@@ -44,8 +44,22 @@ Track progress toward general availability at `voxa.madfam.io`.
 ## Launch
 
 - [ ] Staging soak (1 week) with auth + billing test mode
-- [x] Version `1.0.0` in repo (tag pending release)
+- [x] Version `1.0.0` tag (`v1.0.0` on `313a4e6`)
+- [x] API `1.0.0` live on prod + staging (2026-06-07)
 - [ ] SLP accessibility sign-off
 - [ ] Status page linked from README
+
+## Operator quick commands
+
+```bash
+# When Postgres addons leave provisioning → ready:
+ENCLII_TOKEN='…' ./scripts/deploy/complete-ga-bindings.sh
+
+# Janua OAuth client (once per platform):
+JANUA_ADMIN_EMAIL='…' JANUA_ADMIN_PASSWORD='…' ./scripts/deploy/register-janua-oauth-client.sh
+
+# GitHub lifecycle callbacks:
+ENCLII_CALLBACK_TOKEN='…' ./scripts/deploy/setup-github-secrets.sh
+```
 
 See [CHANGELOG.md](../CHANGELOG.md) and [data-model.md](../data-model.md).
