@@ -34,7 +34,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: web
-          image: ghcr.io/madfam-org/voxa/voxa-web@sha256:c3e1d2bff39cf3cea45f1a35d2bb06f29667720d59663d64f66594b34455436b
+          image: ghcr.io/madfam-org/voxa/voxa-web@sha256:abf3bce4cff3756f7c455c8d69be29b3d73c4efb590a25520905a167dba83aa6
           ports:
             - name: http
               containerPort: 3000
@@ -50,6 +50,16 @@ spec:
               value: "1"
             - name: NEXT_PUBLIC_API_URL
               value: "https://voxa-api.madfam.io"
+            - name: NEXT_PUBLIC_OIDC_ISSUER
+              value: "https://auth.madfam.io"
+            - name: NEXT_PUBLIC_OIDC_CLIENT_ID
+              value: "voxa"
+            - name: NEXT_PUBLIC_BASE_URL
+              value: "https://voxa.madfam.io"
+          envFrom:
+            - secretRef:
+                name: voxa-secrets
+                optional: true
           resources:
             requests:
               cpu: 100m

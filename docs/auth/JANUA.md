@@ -63,6 +63,19 @@ Claims checked: `roles[]`, `role`, `voxa_role`.
 4. Set API `JANUA_*` secrets via Enclii onboard.
 5. Flip `JANUA_AUTH_REQUIRED=true` when ready to disable header auth.
 
+### Register OAuth client
+
+```bash
+JANUA_ADMIN_EMAIL='…' JANUA_ADMIN_PASSWORD='…' ./scripts/deploy/register-janua-oauth-client.sh
+```
+
+### Bind managed Postgres
+
+```bash
+ENCLII_TOKEN='…' ./scripts/deploy/bind-database-addon.sh \
+  voxa c3ea79f2-e05e-4567-8f10-d9d98a0fc2dd 5df18423-044a-4dde-88a7-721727f6974b voxa-services
+```
+
 ## References
 
 - Tulana reference: `tulana/apps/web/src/lib/auth.ts`

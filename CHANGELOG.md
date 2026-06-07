@@ -16,7 +16,8 @@ All notable changes to Voxa are documented here.
 
 ### Changed
 
-- Board and sync routes are async and use the shared store layer
+- Deploy workflows run post-deploy smoke checks against madfam.io health and legal URLs
+- Web deployments expose Janua OIDC env vars; secrets template includes OIDC_CLIENT_SECRET
 - Kubernetes API readiness probes target `/health/ready`
 
 ## [0.5.0] — 2026-06
