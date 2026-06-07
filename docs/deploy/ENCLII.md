@@ -1,6 +1,6 @@
 # Enclii deployment runbook for Voxa
 
-Voxa deploys to **madfam.io** via Enclii using the [zero-touch contract](https://github.com/madfam-org/enclii/blob/main/docs/guides/ZERO_TOUCH_CONTRACT.md): Dockerfiles, `k8s/`, CI, and `enclii.yaml` live in this repo. ArgoCD registration is via `infra/argocd/projects/voxa/config.json` in the Enclii repo (same pattern as Tulana, bloom-scroll, madfam-site).
+Voxa deploys to **madfam.io** via Enclii using the [zero-touch contract](https://github.com/madfam-org/enclii/blob/main/docs/guides/ZERO_TOUCH_CONTRACT.md): Dockerfiles, `k8s/`, CI, and `enclii.yaml` live in this repo. ArgoCD apps are registered by Enclii runtime onboarding (`onboard/ensure`); tunnel routing uses junctions on `voxa-web` / `voxa-api` services.
 
 ## Architecture
 
@@ -131,9 +131,38 @@ Set `ENCLII_CALLBACK_TOKEN` on the repo (ArgoCD webhook secret — see [DEPLOYME
 ENCLII_CALLBACK_TOKEN='<token>' ./scripts/deploy/setup-github-secrets.sh
 ```
 
-## Storage note (v0.5)
+## Storage
 
-The API persists boards to `/app/data/boards.json` on an `emptyDir` volume. Data is ephemeral across pod restarts until PostgreSQL is wired via `voxa-secrets` and a future store migration.
+The API selects a store driver at startup:
+
+| `DATABASE_URL` | Driver | Use |
+|----------------|--------|-----|
+| Set | PostgreSQL | Production and staging (durable) |
+| Unset | JSON file (`./data/boards.json`) | Local dev only |
+
+### Enable PostgreSQL in cluster
+
+1. Provision credentials (template: `deploy/secrets-template.yaml`).
+2. Apply via Enclii onboard:
+
+   ```bash
+   enclii onboard --repo madfam-org/voxa --project voxa \
+     --manifest-path k8s/production \
+     --secrets-file deploy/secrets-template.yaml
+   ```
+
+3. Sync ArgoCD (`voxa-services`). The API runs Drizzle migrations on startup and seeds the demo board when the database is empty.
+
+4. Verify readiness:
+
+   ```bash
+   curl -sS https://voxa-api.madfam.io/health/ready
+   # {"status":"ready","service":"voxa-api","store":"postgres"}
+   ```
+
+Until `DATABASE_URL` is applied, pods use the file store on an `emptyDir` volume (data lost on restart). **Apply PostgreSQL before commercial GA.**
+
+Schema reference: [docs/data-model.md](../data-model.md).
 
 ## References
 

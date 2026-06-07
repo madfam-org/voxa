@@ -1,11 +1,21 @@
 import { serve } from '@hono/node-server';
 import app, { injectWebSocket } from './app.js';
+import { initStore } from './store/index.js';
 
 const port = Number(process.env.PORT ?? 4000);
 const hostname = process.env.LISTEN_HOST ?? '0.0.0.0';
 
-const server = serve({ fetch: app.fetch, port, hostname }, () => {
-  console.log(`Voxa API listening on http://${hostname}:${port}`);
-});
+async function main(): Promise<void> {
+  await initStore();
 
-injectWebSocket(server);
+  const server = serve({ fetch: app.fetch, port, hostname }, () => {
+    console.log(`Voxa API listening on http://${hostname}:${port}`);
+  });
+
+  injectWebSocket(server);
+}
+
+main().catch((err) => {
+  console.error('Failed to start Voxa API', err);
+  process.exit(1);
+});

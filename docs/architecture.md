@@ -64,7 +64,7 @@ Voxa is a TypeScript monorepo targeting five client surfaces (Web, iOS, Android,
 
 ## Deployment (Enclii)
 
-Voxa ships to **madfam.io** via Enclii (zero-touch model): Dockerfiles, `k8s/`, and GitHub Actions live in this repo; ArgoCD and Cloudflare Tunnel are managed by Enclii.
+Voxa ships to **madfam.io** via Enclii (zero-touch model): Dockerfiles, `k8s/`, and GitHub Actions live in this repo; ArgoCD apps and Cloudflare Tunnel routes are managed by Enclii runtime onboarding and junctions.
 
 ```
 push main    → CI → ghcr.io/madfam-org/voxa/* → digest commit → k8s/production
@@ -78,10 +78,12 @@ push staging → CI → digest commit → k8s/staging
 
 Full runbook: [docs/deploy/ENCLII.md](./deploy/ENCLII.md)
 
+Data model: [docs/data-model.md](./data-model.md)
+
 ## Technology Choices
 
 - **Monorepo:** pnpm workspaces + Turborepo
 - **Web:** Next.js 15, React 19
 - **API:** Hono on Node 20 (edge-deployable later)
-- **Database:** PostgreSQL + Drizzle ORM (planned)
+- **Database:** PostgreSQL + Drizzle ORM (`apps/api/src/db/`); file fallback when `DATABASE_URL` unset
 - **Mobile (future):** Expo + React Native sharing `@voxa/ui` tokens
