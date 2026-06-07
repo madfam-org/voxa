@@ -9,26 +9,20 @@ spec:
   #   voxa-app.madfam.io  — explicit app entry (same web service)
   #   voxa-api.madfam.io  — cloud sync + AI API
   runtime:
-    port: 8080
+    port: 80
   domains:
     - name: voxa.madfam.io
       environment: production
-      port: 3000
     - name: voxa-app.madfam.io
       environment: production
-      port: 3000
     - name: voxa-api.madfam.io
       environment: production
-      port: 8080
     - name: voxa.staging.madfam.io
       environment: staging
-      port: 3000
     - name: voxa-app.staging.madfam.io
       environment: staging
-      port: 3000
     - name: voxa-api.staging.madfam.io
       environment: staging
-      port: 8080
   network:
     services:
       - name: voxa-web
