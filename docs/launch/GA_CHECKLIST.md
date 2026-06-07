@@ -9,7 +9,7 @@ Track progress toward general availability at `voxa.madfam.io`.
 - [ ] GitHub webhook → `https://api.enclii.dev/v1/webhooks/github`
 - [ ] `DATABASE_URL` bound via Enclii addon (prod addon provisioned; bind when ready)
 - [ ] `REDIS_URL` applied (WebSocket multi-replica — post-GA scaling)
-- [ ] Post-deploy smoke tests green in CI
+- [x] Post-deploy smoke tests in deploy workflows (prod + staging)
 - [ ] Backup/restore runbook tested (`docs/ops/` — TBD)
 - [ ] Sentry or equivalent error tracking
 

@@ -125,3 +125,14 @@ jobs:
                 \"actor\": \"${{ github.actor }}\"
               }
             }" || true
+
+      - name: Smoke test staging web
+        if: success()
+        run: |
+          for i in 1 2 3 4 5 6; do
+            h="$(curl -sS -o /dev/null -w '%{http_code}' https://voxa-staging.madfam.io/api/health || true)"
+            p="$(curl -sS -o /dev/null -w '%{http_code}' https://voxa-staging.madfam.io/legal/privacy || true)"
+            if [ "$h" = "200" ] && [ "$p" = "200" ]; then exit 0; fi
+            sleep 20
+          done
+          exit 1

@@ -50,6 +50,16 @@ spec:
               value: "1"
             - name: NEXT_PUBLIC_API_URL
               value: "https://voxa-api.madfam.io"
+            - name: NEXT_PUBLIC_OIDC_ISSUER
+              value: "https://auth.madfam.io"
+            - name: NEXT_PUBLIC_OIDC_CLIENT_ID
+              value: "voxa"
+            - name: NEXT_PUBLIC_BASE_URL
+              value: "https://voxa.madfam.io"
+          envFrom:
+            - secretRef:
+                name: voxa-secrets
+                optional: true
           resources:
             requests:
               cpu: 100m

@@ -133,3 +133,17 @@ jobs:
                 \"actor\": \"${{ github.actor }}\"
               }
             }" || true
+
+      - name: Smoke test production web
+        if: success()
+        run: |
+          for i in 1 2 3 4 5 6; do
+            code="$(curl -sS -o /dev/null -w '%{http_code}' https://voxa.madfam.io/api/health || true)"
+            legal="$(curl -sS -o /dev/null -w '%{http_code}' https://voxa.madfam.io/legal/privacy || true)"
+            if [ "$code" = "200" ] && [ "$legal" = "200" ]; then
+              exit 0
+            fi
+            sleep 20
+          done
+          echo "Smoke test failed: voxa.madfam.io" >&2
+          exit 1
