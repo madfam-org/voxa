@@ -320,6 +320,28 @@ export function BoardScreen(): React.ReactNode {
           />
         )}
       </main>
+
+      <footer
+        style={{
+          padding: '10px 16px',
+          fontSize: '0.75rem',
+          color: '#737373',
+          borderTop: '1px solid #262626',
+          display: 'flex',
+          gap: 12,
+          flexWrap: 'wrap',
+        }}
+      >
+        <a href="/legal/privacy" style={{ color: '#93c5fd' }}>
+          Privacy
+        </a>
+        <a href="/legal/terms" style={{ color: '#93c5fd' }}>
+          Terms
+        </a>
+        <a href="/legal/accessibility" style={{ color: '#93c5fd' }}>
+          Accessibility
+        </a>
+      </footer>
     </div>
   );
 }

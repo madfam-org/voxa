@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "node --import tsx --test src/app/api/health/route.test.ts"
+    "test": "node --import tsx --test src/app/api/health/route.test.ts src/components/consent-banner.test.ts"
   },
   "dependencies": {
     "@voxa/access": "workspace:*",
