@@ -95,3 +95,4 @@ export const stubAiService: AiService = {
 };
 
 export { buildSymbolPredictions, buildTextPredictions } from './predict.js';
+export { createAiService } from './llm.js';

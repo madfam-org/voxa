@@ -1,13 +1,13 @@
 {
   "name": "@voxa/api",
-  "version": "0.5.0",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "node --import tsx --test src/health.test.ts src/store/board-operations.test.ts src/routes/boards.routes.test.ts src/lib/janua.test.ts",
+    "test": "node --import tsx --test src/health.test.ts src/store/board-operations.test.ts src/routes/boards.routes.test.ts src/lib/janua.test.ts src/lib/board-access.test.ts src/lib/dhanam.test.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate-cli.ts"
   },
@@ -21,7 +21,8 @@
     "drizzle-orm": "^0.39.3",
     "hono": "^4.6.14",
     "jose": "^5.9.6",
-    "postgres": "^3.4.5"
+    "postgres": "^3.4.5",
+    "@sentry/node": "^8.47.0"
   },
   "devDependencies": {
     "drizzle-kit": "^0.30.4",
