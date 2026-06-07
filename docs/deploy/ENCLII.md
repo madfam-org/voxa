@@ -83,6 +83,27 @@ Run locally: `pnpm test`
 - Do **not** add `NetworkPolicy` resources — use `network` in `enclii.yaml`.
 - Service port **80** in K8s maps to container ports 3000 (web) and 8080 (api).
 
+## Troubleshooting
+
+### Deploy workflow fails at checkout with “could not read Username”
+
+The repo is missing secrets. Deploy workflows use `GITHUB_TOKEN` (no `MADFAM_BOT_PAT` required). Ensure **Settings → Actions → General → Workflow permissions** is set to **Read and write**.
+
+### Onboarding fails on `argocd_config` (forbidden: create applications)
+
+Production Enclii uses **runtime** ArgoCD registration. If `switchyard-api` lacks RBAC to create `applications.argoproj.io` in namespace `argocd`, onboarding partially completes (namespace, domains, network policies) but workloads never sync.
+
+**Platform fix:** grant `switchyard-api` `create`/`update` on ArgoCD Applications (same class of fix as [PHYND RBAC runbook](https://github.com/madfam-org/enclii/blob/main/docs/runbooks/PHYND_APP_ENCLII_BLOCKERS_2026-05-14.md)), then re-run:
+
+```bash
+enclii onboard --repo madfam-org/voxa --project voxa --manifest-path k8s/production
+# or POST /v1/admin/onboard/ensure
+```
+
+### Image gate rejects onboarding (`image must be digest-pinned`)
+
+Workload `Deployment` YAML must contain `@sha256:` references, not short names like `voxa-web`. CI updates both `kustomization.yaml` and the deployment files on each build.
+
 ## Storage note (v0.5)
 
 The API persists boards to `/app/data/boards.json` on an `emptyDir` volume. Data is ephemeral across pod restarts until PostgreSQL is wired via `voxa-secrets` and a future store migration.

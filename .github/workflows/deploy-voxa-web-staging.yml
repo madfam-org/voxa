@@ -59,8 +59,9 @@ jobs:
           sbom: false
 
       - name: Commit image digest
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
         run: |
-          DIGEST="${{ steps.build.outputs.digest }}"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           for ATTEMPT in 1 2 3; do
@@ -69,7 +70,23 @@ jobs:
             cd k8s/staging
             kustomize edit set image voxa-web=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${DIGEST}
             cd ../..
-            git add k8s/staging/kustomization.yaml
+            python3 <<'PY'
+          import os, re, pathlib, sys
+          digest = os.environ["DIGEST"]
+          path = pathlib.Path("k8s/staging/voxa-web-deployment.yaml")
+          text = path.read_text()
+          text, count = re.subn(
+              r"(image:\s+)ghcr\.io/madfam-org/voxa/voxa-web@sha256:[a-f0-9]+",
+              rf"\1ghcr.io/madfam-org/voxa/voxa-web@{digest}",
+              text,
+              count=1,
+          )
+          if not count:
+              print("Could not update staging voxa-web deployment image", file=sys.stderr)
+              sys.exit(1)
+          path.write_text(text)
+          PY
+            git add k8s/staging/kustomization.yaml k8s/staging/voxa-web-deployment.yaml
             git diff --staged --quiet && echo "No changes to commit" && exit 0
             git commit -m "deploy(web): update staging digest to ${GITHUB_SHA::8}"
             git push origin staging && exit 0
