@@ -20,6 +20,7 @@ FROM base AS builder
 COPY --from=deps /app/ ./
 COPY . .
 RUN pnpm turbo build --filter=@voxa/api
+RUN pnpm deploy --filter=@voxa/api --prod /prod/api
 
 FROM node:20-alpine AS runner
 WORKDIR /app
@@ -28,13 +29,9 @@ ENV PORT=8080
 
 RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nodejs
 
-COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
-COPY --from=builder --chown=nodejs:nodejs /app/apps/api/dist ./apps/api/dist
-COPY --from=builder --chown=nodejs:nodejs /app/apps/api/package.json ./apps/api/package.json
-COPY --from=builder --chown=nodejs:nodejs /app/packages ./packages
-COPY --from=builder --chown=nodejs:nodejs /app/package.json ./package.json
+COPY --from=builder --chown=nodejs:nodejs /prod/api/ ./
 
 USER nodejs
 EXPOSE 8080
 
-CMD ["node", "apps/api/dist/index.js"]
+CMD ["node", "dist/index.js"]
