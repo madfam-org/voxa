@@ -34,7 +34,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: web
-          image: ghcr.io/madfam-org/voxa/voxa-web@sha256:74752fe1899fa8e456c58f62aafdc862de2cf0ca74b6fde9373e2b57e9eddee9
+          image: ghcr.io/madfam-org/voxa/voxa-web@sha256:c3e1d2bff39cf3cea45f1a35d2bb06f29667720d59663d64f66594b34455436b
           ports:
             - name: http
               containerPort: 3000
