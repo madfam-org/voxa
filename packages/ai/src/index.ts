@@ -1,4 +1,5 @@
-import type { LocaleCode, Utterance } from '@voxa/core';
+import type { BoardButton, LocaleCode, Utterance } from '@voxa/core';
+import { buildSymbolPredictions, buildTextPredictions } from './predict.js';
 
 export interface PredictionRequest {
   profileId: string;
@@ -16,6 +17,7 @@ export interface TextPrediction {
 export interface SymbolPredictionRequest {
   profileId: string;
   recentSymbolIds: string[];
+  boardButtons?: BoardButton[];
   contextTags?: string[];
   maxSuggestions?: number;
 }
@@ -67,14 +69,17 @@ export interface AiService {
   synthesizeSpeech(req: SpeakRequest): Promise<ArrayBuffer>;
 }
 
-/** No-op stub until inference backends are wired */
+/** Context-aware stub until cloud LLM / PictoBERT backends are wired */
 export const stubAiService: AiService = {
   async predictText(req) {
-    if (!req.partialText) return [];
-    return [{ text: `${req.partialText} …`, confidence: 0.5 }];
+    return buildTextPredictions(req.partialText, req.maxSuggestions ?? 3);
   },
-  async predictSymbols() {
-    return [];
+  async predictSymbols(req) {
+    return buildSymbolPredictions(
+      req.recentSymbolIds,
+      req.boardButtons ?? [],
+      req.maxSuggestions ?? 3,
+    );
   },
   async generateSymbols(req) {
     const count = Math.min(req.count ?? 4, 4);
@@ -88,3 +93,5 @@ export const stubAiService: AiService = {
     return new ArrayBuffer(0);
   },
 };
+
+export { buildSymbolPredictions, buildTextPredictions } from './predict.js';

@@ -16,7 +16,7 @@ interface SettingsPanelProps {
   onClose: () => void;
 }
 
-export function SettingsPanel({ settings, onChange, onClose }: SettingsPanelProps) {
+export function SettingsPanel({ settings, onChange, onClose }: SettingsPanelProps): React.ReactNode {
   return (
     <aside
       role="dialog"

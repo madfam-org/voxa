@@ -14,8 +14,10 @@ import {
 } from '@/lib/board-utils';
 import { useCommunicatorSettings } from '@/hooks/use-communicator-settings';
 import { useEyeDwellByButton } from '@/hooks/use-eye-dwell';
+import { usePredictions } from '@/hooks/use-predictions';
 import { useSwitchScan } from '@/hooks/use-switch-scan';
 import { useSyncedBoard } from '@/hooks/use-synced-board';
+import { PredictionStrip } from '@/components/prediction-strip';
 import { SettingsPanel } from '@/components/settings-panel';
 
 const headerBtn: React.CSSProperties = {
@@ -36,13 +38,14 @@ const secondaryBtn: React.CSSProperties = {
   border: '1px solid #404040',
 };
 
-export function BoardScreen() {
+export function BoardScreen(): React.ReactNode {
   const [role, setRole] = useState<TeamRole>('communicator');
   const [utterance, setUtterance] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
+  const [recentButtonIds, setRecentButtonIds] = useState<string[]>([]);
   const { settings, setSettings } = useCommunicatorSettings();
   const {
     board,
@@ -57,6 +60,8 @@ export function BoardScreen() {
     isEditor,
   } = useSyncedBoard(role);
 
+  const { textPredictions, symbolPredictions } = usePredictions(board, utterance, recentButtonIds);
+
   const sorted = [...board.grid.buttons].sort(
     (a, b) => a.position.row - b.position.row || a.position.column - b.position.column,
   );
@@ -66,6 +71,7 @@ export function BoardScreen() {
       if (isEditor && editingId) return;
       const text = buttonSpeech(btn);
       setUtterance((prev) => [...prev, text]);
+      setRecentButtonIds((prev) => [...prev, btn.id as string].slice(-8));
       if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
         const u = new SpeechSynthesisUtterance(text);
         u.lang = btn.locale;
@@ -74,6 +80,14 @@ export function BoardScreen() {
     },
     [isEditor, editingId],
   );
+
+  const applyPrediction = useCallback((text: string) => {
+    const words = text.split(/\s+/).filter(Boolean);
+    setUtterance(words);
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.speak(new SpeechSynthesisUtterance(text));
+    }
+  }, []);
 
   const switchScanEnabled = settings.accessMode === 'switch' && !isEditor;
   const eyeDwellEnabled = settings.accessMode === 'eye-tracking' && !isEditor;
@@ -251,6 +265,16 @@ export function BoardScreen() {
           {error}
           {warnings.length > 0 && ` OBF warnings: ${warnings.join('; ')}`}
         </div>
+      )}
+
+      {!isEditor && (
+        <PredictionStrip
+          textPredictions={textPredictions}
+          symbolPredictions={symbolPredictions}
+          buttons={sorted}
+          onApplyText={applyPrediction}
+          onSelectSymbol={activate}
+        />
       )}
 
       <main style={{ flex: 1, minHeight: 0, display: 'flex' }}>

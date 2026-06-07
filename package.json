@@ -1,6 +1,6 @@
 {
   "name": "voxa",
-  "version": "0.3.0",
+  "version": "0.5.0",
   "private": true,
   "description": "Next-generation Augmentative and Alternative Communication (AAC) platform — cross-platform, GLP-native, AI-powered, and open by design.",
   "author": "MADFAM <hello@madfam.io>",
@@ -17,6 +17,7 @@
     "dev": "turbo dev",
     "dev:web": "pnpm --filter @voxa/web dev",
     "dev:api": "pnpm --filter @voxa/api dev",
+    "dev:mobile": "pnpm --filter @voxa/mobile dev",
     "build": "turbo build",
     "test": "turbo test",
     "lint": "turbo lint",

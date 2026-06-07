@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createDemoBoard, DEMO_BOARD_ID, type Board, type SyncEvent, type TeamRole } from '@voxa/core';
 import { createVoxaClient } from '@voxa/sync';
 import { BOARD_CACHE_KEY, PENDING_SAVE_KEY } from '@/lib/communicator-settings';
+import { registerBackgroundSync } from '@/lib/offline-idb';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
 
@@ -144,6 +145,25 @@ export function useSyncedBoard(role: TeamRole) {
     };
   }, [client, flushPendingSave, setBoard]);
 
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return;
+
+    const onMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'voxa:flush-pending-save') {
+        void flushPendingSave();
+      }
+    };
+
+    navigator.serviceWorker.addEventListener('message', onMessage);
+    return () => navigator.serviceWorker.removeEventListener('message', onMessage);
+  }, [flushPendingSave]);
+
+  useEffect(() => {
+    const onOnline = () => void flushPendingSave();
+    window.addEventListener('online', onOnline);
+    return () => window.removeEventListener('online', onOnline);
+  }, [flushPendingSave]);
+
   const saveBoard = useCallback(async () => {
     try {
       const result = await client.saveBoard(boardRef.current, boardRef.current.version);
@@ -154,6 +174,7 @@ export function useSyncedBoard(role: TeamRole) {
     } catch {
       queuePendingSave(boardRef.current);
       setPendingSave(true);
+      void registerBackgroundSync();
       throw new Error('Save queued — will sync when back online');
     }
   }, [client, setBoard]);

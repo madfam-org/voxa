@@ -17,7 +17,9 @@ export function buttonBorderColor(btn: BoardButton): string {
   return fitzgeraldColor(btn.partOfSpeech as PartOfSpeech);
 }
 
-export function useObfFileInput(onImport: (raw: string) => Promise<void>) {
+export function useObfFileInput(
+  onImport: (raw: string) => Promise<void>,
+): { open: () => void; input: React.ReactNode } {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const open = () => inputRef.current?.click();

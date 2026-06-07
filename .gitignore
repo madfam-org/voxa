@@ -36,4 +36,5 @@ apps/api/data/
 
 # Mobile / desktop (future)
 apps/mobile/.expo/
+apps/mobile/.expo-shared/
 apps/desktop/target/

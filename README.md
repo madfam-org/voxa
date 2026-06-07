@@ -28,6 +28,7 @@ Current market-leading AAC apps are siloed on iOS, have steep learning curves, l
 voxa/
 ├── apps/
 │   ├── web/          # Primary AAC board interface (Next.js)
+│   ├── mobile/       # Expo communicator app (iOS / Android)
 │   └── api/          # Cloud sync & team collaboration API
 ├── packages/
 │   ├── core/         # Domain models — boards, buttons, profiles
@@ -52,9 +53,10 @@ corepack enable
 pnpm install
 pnpm dev:api      # sync API on http://localhost:4000
 pnpm dev:web      # board UI on http://localhost:3000
+pnpm dev:mobile   # Expo app (iOS / Android / simulator)
 ```
 
-Switch role to **Editor (SLP)** to import/export OBF and edit vocabulary. Open **Settings** for CVI themes, switch scanning, or eye-tracking dwell access.
+On web, tap **I** → **want** to see AI prediction chips. Switch to **Editor (SLP)** for OBF editing, or **Settings** for CVI themes and switch scanning.
 
 ## Documentation
 

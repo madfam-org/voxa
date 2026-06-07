@@ -6,6 +6,7 @@
     "noEmit": false,
     "composite": true
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.test.ts"],
   "references": [{ "path": "../core" }]
 }
