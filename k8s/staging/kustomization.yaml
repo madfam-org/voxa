@@ -4,20 +4,22 @@ kind: Kustomization
 namespace: voxa-staging
 
 resources:
-  - namespace.yaml
-  - voxa-api-deployment.yaml
-  - voxa-api-service.yaml
-  - voxa-web-deployment.yaml
-  - voxa-web-service.yaml
+- namespace.yaml
+- voxa-api-deployment.yaml
+- voxa-api-service.yaml
+- voxa-web-deployment.yaml
+- voxa-web-service.yaml
 
 labels:
-  - pairs:
-      app.kubernetes.io/part-of: voxa
-      enclii.dev/managed-by: switchyard
-      enclii.dev/environment: staging
+- pairs:
+    app.kubernetes.io/part-of: voxa
+    enclii.dev/environment: staging
+    enclii.dev/managed-by: switchyard
 
 images:
-  - name: voxa-api
-    newName: ghcr.io/madfam-org/voxa/voxa-api
-  - name: voxa-web
-    newName: ghcr.io/madfam-org/voxa/voxa-web
+- digest: sha256:d91003f0117958464f21df13f04e5f512605ac9453aec6bef7aa0bdf127174d3
+  name: voxa-api
+  newName: ghcr.io/madfam-org/voxa/voxa-api
+- digest: sha256:0ca241262830cddb488acf2db848da3088bcad5f31e4ed986520a3d27765e415
+  name: voxa-web
+  newName: ghcr.io/madfam-org/voxa/voxa-web
