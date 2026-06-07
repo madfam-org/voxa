@@ -7,7 +7,8 @@ Track progress toward general availability at `voxa.madfam.io`.
 - [ ] GHCR packages public; Kyverno `PolicyException` removed
 - [ ] `ENCLII_CALLBACK_TOKEN` set on `madfam-org/voxa`
 - [ ] GitHub webhook → `https://api.enclii.dev/v1/webhooks/github`
-- [ ] `DATABASE_URL` bound via Enclii addon (prod addon provisioned; bind when ready)
+- [x] `DATABASE_URL` applied via shared Postgres (`data/postgres`, prod + staging)
+- [ ] PgBouncer config includes `voxa` / `voxa_staging` (platform RBAC fix)
 - [ ] `REDIS_URL` applied (WebSocket multi-replica — post-GA scaling)
 - [x] Post-deploy smoke tests in deploy workflows (prod + staging)
 - [x] Backup/restore runbook (`docs/ops/BACKUP_RESTORE.md`)
