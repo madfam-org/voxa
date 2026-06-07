@@ -8,12 +8,14 @@
 #
 # Optional overrides:
 #   JANUA_API_URL=https://auth.madfam.io
-#   VOXA_CLIENT_ID=voxa
+#   VOXA_CLIENT_KEY=voxa
+#   VOXA_AUDIENCE=voxa
 
 set -euo pipefail
 
 JANUA_API_URL="${JANUA_API_URL:-https://auth.madfam.io}"
-CLIENT_ID="${VOXA_CLIENT_ID:-voxa}"
+CLIENT_KEY="${VOXA_CLIENT_KEY:-voxa}"
+AUDIENCE="${VOXA_AUDIENCE:-voxa}"
 
 if [[ -z "${JANUA_ADMIN_EMAIL:-}" || -z "${JANUA_ADMIN_PASSWORD:-}" ]]; then
   echo "Set JANUA_ADMIN_EMAIL and JANUA_ADMIN_PASSWORD" >&2
@@ -24,7 +26,12 @@ login_resp="$(curl -sS -X POST "${JANUA_API_URL}/api/v1/auth/login" \
   -H 'Content-Type: application/json' \
   -d "{\"email\":\"${JANUA_ADMIN_EMAIL}\",\"password\":\"${JANUA_ADMIN_PASSWORD}\"}")"
 
-token="$(echo "${login_resp}" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('access_token') or d.get('token') or '')")"
+token="$(echo "${login_resp}" | python3 -c "
+import json, sys
+d = json.load(sys.stdin)
+tokens = d.get('tokens') or {}
+print(tokens.get('access_token') or d.get('access_token') or d.get('token') or '')
+")"
 if [[ -z "${token}" ]]; then
   echo "Janua login failed: ${login_resp}" >&2
   exit 1
@@ -32,9 +39,10 @@ fi
 
 payload="$(cat <<EOF
 {
-  "client_id": "${CLIENT_ID}",
+  "client_key": "${CLIENT_KEY}",
   "name": "Voxa",
   "description": "Voxa AAC platform (web)",
+  "audience": "${AUDIENCE}",
   "redirect_uris": [
     "https://voxa.madfam.io/auth/callback",
     "https://voxa-app.madfam.io/auth/callback",
@@ -50,21 +58,55 @@ payload="$(cat <<EOF
 EOF
 )"
 
-create_resp="$(curl -sS -w '\n%{http_code}' -X POST "${JANUA_API_URL}/api/v1/oauth/clients" \
+create_resp="$(curl -sS -w '\nHTTP_CODE:%{http_code}' -X POST "${JANUA_API_URL}/api/v1/oauth/clients" \
   -H "Authorization: Bearer ${token}" \
   -H 'Content-Type: application/json' \
   -d "${payload}")"
 
-body="$(echo "${create_resp}" | head -n -1)"
-code="$(echo "${create_resp}" | tail -n 1)"
+code="$(echo "${create_resp}" | sed -n 's/^HTTP_CODE://p' | tail -1)"
+body="$(echo "${create_resp}" | sed '/^HTTP_CODE:/d')"
 
 if [[ "${code}" == "201" ]]; then
-  echo "Created OAuth client '${CLIENT_ID}'"
+  echo "Created OAuth client (key=${CLIENT_KEY}, audience=${AUDIENCE})"
   echo "${body}" | python3 -m json.tool
   echo ""
-  echo "Save client_secret to Enclii secrets (OIDC_CLIENT_SECRET) and GitHub if needed."
+  echo "Save client_id + client_secret to Enclii secrets (OIDC_CLIENT_SECRET) and GitHub vars."
 elif [[ "${code}" == "409" ]]; then
-  echo "OAuth client '${CLIENT_ID}' already exists (409)."
+  echo "OAuth client key '${CLIENT_KEY}' already exists (409)."
+  client_id="$(echo "${body}" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('id') or d.get('client',{}).get('id') or '')" 2>/dev/null || true)"
+  if [[ -z "${client_id}" ]]; then
+    list_resp="$(curl -sS "${JANUA_API_URL}/api/v1/oauth/clients/admin/all?search=${CLIENT_KEY}" \
+      -H "Authorization: Bearer ${token}")"
+    client_id="$(echo "${list_resp}" | python3 -c "
+import json, sys
+d = json.load(sys.stdin)
+items = d.get('items') or d.get('clients') or d
+if isinstance(items, dict):
+    items = items.get('items', [])
+for item in items:
+    if item.get('client_key') == '${CLIENT_KEY}' or item.get('client_id') == '${CLIENT_KEY}' or item.get('name') == 'Voxa':
+        print(item.get('id', ''))
+        break
+")"
+  fi
+  if [[ -n "${client_id}" ]]; then
+    rotate_resp="$(curl -sS -w '\nHTTP_CODE:%{http_code}' -X POST \
+      "${JANUA_API_URL}/api/v1/oauth/clients/${client_id}/rotate" \
+      -H "Authorization: Bearer ${token}" \
+      -H 'Content-Type: application/json' \
+      -d '{}')"
+    rotate_code="$(echo "${rotate_resp}" | sed -n 's/^HTTP_CODE://p' | tail -1)"
+    rotate_body="$(echo "${rotate_resp}" | sed '/^HTTP_CODE:/d')"
+    if [[ "${rotate_code}" == "200" || "${rotate_code}" == "201" ]]; then
+      echo "Rotated client secret for existing client:"
+      echo "${rotate_body}" | python3 -m json.tool
+    else
+      echo "Client exists; rotate failed (${rotate_code}): ${rotate_body}" >&2
+      exit 1
+    fi
+  else
+    echo "${body}"
+  fi
 else
   echo "Failed (${code}): ${body}" >&2
   exit 1
