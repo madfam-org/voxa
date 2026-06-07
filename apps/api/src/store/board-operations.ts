@@ -36,7 +36,11 @@ export function applyCreateBoard(
     throw new Error(`Board already exists: ${id}`);
   }
 
-  const stored: Board = { ...board, updatedAt: new Date().toISOString() };
+  const stored: Board = {
+    ...board,
+    ownerUserId: board.ownerUserId ?? actorUserId,
+    updatedAt: new Date().toISOString(),
+  };
   boards[id] = stored;
   const event = createSyncEvent('board.created', stored, actorUserId);
   return { board: stored, event };

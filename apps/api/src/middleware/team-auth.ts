@@ -5,6 +5,7 @@ import { isJanuaConfigured, mapJanuaRole, verifyAccessToken } from '../lib/janua
 export interface TeamContext {
   userId: string;
   role: TeamRole;
+  orgId?: string;
 }
 
 declare module 'hono' {
@@ -34,6 +35,7 @@ export function teamAuth() {
         c.set('team', {
           userId: String(claims.sub),
           role: mapJanuaRole(claims),
+          orgId: String(claims.org_id ?? claims.organization_id ?? '') || undefined,
         });
         await next();
         return;

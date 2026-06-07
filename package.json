@@ -1,6 +1,6 @@
 {
   "name": "voxa",
-  "version": "0.5.0",
+  "version": "1.0.0",
   "private": true,
   "description": "Next-generation Augmentative and Alternative Communication (AAC) platform — cross-platform, GLP-native, AI-powered, and open by design.",
   "author": "MADFAM <hello@madfam.io>",
@@ -11,7 +11,8 @@
   },
   "workspaces": [
     "apps/*",
-    "packages/*"
+    "packages/*",
+    "e2e"
   ],
   "scripts": {
     "dev": "turbo dev",
@@ -23,7 +24,8 @@
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
     "clean": "turbo clean && rm -rf node_modules",
-    "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\""
+    "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
+    "test:e2e": "pnpm --filter @voxa/e2e test"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

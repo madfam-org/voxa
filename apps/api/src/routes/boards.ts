@@ -1,5 +1,7 @@
 import { Hono } from 'hono';
 import type { Board } from '@voxa/core';
+import { canAccessBoard, canEditBoard } from '../lib/board-access.js';
+import { maxBoardCount, resolveEntitlement } from '../lib/dhanam.js';
 import { requireEditor } from '../middleware/team-auth.js';
 import { getStore } from '../store/index.js';
 import { broadcastBoardEvent } from '../ws/hub.js';
@@ -7,13 +9,20 @@ import { broadcastBoardEvent } from '../ws/hub.js';
 export const boardRoutes = new Hono();
 
 boardRoutes.get('/', async (c) => {
-  const boards = await getStore().listBoards();
+  const { userId, role } = c.get('team');
+  const all = await getStore().listBoards();
+  const boards = all.filter((board) => canAccessBoard(board.id, board.ownerUserId, userId, role));
   return c.json({ boards });
 });
 
 boardRoutes.get('/:boardId', async (c) => {
-  const board = await getStore().getBoard(c.req.param('boardId'));
+  const boardId = c.req.param('boardId');
+  const { userId, role } = c.get('team');
+  const board = await getStore().getBoard(boardId);
   if (!board) return c.json({ error: 'Board not found' }, 404);
+  if (!canAccessBoard(boardId, board.ownerUserId, userId, role)) {
+    return c.json({ error: 'Forbidden' }, 403);
+  }
   return c.json(board);
 });
 
@@ -23,10 +32,24 @@ boardRoutes.post('/', async (c) => {
   }
 
   const body = (await c.req.json()) as Board;
-  const { userId } = c.get('team');
+  const { userId, orgId } = c.get('team');
+
+  const entitlement = await resolveEntitlement(userId);
+  const owned = (await getStore().listBoards()).filter(
+    (board) => board.ownerUserId === userId,
+  );
+  if (owned.length >= maxBoardCount(entitlement)) {
+    return c.json({ error: 'Board limit reached for your plan', tier: entitlement.tier }, 402);
+  }
+
+  const board: Board = {
+    ...body,
+    ownerUserId: userId,
+    orgId: orgId ?? body.orgId,
+  };
 
   try {
-    const result = await getStore().createBoard(body, userId);
+    const result = await getStore().createBoard(board, userId);
     broadcastBoardEvent(result.event);
     return c.json(result, 201);
   } catch (err) {
@@ -41,7 +64,13 @@ boardRoutes.put('/:boardId', async (c) => {
 
   const boardId = c.req.param('boardId');
   const body = (await c.req.json()) as Board & { expectedVersion?: number; forceMotorPlanning?: boolean };
-  const { userId } = c.get('team');
+  const { userId, role } = c.get('team');
+
+  const current = await getStore().getBoard(boardId);
+  if (!current) return c.json({ error: 'Board not found' }, 404);
+  if (!canEditBoard(boardId, current.ownerUserId, userId, role)) {
+    return c.json({ error: 'Forbidden' }, 403);
+  }
 
   try {
     const result = await getStore().updateBoard(boardId, body, userId, {
@@ -69,7 +98,13 @@ boardRoutes.post('/:boardId/import/obf', async (c) => {
 
   const boardId = c.req.param('boardId');
   const raw = await c.req.text();
-  const { userId } = c.get('team');
+  const { userId, role } = c.get('team');
+
+  const current = await getStore().getBoard(boardId);
+  if (!current) return c.json({ error: 'Board not found' }, 404);
+  if (!canEditBoard(boardId, current.ownerUserId, userId, role)) {
+    return c.json({ error: 'Forbidden' }, 403);
+  }
 
   try {
     const result = await getStore().importObfBoard(boardId, raw, userId);
@@ -86,6 +121,13 @@ boardRoutes.post('/:boardId/import/obf', async (c) => {
 
 boardRoutes.get('/:boardId/export/obf', async (c) => {
   const boardId = c.req.param('boardId');
+  const { userId, role } = c.get('team');
+
+  const board = await getStore().getBoard(boardId);
+  if (!board) return c.json({ error: 'Board not found' }, 404);
+  if (!canAccessBoard(boardId, board.ownerUserId, userId, role)) {
+    return c.json({ error: 'Forbidden' }, 403);
+  }
 
   try {
     const json = await getStore().exportObfBoard(boardId);

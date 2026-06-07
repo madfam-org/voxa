@@ -22,6 +22,8 @@ export interface JanuaClaims extends JWTPayload {
   role?: string;
   voxa_role?: string;
   roles?: string[];
+  org_id?: string;
+  organization_id?: string;
 }
 
 export function mapJanuaRole(claims: JanuaClaims | Record<string, unknown>): TeamRole {

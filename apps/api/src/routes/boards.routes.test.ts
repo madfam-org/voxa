@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it, beforeEach } from 'node:test';
-import { DEMO_BOARD_ID } from '@voxa/core';
+import { createBoardId, createDemoBoard, DEMO_BOARD_ID } from '@voxa/core';
 import app from '../app.js';
 import { createFileBoardStore } from '../store/file-board-store.js';
 import { useTestStore } from '../store/index.js';
@@ -22,6 +22,44 @@ describe('board routes', () => {
   it('returns 404 for unknown board', async () => {
     const res = await app.request('/v1/boards/missing-board');
     assert.equal(res.status, 404);
+  });
+
+  it('hides private boards from other users', async () => {
+    const store = createFileBoardStore();
+    await store.resetStoreForTests?.();
+    const privateBoard = {
+      ...createDemoBoard(),
+      id: createBoardId('private-team'),
+      name: 'Private',
+      ownerUserId: 'owner-a',
+    };
+    await store.createBoard(privateBoard, 'owner-a');
+    useTestStore(store);
+
+    const res = await app.request('/v1/boards', {
+      headers: { 'X-Voxa-User-Id': 'other-user', 'X-Voxa-Role': 'communicator' },
+    });
+    const body = (await res.json()) as { boards: Array<{ id: string }> };
+    assert.ok(body.boards.some((board) => board.id === DEMO_BOARD_ID));
+    assert.ok(!body.boards.some((board) => board.id === 'private-team'));
+  });
+
+  it('returns 403 when accessing a private board as another user', async () => {
+    const store = createFileBoardStore();
+    await store.resetStoreForTests?.();
+    const privateBoard = {
+      ...createDemoBoard(),
+      id: createBoardId('secret-board'),
+      name: 'Secret',
+      ownerUserId: 'owner-a',
+    };
+    await store.createBoard(privateBoard, 'owner-a');
+    useTestStore(store);
+
+    const res = await app.request('/v1/boards/secret-board', {
+      headers: { 'X-Voxa-User-Id': 'intruder', 'X-Voxa-Role': 'communicator' },
+    });
+    assert.equal(res.status, 403);
   });
 
   it('requires editor role to update a board', async () => {

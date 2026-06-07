@@ -26,6 +26,8 @@ function rowToBoard(row: typeof boards.$inferSelect): Board {
     grid: row.grid as Board['grid'],
     version: row.version,
     updatedAt: row.updatedAt,
+    ownerUserId: row.ownerUserId ?? undefined,
+    orgId: row.orgId ?? undefined,
   };
 }
 
@@ -48,6 +50,8 @@ export function createPgBoardStore(databaseUrl: string): BoardStore {
         id: board.id as string,
         name: board.name,
         profileId: board.profileId as string,
+        ownerUserId: board.ownerUserId ?? null,
+        orgId: board.orgId ?? null,
         grid: board.grid,
         version: board.version,
         updatedAt: board.updatedAt,
@@ -57,6 +61,8 @@ export function createPgBoardStore(databaseUrl: string): BoardStore {
         set: {
           name: board.name,
           profileId: board.profileId as string,
+          ownerUserId: board.ownerUserId ?? null,
+          orgId: board.orgId ?? null,
           grid: board.grid,
           version: board.version,
           updatedAt: board.updatedAt,

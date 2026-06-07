@@ -97,6 +97,8 @@ export interface Board {
   grid: BoardGrid;
   version: number;
   updatedAt: string;
+  ownerUserId?: string;
+  orgId?: string;
 }
 
 export interface Utterance {
