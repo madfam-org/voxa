@@ -35,6 +35,7 @@ voxa/
 │   ├── obf/          # Open Board Format parser & exporter
 │   ├── vocabulary/   # GLP, Fitzgerald Key, motor planning
 │   ├── access/       # Switch scanning & eye-tracking adapters
+│   ├── sync/         # Cloud sync REST + WebSocket client
 │   └── ai/           # LLM, PictoBERT, symbol gen interfaces
 └── docs/             # Architecture, accessibility, AI roadmap
 ```
@@ -49,10 +50,11 @@ voxa/
 ```bash
 corepack enable
 pnpm install
-pnpm dev:web
+pnpm dev:api      # sync API on http://localhost:4000
+pnpm dev:web      # board UI on http://localhost:3000
 ```
 
-Visit [http://localhost:3000](http://localhost:3000) for the web AAC board prototype.
+Visit [http://localhost:3000](http://localhost:3000). Switch role to **Editor (SLP)** to import/export OBF, edit buttons, and save to the cloud API.
 
 ## Documentation
 

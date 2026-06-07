@@ -1,6 +1,6 @@
 {
   "name": "@voxa/web",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "scripts": {
     "dev": "next dev --port 3000",
@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@voxa/core": "workspace:*",
+    "@voxa/sync": "workspace:*",
     "@voxa/ui": "workspace:*",
     "@voxa/vocabulary": "workspace:*",
     "next": "^15.1.3",

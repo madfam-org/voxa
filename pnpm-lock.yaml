@@ -26,9 +26,18 @@ importers:
       '@hono/node-server':
         specifier: ^1.13.7
         version: 1.19.14(hono@4.12.23)
+      '@hono/node-ws':
+        specifier: ^1.1.1
+        version: 1.3.1(@hono/node-server@1.19.14(hono@4.12.23))(hono@4.12.23)
       '@voxa/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@voxa/obf':
+        specifier: workspace:*
+        version: link:../../packages/obf
+      '@voxa/vocabulary':
+        specifier: workspace:*
+        version: link:../../packages/vocabulary
       hono:
         specifier: ^4.6.14
         version: 4.12.23
@@ -45,6 +54,9 @@ importers:
       '@voxa/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@voxa/sync':
+        specifier: workspace:*
+        version: link:../../packages/sync
       '@voxa/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -97,6 +109,19 @@ importers:
         version: 5.9.3
 
   packages/obf:
+    dependencies:
+      '@voxa/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      tsx:
+        specifier: ^4.19.2
+        version: 4.22.4
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
+  packages/sync:
     dependencies:
       '@voxa/core':
         specifier: workspace:*
@@ -303,6 +328,13 @@ packages:
     engines: {node: '>=18.14.1'}
     peerDependencies:
       hono: ^4
+
+  '@hono/node-ws@1.3.1':
+    resolution: {integrity: sha512-vo/MwCnpJAVHBkGzWjCJ28wF45fYHAfbPZcH2rodZODHtch2GHA94KtMfusmVycTUtsLAsaNsHhtY6P8X3RQsA==}
+    engines: {node: '>=18.14.1'}
+    peerDependencies:
+      '@hono/node-server': ^1.19.11
+      hono: ^4.6.0
 
   '@img/colour@1.1.0':
     resolution: {integrity: sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ==}
@@ -659,6 +691,18 @@ packages:
   undici-types@6.21.0:
     resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==}
 
+  ws@8.21.0:
+    resolution: {integrity: sha512-Vsp28b7DRcimFQvrqu2Wek3z1iYxDCWqHYB8Qsnk/S4RfaCQzPGPyBNuVjJV3cd6UiKtUtp6sNM77gWvzcCH+g==}
+    engines: {node: '>=10.0.0'}
+    peerDependencies:
+      bufferutil: ^4.0.1
+      utf-8-validate: '>=5.0.2'
+    peerDependenciesMeta:
+      bufferutil:
+        optional: true
+      utf-8-validate:
+        optional: true
+
 snapshots:
 
   '@emnapi/runtime@1.10.0':
@@ -747,6 +791,15 @@ snapshots:
   '@hono/node-server@1.19.14(hono@4.12.23)':
     dependencies:
       hono: 4.12.23
+
+  '@hono/node-ws@1.3.1(@hono/node-server@1.19.14(hono@4.12.23))(hono@4.12.23)':
+    dependencies:
+      '@hono/node-server': 1.19.14(hono@4.12.23)
+      hono: 4.12.23
+      ws: 8.21.0
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
 
   '@img/colour@1.1.0':
     optional: true
@@ -1054,3 +1107,5 @@ snapshots:
   typescript@5.9.3: {}
 
   undici-types@6.21.0: {}
+
+  ws@8.21.0: {}

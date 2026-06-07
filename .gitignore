@@ -31,6 +31,9 @@ pnpm-debug.log*
 test-results/
 playwright-report/
 
+# API persisted data (local dev)
+apps/api/data/
+
 # Mobile / desktop (future)
 apps/mobile/.expo/
 apps/desktop/target/

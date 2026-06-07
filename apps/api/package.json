@@ -1,6 +1,6 @@
 {
   "name": "@voxa/api",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "scripts": {
     "dev": "tsx watch src/index.ts",
@@ -10,7 +10,10 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.13.7",
+    "@hono/node-ws": "^1.1.1",
     "@voxa/core": "workspace:*",
+    "@voxa/obf": "workspace:*",
+    "@voxa/vocabulary": "workspace:*",
     "hono": "^4.6.14"
   },
   "devDependencies": {

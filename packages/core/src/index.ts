@@ -5,6 +5,29 @@ export type ProfileId = string & { readonly __brand: 'ProfileId' };
 
 export type LocaleCode = string;
 
+/** Modified Fitzgerald Key part-of-speech tag for button styling */
+export type PartOfSpeechTag =
+  | 'adjective'
+  | 'verb'
+  | 'pronoun'
+  | 'noun'
+  | 'preposition'
+  | 'conjunction';
+
+/** Team roles for collaborative board editing */
+export type TeamRole = 'communicator' | 'editor' | 'admin';
+
+export interface TeamMember {
+  userId: string;
+  role: TeamRole;
+  displayName?: string;
+}
+
+export interface BoardAccess {
+  boardId: BoardId;
+  members: TeamMember[];
+}
+
 /** Grid position — immutable for motor-planning core slots */
 export interface GridPosition {
   row: number;
@@ -48,6 +71,7 @@ export interface GlpButton {
 export type BoardButton = (AnalyticButton | GlpButton) & {
   position: GridPosition;
   locked: boolean;
+  partOfSpeech?: PartOfSpeechTag;
 };
 
 export interface BoardGrid {
@@ -81,6 +105,36 @@ export interface Utterance {
   spokenAt: string;
 }
 
+/** Real-time sync envelope broadcast to connected clients */
+export type SyncEventType = 'board.updated' | 'board.created' | 'presence.join' | 'presence.leave';
+
+export interface SyncEvent {
+  id: string;
+  type: SyncEventType;
+  boardId: BoardId;
+  version: number;
+  actorUserId: string;
+  timestamp: string;
+  payload?: Record<string, unknown>;
+}
+
+export interface BoardUpdateResult {
+  board: Board;
+  event: SyncEvent;
+}
+
+export interface MotorPlanningConflict {
+  code: 'MOTOR_PLANNING_VIOLATION';
+  message: string;
+  violations: Array<{ buttonId: string; previous: GridPosition; next: GridPosition }>;
+}
+
+export interface ApiErrorBody {
+  error: string;
+  code?: string;
+  details?: unknown;
+}
+
 export function createBoardId(id: string): BoardId {
   return id as BoardId;
 }
@@ -92,3 +146,5 @@ export function createButtonId(id: string): ButtonId {
 export function createProfileId(id: string): ProfileId {
   return id as ProfileId;
 }
+
+export { createDemoBoard, DEMO_BOARD_ID } from './demo-board.js';

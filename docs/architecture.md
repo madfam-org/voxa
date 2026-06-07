@@ -42,6 +42,7 @@ Voxa is a TypeScript monorepo targeting five client surfaces (Web, iOS, Android,
 | `@voxa/obf` | Parse/serialize `.obf` / `.obz` per Open Board Format spec |
 | `@voxa/vocabulary` | Fitzgerald Key, GLP chunks, motor-planning validators |
 | `@voxa/access` | Switch scan groups, eye-tracker dwell adapters |
+| `@voxa/sync` | REST + WebSocket client for board sync and OBF endpoints |
 | `@voxa/ai` | LLM prediction, PictoBERT, symbol gen, bilingual TTS contracts |
 
 ## Sync Model
@@ -56,7 +57,7 @@ Voxa is a TypeScript monorepo targeting five client surfaces (Web, iOS, Android,
 | Phase | Deliverable |
 |-------|-------------|
 | **0.1** (current) | Web prototype, core types, OBF skeleton, API scaffold |
-| **0.2** | Cloud sync, team editing, OBF import/export |
+| **0.2** (current) | Cloud sync, team editing, OBF import/export |
 | **0.3** | Switch scanning + CVI themes in production web |
 | **0.4** | Mobile (Expo) + offline cache |
 | **0.5** | LLM prediction + PictoBERT integration |

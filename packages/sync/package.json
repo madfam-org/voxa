@@ -1,8 +1,8 @@
 {
-  "name": "@voxa/obf",
-  "version": "0.1.0",
+  "name": "@voxa/sync",
+  "version": "0.2.0",
   "private": true,
-  "description": "Open Board Format (.obf / .obz) import and export",
+  "description": "Cloud sync client for Voxa boards — REST + WebSocket",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -14,14 +14,12 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "node --import tsx --test src/index.test.ts",
     "clean": "rm -rf dist"
   },
   "dependencies": {
     "@voxa/core": "workspace:*"
   },
   "devDependencies": {
-    "tsx": "^4.19.2",
     "typescript": "^5.7.2"
   }
 }
