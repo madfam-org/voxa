@@ -18,7 +18,7 @@ spec:
   template:
     metadata:
       annotations:
-        kubectl.kubernetes.io/restartedAt: "2026-06-07T09:00:00Z"
+        kubectl.kubernetes.io/restartedAt: "2026-06-07T09:15:00Z"
       labels:
         app: voxa-web
         app.kubernetes.io/name: voxa-web
@@ -56,7 +56,11 @@ spec:
               value: "https://voxa-api-staging.madfam.io"
             - name: NEXT_PUBLIC_OIDC_ISSUER
               value: "https://auth.madfam.io"
+            - name: OIDC_ISSUER
+              value: "https://auth.madfam.io"
             - name: NEXT_PUBLIC_OIDC_CLIENT_ID
+              value: "jnc_4qRWyI-ul_GL28hrSxrX7AvIyotFMBuB"
+            - name: OIDC_CLIENT_ID
               value: "jnc_4qRWyI-ul_GL28hrSxrX7AvIyotFMBuB"
             - name: NEXT_PUBLIC_BASE_URL
               value: "https://voxa-staging.madfam.io"

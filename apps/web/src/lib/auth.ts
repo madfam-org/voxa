@@ -10,8 +10,10 @@ const SESSION_COOKIE = 'voxa_session';
 const SESSION_DISPLAY_COOKIE = 'voxa_user';
 const OAUTH_TRANSIENT_COOKIE_MAX_AGE_SECONDS = 30 * 60;
 
-const OIDC_ISSUER = process.env.NEXT_PUBLIC_OIDC_ISSUER || 'https://auth.madfam.io';
-const OIDC_CLIENT_ID = process.env.NEXT_PUBLIC_OIDC_CLIENT_ID || '';
+const OIDC_ISSUER =
+  process.env.OIDC_ISSUER || process.env.NEXT_PUBLIC_OIDC_ISSUER || 'https://auth.madfam.io';
+const OIDC_CLIENT_ID =
+  process.env.OIDC_CLIENT_ID || process.env.NEXT_PUBLIC_OIDC_CLIENT_ID || '';
 const OIDC_CLIENT_SECRET = process.env.OIDC_CLIENT_SECRET;
 
 const OIDC_DISCOVERY_URL = `${OIDC_ISSUER}/.well-known/openid-configuration`;
@@ -104,7 +106,9 @@ function getDiscoveryEndpoints() {
 }
 
 export function isOidcConfigured(): boolean {
-  return Boolean(process.env.NEXT_PUBLIC_OIDC_CLIENT_ID && process.env.NEXT_PUBLIC_OIDC_ISSUER);
+  const issuer = process.env.OIDC_ISSUER || process.env.NEXT_PUBLIC_OIDC_ISSUER;
+  const clientId = process.env.OIDC_CLIENT_ID || process.env.NEXT_PUBLIC_OIDC_CLIENT_ID;
+  return Boolean(clientId && issuer);
 }
 
 export function normalizeAuthRedirectPath(redirectTo: string): string {
