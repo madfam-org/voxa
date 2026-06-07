@@ -10,6 +10,10 @@ spec:
   #   voxa-api.madfam.io  — cloud sync + AI API
   runtime:
     port: 80
+  # Staging uses single-level subdomains (Universal SSL covers *.madfam.io only):
+  #   voxa-staging.madfam.io
+  #   voxa-app-staging.madfam.io
+  #   voxa-api-staging.madfam.io
   domains:
     - name: voxa.madfam.io
       environment: production
@@ -17,11 +21,11 @@ spec:
       environment: production
     - name: voxa-api.madfam.io
       environment: production
-    - name: voxa.staging.madfam.io
+    - name: voxa-staging.madfam.io
       environment: staging
-    - name: voxa-app.staging.madfam.io
+    - name: voxa-app-staging.madfam.io
       environment: staging
-    - name: voxa-api.staging.madfam.io
+    - name: voxa-api-staging.madfam.io
       environment: staging
   network:
     services:
@@ -62,3 +66,15 @@ spec:
         group: Voxa
         family: AAC Platform
         description: Cloud sync and AI API
+      - name: Voxa Staging
+        url: https://voxa-staging.madfam.io/api/health
+        href: https://voxa-staging.madfam.io
+        group: Voxa
+        family: AAC Platform
+        description: Staging web (AAC communicator)
+      - name: Voxa API Staging
+        url: https://voxa-api-staging.madfam.io/health
+        href: https://voxa-api-staging.madfam.io
+        group: Voxa
+        family: AAC Platform
+        description: Staging cloud sync and AI API

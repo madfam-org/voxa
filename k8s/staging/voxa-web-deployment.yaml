@@ -51,7 +51,7 @@ spec:
             - name: NEXT_TELEMETRY_DISABLED
               value: "1"
             - name: NEXT_PUBLIC_API_URL
-              value: "https://voxa-api.staging.madfam.io"
+              value: "https://voxa-api-staging.madfam.io"
           resources:
             requests:
               cpu: 50m

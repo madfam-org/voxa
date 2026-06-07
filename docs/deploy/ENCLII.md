@@ -14,9 +14,9 @@ Enclii (ArgoCD + Cloudflare Tunnel)
   ├── voxa.madfam.io              → voxa-web (production)
   ├── voxa-app.madfam.io          → voxa-web (production)
   ├── voxa-api.madfam.io          → voxa-api (production)
-  ├── voxa.staging.madfam.io      → voxa-web (staging)
-  ├── voxa-app.staging.madfam.io  → voxa-web (staging)
-  └── voxa-api.staging.madfam.io  → voxa-api (staging)
+  ├── voxa-staging.madfam.io      → voxa-web (staging)
+  ├── voxa-app-staging.madfam.io  → voxa-web (staging)
+  └── voxa-api-staging.madfam.io  → voxa-api (staging)
 ```
 
 Routing uses Cloudflare Tunnel to cluster services (`http://voxa-web.{namespace}.svc.cluster.local:80`). There is **no Ingress** in this repo.
@@ -61,7 +61,7 @@ Routing uses Cloudflare Tunnel to cluster services (`http://voxa-web.{namespace}
 | Environment | Branch | Manifests | Domains |
 |-------------|--------|-----------|---------|
 | Production | `main` | `k8s/production/` | `voxa.madfam.io`, `voxa-app.madfam.io`, `voxa-api.madfam.io` |
-| Staging | `staging` | `k8s/staging/` | `voxa.staging.madfam.io`, `voxa-app.staging.madfam.io`, `voxa-api.staging.madfam.io` |
+| Staging | `staging` | `k8s/staging/` | `voxa-staging.madfam.io`, `voxa-app-staging.madfam.io`, `voxa-api-staging.madfam.io` |
 
 ArgoCD syncs after digest commits. Check status at [app.enclii.dev](https://app.enclii.dev) and the Enclii status page entries declared in `enclii.yaml`.
 
