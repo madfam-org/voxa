@@ -65,7 +65,7 @@ On web, tap **I** → **want** to see AI prediction chips. Switch to **Editor (S
 | Environment | Platform | App | API |
 |-------------|----------|-----|-----|
 | Production | [voxa.madfam.io](https://voxa.madfam.io) | [voxa-app.madfam.io](https://voxa-app.madfam.io) | [voxa-api.madfam.io](https://voxa-api.madfam.io) |
-| Staging | [voxa.staging.madfam.io](https://voxa.staging.madfam.io) | [voxa-app.staging.madfam.io](https://voxa-app.staging.madfam.io) | [voxa-api.staging.madfam.io](https://voxa-api.staging.madfam.io) |
+| Staging | [voxa-staging.madfam.io](https://voxa-staging.madfam.io) | [voxa-app-staging.madfam.io](https://voxa-app-staging.madfam.io) | [voxa-api-staging.madfam.io](https://voxa-api-staging.madfam.io) |
 
 See [docs/deploy/ENCLII.md](./docs/deploy/ENCLII.md) for CI, onboarding, and operator steps.
 
