@@ -22,14 +22,11 @@ Routing uses Cloudflare Tunnel to cluster services (`http://voxa-web.{namespace}
 ## Prerequisites
 
 1. **GitHub secrets** on `madfam-org/voxa`:
-   - `MADFAM_BOT_PAT` — GHCR push + digest commits
-   - `ENCLII_CALLBACK_TOKEN` — lifecycle events to Enclii
+   - `ENCLII_CALLBACK_TOKEN` — lifecycle events to Enclii (same value as other MADFAM repos; see [DEPLOYMENT_TRACKING.md](https://github.com/madfam-org/enclii/blob/main/docs/guides/DEPLOYMENT_TRACKING.md))
 
-2. **Automation team write access**:
-   ```bash
-   gh api -X PUT "orgs/madfam-org/teams/automation/repos/madfam-org/voxa" \
-     -f permission=push
-   ```
+   Deploy workflows use the built-in `GITHUB_TOKEN` for GHCR push and digest commits (`contents: write`, `packages: write`). No `MADFAM_BOT_PAT` is required unless you prefer a dedicated bot account.
+
+2. **Workflow permissions** — ensure Actions can write to the repo (Settings → Actions → General → Workflow permissions: *Read and write*).
 
 3. **Enclii CLI** logged in (`enclii login`) or API token with admin scope.
 

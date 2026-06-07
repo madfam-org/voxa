@@ -11,7 +11,7 @@ on:
       - "!k8s/production/kustomization.yaml"
 
 concurrency:
-  group: voxa-kustomization-main-web
+  group: voxa-kustomization-production
   cancel-in-progress: false
 
 env:
@@ -30,15 +30,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-        with:
-          token: ${{ secrets.MADFAM_BOT_PAT }}
 
       - name: Log in to GHCR
         uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ secrets.MADFAM_BOT_PAT }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
@@ -71,8 +69,8 @@ jobs:
       - name: Commit image digest
         run: |
           DIGEST="${{ steps.build.outputs.digest }}"
-          git config user.name "madfam-bot"
-          git config user.email "bot@madfam.dev"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           for ATTEMPT in 1 2 3; do
             git fetch origin main
             git reset --hard origin/main
