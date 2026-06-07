@@ -30,6 +30,7 @@ ENV PORT=8080
 RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nodejs
 
 COPY --from=builder --chown=nodejs:nodejs /prod/api/ ./
+COPY --from=builder --chown=nodejs:nodejs /app/apps/api/drizzle ./drizzle
 
 USER nodejs
 EXPOSE 8080

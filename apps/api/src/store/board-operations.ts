@@ -1,50 +1,15 @@
 import { randomUUID } from 'node:crypto';
-import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
-import { dirname, join } from 'node:path';
 import {
   createBoardId,
-  createDemoBoard,
-  DEMO_BOARD_ID,
   type Board,
-  type BoardId,
+  type BoardUpdateResult,
   type SyncEvent,
 } from '@voxa/core';
 import { findMotorPlanningViolations } from '@voxa/vocabulary';
 import { obfToVoxaButtons, parseObfJson, voxaBoardToObf } from '@voxa/obf';
+import type { ImportObfResult } from './types.js';
 
-interface StoreState {
-  boards: Record<string, Board>;
-  events: SyncEvent[];
-}
-
-const DATA_DIR = join(process.cwd(), 'data');
-const STORE_PATH = join(DATA_DIR, 'boards.json');
-
-function emptyState(): StoreState {
-  const demo = createDemoBoard();
-  return { boards: { [DEMO_BOARD_ID]: demo }, events: [] };
-}
-
-function loadState(): StoreState {
-  if (!existsSync(STORE_PATH)) {
-    return emptyState();
-  }
-  const raw = readFileSync(STORE_PATH, 'utf8');
-  return JSON.parse(raw) as StoreState;
-}
-
-function saveState(state: StoreState): void {
-  mkdirSync(dirname(STORE_PATH), { recursive: true });
-  writeFileSync(STORE_PATH, JSON.stringify(state, null, 2));
-}
-
-let state = loadState();
-
-function persist(): void {
-  saveState(state);
-}
-
-function createEvent(
+export function createSyncEvent(
   type: SyncEvent['type'],
   board: Board,
   actorUserId: string,
@@ -61,34 +26,30 @@ function createEvent(
   };
 }
 
-export function listBoards(): Board[] {
-  return Object.values(state.boards);
-}
-
-export function getBoard(boardId: string): Board | undefined {
-  return state.boards[boardId];
-}
-
-export function createBoard(board: Board, actorUserId: string): { board: Board; event: SyncEvent } {
+export function applyCreateBoard(
+  boards: Record<string, Board>,
+  board: Board,
+  actorUserId: string,
+): BoardUpdateResult {
   const id = board.id as string;
-  if (state.boards[id]) {
+  if (boards[id]) {
     throw new Error(`Board already exists: ${id}`);
   }
+
   const stored: Board = { ...board, updatedAt: new Date().toISOString() };
-  state.boards[id] = stored;
-  const event = createEvent('board.created', stored, actorUserId);
-  state.events.push(event);
-  persist();
+  boards[id] = stored;
+  const event = createSyncEvent('board.created', stored, actorUserId);
   return { board: stored, event };
 }
 
-export function updateBoard(
+export function applyUpdateBoard(
+  boards: Record<string, Board>,
   boardId: string,
   next: Board,
   actorUserId: string,
   options?: { expectedVersion?: number; forceMotorPlanning?: boolean },
-): { board: Board; event: SyncEvent } {
-  const current = state.boards[boardId];
+): BoardUpdateResult {
+  const current = boards[boardId];
   if (!current) {
     throw new Error(`Board not found: ${boardId}`);
   }
@@ -116,19 +77,18 @@ export function updateBoard(
     version: current.version + 1,
     updatedAt: new Date().toISOString(),
   };
-  state.boards[boardId] = stored;
-  const event = createEvent('board.updated', stored, actorUserId);
-  state.events.push(event);
-  persist();
+  boards[boardId] = stored;
+  const event = createSyncEvent('board.updated', stored, actorUserId);
   return { board: stored, event };
 }
 
-export function importObfBoard(
+export function applyImportObfBoard(
+  boards: Record<string, Board>,
   boardId: string,
   rawObf: string,
   actorUserId: string,
-): { board: Board; event: SyncEvent; warnings: string[] } {
-  const current = getBoard(boardId);
+): ImportObfResult {
+  const current = boards[boardId];
   if (!current) {
     throw new Error(`Board not found: ${boardId}`);
   }
@@ -146,7 +106,7 @@ export function importObfBoard(
     },
   };
 
-  const result = updateBoard(boardId, next, actorUserId, {
+  const result = applyUpdateBoard(boards, boardId, next, actorUserId, {
     expectedVersion: current.version,
     forceMotorPlanning: true,
   });
@@ -154,28 +114,15 @@ export function importObfBoard(
   return { ...result, warnings };
 }
 
-export function exportObfBoard(boardId: string): string {
-  const board = getBoard(boardId);
+export function exportBoardObf(boards: Record<string, Board>, boardId: string): string {
+  const board = boards[boardId];
   if (!board) {
     throw new Error(`Board not found: ${boardId}`);
   }
   return JSON.stringify(voxaBoardToObf(board), null, 2);
 }
 
-export function appendSyncEvents(events: SyncEvent[]): void {
-  state.events.push(...events);
-  if (state.events.length > 5000) {
-    state.events = state.events.slice(-5000);
-  }
-  persist();
-}
-
-export function getRecentEvents(boardId: BoardId, sinceVersion = 0): SyncEvent[] {
-  return state.events.filter((e) => e.boardId === boardId && e.version > sinceVersion);
-}
-
-/** Test helper — reset in-memory store */
-export function resetStoreForTests(): void {
-  state = emptyState();
-  persist();
+export function trimSyncEvents(events: SyncEvent[], max = 5000): SyncEvent[] {
+  if (events.length <= max) return events;
+  return events.slice(-max);
 }

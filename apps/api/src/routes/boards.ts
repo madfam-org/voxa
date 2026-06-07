@@ -1,24 +1,18 @@
 import { Hono } from 'hono';
 import type { Board } from '@voxa/core';
 import { requireEditor } from '../middleware/team-auth.js';
-import {
-  createBoard,
-  exportObfBoard,
-  getBoard,
-  importObfBoard,
-  listBoards,
-  updateBoard,
-} from '../store/board-store.js';
+import { getStore } from '../store/index.js';
 import { broadcastBoardEvent } from '../ws/hub.js';
 
 export const boardRoutes = new Hono();
 
-boardRoutes.get('/', (c) => {
-  return c.json({ boards: listBoards() });
+boardRoutes.get('/', async (c) => {
+  const boards = await getStore().listBoards();
+  return c.json({ boards });
 });
 
-boardRoutes.get('/:boardId', (c) => {
-  const board = getBoard(c.req.param('boardId'));
+boardRoutes.get('/:boardId', async (c) => {
+  const board = await getStore().getBoard(c.req.param('boardId'));
   if (!board) return c.json({ error: 'Board not found' }, 404);
   return c.json(board);
 });
@@ -32,7 +26,7 @@ boardRoutes.post('/', async (c) => {
   const { userId } = c.get('team');
 
   try {
-    const result = createBoard(body, userId);
+    const result = await getStore().createBoard(body, userId);
     broadcastBoardEvent(result.event);
     return c.json(result, 201);
   } catch (err) {
@@ -50,7 +44,7 @@ boardRoutes.put('/:boardId', async (c) => {
   const { userId } = c.get('team');
 
   try {
-    const result = updateBoard(boardId, body, userId, {
+    const result = await getStore().updateBoard(boardId, body, userId, {
       expectedVersion: body.expectedVersion,
       forceMotorPlanning: body.forceMotorPlanning,
     });
@@ -78,7 +72,7 @@ boardRoutes.post('/:boardId/import/obf', async (c) => {
   const { userId } = c.get('team');
 
   try {
-    const result = importObfBoard(boardId, raw, userId);
+    const result = await getStore().importObfBoard(boardId, raw, userId);
     broadcastBoardEvent(result.event);
     return c.json(result);
   } catch (err) {
@@ -90,11 +84,11 @@ boardRoutes.post('/:boardId/import/obf', async (c) => {
   }
 });
 
-boardRoutes.get('/:boardId/export/obf', (c) => {
+boardRoutes.get('/:boardId/export/obf', async (c) => {
   const boardId = c.req.param('boardId');
 
   try {
-    const json = exportObfBoard(boardId);
+    const json = await getStore().exportObfBoard(boardId);
     return c.body(json, 200, {
       'Content-Type': 'application/json',
       'Content-Disposition': `attachment; filename="${boardId}.obf"`,
