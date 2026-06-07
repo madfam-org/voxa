@@ -1,6 +1,6 @@
 # Enclii deployment runbook for Voxa
 
-Voxa deploys to **madfam.io** via Enclii using the [zero-touch contract](https://github.com/madfam-org/enclii/blob/main/docs/guides/ZERO_TOUCH_CONTRACT.md): all manifests, Dockerfiles, and CI live in this repo. Nothing is added to the `enclii` monorepo.
+Voxa deploys to **madfam.io** via Enclii using the [zero-touch contract](https://github.com/madfam-org/enclii/blob/main/docs/guides/ZERO_TOUCH_CONTRACT.md): Dockerfiles, `k8s/`, CI, and `enclii.yaml` live in this repo. ArgoCD registration is via `infra/argocd/projects/voxa/config.json` in the Enclii repo (same pattern as Tulana, bloom-scroll, madfam-site).
 
 ## Architecture
 
@@ -54,11 +54,7 @@ Routing uses Cloudflare Tunnel to cluster services (`http://voxa-web.{namespace}
      --secrets-file ./deploy/secrets.env.example
    ```
 
-5. Staging: create `staging` branch from `main`, run staging workflows, then:
-   ```bash
-   enclii onboard --repo madfam-org/voxa --project voxa \
-     --manifest-path k8s/staging --environment staging --preflight
-   ```
+5. **Staging** — `voxa-staging-services` ArgoCD app tracks branch `staging` and `k8s/staging/` (registered in Enclii `infra/argocd/projects/voxa-staging/config.json`).
 
 ## Day-to-day deploys
 
