@@ -36,7 +36,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: api
-          image: ghcr.io/madfam-org/voxa/voxa-api@sha256:f8c8bf1ab138f1e887f8905020ec942b82357e4e9ce6964f29f3929f672a4dd3
+          image: ghcr.io/madfam-org/voxa/voxa-api@sha256:71d51d97d071caf7c213702f81085554cb4937d6a55579a23dca37fc5568eeaa
           ports:
             - name: http
               containerPort: 8080
