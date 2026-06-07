@@ -54,7 +54,7 @@ Routing uses Cloudflare Tunnel to cluster services (`http://voxa-web.{namespace}
      --secrets-file ./deploy/secrets.env.example
    ```
 
-5. **Staging** — `voxa-staging-services` ArgoCD app tracks branch `staging` and `k8s/staging/` (registered in Enclii `infra/argocd/projects/voxa-staging/config.json`).
+5. **Staging** — `voxa-staging-services` ArgoCD app tracks branch `staging` and `k8s/staging/` (registered at runtime via `POST /v1/admin/onboard/ensure`, not via Enclii `infra/argocd/projects/` entries).
 
 ## Day-to-day deploys
 
@@ -101,6 +101,30 @@ enclii onboard --repo madfam-org/voxa --project voxa --manifest-path k8s/product
 ### Image gate rejects onboarding (`image must be digest-pinned`)
 
 Workload `Deployment` YAML must contain `@sha256:` references, not short names like `voxa-web`. CI updates both `kustomization.yaml` and the deployment files on each build.
+
+### Kyverno blocks sync (`verify-image-signatures`, GHCR DENIED)
+
+Until `ghcr.io/madfam-org/voxa/voxa-web` and `voxa-api` are **public** GitHub Packages, Kyverno keyless verification cannot pull manifests. A temporary `PolicyException` in `k8s/*/signature-policyexception.yaml` (sync-wave `-1`) unblocks rollout.
+
+**Cleanup:** GitHub → madfam-org → Packages → each Voxa image → **Change visibility to public**, then remove the PolicyException manifests and sync.
+
+### Staging HTTPS handshake failure
+
+Cloudflare Universal SSL covers `*.madfam.io` only (one label). Nested names like `voxa.staging.madfam.io` fail TLS. Use single-level staging hosts (`voxa-staging.madfam.io`, etc.) as declared in `enclii.yaml`.
+
+### Lifecycle callbacks no-op
+
+Set `ENCLII_CALLBACK_TOKEN` on the repo (ArgoCD webhook secret — see [DEPLOYMENT_TRACKING.md](https://github.com/madfam-org/enclii/blob/main/docs/guides/DEPLOYMENT_TRACKING.md)):
+
+```bash
+ENCLII_CALLBACK_TOKEN='<token>' ./scripts/deploy/setup-github-secrets.sh
+```
+
+### API pod CrashLoop or `voxa-api.*` returns web 404
+
+- **CrashLoop `Cannot find module '@hono/node-server'`:** API image must use `pnpm deploy` in `apps/api/Dockerfile`.
+- **API hostname serves Next.js:** reconcile tunnel route for `voxa-api*.madfam.io` via Enclii `providers.cloudflare.tunnels-apply` (junction must point at `voxa-api` service on port 80).
+- **Probes fail with running process:** API listens on `LISTEN_HOST=0.0.0.0` (do not use `HOSTNAME`, which Kubernetes sets to the pod name).
 
 ## Storage note (v0.5)
 
