@@ -24,6 +24,8 @@ spec:
         app.kubernetes.io/part-of: voxa
         enclii.dev/managed-by: switchyard
         enclii.dev/environment: staging
+      annotations:
+        kubectl.kubernetes.io/restartedAt: "2026-06-07T08:35:00Z"
     spec:
       imagePullSecrets:
         - name: ghcr-credentials

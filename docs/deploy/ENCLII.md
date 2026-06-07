@@ -162,7 +162,24 @@ The API selects a store driver at startup:
 
 Until `DATABASE_URL` is bound, pods use the file store on an `emptyDir` volume (data lost on restart).
 
-### Managed Postgres addon (recommended)
+### Shared Postgres (recommended for GA)
+
+Most MADFAM apps use logical databases on the shared `data/postgres` cluster (via PgBouncer). This avoids waiting on per-project CloudNativePG addons when CNPG provisioning stalls.
+
+```bash
+ENCLII_TOKEN='…' ./scripts/deploy/provision-shared-postgres.sh
+```
+
+Then roll the API deployment (restart annotation in GitOps or `kubectl rollout restart deployment/voxa-api -n voxa`) and verify:
+
+```bash
+curl -sS https://voxa-api.madfam.io/health/ready
+# {"status":"ready","service":"voxa-api","store":"postgres"}
+```
+
+Credentials live in `voxa-secrets` (`DATABASE_URL`); never commit passwords. Platform ops should add `voxa` / `voxa_staging` to `pgbouncer-config` when PgBouncer RBAC is fixed, then switch the URL host to `pgbouncer.data.svc.cluster.local:6432`.
+
+### Managed Postgres addon (isolated CNPG)
 
 ```bash
 # Create addon (Enclii UI or API)
