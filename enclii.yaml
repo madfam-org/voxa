@@ -14,19 +14,11 @@ spec:
   #   voxa-staging.madfam.io
   #   voxa-app-staging.madfam.io
   #   voxa-api-staging.madfam.io
-  domains:
-    - name: voxa.madfam.io
-      environment: production
-    - name: voxa-app.madfam.io
-      environment: production
-    - name: voxa-api.madfam.io
-      environment: production
-    - name: voxa-staging.madfam.io
-      environment: staging
-    - name: voxa-app-staging.madfam.io
-      environment: staging
-    - name: voxa-api-staging.madfam.io
-      environment: staging
+  #
+  # Routing/DNS: declared here for documentation only. Live tunnel routes and
+  # DNS are managed via Enclii junctions (voxa-web / voxa-api services). Do not
+  # re-add spec.domains — onboarding yaml domain provisioning uses the single
+  # metadata.name service and will overwrite junction routes for voxa-api.*.
   network:
     services:
       - name: voxa-web

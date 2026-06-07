@@ -108,9 +108,20 @@ Until `ghcr.io/madfam-org/voxa/voxa-web` and `voxa-api` are **public** GitHub Pa
 
 **Cleanup:** GitHub → madfam-org → Packages → each Voxa image → **Change visibility to public**, then remove the PolicyException manifests and sync.
 
+### API pod CrashLoop
+
+- **`Cannot find module '@hono/node-server'`:** API image must use `pnpm deploy` in `apps/api/Dockerfile`.
+- **Probes fail with running process:** API listens on `LISTEN_HOST=0.0.0.0` (do not use `HOSTNAME`, which Kubernetes sets to the pod name).
+
+### API hostname serves Next.js (`voxa-api.*` returns web 404)
+
+Multi-service apps must use **Enclii junctions** for tunnel routes (see Tulana). Do not declare `spec.domains` in `enclii.yaml` — onboarding yaml provisioning targets the single `metadata.name` service and can overwrite `voxa-api.*` routes to the web backend.
+
+**Fix:** `providers.cloudflare.tunnels-apply` for project `voxa` with target `voxa-api.madfam.io`.
+
 ### Staging HTTPS handshake failure
 
-Cloudflare Universal SSL covers `*.madfam.io` only (one label). Nested names like `voxa.staging.madfam.io` fail TLS. Use single-level staging hosts (`voxa-staging.madfam.io`, etc.) as declared in `enclii.yaml`.
+Cloudflare Universal SSL covers `*.madfam.io` only (one label). Nested names like `voxa.staging.madfam.io` fail TLS. Use single-level staging hosts (`voxa-staging.madfam.io`, etc.).
 
 ### Lifecycle callbacks no-op
 
@@ -119,12 +130,6 @@ Set `ENCLII_CALLBACK_TOKEN` on the repo (ArgoCD webhook secret — see [DEPLOYME
 ```bash
 ENCLII_CALLBACK_TOKEN='<token>' ./scripts/deploy/setup-github-secrets.sh
 ```
-
-### API pod CrashLoop or `voxa-api.*` returns web 404
-
-- **CrashLoop `Cannot find module '@hono/node-server'`:** API image must use `pnpm deploy` in `apps/api/Dockerfile`.
-- **API hostname serves Next.js:** reconcile tunnel route for `voxa-api*.madfam.io` via Enclii `providers.cloudflare.tunnels-apply` (junction must point at `voxa-api` service on port 80).
-- **Probes fail with running process:** API listens on `LISTEN_HOST=0.0.0.0` (do not use `HOSTNAME`, which Kubernetes sets to the pod name).
 
 ## Storage note (v0.5)
 
