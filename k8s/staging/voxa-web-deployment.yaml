@@ -17,6 +17,8 @@ spec:
       app: voxa-web
   template:
     metadata:
+      annotations:
+        kubectl.kubernetes.io/restartedAt: "2026-06-07T08:45:00Z"
       labels:
         app: voxa-web
         app.kubernetes.io/name: voxa-web

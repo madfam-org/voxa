@@ -20,7 +20,9 @@ Track progress toward general availability at `voxa.madfam.io`.
 - [x] PostgreSQL store + migrations (`DATABASE_URL`)
 - [x] `/health/ready` with store ping
 - [x] Janua SSO scaffold (web OIDC + API JWT verification)
-- [ ] Janua OAuth client registered + secrets applied in prod
+- [ ] Janua OAuth client registered + `OIDC_CLIENT_SECRET` in prod secrets
+- [x] Janua API secrets scaffold in `voxa-secrets` (issuer, audience, session cookie)
+- [x] `NEXT_PUBLIC_OIDC_CLIENT_ID` GitHub repo variable (`voxa`)
 - [ ] `JANUA_AUTH_REQUIRED=true` after OIDC live
 - [x] Board ownership / tenant isolation (`owner_user_id`, route ACLs)
 - [x] Dhanam billing + entitlements (`/v1/billing/entitlement`, board limits)
