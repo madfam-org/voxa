@@ -17,7 +17,9 @@ Track progress toward general availability at `voxa.madfam.io`.
 
 - [x] PostgreSQL store + migrations (`DATABASE_URL`)
 - [x] `/health/ready` with store ping
-- [ ] Janua SSO (replace header auth)
+- [x] Janua SSO scaffold (web OIDC + API JWT verification)
+- [ ] Janua OAuth client registered + secrets applied in prod
+- [ ] `JANUA_AUTH_REQUIRED=true` after OIDC live
 - [ ] Board membership / tenant isolation
 - [ ] Dhanam billing + entitlements
 - [ ] Production AI MVP (consent-gated LLM proxy)

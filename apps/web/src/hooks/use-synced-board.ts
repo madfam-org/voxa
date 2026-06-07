@@ -60,9 +60,40 @@ export function useSyncedBoard(role: TeamRole) {
     });
   }, []);
 
+  const [accessToken, setAccessToken] = useState<string | undefined>();
+  const [sessionUserId, setSessionUserId] = useState<string>('web-user');
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/auth/session');
+        if (!res.ok) return;
+        const body = (await res.json()) as {
+          accessToken?: string;
+          user?: { id?: string };
+        };
+        if (cancelled) return;
+        if (body.accessToken) setAccessToken(body.accessToken);
+        if (body.user?.id) setSessionUserId(body.user.id);
+      } catch {
+        /* unauthenticated or OIDC not configured */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const client = useMemo(
-    () => createVoxaClient({ baseUrl: API_URL, userId: 'web-user', role }),
-    [role],
+    () =>
+      createVoxaClient({
+        baseUrl: API_URL,
+        userId: sessionUserId,
+        role,
+        accessToken,
+      }),
+    [accessToken, role, sessionUserId],
   );
 
   const flushPendingSave = useCallback(async () => {

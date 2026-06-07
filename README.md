@@ -74,6 +74,7 @@ See [docs/deploy/ENCLII.md](./docs/deploy/ENCLII.md) for CI, onboarding, and ope
 - [Product Requirements Document](./PRD.md) — full product specification
 - [Architecture](./docs/architecture.md) — system design and platform targets
 - [Data model](./docs/data-model.md) — PostgreSQL schema and migrations
+- [Janua authentication](./docs/auth/JANUA.md) — SSO for web and API
 - [GA checklist](./docs/launch/GA_CHECKLIST.md) — commercial launch criteria
 - [Enclii Deployment](./docs/deploy/ENCLII.md) — staging/production on madfam.io via Enclii
 - [Accessibility Standards](./docs/accessibility.md) — WCAG 2.2 compliance details

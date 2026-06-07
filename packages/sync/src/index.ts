@@ -4,6 +4,7 @@ export interface VoxaClientOptions {
   baseUrl: string;
   userId?: string;
   role?: TeamRole;
+  accessToken?: string;
 }
 
 export interface ObfImportResult extends BoardUpdateResult {
@@ -15,11 +16,18 @@ export type SyncMessage =
   | { type: 'sync'; event: SyncEvent };
 
 function teamHeaders(options: VoxaClientOptions): HeadersInit {
-  return {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    'X-Voxa-User-Id': options.userId ?? 'dev-user',
-    'X-Voxa-Role': options.role ?? 'editor',
   };
+
+  if (options.accessToken) {
+    headers.Authorization = `Bearer ${options.accessToken}`;
+    return headers;
+  }
+
+  headers['X-Voxa-User-Id'] = options.userId ?? 'dev-user';
+  headers['X-Voxa-Role'] = options.role ?? 'editor';
+  return headers;
 }
 
 export class VoxaClient {
