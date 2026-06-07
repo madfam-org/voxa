@@ -1,0 +1,38 @@
+{
+  "name": "voxa",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Next-generation Augmentative and Alternative Communication (AAC) platform — cross-platform, GLP-native, AI-powered, and open by design.",
+  "author": "MADFAM <hello@madfam.io>",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/madfam-org/voxa"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo dev",
+    "dev:web": "pnpm --filter @voxa/web dev",
+    "dev:api": "pnpm --filter @voxa/api dev",
+    "build": "turbo build",
+    "test": "turbo test",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "clean": "turbo clean && rm -rf node_modules",
+    "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\""
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "prettier": "^3.4.2",
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@9.15.0"
+}
