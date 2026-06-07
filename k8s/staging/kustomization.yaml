@@ -6,6 +6,7 @@ namespace: voxa-staging
 resources:
 - namespace.yaml
 - signature-policyexception.yaml
+- network-policies.yaml
 - voxa-api-deployment.yaml
 - voxa-api-service.yaml
 - voxa-web-deployment.yaml

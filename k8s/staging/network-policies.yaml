@@ -1,0 +1,22 @@
+# Allow Voxa API pods to reach shared Postgres in the data namespace.
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-data-egress
+  namespace: voxa-staging
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/part-of: voxa
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: data
+      ports:
+        - port: 5432
+          protocol: TCP
+        - port: 6432
+          protocol: TCP

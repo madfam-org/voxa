@@ -7,7 +7,7 @@ Track progress toward general availability at `voxa.madfam.io`.
 - [ ] GHCR packages public; Kyverno `PolicyException` removed
 - [ ] `ENCLII_CALLBACK_TOKEN` set on `madfam-org/voxa`
 - [ ] GitHub webhook → `https://api.enclii.dev/v1/webhooks/github`
-- [x] `DATABASE_URL` applied via shared Postgres (`data/postgres`, prod + staging)
+- [x] `DATABASE_URL` applied via shared Postgres (`data/postgres`, prod + staging live)
 - [ ] PgBouncer config includes `voxa` / `voxa_staging` (platform RBAC fix)
 - [ ] `REDIS_URL` applied (WebSocket multi-replica — post-GA scaling)
 - [x] Post-deploy smoke tests in deploy workflows (prod + staging)
@@ -20,7 +20,9 @@ Track progress toward general availability at `voxa.madfam.io`.
 - [x] PostgreSQL store + migrations (`DATABASE_URL`)
 - [x] `/health/ready` with store ping
 - [x] Janua SSO scaffold (web OIDC + API JWT verification)
-- [ ] Janua OAuth client registered + secrets applied in prod
+- [ ] Janua OAuth client registered + `OIDC_CLIENT_SECRET` in prod secrets
+- [x] Janua API secrets scaffold in `voxa-secrets` (issuer, audience, session cookie)
+- [x] `NEXT_PUBLIC_OIDC_CLIENT_ID` GitHub repo variable (`voxa`)
 - [ ] `JANUA_AUTH_REQUIRED=true` after OIDC live
 - [x] Board ownership / tenant isolation (`owner_user_id`, route ACLs)
 - [x] Dhanam billing + entitlements (`/v1/billing/entitlement`, board limits)

@@ -71,9 +71,25 @@ JANUA_ADMIN_EMAIL='…' JANUA_ADMIN_PASSWORD='…' ./scripts/deploy/register-jan
 
 ### Bind managed Postgres
 
+Prefer shared Postgres for GA:
+
+```bash
+ENCLII_TOKEN='…' ./scripts/deploy/provision-shared-postgres.sh
+```
+
+Dedicated CloudNativePG addon (when provisioning succeeds):
+
 ```bash
 ENCLII_TOKEN='…' ./scripts/deploy/bind-database-addon.sh \
-  voxa c3ea79f2-e05e-4567-8f10-d9d98a0fc2dd 5df18423-044a-4dde-88a7-721727f6974b voxa-services
+  voxa <addon_id> <voxa-api-service-id> voxa-services
+```
+
+Full operator sweep:
+
+```bash
+ENCLII_TOKEN='…' JANUA_ADMIN_EMAIL='…' JANUA_ADMIN_PASSWORD='…' \
+  ENCLII_CALLBACK_TOKEN='…' ENCLII_WEBHOOK_SECRET='…' \
+  ./scripts/deploy/complete-ga-operator.sh
 ```
 
 ## References
