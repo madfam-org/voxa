@@ -49,14 +49,26 @@ else
   echo "==> 5/5 Skip webhook (see enclii/docs/guides/WEBHOOK_SETUP_GUIDE.md)"
 fi
 
+if [[ -n "${ENCLII_TOKEN:-}" ]]; then
+  echo "==> 6/6 Restart API if auth not enforced"
+  ready="$(curl -sS https://voxa-api.madfam.io/health/ready || true)"
+  if echo "${ready}" | grep -q '"authEnforced":true'; then
+    echo "authEnforced already true on prod"
+  else
+    "${ROOT}/scripts/deploy/restart-voxa-api.sh" all
+  fi
+else
+  echo "==> 6/6 Skip API restart (set ENCLII_TOKEN)"
+fi
+
 cat <<'EOF'
 
 Manual platform items:
 - GHCR packages public → remove k8s/*/signature-policyexception.yaml
 - PgBouncer: add voxa / voxa_staging to pgbouncer-config (switchyard-api RBAC)
-- Flip JANUA_AUTH_REQUIRED=true after OIDC_CLIENT_SECRET is in voxa-secrets
 
 Verify:
   curl -sS https://voxa-api.madfam.io/health/ready
+  curl -sS -o /dev/null -w '%{http_code}\n' https://voxa-api.madfam.io/v1/boards
   open https://voxa.madfam.io/auth/signin
 EOF
