@@ -160,7 +160,27 @@ The API selects a store driver at startup:
    # {"status":"ready","service":"voxa-api","store":"postgres"}
    ```
 
-Until `DATABASE_URL` is applied, pods use the file store on an `emptyDir` volume (data lost on restart). **Apply PostgreSQL before commercial GA.**
+Until `DATABASE_URL` is bound, pods use the file store on an `emptyDir` volume (data lost on restart).
+
+### Managed Postgres addon (recommended)
+
+```bash
+# Create addon (Enclii UI or API)
+enclii addon create voxa --project voxa --plan standard-0 --engine postgres
+
+# Wait until status=ready, then bind to voxa-api
+enclii addon bind <addon_id> --service <voxa-api-service-id> --env-var DATABASE_URL
+
+# Sync workloads
+enclii ops apps sync --application voxa-services
+```
+
+Production addon `voxa` (id `c3ea79f2-e05e-4567-8f10-d9d98a0fc2dd`) was provisioned via Enclii; bind once status is **ready**, then verify:
+
+```bash
+curl -sS https://voxa-api.madfam.io/health/ready
+# expect store: postgres
+```
 
 Schema reference: [docs/data-model.md](../data-model.md).
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { getAiConsent } from '@/components/consent-banner';
 import type { Board, BoardButton } from '@voxa/core';
 import { stubAiService, type SymbolPrediction, type TextPrediction } from '@voxa/ai';
 
@@ -15,6 +16,12 @@ export function usePredictions(
   const partialText = utterance.join(' ');
 
   useEffect(() => {
+    if (!getAiConsent()) {
+      setTextPredictions([]);
+      setSymbolPredictions([]);
+      return;
+    }
+
     let cancelled = false;
 
     (async () => {

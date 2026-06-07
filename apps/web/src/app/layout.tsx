@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { ConsentBanner } from '@/components/consent-banner';
 import { ServiceWorkerRegistration } from '@/components/service-worker-registration';
 
 export const metadata: Metadata = {
@@ -18,6 +19,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }):
       <body style={{ margin: 0, minHeight: '100dvh' }}>
         <ServiceWorkerRegistration />
         {children}
+        <ConsentBanner />
       </body>
     </html>
   );

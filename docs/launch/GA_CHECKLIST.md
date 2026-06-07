@@ -7,7 +7,7 @@ Track progress toward general availability at `voxa.madfam.io`.
 - [ ] GHCR packages public; Kyverno `PolicyException` removed
 - [ ] `ENCLII_CALLBACK_TOKEN` set on `madfam-org/voxa`
 - [ ] GitHub webhook → `https://api.enclii.dev/v1/webhooks/github`
-- [ ] `DATABASE_URL` applied via Enclii secrets (PostgreSQL live)
+- [ ] `DATABASE_URL` bound via Enclii addon (prod addon provisioned; bind when ready)
 - [ ] `REDIS_URL` applied (WebSocket multi-replica — post-GA scaling)
 - [ ] Post-deploy smoke tests green in CI
 - [ ] Backup/restore runbook tested (`docs/ops/` — TBD)
@@ -27,10 +27,10 @@ Track progress toward general availability at `voxa.madfam.io`.
 
 ## Legal & trust
 
-- [ ] Privacy policy live
-- [ ] Terms of service live
-- [ ] Accessibility statement
-- [ ] Consent banner for AI telemetry
+- [x] Privacy policy live (`/legal/privacy`)
+- [x] Terms of service live (`/legal/terms`)
+- [x] Accessibility statement live (`/legal/accessibility`)
+- [x] Consent banner for AI telemetry
 
 ## Quality
 

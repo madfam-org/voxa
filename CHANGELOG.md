@@ -6,6 +6,7 @@ All notable changes to Voxa are documented here.
 
 ### Added
 
+- Legal pages: privacy, terms, accessibility statement, and AI consent banner
 - Janua SSO: web OIDC sign-in flow, session API, API Bearer JWT verification
 - PostgreSQL persistence via Drizzle ORM (`DATABASE_URL`); automatic migrations on API startup
 - Store abstraction with file-backed fallback for local development
