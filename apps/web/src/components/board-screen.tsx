@@ -234,6 +234,10 @@ export function BoardScreen(): React.ReactNode {
           Settings
         </button>
 
+        <a href="/auth/signin" style={{ ...secondaryBtn, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
+          Sign in
+        </a>
+
         <div style={utteranceBarStyle}>
           {utterance.length ? utterance.join(' ') : 'Tap buttons to build a message…'}
         </div>

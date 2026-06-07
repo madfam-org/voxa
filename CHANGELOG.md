@@ -6,6 +6,7 @@ All notable changes to Voxa are documented here.
 
 ### Added
 
+- Janua SSO: web OIDC sign-in flow, session API, API Bearer JWT verification
 - PostgreSQL persistence via Drizzle ORM (`DATABASE_URL`); automatic migrations on API startup
 - Store abstraction with file-backed fallback for local development
 - `/health/ready` probe with database connectivity check
