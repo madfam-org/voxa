@@ -4,19 +4,29 @@ metadata:
   name: voxa
   project: voxa
 spec:
+  # Canonical MADFAM domain pattern (production):
+  #   voxa.madfam.io      — platform root (AAC communicator web)
+  #   voxa-app.madfam.io  — explicit app entry (same web service)
+  #   voxa-api.madfam.io  — cloud sync + AI API
   runtime:
     port: 8080
   domains:
-    - name: voxa.enclii.dev
+    - name: voxa.madfam.io
       environment: production
       port: 3000
-    - name: api.voxa.enclii.dev
+    - name: voxa-app.madfam.io
+      environment: production
+      port: 3000
+    - name: voxa-api.madfam.io
       environment: production
       port: 8080
-    - name: voxa.staging.enclii.dev
+    - name: voxa.staging.madfam.io
       environment: staging
       port: 3000
-    - name: api.staging.voxa.enclii.dev
+    - name: voxa-app.staging.madfam.io
+      environment: staging
+      port: 3000
+    - name: voxa-api.staging.madfam.io
       environment: staging
       port: 8080
   network:
@@ -40,15 +50,21 @@ spec:
   status:
     enabled: true
     entries:
-      - name: Voxa Web
-        url: https://voxa.enclii.dev/api/health
-        href: https://voxa.enclii.dev
+      - name: Voxa
+        url: https://voxa.madfam.io/api/health
+        href: https://voxa.madfam.io
         group: Voxa
         family: AAC Platform
-        description: AAC communication board (web)
+        description: AAC communication platform (web)
+      - name: Voxa App
+        url: https://voxa-app.madfam.io/api/health
+        href: https://voxa-app.madfam.io
+        group: Voxa
+        family: AAC Platform
+        description: AAC communicator web app
       - name: Voxa API
-        url: https://api.voxa.enclii.dev/health
-        href: https://api.voxa.enclii.dev
+        url: https://voxa-api.madfam.io/health
+        href: https://voxa-api.madfam.io
         group: Voxa
         family: AAC Platform
         description: Cloud sync and AI API

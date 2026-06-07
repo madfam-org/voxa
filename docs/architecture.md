@@ -64,7 +64,7 @@ Voxa is a TypeScript monorepo targeting five client surfaces (Web, iOS, Android,
 
 ## Deployment (Enclii)
 
-Voxa ships to **enclii.dev** via the zero-touch model: Dockerfiles, `k8s/`, and GitHub Actions live in this repo; ArgoCD and Cloudflare Tunnel are managed by Enclii.
+Voxa ships to **madfam.io** via Enclii (zero-touch model): Dockerfiles, `k8s/`, and GitHub Actions live in this repo; ArgoCD and Cloudflare Tunnel are managed by Enclii.
 
 ```
 push main    → CI → ghcr.io/madfam-org/voxa/* → digest commit → k8s/production

@@ -49,7 +49,7 @@ jobs:
           file: apps/web/Dockerfile
           push: true
           build-args: |
-            NEXT_PUBLIC_API_URL=https://api.staging.voxa.enclii.dev
+            NEXT_PUBLIC_API_URL=https://voxa-api.staging.madfam.io
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:staging-${{ github.sha }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:staging

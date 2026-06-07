@@ -20,7 +20,7 @@ RUN pnpm install --frozen-lockfile
 FROM base AS builder
 COPY --from=deps /app/ ./
 COPY . .
-ARG NEXT_PUBLIC_API_URL=https://api.voxa.enclii.dev
+ARG NEXT_PUBLIC_API_URL=https://voxa-api.madfam.io
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 RUN pnpm turbo build --filter=@voxa/web
 

@@ -49,7 +49,7 @@ spec:
             - name: NEXT_TELEMETRY_DISABLED
               value: "1"
             - name: NEXT_PUBLIC_API_URL
-              value: "https://api.voxa.enclii.dev"
+              value: "https://voxa-api.madfam.io"
           resources:
             requests:
               cpu: 100m

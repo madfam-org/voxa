@@ -60,12 +60,12 @@ pnpm dev:mobile   # Expo app (iOS / Android / simulator)
 
 On web, tap **I** → **want** to see AI prediction chips. Switch to **Editor (SLP)** for OBF editing, or **Settings** for CVI themes and switch scanning.
 
-### Deployed environments (Enclii)
+### Deployed environments (Enclii / madfam.io)
 
-| Environment | Web | API |
-|-------------|-----|-----|
-| Production | [voxa.enclii.dev](https://voxa.enclii.dev) | [api.voxa.enclii.dev](https://api.voxa.enclii.dev) |
-| Staging | [voxa.staging.enclii.dev](https://voxa.staging.enclii.dev) | [api.staging.voxa.enclii.dev](https://api.staging.voxa.enclii.dev) |
+| Environment | Platform | App | API |
+|-------------|----------|-----|-----|
+| Production | [voxa.madfam.io](https://voxa.madfam.io) | [voxa-app.madfam.io](https://voxa-app.madfam.io) | [voxa-api.madfam.io](https://voxa-api.madfam.io) |
+| Staging | [voxa.staging.madfam.io](https://voxa.staging.madfam.io) | [voxa-app.staging.madfam.io](https://voxa-app.staging.madfam.io) | [voxa-api.staging.madfam.io](https://voxa-api.staging.madfam.io) |
 
 See [docs/deploy/ENCLII.md](./docs/deploy/ENCLII.md) for CI, onboarding, and operator steps.
 
@@ -73,7 +73,7 @@ See [docs/deploy/ENCLII.md](./docs/deploy/ENCLII.md) for CI, onboarding, and ope
 
 - [Product Requirements Document](./PRD.md) — full product specification
 - [Architecture](./docs/architecture.md) — system design and platform targets
-- [Enclii Deployment](./docs/deploy/ENCLII.md) — staging/production on enclii.dev
+- [Enclii Deployment](./docs/deploy/ENCLII.md) — staging/production on madfam.io via Enclii
 - [Accessibility Standards](./docs/accessibility.md) — WCAG 2.2 compliance details
 - [Linguistic Framework](./docs/linguistic-framework.md) — GLP, motor planning, Fitzgerald Key
 - [AI Roadmap](./docs/ai-roadmap.md) — LLM, PictoBERT, symbol generation, TTS
