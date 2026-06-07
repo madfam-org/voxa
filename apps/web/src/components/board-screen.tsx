@@ -3,7 +3,7 @@
 import { useCallback, useState } from 'react';
 import type { BoardButton, PartOfSpeechTag, TeamRole } from '@voxa/core';
 import { fitzgeraldColor, type PartOfSpeech } from '@voxa/vocabulary';
-import { AacButton, BoardGrid } from '@voxa/ui';
+import { AacButton, BoardGrid, CVI_THEMES, themeStyles } from '@voxa/ui';
 import {
   buttonBorderColor,
   buttonLabel,
@@ -12,7 +12,11 @@ import {
   posOptions,
   useObfFileInput,
 } from '@/lib/board-utils';
+import { useCommunicatorSettings } from '@/hooks/use-communicator-settings';
+import { useEyeDwellByButton } from '@/hooks/use-eye-dwell';
+import { useSwitchScan } from '@/hooks/use-switch-scan';
 import { useSyncedBoard } from '@/hooks/use-synced-board';
+import { SettingsPanel } from '@/components/settings-panel';
 
 const headerBtn: React.CSSProperties = {
   background: '#2563eb',
@@ -37,20 +41,63 @@ export function BoardScreen() {
   const [utterance, setUtterance] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
-  const { board, setBoard, syncStatus, error, warnings, saveBoard, importObf, exportObf, isEditor } =
-    useSyncedBoard(role);
+  const { settings, setSettings } = useCommunicatorSettings();
+  const {
+    board,
+    setBoard,
+    syncStatus,
+    error,
+    warnings,
+    pendingSave,
+    saveBoard,
+    importObf,
+    exportObf,
+    isEditor,
+  } = useSyncedBoard(role);
 
-  const activate = useCallback((btn: BoardButton) => {
-    if (isEditor && editingId) return;
-    const text = buttonSpeech(btn);
-    setUtterance((prev) => [...prev, text]);
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = btn.locale;
-      window.speechSynthesis.speak(u);
-    }
-  }, [isEditor, editingId]);
+  const sorted = [...board.grid.buttons].sort(
+    (a, b) => a.position.row - b.position.row || a.position.column - b.position.column,
+  );
+
+  const activate = useCallback(
+    (btn: BoardButton) => {
+      if (isEditor && editingId) return;
+      const text = buttonSpeech(btn);
+      setUtterance((prev) => [...prev, text]);
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = btn.locale;
+        window.speechSynthesis.speak(u);
+      }
+    },
+    [isEditor, editingId],
+  );
+
+  const switchScanEnabled = settings.accessMode === 'switch' && !isEditor;
+  const eyeDwellEnabled = settings.accessMode === 'eye-tracking' && !isEditor;
+
+  const { isHighlighted, liveRef } = useSwitchScan({
+    enabled: switchScanEnabled,
+    rows: board.grid.rows,
+    columns: board.grid.columns,
+    buttons: sorted,
+    intervalMs: settings.switchIntervalMs,
+    order: settings.switchOrder,
+    auditoryHighlight: settings.auditoryScanHighlight,
+    onSelect: activate,
+    getLabel: buttonLabel,
+  });
+
+  const { onEnter, onLeave, dwellProgressFor } = useEyeDwellByButton(
+    eyeDwellEnabled,
+    settings.eyeDwellMs,
+    (buttonId) => {
+      const btn = sorted.find((b) => (b.id as string) === buttonId);
+      if (btn) activate(btn);
+    },
+  );
 
   const speakAll = useCallback(() => {
     const text = utterance.join(' ');
@@ -109,21 +156,38 @@ export function BoardScreen() {
     });
   };
 
-  const sorted = [...board.grid.buttons].sort(
-    (a, b) => a.position.row - b.position.row || a.position.column - b.position.column,
-  );
-
+  const theme = settings.cviTheme;
+  const shellStyle = themeStyles(theme);
   const syncLabel =
-    syncStatus === 'live' ? '● Live' : syncStatus === 'connecting' ? '… Connecting' : '○ Offline';
+    syncStatus === 'live'
+      ? pendingSave
+        ? '● Live (save queued)'
+        : '● Live'
+      : syncStatus === 'connecting'
+        ? '… Connecting'
+        : '○ Offline';
+
+  const handleButtonPress = (btn: BoardButton) => {
+    if (isEditor) {
+      setEditingId(btn.id as string);
+      return;
+    }
+    if (settings.accessMode === 'touch') {
+      activate(btn);
+    }
+  };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
+    <div style={{ ...shellStyle, display: 'flex', flexDirection: 'column', height: '100dvh' }}>
       {obfInput}
+      <div ref={liveRef} aria-live="polite" aria-atomic="true" style={visuallyHidden} />
+
       <header
         style={{
           padding: '12px 16px',
-          background: '#0a0a0a',
-          color: '#f5f5f5',
+          background: CVI_THEMES[theme].background,
+          color: CVI_THEMES[theme].foreground,
+          borderBottom: `1px solid ${CVI_THEMES[theme].buttonBorder}`,
           display: 'flex',
           alignItems: 'center',
           gap: 12,
@@ -132,14 +196,19 @@ export function BoardScreen() {
       >
         <strong style={{ fontSize: '1.125rem' }}>Voxa</strong>
         <span style={{ opacity: 0.7, fontSize: '0.875rem' }}>{board.name}</span>
-        <span style={{ fontSize: '0.75rem', color: syncStatus === 'live' ? '#4ade80' : '#a3a3a3' }}>
+        <span
+          style={{
+            fontSize: '0.75rem',
+            color: syncStatus === 'live' ? '#4ade80' : CVI_THEMES[theme].foreground,
+          }}
+        >
           {syncLabel} v{board.version}
         </span>
 
         <select
           value={role}
           onChange={(e) => setRole(e.target.value as TeamRole)}
-          style={{ background: '#171717', color: '#f5f5f5', border: '1px solid #404040', borderRadius: 6, padding: '6px 8px' }}
+          style={selectStyle}
           aria-label="Team role"
         >
           <option value="communicator">Communicator</option>
@@ -147,16 +216,11 @@ export function BoardScreen() {
           <option value="admin">Admin</option>
         </select>
 
-        <div
-          style={{
-            flex: 1,
-            minWidth: 200,
-            minHeight: 40,
-            background: '#171717',
-            borderRadius: 8,
-            padding: '8px 12px',
-          }}
-        >
+        <button type="button" onClick={() => setSettingsOpen((v) => !v)} style={secondaryBtn}>
+          Settings
+        </button>
+
+        <div style={utteranceBarStyle}>
           {utterance.length ? utterance.join(' ') : 'Tap buttons to build a message…'}
         </div>
 
@@ -190,18 +254,35 @@ export function BoardScreen() {
       )}
 
       <main style={{ flex: 1, minHeight: 0, display: 'flex' }}>
-        <BoardGrid rows={board.grid.rows} columns={board.grid.columns} theme="cvi-dark" targetScale={1.2}>
+        <BoardGrid
+          rows={board.grid.rows}
+          columns={board.grid.columns}
+          theme={theme}
+          targetScale={settings.targetScale}
+        >
           {sorted.map((btn) => (
             <AacButton
               key={btn.id as string}
               label={buttonLabel(btn)}
               borderColor={buttonBorderColor(btn)}
-              targetScale={1.2}
-              onClick={() => (isEditor ? setEditingId(btn.id as string) : activate(btn))}
-              onDoubleClick={() => !isEditor && activate(btn)}
+              targetScale={settings.targetScale}
+              hideSymbol={settings.hideSymbols}
+              scanHighlighted={isHighlighted(btn)}
+              dwellProgress={dwellProgressFor(btn.id as string)}
+              onClick={() => handleButtonPress(btn)}
+              onPointerEnter={() => onEnter(btn.id as string)}
+              onPointerLeave={onLeave}
             />
           ))}
         </BoardGrid>
+
+        {settingsOpen && (
+          <SettingsPanel
+            settings={settings}
+            onChange={setSettings}
+            onClose={() => setSettingsOpen(false)}
+          />
+        )}
 
         {isEditor && editingId && (
           <EditorPanel
@@ -294,6 +375,36 @@ function EditorPanel({
     </aside>
   );
 }
+
+const selectStyle: React.CSSProperties = {
+  background: '#171717',
+  color: '#f5f5f5',
+  border: '1px solid #404040',
+  borderRadius: 6,
+  padding: '6px 8px',
+  minHeight: 38,
+};
+
+const utteranceBarStyle: React.CSSProperties = {
+  flex: 1,
+  minWidth: 200,
+  minHeight: 40,
+  background: '#171717',
+  borderRadius: 8,
+  padding: '8px 12px',
+};
+
+const visuallyHidden: React.CSSProperties = {
+  position: 'absolute',
+  width: 1,
+  height: 1,
+  padding: 0,
+  margin: -1,
+  overflow: 'hidden',
+  clip: 'rect(0,0,0,0)',
+  whiteSpace: 'nowrap',
+  border: 0,
+};
 
 const labelStyle: React.CSSProperties = {
   display: 'flex',

@@ -51,6 +51,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@voxa/access':
+        specifier: workspace:*
+        version: link:../../packages/access
       '@voxa/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -88,6 +91,9 @@ importers:
 
   packages/access:
     devDependencies:
+      tsx:
+        specifier: ^4.19.2
+        version: 4.22.4
       typescript:
         specifier: ^5.7.2
         version: 5.9.3

@@ -57,9 +57,8 @@ Voxa is a TypeScript monorepo targeting five client surfaces (Web, iOS, Android,
 | Phase | Deliverable |
 |-------|-------------|
 | **0.1** (current) | Web prototype, core types, OBF skeleton, API scaffold |
-| **0.2** (current) | Cloud sync, team editing, OBF import/export |
-| **0.3** | Switch scanning + CVI themes in production web |
-| **0.4** | Mobile (Expo) + offline cache |
+| **0.3** (current) | Switch scanning, CVI themes, eye dwell, offline board cache |
+| **0.4** | Mobile (Expo) + service worker sync |
 | **0.5** | LLM prediction + PictoBERT integration |
 | **1.0** | Clinical pilot, bilingual TTS, desktop shells |
 

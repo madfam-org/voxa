@@ -54,7 +54,7 @@ pnpm dev:api      # sync API on http://localhost:4000
 pnpm dev:web      # board UI on http://localhost:3000
 ```
 
-Visit [http://localhost:3000](http://localhost:3000). Switch role to **Editor (SLP)** to import/export OBF, edit buttons, and save to the cloud API.
+Switch role to **Editor (SLP)** to import/export OBF and edit vocabulary. Open **Settings** for CVI themes, switch scanning, or eye-tracking dwell access.
 
 ## Documentation
 

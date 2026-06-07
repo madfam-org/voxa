@@ -1,6 +1,6 @@
 {
   "name": "@voxa/web",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "scripts": {
     "dev": "next dev --port 3000",
@@ -10,6 +10,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@voxa/access": "workspace:*",
     "@voxa/core": "workspace:*",
     "@voxa/sync": "workspace:*",
     "@voxa/ui": "workspace:*",
