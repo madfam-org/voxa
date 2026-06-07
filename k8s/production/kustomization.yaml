@@ -4,19 +4,20 @@ kind: Kustomization
 namespace: voxa
 
 resources:
-  - namespace.yaml
-  - voxa-api-deployment.yaml
-  - voxa-api-service.yaml
-  - voxa-web-deployment.yaml
-  - voxa-web-service.yaml
+- namespace.yaml
+- voxa-api-deployment.yaml
+- voxa-api-service.yaml
+- voxa-web-deployment.yaml
+- voxa-web-service.yaml
 
 labels:
-  - pairs:
-      app.kubernetes.io/part-of: voxa
-      enclii.dev/managed-by: switchyard
+- pairs:
+    app.kubernetes.io/part-of: voxa
+    enclii.dev/managed-by: switchyard
 
 images:
-  - name: voxa-api
-    newName: ghcr.io/madfam-org/voxa/voxa-api
-  - name: voxa-web
-    newName: ghcr.io/madfam-org/voxa/voxa-web
+- name: voxa-api
+  newName: ghcr.io/madfam-org/voxa/voxa-api
+- digest: sha256:7fb3d4a23191cd9ef997d7a295367353d32072aaa5f9597e096ed71062acaf63
+  name: voxa-web
+  newName: ghcr.io/madfam-org/voxa/voxa-web
