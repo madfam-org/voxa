@@ -6,6 +6,7 @@ metadata:
   name: voxa-signature-temporary
   namespace: voxa
   annotations:
+    argocd.argoproj.io/sync-wave: "-1"
     enclii.dev/reason: "Voxa GHCR packages are private; Kyverno verify-image-signatures cannot pull manifests."
     enclii.dev/scope: "Voxa production deployments until GHCR visibility is public."
 spec:
