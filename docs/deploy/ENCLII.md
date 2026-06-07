@@ -78,7 +78,7 @@ Run locally: `pnpm test`
 
 ## Constraints (Kyverno / Enclii)
 
-- Images must be pinned with `@sha256:` digests (CI handles this).
+- Images must be pinned with `@sha256:` digests in **both** `kustomization.yaml` and workload deployment YAML (CI keeps them in sync).
 - Docker builds use `provenance: false` and `sbom: false`.
 - Do **not** add `NetworkPolicy` resources — use `network` in `enclii.yaml`.
 - Service port **80** in K8s maps to container ports 3000 (web) and 8080 (api).
