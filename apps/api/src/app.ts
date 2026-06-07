@@ -28,7 +28,14 @@ app.get('/health/ready', async (c) => {
   if (!ready) {
     return c.json({ status: 'unavailable', service: 'voxa-api', store: getStoreDriver() }, 503);
   }
-  return c.json({ status: 'ready', service: 'voxa-api', store: getStoreDriver() });
+  return c.json({
+    status: 'ready',
+    service: 'voxa-api',
+    store: getStoreDriver(),
+    authEnforced:
+      process.env.VOXA_JANUA_AUTH_REQUIRED === 'true' ||
+      process.env.JANUA_AUTH_REQUIRED === 'true',
+  });
 });
 
 app.route('/v1/boards', boardRoutes);

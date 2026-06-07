@@ -15,7 +15,13 @@ declare module 'hono' {
 }
 
 const VALID_ROLES: TeamRole[] = ['communicator', 'editor', 'admin'];
-const AUTH_REQUIRED = process.env.JANUA_AUTH_REQUIRED === 'true';
+
+function isAuthRequired(): boolean {
+  return (
+    process.env.VOXA_JANUA_AUTH_REQUIRED === 'true' ||
+    process.env.JANUA_AUTH_REQUIRED === 'true'
+  );
+}
 
 function devTeamFromHeaders(c: Context): TeamContext {
   const userId = c.req.header('X-Voxa-User-Id') ?? 'dev-user';
@@ -44,8 +50,8 @@ export function teamAuth() {
       }
     }
 
-    if (AUTH_REQUIRED || isJanuaConfigured()) {
-      if (AUTH_REQUIRED) {
+    if (isAuthRequired() || isJanuaConfigured()) {
+      if (isAuthRequired()) {
         return c.json({ error: 'Authentication required' }, 401);
       }
     }
