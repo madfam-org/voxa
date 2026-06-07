@@ -37,7 +37,7 @@ Expected ready payload: `{"status":"ready","service":"voxa-api","store":"postgre
 
 1. Confirm Janua OAuth client `voxa` is registered.
 2. Verify `OIDC_CLIENT_SECRET`, `JANUA_ISSUER_URL`, and `JANUA_AUDIENCE=voxa` in secrets.
-3. Set `JANUA_AUTH_REQUIRED=true` only after web sign-in is verified end-to-end.
+3. Set `VOXA_JANUA_AUTH_REQUIRED=true` on the API deployment (not only in secrets — `envFrom` can override `JANUA_AUTH_REQUIRED`). Verify rollout with `curl -sS https://voxa-api.madfam.io/health/ready | jq .authEnforced` before enabling traffic.
 
 ### Rate limit spikes (429)
 
