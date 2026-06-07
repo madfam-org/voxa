@@ -1,0 +1,54 @@
+apiVersion: enclii.dev/v1
+kind: Service
+metadata:
+  name: voxa
+  project: voxa
+spec:
+  runtime:
+    port: 8080
+  domains:
+    - name: voxa.enclii.dev
+      environment: production
+      port: 3000
+    - name: api.voxa.enclii.dev
+      environment: production
+      port: 8080
+    - name: voxa.staging.enclii.dev
+      environment: staging
+      port: 3000
+    - name: api.staging.voxa.enclii.dev
+      environment: staging
+      port: 8080
+  network:
+    services:
+      - name: voxa-web
+        port: 3000
+        ingress: [cloudflare-tunnel]
+        egress: [dns, https]
+      - name: voxa-api
+        port: 8080
+        ingress: [cloudflare-tunnel]
+        egress: [dns, https, postgres, redis, janua, pgbouncer]
+    custom:
+      - name: web-to-api
+        from:
+          app.kubernetes.io/name: voxa-web
+        to:
+          app.kubernetes.io/name: voxa-api
+        port: 8080
+        direction: both
+  status:
+    enabled: true
+    entries:
+      - name: Voxa Web
+        url: https://voxa.enclii.dev/api/health
+        href: https://voxa.enclii.dev
+        group: Voxa
+        family: AAC Platform
+        description: AAC communication board (web)
+      - name: Voxa API
+        url: https://api.voxa.enclii.dev/health
+        href: https://api.voxa.enclii.dev
+        group: Voxa
+        family: AAC Platform
+        description: Cloud sync and AI API

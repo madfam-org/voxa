@@ -1,0 +1,20 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: voxa-web
+  labels:
+    app: voxa-web
+    app.kubernetes.io/name: voxa-web
+    app.kubernetes.io/component: web
+    app.kubernetes.io/part-of: voxa
+    enclii.dev/managed-by: switchyard
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3000
+      protocol: TCP
+  selector:
+    app: voxa-web

@@ -56,10 +56,27 @@ Voxa is a TypeScript monorepo targeting five client surfaces (Web, iOS, Android,
 
 | Phase | Deliverable |
 |-------|-------------|
-| **0.1** (current) | Web prototype, core types, OBF skeleton, API scaffold |
-| **0.5** (current) | LLM prediction strip, PictoBERT-style symbol suggestions, `/v1/ai` API |
-| **0.4** | Expo mobile app, service worker background sync |
-| **1.0** | Clinical pilot, bilingual neural TTS, desktop shells |
+| **0.1** | Web prototype, core types, OBF skeleton, API scaffold |
+| **0.2** | Cloud sync API, team editing, OBF import/export |
+| **0.3** | CVI themes, switch scanning, eye dwell, offline cache |
+| **0.5** (current) | Expo mobile, background sync, AI prediction strip, Enclii deploy |
+| **1.0** | Clinical pilot, bilingual neural TTS, PostgreSQL persistence, desktop shells |
+
+## Deployment (Enclii)
+
+Voxa ships to **enclii.dev** via the zero-touch model: Dockerfiles, `k8s/`, and GitHub Actions live in this repo; ArgoCD and Cloudflare Tunnel are managed by Enclii.
+
+```
+push main    → CI → ghcr.io/madfam-org/voxa/* → digest commit → k8s/production
+push staging → CI → digest commit → k8s/staging
+```
+
+| Surface | Health probe |
+|---------|--------------|
+| Web | `GET /api/health` |
+| API | `GET /health` |
+
+Full runbook: [docs/deploy/ENCLII.md](./deploy/ENCLII.md)
 
 ## Technology Choices
 

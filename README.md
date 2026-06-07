@@ -38,7 +38,9 @@ voxa/
 │   ├── access/       # Switch scanning & eye-tracking adapters
 │   ├── sync/         # Cloud sync REST + WebSocket client
 │   └── ai/           # LLM, PictoBERT, symbol gen interfaces
-└── docs/             # Architecture, accessibility, AI roadmap
+├── k8s/              # Enclii production & staging manifests (Kustomize)
+├── enclii.yaml       # Enclii domain, network, and status declarations
+└── docs/             # Architecture, accessibility, deployment
 ```
 
 ## Quick Start
@@ -58,10 +60,20 @@ pnpm dev:mobile   # Expo app (iOS / Android / simulator)
 
 On web, tap **I** → **want** to see AI prediction chips. Switch to **Editor (SLP)** for OBF editing, or **Settings** for CVI themes and switch scanning.
 
+### Deployed environments (Enclii)
+
+| Environment | Web | API |
+|-------------|-----|-----|
+| Production | [voxa.enclii.dev](https://voxa.enclii.dev) | [api.voxa.enclii.dev](https://api.voxa.enclii.dev) |
+| Staging | [voxa.staging.enclii.dev](https://voxa.staging.enclii.dev) | [api.staging.voxa.enclii.dev](https://api.staging.voxa.enclii.dev) |
+
+See [docs/deploy/ENCLII.md](./docs/deploy/ENCLII.md) for CI, onboarding, and operator steps.
+
 ## Documentation
 
 - [Product Requirements Document](./PRD.md) — full product specification
 - [Architecture](./docs/architecture.md) — system design and platform targets
+- [Enclii Deployment](./docs/deploy/ENCLII.md) — staging/production on enclii.dev
 - [Accessibility Standards](./docs/accessibility.md) — WCAG 2.2 compliance details
 - [Linguistic Framework](./docs/linguistic-framework.md) — GLP, motor planning, Fitzgerald Key
 - [AI Roadmap](./docs/ai-roadmap.md) — LLM, PictoBERT, symbol generation, TTS

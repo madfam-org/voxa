@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --import tsx --test src/app/api/health/route.test.ts"
   },
   "dependencies": {
     "@voxa/access": "workspace:*",
@@ -24,6 +25,7 @@
     "@types/node": "^22.10.0",
     "@types/react": "^19.0.1",
     "@types/react-dom": "^19.0.2",
+    "tsx": "^4.19.2",
     "typescript": "^5.7.2"
   }
 }

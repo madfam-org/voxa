@@ -1,0 +1,22 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: voxa
+
+resources:
+  - namespace.yaml
+  - voxa-api-deployment.yaml
+  - voxa-api-service.yaml
+  - voxa-web-deployment.yaml
+  - voxa-web-service.yaml
+
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: voxa
+      enclii.dev/managed-by: switchyard
+
+images:
+  - name: voxa-api
+    newName: ghcr.io/madfam-org/voxa/voxa-api
+  - name: voxa-web
+    newName: ghcr.io/madfam-org/voxa/voxa-web

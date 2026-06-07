@@ -1,0 +1,10 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: voxa-staging
+  labels:
+    app.kubernetes.io/part-of: voxa
+    enclii.dev/type: application
+    enclii.dev/managed-by: switchyard
+    enclii.dev/environment: staging

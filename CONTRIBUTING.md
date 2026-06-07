@@ -18,9 +18,13 @@ pnpm typecheck
 pnpm test
 ```
 
+Health endpoints used by Kubernetes probes (`/api/health` on web, `/health` on API) have unit tests under `apps/web` and `apps/api`.
+
+For deployment changes, see [Enclii Deployment](./deploy/ENCLII.md).
+
 ## Pull Request Checklist
 
-- [ ] Typecheck and tests pass
+- [ ] Typecheck and tests pass (includes probe health tests in `apps/web` and `apps/api`)
 - [ ] Accessibility: axe scan clean on touched flows (when UI changes)
 - [ ] Motor-planning / GLP changes reviewed against `docs/linguistic-framework.md`
 - [ ] No secrets or PHI in fixtures

@@ -1,0 +1,13 @@
+node_modules
+.git
+.turbo
+.next
+dist
+coverage
+*.md
+!README.md
+apps/api/data
+apps/mobile
+**/.env*
+**/*.test.ts
+**/*.spec.ts
