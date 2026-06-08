@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import {
+  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -10,6 +11,7 @@ import type { BoardButton } from '@voxa/core';
 import { fitzgeraldColor, resolvePartOfSpeech } from '@voxa/vocabulary';
 import { buttonLabel, buttonSpeech } from '@/lib/board-utils';
 import { speakButton, speakText } from '@/lib/play-button-speech';
+import { useMobileAuth } from '@/hooks/use-mobile-auth';
 import { useMobileSyncedBoard } from '@/hooks/use-mobile-synced-board';
 
 /** 1 cm minimum touch target @ 96 dpi, scaled 1.2× */
@@ -17,7 +19,18 @@ const TARGET = Math.round(38 * 1.2);
 
 export function MobileBoardScreen() {
   const [utterance, setUtterance] = useState<string[]>([]);
-  const { board, syncStatus, error, pendingSave, setBoardId } = useMobileSyncedBoard();
+  const { accessToken, userId, isAuthenticated, configured, signIn, signOut, loading: authLoading } =
+    useMobileAuth();
+  const {
+    board,
+    boardCatalog,
+    syncStatus,
+    error,
+    pendingSave,
+    syncError,
+    setBoardId,
+    retryPendingSave,
+  } = useMobileSyncedBoard({ accessToken, userId });
 
   const sorted = [...board.grid.buttons].sort(
     (a, b) => a.position.row - b.position.row || a.position.column - b.position.column,
@@ -31,15 +44,27 @@ export function MobileBoardScreen() {
       }
       const text = buttonSpeech(btn);
       setUtterance((prev) => [...prev, text]);
-      void speakButton(btn);
+      void speakButton(btn, { accessToken });
     },
-    [setBoardId],
+    [accessToken, setBoardId],
   );
+
+  const pickBoard = useCallback(() => {
+    if (boardCatalog.length <= 1) return;
+    Alert.alert(
+      'Switch board',
+      undefined,
+      boardCatalog.map((item) => ({
+        text: item.name,
+        onPress: () => void setBoardId(item.id),
+      })),
+    );
+  }, [boardCatalog, setBoardId]);
 
   const syncLabel =
     syncStatus === 'live'
       ? pendingSave
-        ? '● Live (queued)'
+        ? '● Live (save queued)'
         : '● Live'
       : syncStatus === 'connecting'
         ? '… Connecting'
@@ -52,6 +77,22 @@ export function MobileBoardScreen() {
         <Text style={styles.meta}>
           {board.name} · {syncLabel} v{board.version}
         </Text>
+        {isAuthenticated && boardCatalog.length > 1 ? (
+          <Pressable style={styles.headerBtnSecondary} onPress={pickBoard}>
+            <Text style={styles.headerBtnText}>Boards</Text>
+          </Pressable>
+        ) : null}
+        {!authLoading && configured ? (
+          isAuthenticated ? (
+            <Pressable style={styles.headerBtnSecondary} onPress={() => void signOut()}>
+              <Text style={styles.headerBtnText}>Sign out</Text>
+            </Pressable>
+          ) : (
+            <Pressable style={styles.headerBtnSecondary} onPress={() => void signIn()}>
+              <Text style={styles.headerBtnText}>Sign in</Text>
+            </Pressable>
+          )
+        ) : null}
         <Text style={styles.utterance}>
           {utterance.length ? utterance.join(' ') : 'Tap to communicate…'}
         </Text>
@@ -70,6 +111,17 @@ export function MobileBoardScreen() {
       </View>
 
       {error ? <Text style={styles.banner}>{error}</Text> : null}
+
+      {pendingSave ? (
+        <View style={styles.pendingRow}>
+          <Text style={styles.pendingText}>
+            {syncError ? `Save queued — ${syncError}` : 'Save queued — will sync when online'}
+          </Text>
+          <Pressable style={styles.retryBtn} onPress={() => void retryPendingSave()}>
+            <Text style={styles.retryBtnText}>Retry</Text>
+          </Pressable>
+        </View>
+      ) : null}
 
       <ScrollView contentContainerStyle={styles.grid}>
         {sorted.map((btn) => {
@@ -121,8 +173,35 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 14,
   },
+  headerBtnSecondary: {
+    backgroundColor: '#262626',
+    minHeight: 38,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: '#404040',
+  },
   headerBtnText: { color: '#fff', fontWeight: '600' },
   banner: { color: '#fcd34d', padding: 8, paddingHorizontal: 12, fontSize: 13 },
+  pendingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: '#422006',
+  },
+  pendingText: { flex: 1, color: '#fde68a', fontSize: 13 },
+  retryBtn: {
+    backgroundColor: '#78350f',
+    borderRadius: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  retryBtnText: { color: '#fff', fontWeight: '600', fontSize: 13 },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',

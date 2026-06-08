@@ -39,8 +39,8 @@ Replace placeholder values in `eas.json` (`appleId`, `ascAppId`, `appleTeamId`) 
 
 - [ ] EAS project linked (`eas init` if not already)
 - [ ] Preview builds on TestFlight + Play internal testing
-- [ ] Janua OAuth deep link / universal links on iOS and Android
-- [ ] Offline board cache + sync conflict handling verified
+- [ ] Janua OAuth deep link / universal links on iOS and Android — `voxa://auth/callback` ✅ scaffold 2026-06-09
+- [ ] Offline board cache + sync conflict handling verified — AsyncStorage + NetInfo retry ✅ 2026-06-09
 - [ ] Switch scanning on reference hardware (iOS/Android)
 - [ ] Store screenshots, descriptions, privacy nutrition labels
 - [ ] SLP sign-off on mobile communicator flows ([SLP_SIGNOFF.md](./SLP_SIGNOFF.md) — extend for native)

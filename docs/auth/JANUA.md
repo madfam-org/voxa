@@ -63,6 +63,26 @@ Claims checked: `roles[]`, `role`, `voxa_role`.
 4. Set API `JANUA_*` secrets via Enclii onboard.
 5. Flip `JANUA_AUTH_REQUIRED=true` when ready to disable header auth.
 
+## Mobile (Expo)
+
+PKCE authorization code flow via `expo-auth-session`:
+
+| Piece | Purpose |
+|-------|---------|
+| `useMobileAuth` | Janua sign-in; session in SecureStore |
+| `voxa://auth/callback` | OAuth redirect (register in Janua admin) |
+| Bearer on `@voxa/sync` | Same account boards as web |
+
+Set in `app.json` / EAS `extra`:
+
+```json
+{
+  "oidcIssuer": "https://auth.madfam.io",
+  "oidcClientId": "voxa",
+  "apiUrl": "https://voxa-api.madfam.io"
+}
+```
+
 ### Register OAuth client
 
 ```bash

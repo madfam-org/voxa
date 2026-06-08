@@ -17,9 +17,12 @@ async function stopActiveSound(): Promise<void> {
   activeSound = null;
 }
 
-async function playRemoteAudio(url: string): Promise<void> {
+async function playRemoteAudio(
+  url: string,
+  headers?: Record<string, string>,
+): Promise<void> {
   await stopActiveSound();
-  const { sound } = await Audio.Sound.createAsync({ uri: url });
+  const { sound } = await Audio.Sound.createAsync({ uri: url, headers });
   activeSound = sound;
   await sound.playAsync();
   await new Promise<void>((resolve) => {
@@ -32,16 +35,23 @@ async function playRemoteAudio(url: string): Promise<void> {
 }
 
 /** Play recorded media when present; otherwise fall back to TTS. */
-export async function speakButton(btn: BoardButton): Promise<void> {
+export async function speakButton(
+  btn: BoardButton,
+  options?: { accessToken?: string },
+): Promise<void> {
+  const headers = options?.accessToken
+    ? { Authorization: `Bearer ${options.accessToken}` }
+    : undefined;
+
   const video = buttonMediaVideo(btn);
   if (video?.url) {
-    await playRemoteAudio(video.url);
+    await playRemoteAudio(video.url, headers);
     return;
   }
 
   const audio = buttonRecordedSpeech(btn);
   if (audio?.url) {
-    await playRemoteAudio(audio.url);
+    await playRemoteAudio(audio.url, headers);
     return;
   }
 

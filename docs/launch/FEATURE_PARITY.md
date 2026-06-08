@@ -65,7 +65,8 @@ Actionable **feature parity match** against the AAC platform benchmark. Each row
 | Usage history / activation log | TD Snap, Grid | 🟡 | API + client log (2026-06-08); SLP **Usage** panel in `/app` for editors (2026-06-08) |
 | Real-time team co-edit | TD Snap, Grid | 🔴 | WebSocket + REDIS_URL phase |
 | Remote SLP edit without device handoff | Cloud AAC | 🟡 | `/app/edit` remote editor + audit log (2026-06-09) |
-| iOS + Android store apps | All Tier A | 🟡 | EAS preview CI + recorded-speech playback in mobile scaffold (2026-06-08); store submit M4 |
+| iOS + Android store apps | All Tier A | 🟡 | EAS preview CI + Janua OAuth + offline cache (2026-06-09); store submit M4 |
+| Cross-platform single account | Fragmented | 🟡 | Web + mobile share Janua token + board list (2026-06-09) |
 | Hardware switch (Bluetooth/USB) | Grid, TD Snap | 🔴 | P1 mobile + web |
 | Keyguard / touch guard support | Clinical | 🔴 | P2 |
 
@@ -105,7 +106,7 @@ Actionable **feature parity match** against the AAC platform benchmark. Each row
 | WCAG 2.2 web-native + axe CI | Rare in AAC | ✅ | Extend coverage P1 |
 | Janua SSO + madfam.io trust stack | N/A | ✅ | Enterprise story |
 | Consent-gated AI telemetry | Privacy leadership | ✅ | Expand analytics P1 |
-| Cross-platform single account | Fragmented | 🟡 | Full at M5 |
+| Cross-platform single account | Fragmented | 🟡 | Web + mobile Janua OAuth + shared board list (2026-06-09) |
 
 ---
 

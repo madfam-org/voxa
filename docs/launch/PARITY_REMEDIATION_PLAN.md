@@ -158,8 +158,8 @@ Each epic links to [FEATURE_PARITY.md](./FEATURE_PARITY.md) rows and benchmark d
 | ID | Feature | Remediation | Implementation |
 |----|---------|-------------|----------------|
 | D1 | iOS + Android apps | EAS preview → production | [MOBILE_GA.md](./MOBILE_GA.md), `mobile-eas.yml` CI ✅ 2026-06-08 |
-| D2 | Janua mobile OAuth | Universal links / app links | Janua client redirect URIs, `expo-auth-session` |
-| D3 | Offline on device | SQLite/AsyncStorage + sync queue | `apps/mobile` storage layer, `@voxa/sync` |
+| D2 | Janua mobile OAuth | Universal links / app links | `expo-auth-session` + SecureStore ✅ 2026-06-09 |
+| D3 | Offline on device | SQLite/AsyncStorage + sync queue | AsyncStorage cache, NetInfo flush, retry UI ✅ 2026-06-09 |
 | D4 | PWA install | Web manifest + install prompt on landing | `apps/web` |
 | D5 | Windows | Edge/Chrome PWA + optional Electron wrapper | Post-M5 optional |
 
@@ -424,6 +424,7 @@ pnpm test && pnpm typecheck
 | 21 | Switch scan voice + pause while speaking (A1) | A | Engineering ✅ 2026-06-09 |
 | 22 | Touch-release activation setting (A2) | A | Engineering ✅ 2026-06-09 |
 | 23 | Remote SLP editor + audit log (E3) | E | Engineering ✅ 2026-06-09 |
+| 24 | Mobile Janua OAuth + offline sync (D2/D3) | D | Mobile ✅ 2026-06-09 |
 
 ---
 
