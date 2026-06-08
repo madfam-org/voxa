@@ -5,6 +5,9 @@ on:
   schedule:
     - cron: '0 14 * * 1-5'
 
+permissions:
+  contents: write
+
 jobs:
   smoke:
     runs-on: ubuntu-latest
@@ -21,8 +24,11 @@ jobs:
       - run: pnpm exec playwright install chromium --with-deps
         working-directory: e2e
       - name: Staging soak health
+        run: ./scripts/launch/soak-daily-check.sh --log docs/launch/SOAK_LOG.md
+      - name: Staging soak scenarios
         run: ./scripts/launch/soak-scenarios.sh
       - name: Authenticated staging soak
+        id: auth_soak
         env:
           OIDC_CLIENT_ID: ${{ secrets.VOXA_STAGING_OIDC_CLIENT_ID }}
           OIDC_CLIENT_SECRET: ${{ secrets.VOXA_STAGING_OIDC_CLIENT_SECRET }}
@@ -30,10 +36,11 @@ jobs:
           JANUA_TEST_PASSWORD: ${{ secrets.VOXA_STAGING_TEST_PASSWORD }}
         run: |
           if [[ -z "${OIDC_CLIENT_SECRET:-}" || -z "${JANUA_TEST_EMAIL:-}" || -z "${OIDC_CLIENT_ID:-}" ]]; then
-            echo "Skipping auth soak — configure VOXA_STAGING_OIDC_* and VOXA_STAGING_TEST_* secrets"
+            echo "Skipping auth soak — configure VOXA_STAGING_* secrets (see scripts/launch/setup-staging-soak-secrets.sh)"
             exit 0
           fi
           export VOXA_TEST_ACCESS_TOKEN="$(./scripts/launch/fetch-staging-access-token.sh)"
+          echo "VOXA_TEST_ACCESS_TOKEN=$VOXA_TEST_ACCESS_TOKEN" >> "$GITHUB_ENV"
           ./scripts/launch/soak-scenarios.sh --with-auth
       - run: pnpm test:e2e:smoke
         env:
@@ -41,3 +48,22 @@ jobs:
       - run: pnpm test:e2e:a11y
         env:
           PLAYWRIGHT_BASE_URL: https://voxa-staging.madfam.io
+      - run: pnpm test:e2e:staging
+        env:
+          PLAYWRIGHT_BASE_URL: https://voxa-staging.madfam.io
+          VOXA_STAGING_API_URL: https://voxa-api-staging.madfam.io
+          VOXA_TEST_ACCESS_TOKEN: ${{ env.VOXA_TEST_ACCESS_TOKEN }}
+          JANUA_TEST_EMAIL: ${{ secrets.VOXA_STAGING_TEST_EMAIL }}
+          JANUA_TEST_PASSWORD: ${{ secrets.VOXA_STAGING_TEST_PASSWORD }}
+      - name: Commit soak log
+        if: github.event_name == 'schedule'
+        run: |
+          if git diff --quiet docs/launch/SOAK_LOG.md; then
+            echo "No soak log changes"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/launch/SOAK_LOG.md
+          git commit -m "chore(soak): append daily staging soak log"
+          git push
