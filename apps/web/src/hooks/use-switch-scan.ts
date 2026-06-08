@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { BoardButton } from '@voxa/core';
-import { buildGridScanPath, clampSwitchInterval, type ScanOrder } from '@voxa/access';
+import { buildGridScanPath, clampSwitchInterval, classifySwitchKey, type ScanOrder } from '@voxa/access';
 import { announceScanLabel } from '@/lib/play-button-speech';
 
 interface UseSwitchScanOptions {
@@ -75,11 +75,13 @@ export function useSwitchScan({
     if (!enabled) return;
 
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.code === 'Space' || e.code === 'Enter') {
+      const action = classifySwitchKey(e.code);
+      if (action === 'select') {
         e.preventDefault();
         select();
+        return;
       }
-      if (e.code === 'ArrowRight') {
+      if (action === 'advance') {
         e.preventDefault();
         advance();
       }

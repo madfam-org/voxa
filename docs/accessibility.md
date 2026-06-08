@@ -33,6 +33,7 @@ Users can disable decorative imagery, reduce grid chrome, and enlarge symbol-onl
 - Auditory scan highlight optional (screen reader live region)
 - Optional spoken scan voice for each focused cell
 - Scan pauses automatically while TTS or recorded speech plays (configurable)
+- **Hardware USB/BT switches (web):** select via Space/Enter; advance scan via ArrowRight, Tab, ArrowDown, or F13/F14 (`classifySwitchKey` in `@voxa/access`)
 
 ### Eye Tracking
 

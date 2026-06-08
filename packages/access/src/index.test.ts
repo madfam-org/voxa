@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { buildGridScanPath, clampSwitchInterval, linearScanIndex } from './index.js';
+import { buildGridScanPath, clampSwitchInterval, classifySwitchKey, linearScanIndex } from './index.js';
 
 describe('switch scanning', () => {
   it('wraps scan index across grid size', () => {
@@ -23,5 +23,16 @@ describe('switch scanning', () => {
     assert.equal(clampSwitchInterval(100), 300);
     assert.equal(clampSwitchInterval(2000), 2000);
     assert.equal(clampSwitchInterval(9000), 5000);
+  });
+});
+
+describe('hardware switch input', () => {
+  it('maps USB switch key codes to scan actions', () => {
+    assert.equal(classifySwitchKey('Space'), 'select');
+    assert.equal(classifySwitchKey('Enter'), 'select');
+    assert.equal(classifySwitchKey('ArrowRight'), 'advance');
+    assert.equal(classifySwitchKey('Tab'), 'advance');
+    assert.equal(classifySwitchKey('F13'), 'advance');
+    assert.equal(classifySwitchKey('KeyA'), null);
   });
 });

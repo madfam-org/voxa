@@ -37,6 +37,7 @@ import { GridSettingsPanel } from '@/components/grid-settings-panel';
 import { RecordedMediaPanel } from '@/components/recorded-media-panel';
 import { WordFormsPanel } from '@/components/word-forms-panel';
 import { BoardAuditPanel } from '@/components/board-audit-panel';
+import { SyncStatusBanner } from '@/components/sync-status-banner';
 import { DraggableButtonShell, EditorGridCell } from '@/components/editor-grid-cell';
 
 const headerBtn: React.CSSProperties = {
@@ -93,6 +94,8 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
     warnings,
     pendingSave,
     syncError,
+    conflictRefreshed,
+    clearConflictNotice,
     retryPendingSave,
     saveBoard,
     importObf,
@@ -377,7 +380,8 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
   const handleSave = useCallback(async () => {
     setBusy(true);
     try {
-      await saveBoard();
+      const result = await saveBoard();
+      if (result && 'conflict' in result) return;
     } catch (err) {
       alert((err as Error).message);
     } finally {
@@ -830,36 +834,17 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
         </div>
       ) : null}
 
-      {(error || warnings.length > 0 || pendingSave || syncError) && (
-        <div
-          style={{
-            background: pendingSave ? '#422006' : '#171717',
-            color: '#fcd34d',
-            padding: '8px 16px',
-            fontSize: '0.875rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            flexWrap: 'wrap',
-          }}
-        >
-          <span style={{ flex: 1, minWidth: 200 }}>
-            {pendingSave ? 'Changes queued — will sync when back online. ' : ''}
-            {error}
-            {syncError ? ` Sync error: ${syncError}` : ''}
-            {warnings.length > 0 ? ` OBF warnings: ${warnings.join('; ')}` : ''}
-          </span>
-          {(pendingSave || syncError) && isEditor ? (
-            <button
-              type="button"
-              onClick={() => void retryPendingSave()}
-              style={{ ...secondaryBtn, padding: '6px 12px', fontSize: '0.8125rem' }}
-            >
-              Retry sync
-            </button>
-          ) : null}
-        </div>
-      )}
+      <SyncStatusBanner
+        syncStatus={syncStatus}
+        pendingSave={pendingSave}
+        syncError={syncError}
+        error={error}
+        conflictRefreshed={conflictRefreshed}
+        warnings={warnings}
+        isEditor={isEditor}
+        onRetry={retryPendingSave}
+        onDismissConflict={clearConflictNotice}
+      />
 
       {isEditor ? (
         <div

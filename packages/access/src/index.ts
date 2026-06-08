@@ -97,3 +97,10 @@ export function snapHitBox(
   const dy = y - targetY;
   return dx * dx + dy * dy <= radiusPx * radiusPx;
 }
+
+export {
+  classifySwitchKey,
+  SWITCH_ADVANCE_KEY_CODES,
+  SWITCH_SELECT_KEY_CODES,
+  type SwitchKeyAction,
+} from './switch-input.js';

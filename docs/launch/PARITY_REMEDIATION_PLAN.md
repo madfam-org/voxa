@@ -85,10 +85,10 @@ Each epic links to [FEATURE_PARITY.md](./FEATURE_PARITY.md) rows and benchmark d
 
 | ID | Feature | Current | Remediation | Implementation |
 |----|---------|---------|-------------|----------------|
-| A1 | Switch scanning | 🟡 web only | Auditory voice cue + scan pause on speak; document hardware path | `@voxa/access`, `use-switch-scan`, `settings-panel.tsx` ✅ 2026-06-09 |
+| A1 | Switch scanning | 🟡 web only | Voice cue + pause on speak; USB switch keys (Space/Tab/F13) ✅ 2026-06-09 |
 | A2 | Eye dwell | 🟡 pointer sim | Configurable dwell; touch-release vs touch-start; snap-to-cell | `@voxa/access` `EyeTrackingConfig`, touch activation setting ✅ 2026-06-09 (partial) |
 | A3 | SLP editor | 🟡 basic | Editor PIN lock; grid resize validation; slot lock enforcement in UI | `board-screen.tsx` `EditorPanel`, `@voxa/core` `locked` |
-| A4 | Offline cache | 🟡 IndexedDB pending | Queue + 409 conflict refetch UX (2026-06-09); offline banner |
+| A4 | Offline cache | 🟡 IndexedDB pending | Sync status banner + 409 conflict refetch (2026-06-09) |
 | A5 | A11y CI scope | ✅ legal/home | Extend axe to `/app`, `/demo`, editor, settings | `e2e/specs/a11y.spec.ts` |
 | A6 | Soak / clinical | ✅ SLP 2026-06-08 | Extend SLP sign-off template for mobile when M4 ready | [SLP_SIGNOFF.md](./SLP_SIGNOFF.md) |
 
@@ -430,6 +430,7 @@ pnpm test && pnpm typecheck
 | 27 | Redis-backed WebSocket sync fan-out (E4) | E | Engineering ✅ 2026-06-09 |
 | 28 | WS auth + client self-event filter + declaration-day script (E4/W0) | E/W0 | Engineering ✅ 2026-06-09 |
 | 29 | Save conflict refetch UX + mobile OAuth refresh (A4/D2) | A/D | Engineering ✅ 2026-06-09 |
+| 30 | Sync status banner + USB switch keys + save conflict toast (A4/A1) | A | Engineering ✅ 2026-06-09 |
 
 ---
 

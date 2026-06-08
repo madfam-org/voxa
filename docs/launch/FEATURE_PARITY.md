@@ -30,7 +30,7 @@ Actionable **feature parity match** against the AAC platform benchmark. Each row
 | 1 cm touch targets | WCAG 2.2 / OpenAAC 🟢 | ✅ | `@voxa/ui` AacButton |
 | ARIA grid structure | WCAG / access | ✅ | BoardGrid row/cell (2026-06-08) |
 | CVI themes | OpenAAC ⭐ / TD Snap HC | ✅ | cvi-dark, cvi-high-contrast |
-| Switch scanning (configurable) | OpenAAC ⭐ | 🟡 | Web; voice cue + pause on speak; no BT switch (2026-06-09) |
+| Switch scanning (configurable) | OpenAAC ⭐ | 🟡 | Web; voice cue + USB switch key map (2026-06-09) |
 | Eye dwell (configurable) | OpenAAC ⭐ | 🟡 | Pointer sim; touch-release option; not Tobii SDK (2026-06-09) |
 | Message bar + speak utterance | OpenAAC 🟢 | ✅ | Web Speech API |
 | OBF export | OpenAAC / Cboard | ✅ | API + editor UI |
@@ -39,7 +39,7 @@ Actionable **feature parity match** against the AAC platform benchmark. Each row
 | Board-to-board navigation (OBF `load_board_id`) | OpenAAC / Cboard | 🟡 | Import/export + editor link + activate navigate (2026-06-08) |
 | SLP editor mode | OpenAAC 🟢 | 🟡 | EditorPanel + PIN lock (2026-06-08); full vocab tools P1 |
 | Cloud board persistence | OpenAAC 💡 | ✅ | PostgreSQL + sync client |
-| Offline cache + retry | OpenAAC 💡 | 🟡 | IndexedDB pending queue + 409 conflict refetch (2026-06-09) |
+| Offline cache + retry | OpenAAC 💡 | 🟡 | IndexedDB queue + sync status banner + 409 refetch (2026-06-09) |
 | Legal / privacy / a11y pages | Commercial GA | ✅ | `/legal/*` |
 | Automated a11y CI | WCAG regression | ✅ | axe on `/`, `/demo`, legal, sign-in; `/app` when Janua creds in CI |
 | Staging soak + SLP sign-off | Clinical gate | ✅ | Automated soak in CI; SLP 2026-06-08 ([SLP_SIGNOFF.md](./SLP_SIGNOFF.md)) |
@@ -68,7 +68,7 @@ Actionable **feature parity match** against the AAC platform benchmark. Each row
 | iOS + Android store apps | All Tier A | 🟡 | EAS env wiring + icons + CI guard (2026-06-09); `eas init` + TestFlight pending |
 | Cross-platform single account | Fragmented | 🟡 | Web + mobile share Janua token + board list (2026-06-09) |
 | PWA install (home screen) | Cboard, web AAC | 🟡 | `manifest.webmanifest` + install banner on landing (2026-06-09) |
-| Hardware switch (Bluetooth/USB) | Grid, TD Snap | 🔴 | P1 mobile + web |
+| Hardware switch (Bluetooth/USB) | Grid, TD Snap | 🟡 | Web USB key map via `@voxa/access`; native BT adapter P2 |
 | Keyguard / touch guard support | Clinical | 🔴 | P2 |
 
 ---

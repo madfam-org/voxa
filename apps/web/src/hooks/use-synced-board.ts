@@ -8,6 +8,7 @@ import {
   createProfileId,
   DEMO_BOARD_ID,
   type Board,
+  type BoardUpdateResult,
   type SyncEvent,
   type TeamRole,
 } from '@voxa/core';
@@ -53,6 +54,8 @@ function loadSelectedBoardId(): string {
   return localStorage.getItem(SELECTED_BOARD_KEY) || DEMO_BOARD_ID;
 }
 
+export type SaveBoardResult = BoardUpdateResult | { conflict: true };
+
 export function useSyncedBoard(role: TeamRole) {
   const [boardId, setBoardIdState] = useState<string>(DEMO_BOARD_ID);
   const [boardCatalog, setBoardCatalog] = useState<BoardSummary[]>([]);
@@ -62,6 +65,7 @@ export function useSyncedBoard(role: TeamRole) {
   const [warnings, setWarnings] = useState<string[]>([]);
   const [pendingSave, setPendingSave] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
+  const [conflictRefreshed, setConflictRefreshed] = useState(false);
   const boardRef = useRef(board);
   boardRef.current = board;
   const isEditor = role === 'editor' || role === 'admin';
@@ -153,19 +157,28 @@ export function useSyncedBoard(role: TeamRole) {
     setPendingSave(await hasPendingBoardSave(boardId));
   }, [boardId]);
 
-  const applyVersionConflict = useCallback(async () => {
+  const applyVersionConflict = useCallback(async (fromManualSave = false) => {
     try {
       const fresh = await client.getBoard(boardId);
       setBoard(fresh);
       await clearPendingBoardSave(boardId);
       setPendingSave(false);
-      setSyncError(
-        'Another editor saved changes first — your board was refreshed to the latest version.',
-      );
+      if (fromManualSave) {
+        setConflictRefreshed(true);
+        setSyncError(null);
+      } else {
+        setSyncError(
+          'Another editor saved changes first — your board was refreshed to the latest version.',
+        );
+      }
     } catch {
       setSyncError('Version conflict — reload the page and try again.');
     }
   }, [boardId, client, setBoard]);
+
+  const clearConflictNotice = useCallback(() => {
+    setConflictRefreshed(false);
+  }, []);
 
   const flushPendingSave = useCallback(async () => {
     const pending = await loadPendingBoardSave(boardId);
@@ -289,18 +302,19 @@ export function useSyncedBoard(role: TeamRole) {
     return () => window.clearTimeout(timer);
   }, [accessToken, board, boardId, isEditor, pendingSave, syncStatus]);
 
-  const saveBoard = useCallback(async () => {
+  const saveBoard = useCallback(async (): Promise<SaveBoardResult> => {
     try {
       const result = await client.saveBoard(boardRef.current, boardRef.current.version);
       setBoard(result.board);
       await clearPendingBoardSave(boardId);
       setPendingSave(false);
       setSyncError(null);
+      setConflictRefreshed(false);
       return result;
     } catch (err) {
       if (isVersionConflictError(err)) {
-        await applyVersionConflict();
-        throw new Error('Board refreshed after a version conflict — review and save again.');
+        await applyVersionConflict(true);
+        return { conflict: true };
       }
       await queuePendingBoardSave(boardId, boardRef.current);
       setPendingSave(true);
@@ -420,6 +434,8 @@ export function useSyncedBoard(role: TeamRole) {
     warnings,
     pendingSave,
     syncError,
+    conflictRefreshed,
+    clearConflictNotice,
     reload,
     retryPendingSave: flushPendingSave,
     saveBoard,

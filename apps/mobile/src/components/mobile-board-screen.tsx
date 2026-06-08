@@ -112,6 +112,14 @@ export function MobileBoardScreen() {
 
       {error ? <Text style={styles.banner}>{error}</Text> : null}
 
+      {syncStatus === 'offline' && !pendingSave ? (
+        <View style={styles.offlineRow}>
+          <Text style={styles.offlineText}>
+            {error ?? 'Offline — using cached board until connection returns.'}
+          </Text>
+        </View>
+      ) : null}
+
       {pendingSave ? (
         <View style={styles.pendingRow}>
           <Text style={styles.pendingText}>
@@ -194,6 +202,12 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     backgroundColor: '#422006',
   },
+  offlineRow: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: '#1e293b',
+  },
+  offlineText: { color: '#93c5fd', fontSize: 13 },
   pendingText: { flex: 1, color: '#fde68a', fontSize: 13 },
   retryBtn: {
     backgroundColor: '#78350f',
