@@ -9,14 +9,25 @@ import {
 } from '@voxa/access';
 import { CVI_THEMES, type CviTheme } from '@voxa/ui';
 import type { CommunicatorSettings } from '@/lib/communicator-settings';
+import {
+  clearEditorPin,
+  editorPinIsConfigured,
+  setEditorPin,
+} from '@/lib/editor-pin';
 
 interface SettingsPanelProps {
   settings: CommunicatorSettings;
   onChange: (patch: Partial<CommunicatorSettings>) => void;
   onClose: () => void;
+  showEditorPinSettings?: boolean;
 }
 
-export function SettingsPanel({ settings, onChange, onClose }: SettingsPanelProps): React.ReactNode {
+export function SettingsPanel({
+  settings,
+  onChange,
+  onClose,
+  showEditorPinSettings = false,
+}: SettingsPanelProps): React.ReactNode {
   return (
     <aside
       role="dialog"
@@ -153,6 +164,46 @@ export function SettingsPanel({ settings, onChange, onClose }: SettingsPanelProp
           Show symbols without text labels
         </label>
       </Field>
+
+      {showEditorPinSettings ? (
+        <section style={{ borderTop: '1px solid #333', paddingTop: 12, marginTop: 8 }}>
+          <h3 style={{ margin: '0 0 8px', fontSize: '0.9375rem' }}>Editor PIN</h3>
+          <p style={hintStyle}>
+            {editorPinIsConfigured()
+              ? 'A PIN is required to enter Editor or Admin role on this device.'
+              : 'Set a PIN so only clinicians can edit vocabulary.'}
+          </p>
+          <button
+            type="button"
+            style={closeBtn}
+            onClick={() => {
+              const pin = window.prompt('New editor PIN (4–8 digits)');
+              if (!pin) return;
+              try {
+                setEditorPin(pin);
+                window.alert('Editor PIN saved.');
+              } catch (err) {
+                window.alert((err as Error).message);
+              }
+            }}
+          >
+            {editorPinIsConfigured() ? 'Change PIN' : 'Set PIN'}
+          </button>
+          {editorPinIsConfigured() ? (
+            <button
+              type="button"
+              style={{ ...closeBtn, marginTop: 8, width: '100%' }}
+              onClick={() => {
+                if (window.confirm('Remove editor PIN? Editor mode will open without a prompt.')) {
+                  clearEditorPin();
+                }
+              }}
+            >
+              Remove PIN
+            </button>
+          ) : null}
+        </section>
+      ) : null}
     </aside>
   );
 }

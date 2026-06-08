@@ -17,6 +17,12 @@ import { useEyeDwellByButton } from '@/hooks/use-eye-dwell';
 import { usePredictions } from '@/hooks/use-predictions';
 import { useSwitchScan } from '@/hooks/use-switch-scan';
 import { useSyncedBoard } from '@/hooks/use-synced-board';
+import {
+  editorPinIsConfigured,
+  isEditorUnlocked,
+  lockEditorSession,
+  unlockEditor,
+} from '@/lib/editor-pin';
 import { PredictionStrip } from '@/components/prediction-strip';
 import { SettingsPanel } from '@/components/settings-panel';
 
@@ -167,6 +173,33 @@ export function BoardScreen(): React.ReactNode {
     }
   }, [createBoard]);
 
+  const handleRoleChange = useCallback(
+    (nextRole: TeamRole) => {
+      if (nextRole === 'communicator') {
+        lockEditorSession();
+        setRole('communicator');
+        setEditingId(null);
+        return;
+      }
+
+      if (!editorPinIsConfigured() || isEditorUnlocked()) {
+        setRole(nextRole);
+        return;
+      }
+
+      const pin = window.prompt('Enter editor PIN to unlock vocabulary editing');
+      if (pin && unlockEditor(pin)) {
+        setRole(nextRole);
+        return;
+      }
+
+      if (pin) {
+        window.alert('Incorrect PIN. Editor mode stays locked.');
+      }
+    },
+    [],
+  );
+
   const handleSave = useCallback(async () => {
     setBusy(true);
     try {
@@ -268,7 +301,7 @@ export function BoardScreen(): React.ReactNode {
 
         <select
           value={role}
-          onChange={(e) => setRole(e.target.value as TeamRole)}
+          onChange={(e) => handleRoleChange(e.target.value as TeamRole)}
           style={selectStyle}
           aria-label="Team role"
         >
@@ -354,7 +387,27 @@ export function BoardScreen(): React.ReactNode {
               onClick={() => handleButtonPress(btn)}
               onPointerEnter={() => onEnter(btn.id as string)}
               onPointerLeave={onLeave}
-            />
+              aria-label={
+                isEditor && btn.locked
+                  ? `${buttonLabel(btn)} (locked motor-plan slot)`
+                  : buttonLabel(btn)
+              }
+            >
+              {isEditor && btn.locked ? (
+                <span
+                  aria-hidden
+                  style={{
+                    position: 'absolute',
+                    top: 4,
+                    right: 4,
+                    fontSize: '0.75rem',
+                    lineHeight: 1,
+                  }}
+                >
+                  🔒
+                </span>
+              ) : null}
+            </AacButton>
           ))}
         </BoardGrid>
 
@@ -363,6 +416,7 @@ export function BoardScreen(): React.ReactNode {
             settings={settings}
             onChange={setSettings}
             onClose={() => setSettingsOpen(false)}
+            showEditorPinSettings={role === 'admin'}
           />
         )}
 
@@ -379,7 +433,7 @@ export function BoardScreen(): React.ReactNode {
         style={{
           padding: '10px 16px',
           fontSize: '0.75rem',
-          color: '#737373',
+          color: '#a3a3a3',
           borderTop: '1px solid #262626',
           display: 'flex',
           gap: 12,
@@ -411,6 +465,7 @@ function EditorPanel({
 }) {
   const label = button.kind === 'analytic' ? button.label : button.phrase;
   const speech = button.kind === 'analytic' ? button.speechText : button.phrase;
+  const fieldsLocked = button.locked;
 
   return (
     <aside
@@ -425,11 +480,18 @@ function EditorPanel({
     >
       <h2 style={{ margin: '0 0 12px', fontSize: '1rem' }}>Edit button</h2>
 
+      {fieldsLocked ? (
+        <p style={{ fontSize: '0.8125rem', color: '#fcd34d', margin: '0 0 12px' }}>
+          Motor-plan slot locked — unlock below to change label, speech, or visibility.
+        </p>
+      ) : null}
+
       <label style={labelStyle}>
         Label
         <input
           style={fieldStyle}
           value={label}
+          disabled={fieldsLocked}
           onChange={(e) =>
             button.kind === 'analytic'
               ? onChange({ label: e.target.value, speechText: e.target.value })
@@ -444,6 +506,7 @@ function EditorPanel({
           <input
             style={fieldStyle}
             value={speech}
+            disabled={fieldsLocked}
             onChange={(e) => onChange({ speechText: e.target.value })}
           />
         </label>
@@ -454,6 +517,7 @@ function EditorPanel({
         <select
           style={fieldStyle}
           value={button.partOfSpeech ?? 'noun'}
+          disabled={fieldsLocked}
           onChange={(e) => onChange({ partOfSpeech: e.target.value as PartOfSpeechTag })}
         >
           {posOptions().map((pos) => (
@@ -477,6 +541,7 @@ function EditorPanel({
         <input
           type="checkbox"
           checked={button.hidden ?? false}
+          disabled={fieldsLocked}
           onChange={(e) => onChange({ hidden: e.target.checked })}
         />
         Hide from communicator view

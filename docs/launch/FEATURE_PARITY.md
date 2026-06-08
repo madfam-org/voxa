@@ -35,11 +35,11 @@ Actionable **feature parity match** against the AAC platform benchmark. Each row
 | Message bar + speak utterance | OpenAAC 🟢 | ✅ | Web Speech API |
 | OBF export | OpenAAC / Cboard | ✅ | API + editor UI |
 | OBF import | OpenAAC / Cboard | ✅ | API + UI; auth soak validated 2026-06-08 |
-| SLP editor mode | OpenAAC 🟢 | 🟡 | Basic EditorPanel; not full vocab tools |
+| SLP editor mode | OpenAAC 🟢 | 🟡 | EditorPanel + PIN lock (2026-06-08); full vocab tools P1 |
 | Cloud board persistence | OpenAAC 💡 | ✅ | PostgreSQL + sync client |
 | Offline cache + retry | OpenAAC 💡 | 🟡 | IndexedDB pending save |
 | Legal / privacy / a11y pages | Commercial GA | ✅ | `/legal/*` |
-| Automated a11y CI | WCAG regression | ✅ | axe Playwright |
+| Automated a11y CI | WCAG regression | ✅ | axe on `/`, `/demo`, legal, sign-in; `/app` when Janua creds in CI |
 | Staging soak + SLP sign-off | Clinical gate | ✅ | Automated soak in CI; SLP 2026-06-08 ([SLP_SIGNOFF.md](./SLP_SIGNOFF.md)) |
 
 ---
@@ -145,7 +145,7 @@ Mapped from [OpenAAC considerations](https://www.openaac.org/considerations). �
 | ⭐ Symbol library search | P1 | 🔴 |
 | ⭐ Fitzgerald color by POS | P1 | ✅ |
 | 💡 Babble (show all hidden) | P2 | 🔴 |
-| 💡 Lock editing behind PIN | P1 | 🔴 |
+| 💡 Lock editing behind PIN | P1 | 🟡 | Admin settings + role gate (2026-06-08) |
 | 💡 Cloud backup | P0 | ✅ |
 | 💡 Share vocabulary sets | P2 | 🔴 |
 
