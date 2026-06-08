@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { DEMO_BOARD_ID, type BoardButton, type PartOfSpeechTag, type TeamRole } from '@voxa/core';
 import { fitzgeraldColor, resizeBoardGrid, type PartOfSpeech } from '@voxa/vocabulary';
 import { AacButton, BoardGrid, CVI_THEMES, themeStyles } from '@voxa/ui';
@@ -34,6 +34,7 @@ import { SettingsPanel } from '@/components/settings-panel';
 import { UsageReportPanel } from '@/components/usage-report-panel';
 import { GridSettingsPanel } from '@/components/grid-settings-panel';
 import { RecordedMediaPanel } from '@/components/recorded-media-panel';
+import { WordFormsPanel } from '@/components/word-forms-panel';
 
 const headerBtn: React.CSSProperties = {
   background: '#2563eb',
@@ -64,6 +65,7 @@ export function BoardScreen(): React.ReactNode {
   const [babbleActive, setBabbleActive] = useState(false);
 
   const [recentButtonIds, setRecentButtonIds] = useState<string[]>([]);
+  const formTapRef = useRef<{ buttonId: string; at: number; index: number } | null>(null);
   const { settings, setSettings } = useCommunicatorSettings();
   const {
     board,
@@ -106,6 +108,25 @@ export function BoardScreen(): React.ReactNode {
 
   const { textPredictions, symbolPredictions } = usePredictions(board, utterance, recentButtonIds);
 
+  const resolveActivationSpeech = useCallback((btn: BoardButton): string => {
+    if (btn.kind !== 'analytic' || !btn.speechForms?.length) {
+      return buttonSpeech(btn);
+    }
+
+    const forms = btn.speechForms;
+    let index = forms.findIndex((form) => form.id === btn.activeSpeechFormId);
+    if (index < 0) index = 0;
+
+    const now = Date.now();
+    const last = formTapRef.current;
+    if (last?.buttonId === (btn.id as string) && now - last.at < 900) {
+      index = (last.index + 1) % forms.length;
+    }
+
+    formTapRef.current = { buttonId: btn.id as string, at: now, index };
+    return buttonSpeech(btn, index);
+  }, []);
+
   const activate = useCallback(
     (btn: BoardButton) => {
       if (isEditor && editingId) return;
@@ -115,7 +136,7 @@ export function BoardScreen(): React.ReactNode {
         return;
       }
 
-      const text = buttonSpeech(btn);
+      const text = resolveActivationSpeech(btn);
       setUtterance((prev) => [...prev, text]);
       setRecentButtonIds((prev) => [...prev, btn.id as string].slice(-8));
       void logButtonActivation(accessToken, {
@@ -124,10 +145,10 @@ export function BoardScreen(): React.ReactNode {
         speechText: text,
       });
       if (!settings.whisperMode) {
-        void speakButton(btn, { accessToken });
+        void speakButton(btn, { accessToken, speechText: text });
       }
     },
-    [accessToken, boardId, isEditor, editingId, setBoardId, settings.whisperMode],
+    [accessToken, boardId, isEditor, editingId, resolveActivationSpeech, setBoardId, settings.whisperMode],
   );
 
   const applyPrediction = useCallback((text: string) => {
@@ -642,6 +663,21 @@ export function BoardScreen(): React.ReactNode {
                   🔒
                 </span>
               ) : null}
+              {!isEditor && btn.kind === 'analytic' && (btn.speechForms?.length ?? 0) > 1 ? (
+                <span
+                  aria-hidden
+                  style={{
+                    position: 'absolute',
+                    bottom: 4,
+                    right: 4,
+                    fontSize: '0.625rem',
+                    color: '#93c5fd',
+                    fontWeight: 700,
+                  }}
+                >
+                  ↻
+                </span>
+              ) : null}
             </AacButton>
             );
           })}
@@ -821,6 +857,10 @@ function EditorPanel({
             onChange={(e) => onChange({ speechText: e.target.value })}
           />
         </label>
+      )}
+
+      {button.kind === 'analytic' && (
+        <WordFormsPanel button={button} disabled={fieldsLocked} onChange={onChange} />
       )}
 
       <label style={labelStyle}>

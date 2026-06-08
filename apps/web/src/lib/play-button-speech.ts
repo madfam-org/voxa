@@ -67,7 +67,7 @@ function speakWithTts(text: string, locale: string): void {
 /** Play recorded media when present; otherwise fall back to TTS. */
 export async function speakButton(
   btn: BoardButton,
-  options?: { accessToken?: string },
+  options?: { accessToken?: string; speechText?: string },
 ): Promise<void> {
   const video = buttonMediaVideo(btn);
   if (video?.url) {
@@ -82,7 +82,7 @@ export async function speakButton(
     return;
   }
 
-  speakWithTts(buttonSpeech(btn), btn.locale);
+  speakWithTts(options?.speechText ?? buttonSpeech(btn), btn.locale);
 }
 
 export function speakText(text: string, locale = 'en-US'): void {

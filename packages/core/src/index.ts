@@ -46,6 +46,13 @@ export interface RecordedSpeech {
   durationMs?: number;
 }
 
+/** Alternate spoken forms (tenses, plurals, etc.) for analytic buttons */
+export interface SpeechForm {
+  id: string;
+  label: string;
+  speechText: string;
+}
+
 /** Analytic single-word or short-phrase button */
 export interface AnalyticButton {
   kind: 'analytic';
@@ -54,6 +61,9 @@ export interface AnalyticButton {
   symbolUrl?: string;
   speechText: string;
   audio?: RecordedSpeech;
+  /** Alternate inflected forms; active form selected via activeSpeechFormId or tap-cycle */
+  speechForms?: SpeechForm[];
+  activeSpeechFormId?: string;
   locale: LocaleCode;
 }
 
@@ -161,6 +171,23 @@ export function buttonRecordedSpeech(btn: BoardButton): RecordedSpeech | undefin
 
 export function buttonMediaVideo(btn: BoardButton): MediaAsset | undefined {
   return btn.kind === 'glp' ? btn.video : undefined;
+}
+
+export function resolveButtonSpeech(btn: BoardButton, formIndex?: number): string {
+  if (btn.kind === 'glp') return btn.phrase;
+
+  const forms = btn.speechForms;
+  if (forms?.length) {
+    if (formIndex !== undefined && forms[formIndex]) {
+      return forms[formIndex].speechText;
+    }
+    if (btn.activeSpeechFormId) {
+      const active = forms.find((form) => form.id === btn.activeSpeechFormId);
+      if (active) return active.speechText;
+    }
+  }
+
+  return btn.speechText;
 }
 
 export { createDemoBoard, DEMO_BOARD_ID } from './demo-board.js';

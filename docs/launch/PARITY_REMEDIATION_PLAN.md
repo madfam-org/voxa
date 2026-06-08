@@ -115,7 +115,7 @@ Each epic links to [FEATURE_PARITY.md](./FEATURE_PARITY.md) rows and benchmark d
 | B4 | Custom grid 9–144+ | Editor rows/cols with validation; reflow rules | `resizeBoardGrid` + editor **Grid** panel ✅ 2026-06-09 |
 | B5 | Symbol/label modes | ✅ partial | Unify `hideLabels`/`hideSymbols` per board + profile | `communicator-settings.ts`, `AacButton` |
 | B6 | Fitzgerald POS | ✅ colors | Apply POS colors on **all** buttons including imports | `@voxa/ui` borderColor from `partOfSpeech` |
-| B7 | Word forms / inflection | Morphology table for top 200 core verbs/nouns | New `@voxa/vocabulary` inflection module; optional button `forms[]` |
+| B7 | Word forms / inflection | Morphology table for top 200 core verbs/nouns | `speechForms` + `suggestInflections` + editor panel ✅ 2026-06-09 |
 | B8 | Whisper mode | Message bar “hold to preview” without speak | **Whisper mode** setting — build utterance without TTS ✅ 2026-06-08 |
 | B9 | Links to other boards | OBF `links` → navigate to linked board | OBF `load_board_id` ↔ `navigateToBoardId`; editor + activate ✅ 2026-06-08 |
 
@@ -416,6 +416,7 @@ pnpm test && pnpm typecheck
 | 13 | OBZ import/export with images (C5) | C | Engineering ✅ 2026-06-08 |
 | 14 | Custom grid editor + reflow (B4) | B | Engineering ✅ 2026-06-09 |
 | 15 | Board rename/duplicate/delete (B1) | B | Engineering ✅ 2026-06-09 |
+| 16 | Word forms / inflection (B7) | B | Engineering ✅ 2026-06-09 |
 
 ---
 

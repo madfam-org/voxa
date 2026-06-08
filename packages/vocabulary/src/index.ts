@@ -57,3 +57,9 @@ export {
   validateGridDimensions,
   type GridResizeResult,
 } from './grid.js';
+
+export {
+  mergeSpeechForms,
+  suggestInflections,
+  type InflectionKind,
+} from './inflections.js';

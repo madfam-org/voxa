@@ -2,14 +2,15 @@
 
 import { useRef } from 'react';
 import type { BoardButton, PartOfSpeechTag } from '@voxa/core';
+import { resolveButtonSpeech } from '@voxa/core';
 import { fitzgeraldColor, type PartOfSpeech } from '@voxa/vocabulary';
 
 export function buttonLabel(btn: BoardButton): string {
   return btn.kind === 'analytic' ? btn.label : btn.phrase;
 }
 
-export function buttonSpeech(btn: BoardButton): string {
-  return btn.kind === 'analytic' ? btn.speechText : btn.phrase;
+export function buttonSpeech(btn: BoardButton, formIndex?: number): string {
+  return resolveButtonSpeech(btn, formIndex);
 }
 
 export function buttonSymbolUrl(btn: BoardButton): string | undefined {

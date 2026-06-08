@@ -60,7 +60,7 @@ Actionable **feature parity match** against the AAC platform benchmark. Each row
 | Recorded speech on button | OpenAAC ✅ / GLP | 🟡 | `RecordedSpeech` on buttons; web record/upload + playback over TTS (2026-06-08) |
 | GLP buttons with audio/video | Voxa differentiator | 🟡 | GLP video upload in editor; plays in communicator (2026-06-08) |
 | Symbol library search (ARASAAC) | OpenAAC ⭐ | 🟡 | API + editor search (2026-06-08) |
-| Word forms / inflection | OpenAAC / Proloquo grammar | 🔴 | P1 |
+| Word forms / inflection | OpenAAC / Proloquo grammar | 🟡 | `speechForms` + suggest/apply in editor; double-tap cycle (2026-06-09) |
 | Whisper / build utterance without speak | SFY | 🟡 | **Whisper mode** in settings (2026-06-08) |
 | Usage history / activation log | TD Snap, Grid | 🟡 | API + client log (2026-06-08); SLP **Usage** panel in `/app` for editors (2026-06-08) |
 | Real-time team co-edit | TD Snap, Grid | 🔴 | WebSocket + REDIS_URL phase |
