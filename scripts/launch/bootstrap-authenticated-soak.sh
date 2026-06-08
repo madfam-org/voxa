@@ -119,23 +119,9 @@ if [[ "${SKIP_GH_SECRETS:-}" != "1" ]]; then
   echo "GitHub secrets configured."
 fi
 
-echo "== Wait for staging web rollout (GitOps restartedAt or Enclii restart) =="
-sleep 45
-
 echo "== Verify web OAuth (staging sign-in callback) =="
-web_oauth_ok=false
-for attempt in 1 2 3; do
-  if "${ROOT}/scripts/launch/verify-staging-web-oidc.sh"; then
-    web_oauth_ok=true
-    break
-  fi
-  echo "Web OAuth verify attempt ${attempt} failed; retrying after 30s…" >&2
-  sleep 30
-  restart_web "80560128-37a7-462e-a053-bac495241f47" "staging"
-  sleep 30
-done
-if [[ "${web_oauth_ok}" != true ]]; then
-  echo "WARN: staging web OAuth verify failed — bump k8s/staging/voxa-web-deployment.yaml restartedAt and sync Argo" >&2
+if ! "${ROOT}/scripts/launch/verify-staging-web-oidc.sh"; then
+  echo "WARN: staging web OAuth verify failed (curl cookie simulation; see Playwright staging-auth-ux for browser soak)" >&2
 fi
 
 echo "== Verify authenticated soak =="

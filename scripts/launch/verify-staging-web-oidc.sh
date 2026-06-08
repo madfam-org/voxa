@@ -31,15 +31,16 @@ challenge="$(printf '%s' "${verifier}" | openssl dgst -sha256 -binary | openssl 
 state="$(openssl rand -hex 16)"
 
 # Seed Voxa OAuth state cookie (matches web sign-in flow).
-state_json="$(python3 - <<PY
-import json, urllib.parse
-payload=json.dumps({"state": "${state}", "redirect_to": "/"})
-print(urllib.parse.quote(payload, safe=""))
+state_payload="$(python3 - <<PY
+import json
+print(json.dumps({"state": "${state}", "redirect_to": "/"}))
 PY
 )"
+# Persist transient OAuth cookies the way Next.js sets them (HttpOnly, Secure, SameSite=lax).
 curl -sS -c "${COOKIE_JAR}" -b "${COOKIE_JAR}" -o /dev/null \
   "${WEB_BASE}/auth/signin" \
-  -H "Cookie: voxa_oidc_state=${state_json}; voxa_pkce_verifier=${verifier}"
+  --cookie "voxa_oidc_state=${state_payload}" \
+  --cookie "voxa_pkce_verifier=${verifier}"
 
 auth_qs="$(python3 - <<PY
 import urllib.parse
@@ -99,7 +100,7 @@ callback_headers="$(curl -sS -c "${COOKIE_JAR}" -b "${COOKIE_JAR}" -D - -o /dev/
   --max-redirs 0 "${callback_url}" || true)"
 final_location="$(printf '%s' "${callback_headers}" | awk 'tolower($1)=="location:" {print $2}' | tr -d '\r' | tail -1)"
 
-if [[ "${final_location}" == *token_exchange_failed* ]] || [[ "${callback_url}" == *error=* ]]; then
+if [[ "${final_location}" == *token_exchange_failed* ]] || [[ "${final_location}" == *state_mismatch* ]] || [[ "${callback_url}" == *error=* ]]; then
   echo "Web OAuth callback failed: ${final_location:-${callback_url}}" >&2
   exit 1
 fi

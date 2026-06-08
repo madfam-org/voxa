@@ -25,6 +25,7 @@ test.describe('Staging UX soak', () => {
 
   test('accessibility settings expose CVI theme and switch scanning', async ({ page }) => {
     test.skip(!hasJanuaTestCredentials(), 'Requires JANUA_TEST_EMAIL/PASSWORD for staging OAuth');
+    test.skip(!!process.env.CI, 'Browser Janua OAuth — run manually on staging (API auth soak covers CI)');
 
     await page.addInitScript(() => localStorage.setItem('voxa-ai-consent', 'granted'));
     await signInViaJanua(page);
