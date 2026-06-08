@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import type { BoardButton } from '@voxa/core';
 import { fitzgeraldColor, resolvePartOfSpeech } from '@voxa/vocabulary';
+import type { ScanOrder } from '@voxa/access';
 import { buttonLabel, buttonSpeech } from '@/lib/board-utils';
 import { speakButton, speakText } from '@/lib/play-button-speech';
 import { useMobileAuth } from '@/hooks/use-mobile-auth';
@@ -86,6 +87,33 @@ export function MobileBoardScreen() {
     setSettings(next);
     void saveMobileSettings(next);
   }, [settings]);
+
+  const patchSettings = useCallback((patch: Partial<MobileCommunicatorSettings>) => {
+    const next = { ...settings, ...patch };
+    setSettings(next);
+    void saveMobileSettings(next);
+  }, [settings]);
+
+  const configureSwitchScan = useCallback(() => {
+    Alert.alert(
+      'Switch scan speed',
+      `${settings.switchIntervalMs} ms · ${settings.switchOrder.replace('-', ' ')}`,
+      [
+        { text: 'Faster (600 ms)', onPress: () => patchSettings({ switchIntervalMs: 600 }) },
+        { text: 'Default (1200 ms)', onPress: () => patchSettings({ switchIntervalMs: 1200 }) },
+        { text: 'Slower (2000 ms)', onPress: () => patchSettings({ switchIntervalMs: 2000 }) },
+        {
+          text: 'Row-major order',
+          onPress: () => patchSettings({ switchOrder: 'row-major' as ScanOrder }),
+        },
+        {
+          text: 'Column-major order',
+          onPress: () => patchSettings({ switchOrder: 'column-major' as ScanOrder }),
+        },
+        { text: 'Cancel', style: 'cancel' },
+      ],
+    );
+  }, [patchSettings, settings.switchIntervalMs, settings.switchOrder]);
 
   const pickBoard = useCallback(() => {
     if (boardCatalog.length <= 1) return;
@@ -181,6 +209,9 @@ export function MobileBoardScreen() {
           </Text>
           <Pressable style={styles.switchBtn} onPress={advance} accessibilityLabel="Advance scan">
             <Text style={styles.switchBtnText}>Next</Text>
+          </Pressable>
+          <Pressable style={styles.switchBtn} onPress={configureSwitchScan} accessibilityLabel="Switch scan settings">
+            <Text style={styles.switchBtnText}>Tune</Text>
           </Pressable>
           <Pressable style={styles.switchBtnPrimary} onPress={select} accessibilityLabel="Select scanned cell">
             <Text style={styles.switchBtnText}>Select</Text>

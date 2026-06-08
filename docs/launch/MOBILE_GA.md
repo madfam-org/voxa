@@ -55,7 +55,7 @@ Replace placeholder values in `eas.json` submit block (`appleId`, `ascAppId`, `a
 - [ ] Preview builds on TestFlight + Play internal testing
 - [ ] Janua OAuth deep link — `voxa://auth/callback` + refresh token rotation ✅ 2026-06-09
 - [ ] Offline board cache + sync conflict handling verified — AsyncStorage + NetInfo retry ✅ 2026-06-09
-- [ ] Switch scanning on reference hardware (iOS/Android)
+- [ ] Switch scanning on reference hardware (iOS/Android) — on-screen scan + **Tune** speed/order ✅ 2026-06-09; BT adapter P2
 - [ ] Store screenshots, descriptions, privacy nutrition labels
 - [ ] SLP sign-off on mobile communicator flows ([SLP_SIGNOFF.md](./SLP_SIGNOFF.md) — extend for native)
 - [ ] `production` submit via `eas submit`

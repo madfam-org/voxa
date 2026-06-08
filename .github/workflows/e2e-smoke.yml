@@ -34,9 +34,7 @@ jobs:
         run: |
           {
             echo "## GA soak window"
-            ./scripts/launch/soak-window-progress.sh --required 7 --start 2026-06-08 || true
-            echo ""
-            echo "Log: docs/launch/SOAK_LOG.md"
+            ./scripts/launch/soak-status.sh --required 7 --start 2026-06-08 --declare 2026-06-15 || true
           } >> "$GITHUB_STEP_SUMMARY"
       - name: Soak window gate
         continue-on-error: true
@@ -45,6 +43,9 @@ jobs:
         run: ./scripts/launch/soak-scenarios.sh
       - name: Production GA gate
         run: ./scripts/launch/verify-prod-ga.sh
+      - name: Production Redis co-edit readiness
+        continue-on-error: true
+        run: ./scripts/launch/verify-prod-redis.sh
       - name: Authenticated staging soak
         id: auth_soak
         env:

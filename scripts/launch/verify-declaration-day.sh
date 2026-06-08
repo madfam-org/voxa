@@ -83,6 +83,10 @@ step "Soak window (${REQUIRED} days from ${START_DATE})" \
   "${ROOT}/scripts/launch/verify-soak-window.sh" --required "${REQUIRED}" --start "${START_DATE}" --log "${LOG_FILE}"
 
 echo ""
+echo "== Soak operator summary =="
+"${ROOT}/scripts/launch/soak-status.sh" --required "${REQUIRED}" --start "${START_DATE}" --log "${LOG_FILE}" || true
+
+echo ""
 echo "---"
 if [[ "${fail}" -eq 0 ]]; then
   echo "Declaration-day checks passed @ $(date -u +%Y-%m-%dT%H:%M:%SZ)"

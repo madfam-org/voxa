@@ -63,5 +63,7 @@ if [[ "${count}" -ge "${REQUIRED}" ]]; then
   exit 0
 fi
 
+missing_date="${check_date}"
+echo "Next missing pass day: ${missing_date}"
 echo "Status: IN_PROGRESS (need ${REQUIRED} consecutive pass days)"
 exit 1

@@ -439,6 +439,7 @@ pnpm test && pnpm typecheck
 | 36 | Media workflow e2e: ARASAAC, GLP audio, OBZ images (C/W2) | C | Engineering ✅ 2026-06-09 |
 | 37 | Clinical workflow e2e: usage report, remote edit, audit (E/W3) | E | Engineering ✅ 2026-06-09 |
 | 38 | EAS config guard + mobile settings tests (D1/W3) | D | Mobile ✅ 2026-06-09 |
+| 39 | Soak status + prod Redis verify + mobile scan tune (W0/E4/D) | W0/E4/D | Ops/Engineering ✅ 2026-06-09 |
 
 ---
 
