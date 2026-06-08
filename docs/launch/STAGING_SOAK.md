@@ -47,12 +47,12 @@ Record daily results in [SOAK_LOG.md](./SOAK_LOG.md) (auto-appended with `--log`
 
 ## Manual scenarios (once per soak week)
 
-- [ ] Janua sign-in → session → authenticated board list/create
+- [x] Janua sign-in → session → authenticated board list/create (automated via `soak-scenarios.sh --with-auth`)
 - [ ] Sign out and confirm protected routes return 401
-- [ ] Dhanam billing test mode: entitlement API returns expected tier/limit
-- [ ] AI consent banner: predictions only after consent; revoke consent blocks `/v1/ai/*`
-- [ ] Legal pages load (`/legal/privacy`, `/legal/terms`, `/legal/accessibility`)
-- [ ] OBF import/export smoke (Editor mode)
+- [x] Dhanam billing test mode: entitlement API returns expected tier/limit (automated auth soak)
+- [x] AI consent banner: predictions blocked without `X-Voxa-AI-Consent` (automated auth soak)
+- [x] Legal pages load (`/legal/privacy`, `/legal/terms`, `/legal/accessibility`)
+- [ ] OBF import/export smoke (Editor mode) — Playwright follow-up
 - [ ] CVI theme + switch scanning modes (accessibility settings)
 
 ## Exit criteria

@@ -22,6 +22,19 @@ jobs:
         working-directory: e2e
       - name: Staging soak health
         run: ./scripts/launch/soak-scenarios.sh
+      - name: Authenticated staging soak
+        env:
+          OIDC_CLIENT_ID: ${{ secrets.VOXA_STAGING_OIDC_CLIENT_ID }}
+          OIDC_CLIENT_SECRET: ${{ secrets.VOXA_STAGING_OIDC_CLIENT_SECRET }}
+          JANUA_TEST_EMAIL: ${{ secrets.VOXA_STAGING_TEST_EMAIL }}
+          JANUA_TEST_PASSWORD: ${{ secrets.VOXA_STAGING_TEST_PASSWORD }}
+        run: |
+          if [[ -z "${OIDC_CLIENT_SECRET:-}" || -z "${JANUA_TEST_EMAIL:-}" || -z "${OIDC_CLIENT_ID:-}" ]]; then
+            echo "Skipping auth soak — configure VOXA_STAGING_OIDC_* and VOXA_STAGING_TEST_* secrets"
+            exit 0
+          fi
+          export VOXA_TEST_ACCESS_TOKEN="$(./scripts/launch/fetch-staging-access-token.sh)"
+          ./scripts/launch/soak-scenarios.sh --with-auth
       - run: pnpm test:e2e:smoke
         env:
           PLAYWRIGHT_BASE_URL: https://voxa-staging.madfam.io

@@ -63,7 +63,7 @@ On web, tap **I** → **want** to see AI prediction chips. Switch to **Editor (S
 ### Status & monitoring
 
 - **Service status:** [status.madfam.io](https://status.madfam.io) (Voxa entries under AAC Platform)
-- **GA progress:** [docs/launch/GA_ROADMAP.md](./docs/launch/GA_ROADMAP.md) · [GA_CHECKLIST.md](./docs/launch/GA_CHECKLIST.md) · [GA_STATUS.md](./docs/launch/GA_STATUS.md)
+- **GA progress:** [docs/launch/GA_ROADMAP.md](./docs/launch/GA_ROADMAP.md) · [REMEDIATION_PLAN.md](./docs/launch/REMEDIATION_PLAN.md) · [GA_CHECKLIST.md](./docs/launch/GA_CHECKLIST.md) · [GA_STATUS.md](./docs/launch/GA_STATUS.md)
 
 ### Deployed environments (Enclii / madfam.io)
 
@@ -82,7 +82,8 @@ See [docs/deploy/ENCLII.md](./docs/deploy/ENCLII.md) for CI, onboarding, and ope
 - [Janua authentication](./docs/auth/JANUA.md) — SSO for web and API
 - [AAC platform benchmark](./docs/launch/AAC_PLATFORM_BENCHMARK.md) — competitive research (commercial + OSS)
 - [Feature parity tracker](./docs/launch/FEATURE_PARITY.md) — GA parity checklist vs Tier A AAC
-- [GA roadmap](./docs/launch/GA_ROADMAP.md) — phased plan to full commercial GA
+- [Remediation plan](./docs/launch/REMEDIATION_PLAN.md) — W1–W4 execution tracker for full web GA
+- [Migration guide](./docs/launch/MIGRATION.md) — OBF import from other AAC platforms
 - [GA checklist](./docs/launch/GA_CHECKLIST.md) — commercial launch criteria
 - [GA status](./docs/launch/GA_STATUS.md) — production deploy wrap-up and remaining platform items
 - [Staging soak](./docs/launch/STAGING_SOAK.md) — pre-GA validation checklist

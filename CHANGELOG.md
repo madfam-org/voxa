@@ -6,7 +6,20 @@ All notable changes to Voxa are documented here.
 
 ### Added
 
-- AAC competitive benchmark: `docs/launch/AAC_PLATFORM_BENCHMARK.md` (Tier A–D platforms, cross-matrix, positioning)
+- Full GA remediation plan: `docs/launch/REMEDIATION_PLAN.md` (W1–W4 waves)
+- Customer migration guide: `docs/launch/MIGRATION.md` (OBF import path)
+- Multi-board library: web board picker, **New board**, `VoxaClient.createBoard()`
+- Per-button `hidden` flag (editor) and symbol display modes (`hideLabels`, `hideSymbols`)
+- Authenticated soak checks: billing entitlement, AI consent gate, board create, OBF round-trip
+- CI auth soak step in `e2e-smoke.yml` (when `VOXA_STAGING_*` secrets configured)
+
+### Changed
+
+- `register-janua-oauth-client.sh` is idempotent by default; `--rotate-secret` opt-in
+- `soak-scenarios.sh` uses POST for AI auth gates; extended `--with-auth` coverage
+- Soak fixture aligned to OBF 3.x format
+
+### Added (prior unreleased)
 - Feature parity tracker: `docs/launch/FEATURE_PARITY.md` (P0–P3 checklist, scorecard, OpenAAC alignment)
 - GA roadmap Phase 6 (competitive parity) and milestone M6
 

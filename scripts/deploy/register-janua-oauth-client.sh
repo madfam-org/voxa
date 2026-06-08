@@ -1,10 +1,14 @@
 #!/usr/bin/env bash
 # Register the Voxa OAuth client in Janua (auth.madfam.io).
-# Run once per environment set; safe to re-run (409 = already exists).
+#
+# Idempotent by default: existing client (409) is reported and left unchanged.
+# Use --rotate-secret only when intentionally rolling OIDC_CLIENT_SECRET.
 #
 # Usage:
 #   JANUA_ADMIN_EMAIL='admin@madfam.io' JANUA_ADMIN_PASSWORD='…' \
 #     ./scripts/deploy/register-janua-oauth-client.sh
+#
+#   ./scripts/deploy/register-janua-oauth-client.sh --rotate-secret
 #
 # Optional overrides:
 #   JANUA_API_URL=https://auth.madfam.io
@@ -16,6 +20,24 @@ set -euo pipefail
 JANUA_API_URL="${JANUA_API_URL:-https://auth.madfam.io}"
 CLIENT_KEY="${VOXA_CLIENT_KEY:-voxa}"
 AUDIENCE="${VOXA_AUDIENCE:-voxa}"
+ROTATE_SECRET=false
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --rotate-secret)
+      ROTATE_SECRET=true
+      shift
+      ;;
+    -h|--help)
+      sed -n '1,20p' "$0"
+      exit 0
+      ;;
+    *)
+      echo "Unknown argument: $1" >&2
+      exit 2
+      ;;
+  esac
+done
 
 if [[ -z "${JANUA_ADMIN_EMAIL:-}" || -z "${JANUA_ADMIN_PASSWORD:-}" ]]; then
   echo "Set JANUA_ADMIN_EMAIL and JANUA_ADMIN_PASSWORD" >&2
@@ -36,6 +58,31 @@ if [[ -z "${token}" ]]; then
   echo "Janua login failed: ${login_resp}" >&2
   exit 1
 fi
+
+find_existing_client() {
+  local list_resp client_id
+  list_resp="$(curl -sS "${JANUA_API_URL}/api/v1/oauth/clients/admin/all?search=${CLIENT_KEY}" \
+    -H "Authorization: Bearer ${token}")"
+  client_id="$(echo "${list_resp}" | python3 -c "
+import json, sys
+d = json.load(sys.stdin)
+items = d.get('items') or d.get('clients') or d
+if isinstance(items, dict):
+    items = items.get('items', [])
+matches = []
+for item in items:
+    key = item.get('client_key') or ''
+    name = item.get('name') or ''
+    if key == '${CLIENT_KEY}' or name == 'Voxa':
+        matches.append(item)
+if not matches:
+    sys.exit(1)
+# Prefer exact client_key match; fall back to first Voxa-named client
+matches.sort(key=lambda x: 0 if x.get('client_key') == '${CLIENT_KEY}' else 1)
+print(matches[0].get('id', ''))
+")"
+  echo "${client_id}"
+}
 
 payload="$(cat <<EOF
 {
@@ -71,43 +118,45 @@ if [[ "${code}" == "201" ]]; then
   echo "${body}" | python3 -m json.tool
   echo ""
   echo "Save client_id + client_secret to Enclii secrets (OIDC_CLIENT_SECRET) and GitHub vars."
-elif [[ "${code}" == "409" ]]; then
+  exit 0
+fi
+
+if [[ "${code}" == "409" ]]; then
   echo "OAuth client key '${CLIENT_KEY}' already exists (409)."
   client_id="$(echo "${body}" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('id') or d.get('client',{}).get('id') or '')" 2>/dev/null || true)"
   if [[ -z "${client_id}" ]]; then
-    list_resp="$(curl -sS "${JANUA_API_URL}/api/v1/oauth/clients/admin/all?search=${CLIENT_KEY}" \
-      -H "Authorization: Bearer ${token}")"
-    client_id="$(echo "${list_resp}" | python3 -c "
-import json, sys
-d = json.load(sys.stdin)
-items = d.get('items') or d.get('clients') or d
-if isinstance(items, dict):
-    items = items.get('items', [])
-for item in items:
-    if item.get('client_key') == '${CLIENT_KEY}' or item.get('client_id') == '${CLIENT_KEY}' or item.get('name') == 'Voxa':
-        print(item.get('id', ''))
-        break
-")"
+    client_id="$(find_existing_client || true)"
   fi
-  if [[ -n "${client_id}" ]]; then
-    rotate_resp="$(curl -sS -w '\nHTTP_CODE:%{http_code}' -X POST \
-      "${JANUA_API_URL}/api/v1/oauth/clients/${client_id}/rotate" \
-      -H "Authorization: Bearer ${token}" \
-      -H 'Content-Type: application/json' \
-      -d '{}')"
-    rotate_code="$(echo "${rotate_resp}" | sed -n 's/^HTTP_CODE://p' | tail -1)"
-    rotate_body="$(echo "${rotate_resp}" | sed '/^HTTP_CODE:/d')"
-    if [[ "${rotate_code}" == "200" || "${rotate_code}" == "201" ]]; then
-      echo "Rotated client secret for existing client:"
-      echo "${rotate_body}" | python3 -m json.tool
-    else
-      echo "Client exists; rotate failed (${rotate_code}): ${rotate_body}" >&2
-      exit 1
-    fi
+  if [[ -z "${client_id}" ]]; then
+    echo "Could not resolve existing client id." >&2
+    echo "${body}" >&2
+    exit 1
+  fi
+
+  if [[ "${ROTATE_SECRET}" != true ]]; then
+    echo "Existing client id: ${client_id}"
+    echo "No changes made (pass --rotate-secret to roll OIDC_CLIENT_SECRET)."
+    exit 0
+  fi
+
+  rotate_resp="$(curl -sS -w '\nHTTP_CODE:%{http_code}' -X POST \
+    "${JANUA_API_URL}/api/v1/oauth/clients/${client_id}/rotate" \
+    -H "Authorization: Bearer ${token}" \
+    -H 'Content-Type: application/json' \
+    -d '{}')"
+  rotate_code="$(echo "${rotate_resp}" | sed -n 's/^HTTP_CODE://p' | tail -1)"
+  rotate_body="$(echo "${rotate_resp}" | sed '/^HTTP_CODE:/d')"
+  if [[ "${rotate_code}" == "200" || "${rotate_code}" == "201" ]]; then
+    echo "Rotated client secret for existing client:"
+    echo "${rotate_body}" | python3 -m json.tool
+    echo ""
+    echo "Update OIDC_CLIENT_SECRET in Enclii voxa-secrets and GitHub Actions secrets."
   else
-    echo "${body}"
+    echo "Client exists; rotate failed (${rotate_code}): ${rotate_body}" >&2
+    exit 1
   fi
-else
-  echo "Failed (${code}): ${body}" >&2
-  exit 1
+  exit 0
 fi
+
+echo "Failed (${code}): ${body}" >&2
+exit 1

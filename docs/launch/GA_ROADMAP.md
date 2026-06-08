@@ -57,8 +57,8 @@ gantt
 
 | Work item | Owner | Target | Notes |
 |-----------|-------|--------|-------|
-| GHCR packages public (`voxa-api`, `voxa-web`) | Org admin | Week of 2026-06-08 | [GHCR_ORG_ADMIN.md](./GHCR_ORG_ADMIN.md) |
-| Remove `k8s/*/signature-policyexception.yaml` | Engineering | After GHCR public | Kyverno cosign verify works without bypass |
+| GHCR packages public (`voxa-api`, `voxa-web`) | Org admin | ✅ 2026-06-08 | [GHCR_ORG_ADMIN.md](./GHCR_ORG_ADMIN.md) |
+| Remove `k8s/*/signature-policyexception.yaml` | Engineering | ✅ 2026-06-08 | Kyverno cosign verify works without bypass |
 | PgBouncer entries for `voxa` / `voxa_staging` | Platform | Non-blocking | Direct Postgres OK today |
 | Cluster CPU headroom | Platform | Ongoing | Prevents `switchyard-api` Pending rollouts |
 

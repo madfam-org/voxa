@@ -32,13 +32,13 @@ Actionable **feature parity match** against the AAC platform benchmark. Each row
 | Eye dwell (configurable) | OpenAAC ⭐ | 🟡 | Pointer sim; not Tobii SDK |
 | Message bar + speak utterance | OpenAAC 🟢 | ✅ | Web Speech API |
 | OBF export | OpenAAC / Cboard | ✅ | API + editor UI |
-| OBF import | OpenAAC / Cboard | 🟡 | API + UI; soak validation pending |
+| OBF import | OpenAAC / Cboard | ✅ | API + UI; auth soak validated 2026-06-08 |
 | SLP editor mode | OpenAAC 🟢 | 🟡 | Basic EditorPanel; not full vocab tools |
 | Cloud board persistence | OpenAAC 💡 | ✅ | PostgreSQL + sync client |
 | Offline cache + retry | OpenAAC 💡 | 🟡 | IndexedDB pending save |
 | Legal / privacy / a11y pages | Commercial GA | ✅ | `/legal/*` |
 | Automated a11y CI | WCAG regression | ✅ | axe Playwright |
-| Staging soak + SLP sign-off | Clinical gate | 🔴 | In progress → 2026-06-15 |
+| Staging soak + SLP sign-off | Clinical gate | 🟡 | Automated soak in CI; SLP pending |
 
 ---
 
@@ -46,12 +46,12 @@ Actionable **feature parity match** against the AAC platform benchmark. Each row
 
 | Feature | Leaders | Voxa status | Target phase |
 |---------|---------|-------------|--------------|
-| Multi-board library (not single demo) | All Tier A | 🔴 | P1 — Q3 2026 |
+| Multi-board library (not single demo) | All Tier A | 🟡 | Board picker + create (2026-06-08) |
 | Motor-planning slot locks enforced in UI | LAMP, SFY | 🟡 | Model yes; editor UX P1 |
 | Fitzgerald POS on all buttons | Proloquo, Grid | 🟡 | Demo + editor; not full library |
-| Hide/show buttons (open/close) | SFY, Proloquo | 🔴 | P1 |
+| Hide/show buttons (open/close) | SFY, Proloquo | 🟡 | Per-button `hidden` flag in editor |
 | Custom grid size (9–144+ cells) | Proloquo2Go | 🟡 | Configurable rows/cols in editor |
-| Symbol-only / label-only modes | OpenAAC ✅ | 🔴 | P1 |
+| Symbol-only / label-only modes | OpenAAC ✅ | 🟡 | `hideLabels` + `hideSymbols` settings |
 | Upload custom symbol / photo | OpenAAC 🟢 | 🟡 | Editor partial |
 | Recorded speech on button | OpenAAC ✅ / GLP | 🔴 | Type in `@voxa/core`; UI P1 |
 | GLP buttons with audio/video | Voxa differentiator | 🟡 | Type + demo; media upload P1 |

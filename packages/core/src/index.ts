@@ -72,6 +72,8 @@ export type BoardButton = (AnalyticButton | GlpButton) & {
   position: GridPosition;
   locked: boolean;
   partOfSpeech?: PartOfSpeechTag;
+  /** Hidden from communicator view until revealed by editor (OpenAAC hide/show). */
+  hidden?: boolean;
 };
 
 export interface BoardGrid {

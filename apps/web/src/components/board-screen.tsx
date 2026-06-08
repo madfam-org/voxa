@@ -49,6 +49,10 @@ export function BoardScreen(): React.ReactNode {
   const { settings, setSettings } = useCommunicatorSettings();
   const {
     board,
+    boardId,
+    boardCatalog,
+    setBoardId,
+    createBoard,
     setBoard,
     syncStatus,
     error,
@@ -58,13 +62,16 @@ export function BoardScreen(): React.ReactNode {
     importObf,
     exportObf,
     isEditor,
+    isAuthenticated,
   } = useSyncedBoard(role);
-
-  const { textPredictions, symbolPredictions } = usePredictions(board, utterance, recentButtonIds);
 
   const sorted = [...board.grid.buttons].sort(
     (a, b) => a.position.row - b.position.row || a.position.column - b.position.column,
   );
+
+  const visibleButtons = sorted.filter((btn) => isEditor || !btn.hidden);
+
+  const { textPredictions, symbolPredictions } = usePredictions(board, utterance, recentButtonIds);
 
   const activate = useCallback(
     (btn: BoardButton) => {
@@ -96,7 +103,7 @@ export function BoardScreen(): React.ReactNode {
     enabled: switchScanEnabled,
     rows: board.grid.rows,
     columns: board.grid.columns,
-    buttons: sorted,
+    buttons: visibleButtons,
     intervalMs: settings.switchIntervalMs,
     order: settings.switchOrder,
     auditoryHighlight: settings.auditoryScanHighlight,
@@ -108,7 +115,7 @@ export function BoardScreen(): React.ReactNode {
     eyeDwellEnabled,
     settings.eyeDwellMs,
     (buttonId) => {
-      const btn = sorted.find((b) => (b.id as string) === buttonId);
+      const btn = visibleButtons.find((b) => (b.id as string) === buttonId);
       if (btn) activate(btn);
     },
   );
@@ -146,6 +153,19 @@ export function BoardScreen(): React.ReactNode {
       setBusy(false);
     }
   }, [exportObf, board.id]);
+
+  const handleCreateBoard = useCallback(async () => {
+    const name = window.prompt('Board name', 'My board');
+    if (!name?.trim()) return;
+    setBusy(true);
+    try {
+      await createBoard(name.trim());
+    } catch (err) {
+      alert((err as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }, [createBoard]);
 
   const handleSave = useCallback(async () => {
     setBusy(true);
@@ -209,7 +229,30 @@ export function BoardScreen(): React.ReactNode {
         }}
       >
         <strong style={{ fontSize: '1.125rem' }}>Voxa</strong>
-        <span style={{ opacity: 0.7, fontSize: '0.875rem' }}>{board.name}</span>
+
+        {isAuthenticated && boardCatalog.length > 0 ? (
+          <select
+            value={boardId}
+            onChange={(e) => setBoardId(e.target.value)}
+            style={selectStyle}
+            aria-label="Board"
+          >
+            {boardCatalog.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.name}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <span style={{ opacity: 0.7, fontSize: '0.875rem' }}>{board.name}</span>
+        )}
+
+        {isEditor && isAuthenticated && (
+          <button type="button" onClick={handleCreateBoard} disabled={busy} style={secondaryBtn}>
+            New board
+          </button>
+        )}
+
         <span
           style={{
             fontSize: '0.75rem',
@@ -237,6 +280,12 @@ export function BoardScreen(): React.ReactNode {
         <a href="/auth/signin" style={{ ...secondaryBtn, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
           Sign in
         </a>
+
+        {isAuthenticated && (
+          <a href="/auth/signout" style={{ ...secondaryBtn, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
+            Sign out
+          </a>
+        )}
 
         <div style={utteranceBarStyle}>
           {utterance.length ? utterance.join(' ') : 'Tap buttons to build a message…'}
@@ -288,13 +337,14 @@ export function BoardScreen(): React.ReactNode {
           theme={theme}
           targetScale={settings.targetScale}
         >
-          {sorted.map((btn) => (
+          {visibleButtons.map((btn) => (
             <AacButton
               key={btn.id as string}
               label={buttonLabel(btn)}
               borderColor={buttonBorderColor(btn)}
               targetScale={settings.targetScale}
               hideSymbol={settings.hideSymbols}
+              hideLabel={settings.hideLabels}
               scanHighlighted={isHighlighted(btn)}
               dwellProgress={dwellProgressFor(btn.id as string)}
               onClick={() => handleButtonPress(btn)}
@@ -417,6 +467,15 @@ function EditorPanel({
           onChange={(e) => onChange({ locked: e.target.checked })}
         />
         Lock position (motor planning)
+      </label>
+
+      <label style={{ ...labelStyle, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <input
+          type="checkbox"
+          checked={button.hidden ?? false}
+          onChange={(e) => onChange({ hidden: e.target.checked })}
+        />
+        Hide from communicator view
       </label>
 
       <button type="button" onClick={onClose} style={{ ...headerBtn, marginTop: 16, width: '100%' }}>
