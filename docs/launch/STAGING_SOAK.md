@@ -20,6 +20,13 @@ Run locally or via scheduled CI (`e2e-smoke` workflow, weekdays 14:00 UTC):
 ./scripts/launch/soak-daily-check.sh
 # optional: append result to soak log
 ./scripts/launch/soak-daily-check.sh --log docs/launch/SOAK_LOG.md
+
+# Extended automated scenarios (legal, auth gates):
+./scripts/launch/soak-scenarios.sh
+
+# With Janua voxa session + OBF import/export on staging:
+# Sign in at staging → copy accessToken from /api/auth/session
+VOXA_TEST_ACCESS_TOKEN='…' ./scripts/launch/soak-scenarios.sh --with-auth
 ```
 
 Manual one-liners:

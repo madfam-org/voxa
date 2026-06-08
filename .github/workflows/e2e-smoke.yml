@@ -21,7 +21,7 @@ jobs:
       - run: pnpm exec playwright install chromium --with-deps
         working-directory: e2e
       - name: Staging soak health
-        run: ./scripts/launch/soak-daily-check.sh
+        run: ./scripts/launch/soak-scenarios.sh
       - run: pnpm test:e2e:smoke
         env:
           PLAYWRIGHT_BASE_URL: https://voxa-staging.madfam.io

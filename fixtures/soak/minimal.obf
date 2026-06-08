@@ -1,0 +1,24 @@
+{
+  "format": "open-board-format-1.0",
+  "id": "soak-minimal",
+  "name": "Soak test board",
+  "grid": {
+    "rows": 2,
+    "columns": 2,
+    "order": "row-major"
+  },
+  "buttons": [
+    {
+      "id": "hello",
+      "label": "hello",
+      "vocalization": "hello",
+      "background_color": "#16a34a"
+    },
+    {
+      "id": "thanks",
+      "label": "thanks",
+      "vocalization": "thank you",
+      "background_color": "#16a34a"
+    }
+  ]
+}

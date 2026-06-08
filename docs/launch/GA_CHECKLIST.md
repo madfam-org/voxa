@@ -4,7 +4,7 @@ Track progress toward general availability at `voxa.madfam.io`.
 
 ## Platform (Enclii / ops)
 
-- [ ] GHCR packages public; Kyverno `PolicyException` removed — `scripts/deploy/make-ghcr-packages-public.sh`
+- [ ] GHCR packages public; Kyverno `PolicyException` removed — [GHCR_ORG_ADMIN.md](./GHCR_ORG_ADMIN.md)
 - [x] `ENCLII_CALLBACK_TOKEN` set on `madfam-org/voxa` (2026-06-07; synced across MADFAM deploy repos)
 - [x] GitHub webhook registered on `madfam-org/voxa` → `https://api.enclii.dev/v1/webhooks/github` (hook `637900323`)
 - [x] Enclii webhook signature verified (2026-06-08; scale + restart — see [GA_STATUS.md](./GA_STATUS.md))
