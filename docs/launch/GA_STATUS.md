@@ -135,6 +135,23 @@ ssh ssh.madfam.io 'sudo /usr/local/bin/k3s kubectl get secret enclii-github-webh
 
 Local `kubectl` and non-interactive SSH to `ssh.madfam.io` require **Cloudflare Access** authentication.
 
+### 5. Staging web browser sign-in (`token_exchange_failed`)
+
+**Symptom:** `/auth/signin?error=token_exchange_failed` after Janua login; API token soak (`fetch-staging-access-token.sh`) still passes.
+
+**Cause:** `voxa-web` pods must load `OIDC_CLIENT_SECRET` from `voxa-secrets` after each Janua rotate. Use explicit `secretKeyRef` (not optional `envFrom`) and recycle pods.
+
+**Fix:**
+
+```bash
+JANUA_ADMIN_EMAIL='…' JANUA_ADMIN_PASSWORD='…' ./scripts/launch/bootstrap-authenticated-soak.sh
+# Confirm GitOps synced k8s/staging/voxa-web-deployment.yaml (secretKeyRef + restartedAt)
+curl -sS https://voxa-staging.madfam.io/api/health  # oidcClientSecretSet: true after next web deploy
+./scripts/launch/verify-staging-web-oidc.sh  # optional curl-based callback check
+```
+
+Remove stray keys: `./scripts/launch/prune-staging-secret-key.sh TEST_PROBE` (break-glass SSH).
+
 ## Operator script index
 
 | Script | Purpose |
@@ -147,6 +164,9 @@ Local `kubectl` and non-interactive SSH to `ssh.madfam.io` require **Cloudflare 
 | `scripts/deploy/restart-voxa-api.sh` | Rolling restart prod/staging API when auth env changes |
 | `scripts/deploy/rollout-switchyard-api.sh` | Recycle switchyard-api after webhook secret rotation |
 | `scripts/deploy/make-ghcr-packages-public.sh` | Org admin: public GHCR packages |
+| `scripts/launch/bootstrap-authenticated-soak.sh` | Rotate OIDC, sync secrets, GitHub `VOXA_STAGING_*`, auth soak |
+| `scripts/launch/verify-staging-web-oidc.sh` | Curl-based staging web OAuth callback check |
+| `scripts/launch/prune-staging-secret-key.sh` | Remove stray keys from `voxa-staging/voxa-secrets` (SSH) |
 | `scripts/launch/soak-daily-check.sh` | Daily staging soak health checks |
 
 ## Security notes
