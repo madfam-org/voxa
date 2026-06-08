@@ -104,8 +104,19 @@ export function serializeObf(board: ObfBoard): string {
   return JSON.stringify(board, null, 2);
 }
 
-/** .obz is a zip archive of OBF + media — extraction deferred to platform layer */
+/** .obz is a zip archive of OBF JSON + embedded images — see `./obz.js` */
 export type ObzArchive = {
   boardJson: string;
   mediaPaths: string[];
 };
+
+export {
+  fetchSymbolBytes,
+  obfToVoxaButtonsWithImages,
+  obzToVoxaButtons,
+  packObz,
+  resolveObfImageUrl,
+  unpackObz,
+  voxaBoardToObz,
+  type ObzUnpackResult,
+} from './obz.js';

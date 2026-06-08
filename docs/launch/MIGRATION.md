@@ -37,7 +37,9 @@ Export **OBF 3.x JSON** from the source app, then import via Voxa Editor. Voxa m
 - Background colors (when present)
 - Basic symbol URLs (when inline HTTP URLs)
 
-**Not yet supported:** `.obz` zip bundles with embedded media, folder navigation (`load_board_id`), hierarchical `parent_id` trees.
+**Supported (2026-06-08):** `.obz` zip bundles with embedded images (`Import OBZ` / `Export OBZ` in editor), board navigation via OBF `load_board_id`.
+
+**Not yet supported:** hierarchical `parent_id` folder trees inside a single board view.
 
 ## Coming soon (P2)
 

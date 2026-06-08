@@ -9,6 +9,7 @@ export interface CommunicatorSettings {
   switchOrder: ScanOrder;
   eyeDwellMs: number;
   auditoryScanHighlight: boolean;
+  whisperMode: boolean;
   hideSymbols: boolean;
   hideLabels: boolean;
 }
@@ -21,6 +22,7 @@ export const DEFAULT_COMMUNICATOR_SETTINGS: CommunicatorSettings = {
   switchOrder: 'row-major',
   eyeDwellMs: 1000,
   auditoryScanHighlight: true,
+  whisperMode: false,
   hideSymbols: false,
   hideLabels: false,
 };

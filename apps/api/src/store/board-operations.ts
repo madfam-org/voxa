@@ -6,7 +6,7 @@ import {
   type SyncEvent,
 } from '@voxa/core';
 import { findMotorPlanningViolations } from '@voxa/vocabulary';
-import { obfToVoxaButtons, parseObfJson, voxaBoardToObf } from '@voxa/obf';
+import { obfToVoxaButtons, obzToVoxaButtons, parseObfJson, unpackObz, voxaBoardToObf, voxaBoardToObz } from '@voxa/obf';
 import type { ImportObfResult } from './types.js';
 
 export function createSyncEvent(
@@ -116,6 +116,46 @@ export function applyImportObfBoard(
   });
 
   return { ...result, warnings };
+}
+
+export function applyImportObzBoard(
+  boards: Record<string, Board>,
+  boardId: string,
+  archive: Uint8Array,
+  actorUserId: string,
+): ImportObfResult {
+  const current = boards[boardId];
+  if (!current) {
+    throw new Error(`Board not found: ${boardId}`);
+  }
+
+  const unpacked = unpackObz(archive);
+  const buttons = obzToVoxaButtons(unpacked);
+
+  const next: Board = {
+    ...current,
+    name: unpacked.board.name || current.name,
+    grid: {
+      rows: unpacked.board.grid.rows,
+      columns: unpacked.board.grid.columns,
+      buttons,
+    },
+  };
+
+  const result = applyUpdateBoard(boards, boardId, next, actorUserId, {
+    expectedVersion: current.version,
+    forceMotorPlanning: true,
+  });
+
+  return { ...result, warnings: unpacked.warnings };
+}
+
+export async function exportBoardObz(boards: Record<string, Board>, boardId: string): Promise<Uint8Array> {
+  const board = boards[boardId];
+  if (!board) {
+    throw new Error(`Board not found: ${boardId}`);
+  }
+  return voxaBoardToObz(board);
 }
 
 export function exportBoardObf(boards: Record<string, Board>, boardId: string): string {

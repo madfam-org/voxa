@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { BoardButton, PartOfSpeechTag, TeamRole } from '@voxa/core';
 import { fitzgeraldColor, type PartOfSpeech } from '@voxa/vocabulary';
 import { AacButton, BoardGrid, CVI_THEMES, themeStyles } from '@voxa/ui';
@@ -10,8 +10,10 @@ import {
   buttonSpeech,
   buttonSymbolUrl,
   downloadTextFile,
+  downloadBinaryFile,
   posOptions,
   useObfFileInput,
+  useObzFileInput,
 } from '@/lib/board-utils';
 import { useCommunicatorSettings } from '@/hooks/use-communicator-settings';
 import { useEyeDwellByButton } from '@/hooks/use-eye-dwell';
@@ -57,6 +59,7 @@ export function BoardScreen(): React.ReactNode {
   const [busy, setBusy] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [usageOpen, setUsageOpen] = useState(false);
+  const [babbleActive, setBabbleActive] = useState(false);
 
   const [recentButtonIds, setRecentButtonIds] = useState<string[]>([]);
   const { settings, setSettings } = useCommunicatorSettings();
@@ -76,17 +79,25 @@ export function BoardScreen(): React.ReactNode {
     saveBoard,
     importObf,
     exportObf,
+    importObz,
+    exportObz,
     isEditor,
     isAuthenticated,
     accessToken,
     sessionUserId,
   } = useSyncedBoard(role);
 
+  useEffect(() => {
+    setBabbleActive(false);
+  }, [boardId]);
+
   const sorted = [...board.grid.buttons].sort(
     (a, b) => a.position.row - b.position.row || a.position.column - b.position.column,
   );
 
-  const visibleButtons = sorted.filter((btn) => isEditor || !btn.hidden);
+  const visibleButtons = sorted.filter(
+    (btn) => isEditor || !btn.hidden || (!isEditor && babbleActive),
+  );
 
   const { textPredictions, symbolPredictions } = usePredictions(board, utterance, recentButtonIds);
 
@@ -107,9 +118,11 @@ export function BoardScreen(): React.ReactNode {
         buttonId: btn.id as string,
         speechText: text,
       });
-      void speakButton(btn, { accessToken });
+      if (!settings.whisperMode) {
+        void speakButton(btn, { accessToken });
+      }
     },
-    [accessToken, boardId, isEditor, editingId, setBoardId],
+    [accessToken, boardId, isEditor, editingId, setBoardId, settings.whisperMode],
   );
 
   const applyPrediction = useCallback((text: string) => {
@@ -162,7 +175,34 @@ export function BoardScreen(): React.ReactNode {
     [importObf],
   );
 
+  const handleImportObz = useCallback(
+    async (archive: ArrayBuffer) => {
+      setBusy(true);
+      try {
+        await importObz(archive);
+      } catch (err) {
+        alert((err as Error).message);
+      } finally {
+        setBusy(false);
+      }
+    },
+    [importObz],
+  );
+
   const { open: openObfImport, input: obfInput } = useObfFileInput(handleImport);
+  const { open: openObzImport, input: obzInput } = useObzFileInput(handleImportObz);
+
+  const handleExportObz = useCallback(async () => {
+    setBusy(true);
+    try {
+      const archive = await exportObz();
+      downloadBinaryFile(`${board.id as string}.obz`, archive, 'application/zip');
+    } catch (err) {
+      alert((err as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }, [exportObz, board.id]);
 
   const handleExport = useCallback(async () => {
     setBusy(true);
@@ -197,6 +237,7 @@ export function BoardScreen(): React.ReactNode {
         setEditingId(null);
         return;
       }
+      setBabbleActive(false);
 
       if (!editorPinIsConfigured() || isEditorUnlocked()) {
         setRole(nextRole);
@@ -263,6 +304,7 @@ export function BoardScreen(): React.ReactNode {
   return (
     <div style={{ ...shellStyle, display: 'flex', flexDirection: 'column', height: '100dvh' }}>
       {obfInput}
+      {obzInput}
       <div ref={liveRef} aria-live="polite" aria-atomic="true" style={visuallyHidden} />
 
       <header
@@ -326,6 +368,21 @@ export function BoardScreen(): React.ReactNode {
           <option value="admin">Admin</option>
         </select>
 
+        {!isEditor ? (
+          <button
+            type="button"
+            onClick={() => setBabbleActive((active) => !active)}
+            style={{
+              ...secondaryBtn,
+              background: babbleActive ? '#422006' : secondaryBtn.background,
+              borderColor: babbleActive ? '#f59e0b' : '#404040',
+            }}
+            aria-pressed={babbleActive}
+          >
+            Babble
+          </button>
+        ) : null}
+
         <button
           type="button"
           onClick={() => {
@@ -376,8 +433,14 @@ export function BoardScreen(): React.ReactNode {
             <button type="button" onClick={openObfImport} disabled={busy} style={secondaryBtn}>
               Import OBF
             </button>
+            <button type="button" onClick={openObzImport} disabled={busy} style={secondaryBtn}>
+              Import OBZ
+            </button>
             <button type="button" onClick={handleExport} disabled={busy} style={secondaryBtn}>
               Export OBF
+            </button>
+            <button type="button" onClick={() => void handleExportObz()} disabled={busy} style={secondaryBtn}>
+              Export OBZ
             </button>
             <button type="button" onClick={handleSave} disabled={busy} style={secondaryBtn}>
               Save
@@ -385,6 +448,20 @@ export function BoardScreen(): React.ReactNode {
           </>
         )}
       </header>
+
+      {babbleActive && !isEditor ? (
+        <div
+          style={{
+            background: '#422006',
+            color: '#fcd34d',
+            padding: '6px 16px',
+            fontSize: '0.8125rem',
+          }}
+        >
+          Babble mode — hidden vocabulary is visible for this session. Turn off Babble to restore the
+          motor plan.
+        </div>
+      ) : null}
 
       {(error || warnings.length > 0 || pendingSave || syncError) && (
         <div
@@ -434,7 +511,9 @@ export function BoardScreen(): React.ReactNode {
           theme={theme}
           targetScale={settings.targetScale}
         >
-          {visibleButtons.map((btn) => (
+          {visibleButtons.map((btn) => {
+            const revealedHidden = babbleActive && !isEditor && btn.hidden;
+            return (
             <AacButton
               key={btn.id as string}
               label={buttonLabel(btn)}
@@ -448,10 +527,13 @@ export function BoardScreen(): React.ReactNode {
               onClick={() => handleButtonPress(btn)}
               onPointerEnter={() => onEnter(btn.id as string)}
               onPointerLeave={onLeave}
+              style={revealedHidden ? { opacity: 0.72, outline: '2px dashed #f59e0b' } : undefined}
               aria-label={
                 isEditor && btn.locked
                   ? `${buttonLabel(btn)} (locked motor-plan slot)`
-                  : buttonLabel(btn)
+                  : revealedHidden
+                    ? `${buttonLabel(btn)} (hidden, babble mode)`
+                    : buttonLabel(btn)
               }
             >
               {isEditor && btn.locked ? (
@@ -469,7 +551,8 @@ export function BoardScreen(): React.ReactNode {
                 </span>
               ) : null}
             </AacButton>
-          ))}
+            );
+          })}
         </BoardGrid>
 
         {settingsOpen && (

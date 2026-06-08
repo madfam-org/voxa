@@ -102,6 +102,28 @@ export class VoxaClient {
     return res.text();
   }
 
+  async importObz(boardId: string, archive: ArrayBuffer): Promise<ObfImportResult> {
+    const headers = { ...teamHeaders(this.options), 'Content-Type': 'application/zip' };
+    const res = await fetch(this.url(`/v1/boards/${boardId}/import/obz`), {
+      method: 'POST',
+      headers,
+      body: archive,
+    });
+    if (!res.ok) {
+      const err = (await res.json().catch(() => ({}))) as { error?: string };
+      throw new Error(err.error ?? `Import failed: ${res.status}`);
+    }
+    return res.json() as Promise<ObfImportResult>;
+  }
+
+  async exportObz(boardId: string): Promise<ArrayBuffer> {
+    const res = await fetch(this.url(`/v1/boards/${boardId}/export/obz`), {
+      headers: teamHeaders(this.options),
+    });
+    if (!res.ok) throw new Error(`Export failed: ${res.status}`);
+    return res.arrayBuffer();
+  }
+
   connectBoardSync(
     boardId: string,
     onEvent: (event: SyncEvent) => void,

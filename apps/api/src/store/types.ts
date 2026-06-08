@@ -19,7 +19,13 @@ export interface BoardStore {
     rawObf: string,
     actorUserId: string,
   ): Promise<ImportObfResult>;
+  importObzBoard(
+    boardId: string,
+    archive: Uint8Array,
+    actorUserId: string,
+  ): Promise<ImportObfResult>;
   exportObfBoard(boardId: string): Promise<string>;
+  exportObzBoard(boardId: string): Promise<Uint8Array>;
   appendSyncEvents(events: SyncEvent[]): Promise<void>;
   getRecentEvents(boardId: BoardId, sinceVersion?: number): Promise<SyncEvent[]>;
   ensureSeeded?(): Promise<void>;

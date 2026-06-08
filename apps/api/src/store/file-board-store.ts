@@ -11,8 +11,10 @@ import {
 import {
   applyCreateBoard,
   applyImportObfBoard,
+  applyImportObzBoard,
   applyUpdateBoard,
   exportBoardObf,
+  exportBoardObz,
   trimSyncEvents,
 } from './board-operations.js';
 import type { BoardStore, ImportObfResult } from './types.js';
@@ -80,8 +82,19 @@ export function createFileBoardStore(initialState?: StoreState): BoardStore {
       return result;
     },
 
+    async importObzBoard(boardId, archive, actorUserId): Promise<ImportObfResult> {
+      const result = applyImportObzBoard(state.boards, boardId, archive, actorUserId);
+      state.events.push(result.event);
+      persist();
+      return result;
+    },
+
     async exportObfBoard(boardId: string) {
       return exportBoardObf(state.boards, boardId);
+    },
+
+    async exportObzBoard(boardId: string) {
+      return exportBoardObz(state.boards, boardId);
     },
 
     async appendSyncEvents(events: SyncEvent[]) {

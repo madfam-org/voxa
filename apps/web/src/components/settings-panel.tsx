@@ -143,6 +143,17 @@ export function SettingsPanel({
         </>
       )}
 
+      <Field label="Whisper mode (build without speaking)">
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <input
+            type="checkbox"
+            checked={settings.whisperMode}
+            onChange={(e) => onChange({ whisperMode: e.target.checked })}
+          />
+          Add words to the message bar without TTS
+        </label>
+      </Field>
+
       <Field label="Hide symbols (text-only CVI mode)">
         <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <input

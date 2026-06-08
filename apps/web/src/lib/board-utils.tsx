@@ -21,8 +21,9 @@ export function buttonBorderColor(btn: BoardButton): string {
   return fitzgeraldColor(btn.partOfSpeech as PartOfSpeech);
 }
 
-export function useObfFileInput(
-  onImport: (raw: string) => Promise<void>,
+export function useBoardFileInput(
+  onImport: (file: File) => Promise<void>,
+  accept: string,
 ): { open: () => void; input: React.ReactNode } {
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -32,13 +33,12 @@ export function useObfFileInput(
     <input
       ref={inputRef}
       type="file"
-      accept=".obf,.json,application/json"
+      accept={accept}
       style={{ display: 'none' }}
       onChange={async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
-        const raw = await file.text();
-        await onImport(raw);
+        await onImport(file);
         e.target.value = '';
       }}
     />
@@ -47,8 +47,33 @@ export function useObfFileInput(
   return { open, input };
 }
 
+export function useObfFileInput(
+  onImport: (raw: string) => Promise<void>,
+): { open: () => void; input: React.ReactNode } {
+  return useBoardFileInput(async (file) => {
+    await onImport(await file.text());
+  }, '.obf,.json,application/json');
+}
+
+export function useObzFileInput(
+  onImport: (archive: ArrayBuffer) => Promise<void>,
+): { open: () => void; input: React.ReactNode } {
+  return useBoardFileInput(async (file) => {
+    await onImport(await file.arrayBuffer());
+  }, '.obz,application/zip');
+}
+
 export function downloadTextFile(filename: string, content: string, mime = 'application/json') {
   const blob = new Blob([content], { type: mime });
+  downloadBlobFile(filename, blob);
+}
+
+export function downloadBinaryFile(filename: string, content: ArrayBuffer | Uint8Array, mime: string) {
+  const bytes = content instanceof Uint8Array ? content : new Uint8Array(content);
+  downloadBlobFile(filename, new Blob([bytes.slice()], { type: mime }));
+}
+
+function downloadBlobFile(filename: string, blob: Blob) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;

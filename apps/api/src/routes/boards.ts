@@ -119,6 +119,57 @@ boardRoutes.post('/:boardId/import/obf', async (c) => {
   }
 });
 
+boardRoutes.post('/:boardId/import/obz', async (c) => {
+  if (!requireEditor(c)) {
+    return c.json({ error: 'Editor role required' }, 403);
+  }
+
+  const boardId = c.req.param('boardId');
+  const archive = new Uint8Array(await c.req.arrayBuffer());
+  const { userId, role } = c.get('team');
+
+  const current = await getStore().getBoard(boardId);
+  if (!current) return c.json({ error: 'Board not found' }, 404);
+  if (!canEditBoard(boardId, current.ownerUserId, userId, role)) {
+    return c.json({ error: 'Forbidden' }, 403);
+  }
+
+  try {
+    const result = await getStore().importObzBoard(boardId, archive, userId);
+    broadcastBoardEvent(result.event);
+    return c.json(result);
+  } catch (err) {
+    const error = err as Error & { status?: number; details?: unknown };
+    if (error.status === 422 && error.details) {
+      return c.json({ error: error.message, details: error.details }, 422);
+    }
+    return c.json({ error: error.message, details: error.details }, 400);
+  }
+});
+
+boardRoutes.get('/:boardId/export/obz', async (c) => {
+  const boardId = c.req.param('boardId');
+  const { userId, role } = c.get('team');
+
+  const board = await getStore().getBoard(boardId);
+  if (!board) return c.json({ error: 'Board not found' }, 404);
+  if (!canAccessBoard(boardId, board.ownerUserId, userId, role)) {
+    return c.json({ error: 'Forbidden' }, 403);
+  }
+
+  try {
+    const archive = await getStore().exportObzBoard(boardId);
+    return new Response(archive.slice(), {
+      headers: {
+        'Content-Type': 'application/zip',
+        'Content-Disposition': `attachment; filename="${boardId}.obz"`,
+      },
+    });
+  } catch (err) {
+    return c.json({ error: (err as Error).message }, 404);
+  }
+});
+
 boardRoutes.get('/:boardId/export/obf', async (c) => {
   const boardId = c.req.param('boardId');
   const { userId, role } = c.get('team');

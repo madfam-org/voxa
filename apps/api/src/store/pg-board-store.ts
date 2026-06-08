@@ -12,8 +12,10 @@ import { boards, syncEvents } from '../db/schema.js';
 import {
   applyCreateBoard,
   applyImportObfBoard,
+  applyImportObzBoard,
   applyUpdateBoard,
   exportBoardObf,
+  exportBoardObz,
   trimSyncEvents,
 } from './board-operations.js';
 import type { BoardStore, ImportObfResult } from './types.js';
@@ -130,9 +132,22 @@ export function createPgBoardStore(databaseUrl: string): BoardStore {
       return result;
     },
 
+    async importObzBoard(boardId, archive, actorUserId): Promise<ImportObfResult> {
+      const map = await loadBoardMap();
+      const result = applyImportObzBoard(map, boardId, archive, actorUserId);
+      await persistBoard(result.board);
+      await persistEvent(result.event);
+      return result;
+    },
+
     async exportObfBoard(boardId: string) {
       const map = await loadBoardMap();
       return exportBoardObf(map, boardId);
+    },
+
+    async exportObzBoard(boardId: string) {
+      const map = await loadBoardMap();
+      return exportBoardObz(map, boardId);
     },
 
     async appendSyncEvents(events: SyncEvent[]) {

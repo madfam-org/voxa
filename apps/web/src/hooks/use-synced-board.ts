@@ -296,6 +296,20 @@ export function useSyncedBoard(role: TeamRole) {
     return client.exportObf(boardId);
   }, [boardId, client]);
 
+  const importObz = useCallback(
+    async (archive: ArrayBuffer) => {
+      const result = await client.importObz(boardId, archive);
+      setBoard(result.board);
+      setWarnings(result.warnings);
+      return result;
+    },
+    [boardId, client, setBoard],
+  );
+
+  const exportObz = useCallback(async () => {
+    return client.exportObz(boardId);
+  }, [boardId, client]);
+
   const createBoard = useCallback(
     async (name: string) => {
       const id = `board-${Date.now()}`;
@@ -334,6 +348,8 @@ export function useSyncedBoard(role: TeamRole) {
     saveBoard,
     importObf,
     exportObf,
+    importObz,
+    exportObz,
     isEditor,
     isAuthenticated: Boolean(accessToken),
     accessToken,

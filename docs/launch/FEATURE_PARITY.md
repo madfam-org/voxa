@@ -6,7 +6,7 @@ Actionable **feature parity match** against the AAC platform benchmark. Each row
 
 **Legend:** ✅ done · 🟡 partial/MVP · 🔴 not started · ➖ out of scope
 
-**Last updated:** 2026-06-08
+**Last updated:** 2026-06-09
 
 ---
 
@@ -34,6 +34,7 @@ Actionable **feature parity match** against the AAC platform benchmark. Each row
 | Eye dwell (configurable) | OpenAAC ⭐ | 🟡 | Pointer sim; not Tobii SDK |
 | Message bar + speak utterance | OpenAAC 🟢 | ✅ | Web Speech API |
 | OBF export | OpenAAC / Cboard | ✅ | API + editor UI |
+| OBZ export (images embedded) | OpenAAC / Cboard | 🟡 | API + editor UI (2026-06-08) |
 | OBF import | OpenAAC / Cboard | ✅ | API + UI; auth soak validated 2026-06-08 |
 | Board-to-board navigation (OBF `load_board_id`) | OpenAAC / Cboard | 🟡 | Import/export + editor link + activate navigate (2026-06-08) |
 | SLP editor mode | OpenAAC 🟢 | 🟡 | EditorPanel + PIN lock (2026-06-08); full vocab tools P1 |
@@ -52,7 +53,7 @@ Actionable **feature parity match** against the AAC platform benchmark. Each row
 | Multi-board library (not single demo) | All Tier A | 🟡 | Board picker + create (2026-06-08) |
 | Motor-planning slot locks enforced in UI | LAMP, SFY | 🟡 | Model yes; editor UX P1 |
 | Fitzgerald POS on all buttons | Proloquo, Grid | 🟡 | Demo + editor; not full library |
-| Hide/show buttons (open/close) | SFY, Proloquo | 🟡 | Per-button `hidden` flag in editor |
+| Hide/show buttons (open/close) | SFY, Proloquo | 🟡 | Per-button `hidden` + **Babble** session mode (2026-06-08) |
 | Custom grid size (9–144+ cells) | Proloquo2Go | 🟡 | Configurable rows/cols in editor |
 | Symbol-only / label-only modes | OpenAAC ✅ | 🟡 | `hideLabels` + `hideSymbols` settings |
 | Upload custom symbol / photo | OpenAAC 🟢 | 🟡 | Editor partial |
@@ -60,7 +61,7 @@ Actionable **feature parity match** against the AAC platform benchmark. Each row
 | GLP buttons with audio/video | Voxa differentiator | 🟡 | GLP video upload in editor; plays in communicator (2026-06-08) |
 | Symbol library search (ARASAAC) | OpenAAC ⭐ | 🟡 | API + editor search (2026-06-08) |
 | Word forms / inflection | OpenAAC / Proloquo grammar | 🔴 | P1 |
-| Whisper / build utterance without speak | SFY | 🟡 | Message bar; no whisper mode |
+| Whisper / build utterance without speak | SFY | 🟡 | **Whisper mode** in settings (2026-06-08) |
 | Usage history / activation log | TD Snap, Grid | 🟡 | API + client log (2026-06-08); SLP **Usage** panel in `/app` for editors (2026-06-08) |
 | Real-time team co-edit | TD Snap, Grid | 🔴 | WebSocket + REDIS_URL phase |
 | Remote SLP edit without device handoff | Cloud AAC | 🟡 | Roles in API; UX P1 |
@@ -145,7 +146,7 @@ Mapped from [OpenAAC considerations](https://www.openaac.org/considerations). �
 | ⭐ Hold to select / dwell duration | P1 | 🟡 |
 | ⭐ Symbol library search | P1 | 🟡 |
 | ⭐ Fitzgerald color by POS | P1 | ✅ |
-| 💡 Babble (show all hidden) | P2 | 🔴 |
+| 💡 Babble (show all hidden) | P2 | 🟡 | Session Babble toggle in `/app` (2026-06-08) |
 | 💡 Lock editing behind PIN | P1 | 🟡 | Admin settings + role gate (2026-06-08) |
 | 💡 Cloud backup | P0 | ✅ |
 | 💡 Share vocabulary sets | P2 | 🔴 |

@@ -111,12 +111,12 @@ Each epic links to [FEATURE_PARITY.md](./FEATURE_PARITY.md) rows and benchmark d
 |----|---------|-------------|----------------|
 | B1 | Multi-board library | Board list UX; rename/duplicate/delete; default board per profile | `use-synced-board.ts`, API `GET/POST /v1/boards`, web board picker |
 | B2 | Motor-plan locks | Visual lock indicator; prevent move/delete of locked slots; SLP override | `@voxa/core`, editor drag-drop guards |
-| B3 | Hide/show + babble | Toggle `hidden`; “show all” babble mode (communicator) | `@voxa/core` `hidden`, `board-screen.tsx` |
+| B3 | Hide/show + babble | Toggle `hidden`; “show all” babble mode (communicator) | `hidden` in editor + **Babble** session toggle ✅ 2026-06-08 |
 | B4 | Custom grid 9–144+ | Editor rows/cols with validation; reflow rules | `@voxa/core` `BoardGrid`, editor |
 | B5 | Symbol/label modes | ✅ partial | Unify `hideLabels`/`hideSymbols` per board + profile | `communicator-settings.ts`, `AacButton` |
 | B6 | Fitzgerald POS | ✅ colors | Apply POS colors on **all** buttons including imports | `@voxa/ui` borderColor from `partOfSpeech` |
 | B7 | Word forms / inflection | Morphology table for top 200 core verbs/nouns | New `@voxa/vocabulary` inflection module; optional button `forms[]` |
-| B8 | Whisper mode | Message bar “hold to preview” without speak | `board-screen.tsx` message bar |
+| B8 | Whisper mode | Message bar “hold to preview” without speak | **Whisper mode** setting — build utterance without TTS ✅ 2026-06-08 |
 | B9 | Links to other boards | OBF `links` → navigate to linked board | OBF `load_board_id` ↔ `navigateToBoardId`; editor + activate ✅ 2026-06-08 |
 
 **Acceptance (W2):**
@@ -139,7 +139,7 @@ Each epic links to [FEATURE_PARITY.md](./FEATURE_PARITY.md) rows and benchmark d
 | C2 | Custom photo upload | S3-compatible object store; signed upload URL | API `POST /v1/media`, `@voxa/core` `mediaId` on buttons |
 | C3 | Recorded speech | Record/upload audio per button; play instead of TTS when set | `@voxa/core` `RecordedSpeech`; API `POST/GET /v1/media`; web `MediaRecorder` ✅ 2026-06-08 |
 | C4 | GLP video/audio | GLP buttons store `mediaUrl` + intonation notes | GLP video upload + playback ✅ 2026-06-08 |
-| C5 | `.obz` bundles | Import/export ZIP with images | `@voxa/obf` OBZ support |
+| C5 | `.obz` bundles | Import/export ZIP with images | `@voxa/obf` pack/unpack + API + editor ✅ 2026-06-08 |
 
 **Acceptance (W2):**
 
@@ -412,6 +412,8 @@ pnpm test && pnpm typecheck
 | 9 | Recorded speech + GLP media (C3/C4) | C | Engineering ✅ 2026-06-08 |
 | 10 | OBF board navigation (B9) | B | Engineering ✅ 2026-06-08 |
 | 11 | EAS preview CI workflow (D1) | D | Mobile ✅ 2026-06-08 |
+| 12 | Babble + whisper communicator modes (B3/B8) | B | Engineering ✅ 2026-06-08 |
+| 13 | OBZ import/export with images (C5) | C | Engineering ✅ 2026-06-08 |
 
 ---
 

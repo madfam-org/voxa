@@ -78,6 +78,8 @@ The API container runs migrations automatically on startup when `DATABASE_URL` i
 
 Requires `X-Voxa-AI-Consent: true` (same opt-in as AI predictions). Summary endpoint: `GET /v1/events/activations/summary?boardId=&days=7` (editor role).
 
+**OBZ bundles:** `POST /v1/boards/:id/import/obz` (zip), `GET /v1/boards/:id/export/obz` — embeds `board.json` plus `images/*` per `@voxa/obf`.
+
 ### `media_assets`
 
 Button recordings and GLP video clips (base64 in Postgres for MVP).
