@@ -6,6 +6,14 @@ import {
 } from '@/lib/auth';
 
 export async function POST() {
+  return clearSessionResponse();
+}
+
+export async function GET() {
+  return clearSessionResponse();
+}
+
+function clearSessionResponse() {
   const response = NextResponse.redirect(
     process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000',
   );

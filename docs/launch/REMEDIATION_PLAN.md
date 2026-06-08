@@ -59,7 +59,7 @@ Track execution in [GA_CHECKLIST.md](./GA_CHECKLIST.md). Live state: [GA_STATUS.
 | 15 | `REDIS_URL` | Multi-replica WebSocket sync |
 | 16 | Mobile EAS | [MOBILE_GA.md](./MOBILE_GA.md) |
 | 17 | `.obz` + ARASAAC | [FEATURE_PARITY.md](./FEATURE_PARITY.md) P1 |
-| 18 | Janua duplicate client | Deactivate stray `jnc_GbA_…` in Janua admin; keep `jnc_4qRWyI…` |
+| 18 | Janua duplicate client | Deactivate stray `jnc_GbA_…` in Janua admin; keep `jnc_4qRWyI…` | ✅ Script + 3 deactivated 2026-06-08 |
 
 ## Verification commands
 

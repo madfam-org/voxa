@@ -15,7 +15,8 @@ All notable changes to Voxa are documented here.
 
 ### Changed
 
-- `register-janua-oauth-client.sh` is idempotent by default; `--rotate-secret` opt-in
+- Sign-out route accepts GET (fixes `/auth/signout` link)
+- `e2e-smoke.yml` appends daily soak log and runs staging UX/auth Playwright specs
 - `soak-scenarios.sh` uses POST for AI auth gates; extended `--with-auth` coverage
 - Soak fixture aligned to OBF 3.x format
 
@@ -25,7 +26,9 @@ All notable changes to Voxa are documented here.
 
 ### Added (prior unreleased)
 
-- Commercial GA roadmap: `docs/launch/GA_ROADMAP.md` (phases, milestones M0–M6)
+- Janua duplicate OAuth cleanup: `scripts/deploy/cleanup-duplicate-janua-voxa-clients.sh`
+- Staging soak secrets helper: `scripts/launch/setup-staging-soak-secrets.sh`
+- Playwright staging soak: `e2e/specs/staging-ux.spec.ts`, `staging-auth.spec.ts`, Janua login helper
 - SLP accessibility sign-off template: `docs/launch/SLP_SIGNOFF.md`
 - Mobile GA path: `docs/launch/MOBILE_GA.md`, `apps/mobile/eas.json` (preview + production profiles)
 - Staging soak log: `docs/launch/SOAK_LOG.md`; daily check script `scripts/launch/soak-daily-check.sh`
