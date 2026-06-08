@@ -6,7 +6,13 @@ All notable changes to Voxa are documented here.
 
 ### Added
 
-- Commercial GA roadmap: `docs/launch/GA_ROADMAP.md` (phases, milestones M0–M5)
+- AAC competitive benchmark: `docs/launch/AAC_PLATFORM_BENCHMARK.md` (Tier A–D platforms, cross-matrix, positioning)
+- Feature parity tracker: `docs/launch/FEATURE_PARITY.md` (P0–P3 checklist, scorecard, OpenAAC alignment)
+- GA roadmap Phase 6 (competitive parity) and milestone M6
+
+### Added (prior unreleased)
+
+- Commercial GA roadmap: `docs/launch/GA_ROADMAP.md` (phases, milestones M0–M6)
 - SLP accessibility sign-off template: `docs/launch/SLP_SIGNOFF.md`
 - Mobile GA path: `docs/launch/MOBILE_GA.md`, `apps/mobile/eas.json` (preview + production profiles)
 - Staging soak log: `docs/launch/SOAK_LOG.md`; daily check script `scripts/launch/soak-daily-check.sh`
