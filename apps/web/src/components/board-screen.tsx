@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { DEMO_BOARD_ID, type BoardButton, type PartOfSpeechTag, type TeamRole } from '@voxa/core';
+import { DEMO_BOARD_ID, type BoardButton, type BoardDisplayPreferences, type PartOfSpeechTag, type TeamRole } from '@voxa/core';
 import { fitzgeraldColor, createButtonAtCell, moveButtonToCell, resizeBoardGrid, type PartOfSpeech } from '@voxa/vocabulary';
 import { AacButton, BoardGrid, CVI_THEMES, themeStyles } from '@voxa/ui';
 import {
@@ -15,6 +15,7 @@ import {
   useObfFileInput,
   useObzFileInput,
 } from '@/lib/board-utils';
+import { effectiveDisplaySettings } from '@/lib/communicator-settings';
 import { useCommunicatorSettings } from '@/hooks/use-communicator-settings';
 import { useEyeDwellByButton } from '@/hooks/use-eye-dwell';
 import { usePredictions } from '@/hooks/use-predictions';
@@ -94,6 +95,8 @@ export function BoardScreen(): React.ReactNode {
     accessToken,
     sessionUserId,
   } = useSyncedBoard(role);
+
+  const displaySettings = effectiveDisplaySettings(settings, board.display);
 
   useEffect(() => {
     setBabbleActive(false);
@@ -370,6 +373,23 @@ export function BoardScreen(): React.ReactNode {
     });
   };
 
+  const handleBoardDisplayChange = useCallback(
+    (patch: Partial<BoardDisplayPreferences>) => {
+      const next: BoardDisplayPreferences = { ...board.display };
+      for (const [key, value] of Object.entries(patch) as Array<
+        [keyof BoardDisplayPreferences, boolean | undefined]
+      >) {
+        if (value === undefined) delete next[key];
+        else next[key] = value;
+      }
+      setBoard({
+        ...board,
+        display: Object.keys(next).length > 0 ? next : undefined,
+      });
+    },
+    [board, setBoard],
+  );
+
   const handleGridDrop = useCallback(
     (buttonId: string, row: number, column: number) => {
       try {
@@ -448,8 +468,8 @@ export function BoardScreen(): React.ReactNode {
         symbolUrl={buttonSymbolUrl(btn)}
         borderColor={buttonBorderColor(btn)}
         targetScale={settings.targetScale}
-        hideSymbol={settings.hideSymbols}
-        hideLabel={settings.hideLabels}
+        hideSymbol={displaySettings.hideSymbols}
+        hideLabel={displaySettings.hideLabels}
         scanHighlighted={isHighlighted(btn)}
         dwellProgress={dwellProgressFor(btn.id as string)}
         onClick={() => handleButtonPress(btn)}
@@ -783,6 +803,8 @@ export function BoardScreen(): React.ReactNode {
             onChange={setSettings}
             onClose={() => setSettingsOpen(false)}
             showEditorPinSettings={role === 'admin'}
+            boardDisplay={board.display}
+            onBoardDisplayChange={isEditor ? handleBoardDisplayChange : undefined}
           />
         )}
 

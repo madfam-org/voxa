@@ -3,7 +3,7 @@
 import { useRef } from 'react';
 import type { BoardButton, PartOfSpeechTag } from '@voxa/core';
 import { resolveButtonSpeech } from '@voxa/core';
-import { fitzgeraldColor, type PartOfSpeech } from '@voxa/vocabulary';
+import { fitzgeraldColor, resolvePartOfSpeech, type PartOfSpeech } from '@voxa/vocabulary';
 
 export function buttonLabel(btn: BoardButton): string {
   return btn.kind === 'analytic' ? btn.label : btn.phrase;
@@ -18,8 +18,8 @@ export function buttonSymbolUrl(btn: BoardButton): string | undefined {
 }
 
 export function buttonBorderColor(btn: BoardButton): string {
-  if (!btn.partOfSpeech) return '#cbd5e1';
-  return fitzgeraldColor(btn.partOfSpeech as PartOfSpeech);
+  const pos = resolvePartOfSpeech(btn);
+  return fitzgeraldColor(pos as PartOfSpeech);
 }
 
 export function useBoardFileInput(

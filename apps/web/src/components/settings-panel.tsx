@@ -8,6 +8,7 @@ import {
   type ScanOrder,
 } from '@voxa/access';
 import { CVI_THEMES, type CviTheme } from '@voxa/ui';
+import type { BoardDisplayPreferences } from '@voxa/core';
 import type { CommunicatorSettings } from '@/lib/communicator-settings';
 import {
   clearEditorPin,
@@ -20,6 +21,8 @@ interface SettingsPanelProps {
   onChange: (patch: Partial<CommunicatorSettings>) => void;
   onClose: () => void;
   showEditorPinSettings?: boolean;
+  boardDisplay?: BoardDisplayPreferences;
+  onBoardDisplayChange?: (patch: Partial<BoardDisplayPreferences>) => void;
 }
 
 export function SettingsPanel({
@@ -27,6 +30,8 @@ export function SettingsPanel({
   onChange,
   onClose,
   showEditorPinSettings = false,
+  boardDisplay,
+  onBoardDisplayChange,
 }: SettingsPanelProps): React.ReactNode {
   return (
     <aside
@@ -175,6 +180,39 @@ export function SettingsPanel({
           Show symbols without text labels
         </label>
       </Field>
+
+      {onBoardDisplayChange ? (
+        <section style={{ borderTop: '1px solid #333', paddingTop: 12, marginTop: 8 }}>
+          <h3 style={{ margin: '0 0 8px', fontSize: '0.9375rem' }}>Board display</h3>
+          <p style={hintStyle}>
+            Saved with this vocabulary board. Overrides the device settings above when checked.
+          </p>
+          <Field label="Hide symbols on this board">
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <input
+                type="checkbox"
+                checked={boardDisplay?.hideSymbols ?? false}
+                onChange={(e) =>
+                  onBoardDisplayChange({ hideSymbols: e.target.checked ? true : undefined })
+                }
+              />
+              Text-only mode for this board
+            </label>
+          </Field>
+          <Field label="Hide labels on this board">
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <input
+                type="checkbox"
+                checked={boardDisplay?.hideLabels ?? false}
+                onChange={(e) =>
+                  onBoardDisplayChange({ hideLabels: e.target.checked ? true : undefined })
+                }
+              />
+              Symbol-only mode for this board
+            </label>
+          </Field>
+        </section>
+      ) : null}
 
       {showEditorPinSettings ? (
         <section style={{ borderTop: '1px solid #333', paddingTop: 12, marginTop: 8 }}>

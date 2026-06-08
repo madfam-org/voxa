@@ -105,6 +105,13 @@ export interface CommunicatorProfile {
   targetScale: number;
 }
 
+export interface BoardDisplayPreferences {
+  /** Overrides profile hideSymbols when set. */
+  hideSymbols?: boolean;
+  /** Overrides profile hideLabels when set. */
+  hideLabels?: boolean;
+}
+
 export interface Board {
   id: BoardId;
   name: string;
@@ -114,6 +121,8 @@ export interface Board {
   updatedAt: string;
   ownerUserId?: string;
   orgId?: string;
+  /** Per-board communicator display overrides (OpenAAC symbol/label modes). */
+  display?: BoardDisplayPreferences;
 }
 
 export interface Utterance {

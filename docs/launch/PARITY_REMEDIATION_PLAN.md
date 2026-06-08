@@ -113,8 +113,8 @@ Each epic links to [FEATURE_PARITY.md](./FEATURE_PARITY.md) rows and benchmark d
 | B2 | Motor-plan locks | Visual lock indicator; prevent move/delete of locked slots; SLP override | Drag-drop grid editor + `moveButtonToCell` guards ✅ 2026-06-09 |
 | B3 | Hide/show + babble | Toggle `hidden`; “show all” babble mode (communicator) | `hidden` in editor + **Babble** session toggle ✅ 2026-06-08 |
 | B4 | Custom grid 9–144+ | Editor rows/cols with validation; reflow rules | `resizeBoardGrid` + editor **Grid** panel ✅ 2026-06-09 |
-| B5 | Symbol/label modes | ✅ partial | Unify `hideLabels`/`hideSymbols` per board + profile | `communicator-settings.ts`, `AacButton` |
-| B6 | Fitzgerald POS | ✅ colors | Apply POS colors on **all** buttons including imports | `@voxa/ui` borderColor from `partOfSpeech` |
+| B5 | Symbol/label modes | ✅ partial | Unify `hideLabels`/`hideSymbols` per board + profile | `Board.display` + `effectiveDisplaySettings` ✅ 2026-06-09 |
+| B6 | Fitzgerald POS | ✅ colors | Apply POS colors on **all** buttons including imports | `resolvePartOfSpeech` + OBF `border_color` ✅ 2026-06-09 |
 | B7 | Word forms / inflection | Morphology table for top 200 core verbs/nouns | `speechForms` + `suggestInflections` + editor panel ✅ 2026-06-09 |
 | B8 | Whisper mode | Message bar “hold to preview” without speak | **Whisper mode** setting — build utterance without TTS ✅ 2026-06-08 |
 | B9 | Links to other boards | OBF `links` → navigate to linked board | OBF `load_board_id` ↔ `navigateToBoardId`; editor + activate ✅ 2026-06-08 |
@@ -418,6 +418,8 @@ pnpm test && pnpm typecheck
 | 15 | Board rename/duplicate/delete (B1) | B | Engineering ✅ 2026-06-09 |
 | 16 | Word forms / inflection (B7) | B | Engineering ✅ 2026-06-09 |
 | 17 | Editor drag-move with motor-plan guards (B2) | B | Engineering ✅ 2026-06-09 |
+| 18 | Fitzgerald POS on imports + display (B6) | B | Engineering ✅ 2026-06-09 |
+| 19 | Board + profile symbol/label modes (B5) | B | Engineering ✅ 2026-06-09 |
 
 ---
 

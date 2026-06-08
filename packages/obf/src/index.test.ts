@@ -16,6 +16,21 @@ describe('OBF interchange', () => {
     assert.equal(parsed.grid.rows, board.grid.rows);
   });
 
+  it('infers partOfSpeech from OBF border_color on import', () => {
+    const { board: parsed } = parseObfJson(
+      JSON.stringify({
+        format: 'open-board-format',
+        formatVersion: '3.0',
+        id: 'pos-test',
+        name: 'POS',
+        grid: { rows: 1, columns: 1, order: 'row-major' },
+        buttons: [{ id: 'go', label: 'go', border_color: '#16a34a' }],
+      }),
+    );
+    const [button] = obfToVoxaButtons(parsed);
+    assert.equal(button?.partOfSpeech, 'verb');
+  });
+
   it('preserves OBF load_board_id as navigateToBoardId', () => {
     const board = createDemoBoard();
     const withLink = {

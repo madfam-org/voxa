@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@voxa/core": "workspace:*",
+    "@voxa/vocabulary": "workspace:*",
     "fflate": "^0.8.2"
   },
   "devDependencies": {

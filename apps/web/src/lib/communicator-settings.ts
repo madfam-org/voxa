@@ -1,4 +1,5 @@
 import type { AccessProfile, ScanOrder } from '@voxa/access';
+import type { BoardDisplayPreferences } from '@voxa/core';
 import type { CviTheme } from '@voxa/ui';
 
 export interface CommunicatorSettings {
@@ -44,6 +45,17 @@ export function loadCommunicatorSettings(): CommunicatorSettings {
 export function saveCommunicatorSettings(settings: CommunicatorSettings): void {
   if (typeof window === 'undefined') return;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+}
+
+/** Merge profile defaults with optional per-board display overrides (B5). */
+export function effectiveDisplaySettings(
+  profile: CommunicatorSettings,
+  boardDisplay?: BoardDisplayPreferences,
+): Pick<CommunicatorSettings, 'hideSymbols' | 'hideLabels'> {
+  return {
+    hideSymbols: boardDisplay?.hideSymbols ?? profile.hideSymbols,
+    hideLabels: boardDisplay?.hideLabels ?? profile.hideLabels,
+  };
 }
 
 export const BOARD_CACHE_KEY = 'voxa-board-cache';

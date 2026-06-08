@@ -219,6 +219,9 @@ importers:
       '@voxa/core':
         specifier: workspace:*
         version: link:../core
+      '@voxa/vocabulary':
+        specifier: workspace:*
+        version: link:../vocabulary
       fflate:
         specifier: ^0.8.2
         version: 0.8.3

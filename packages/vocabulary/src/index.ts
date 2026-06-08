@@ -71,3 +71,9 @@ export {
   type MoveButtonOptions,
   type MoveButtonResult,
 } from './grid-moves.js';
+
+export {
+  guessPartOfSpeechFromLabel,
+  partOfSpeechFromBorderColor,
+  resolvePartOfSpeech,
+} from './part-of-speech.js';

@@ -52,10 +52,10 @@ Actionable **feature parity match** against the AAC platform benchmark. Each row
 |---------|---------|-------------|--------------|
 | Multi-board library (not single demo) | All Tier A | 🟡 | Picker + create/rename/duplicate/delete (2026-06-09) |
 | Motor-planning slot locks enforced in UI | LAMP, SFY | 🟡 | Lock indicator + drag-move with guards; admin override (2026-06-09) |
-| Fitzgerald POS on all buttons | Proloquo, Grid | 🟡 | Demo + editor; not full library |
+| Fitzgerald POS on all buttons | Proloquo, Grid | 🟡 | `resolvePartOfSpeech` on display + OBF import (2026-06-09) |
 | Hide/show buttons (open/close) | SFY, Proloquo | 🟡 | Per-button `hidden` + **Babble** session mode (2026-06-08) |
 | Custom grid size (9–144+ cells) | Proloquo2Go | 🟡 | Editor **Grid** panel — 9–144 cells, locked-slot reflow (2026-06-09) |
-| Symbol-only / label-only modes | OpenAAC ✅ | 🟡 | `hideLabels` + `hideSymbols` settings |
+| Symbol-only / label-only modes | OpenAAC ✅ | 🟡 | Profile + per-board overrides in settings (2026-06-09) |
 | Upload custom symbol / photo | OpenAAC 🟢 | 🟡 | Editor partial |
 | Recorded speech on button | OpenAAC ✅ / GLP | 🟡 | `RecordedSpeech` on buttons; web record/upload + playback over TTS (2026-06-08) |
 | GLP buttons with audio/video | Voxa differentiator | 🟡 | GLP video upload in editor; plays in communicator (2026-06-08) |

@@ -1,4 +1,5 @@
 import type { Board, BoardButton } from '@voxa/core';
+import { fitzgeraldColor, resolvePartOfSpeech } from '@voxa/vocabulary';
 
 /**
  * Minimal OBF 3.x board shape for interchange.
@@ -55,6 +56,10 @@ export function obfToVoxaButtons(obf: ObfBoard): BoardButton[] {
     const row = Math.floor(index / columns);
     const column = index % columns;
     const label = btn.label ?? btn.vocalization ?? '…';
+    const partOfSpeech = resolvePartOfSpeech(
+      { kind: 'analytic', label, partOfSpeech: undefined },
+      btn.border_color,
+    );
 
     const base = {
       kind: 'analytic' as const,
@@ -65,6 +70,7 @@ export function obfToVoxaButtons(obf: ObfBoard): BoardButton[] {
       locale: 'en-US',
       position: { row, column },
       locked: false,
+      partOfSpeech,
     };
 
     if (btn.load_board_id) {
@@ -95,6 +101,7 @@ export function voxaBoardToObf(board: Board): ObfBoard {
       label: btn.kind === 'analytic' ? btn.label : btn.phrase,
       vocalization: btn.kind === 'analytic' ? btn.speechText : btn.phrase,
       image_id: btn.symbolUrl,
+      border_color: fitzgeraldColor(resolvePartOfSpeech(btn)),
       ...(btn.navigateToBoardId ? { load_board_id: btn.navigateToBoardId as string } : {}),
     })),
   };

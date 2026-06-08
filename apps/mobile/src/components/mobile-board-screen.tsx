@@ -7,7 +7,7 @@ import {
   View,
 } from 'react-native';
 import type { BoardButton } from '@voxa/core';
-import { fitzgeraldColor, type PartOfSpeech } from '@voxa/vocabulary';
+import { fitzgeraldColor, resolvePartOfSpeech } from '@voxa/vocabulary';
 import { buttonLabel, buttonSpeech } from '@/lib/board-utils';
 import { speakButton, speakText } from '@/lib/play-button-speech';
 import { useMobileSyncedBoard } from '@/hooks/use-mobile-synced-board';
@@ -73,9 +73,7 @@ export function MobileBoardScreen() {
 
       <ScrollView contentContainerStyle={styles.grid}>
         {sorted.map((btn) => {
-          const borderColor = btn.partOfSpeech
-            ? fitzgeraldColor(btn.partOfSpeech as PartOfSpeech)
-            : '#525252';
+          const borderColor = fitzgeraldColor(resolvePartOfSpeech(btn));
           return (
             <Pressable
               key={btn.id as string}
