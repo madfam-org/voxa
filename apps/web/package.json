@@ -15,6 +15,7 @@
     "@voxa/ai": "workspace:*",
     "@voxa/core": "workspace:*",
     "@voxa/sync": "workspace:*",
+    "@voxa/symbols": "workspace:*",
     "@voxa/ui": "workspace:*",
     "@voxa/vocabulary": "workspace:*",
     "next": "^15.1.3",

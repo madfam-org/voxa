@@ -12,6 +12,10 @@ export function buttonSpeech(btn: BoardButton): string {
   return btn.kind === 'analytic' ? btn.speechText : btn.phrase;
 }
 
+export function buttonSymbolUrl(btn: BoardButton): string | undefined {
+  return btn.symbolUrl;
+}
+
 export function buttonBorderColor(btn: BoardButton): string {
   if (!btn.partOfSpeech) return '#cbd5e1';
   return fitzgeraldColor(btn.partOfSpeech as PartOfSpeech);

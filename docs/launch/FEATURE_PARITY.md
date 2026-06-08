@@ -57,7 +57,7 @@ Actionable **feature parity match** against the AAC platform benchmark. Each row
 | Upload custom symbol / photo | OpenAAC 🟢 | 🟡 | Editor partial |
 | Recorded speech on button | OpenAAC ✅ / GLP | 🔴 | Type in `@voxa/core`; UI P1 |
 | GLP buttons with audio/video | Voxa differentiator | 🟡 | Type + demo; media upload P1 |
-| Symbol library search (ARASAAC) | OpenAAC ⭐ | 🔴 | P1 — integrate OpenSymbols |
+| Symbol library search (ARASAAC) | OpenAAC ⭐ | 🟡 | API + editor search (2026-06-08) |
 | Word forms / inflection | OpenAAC / Proloquo grammar | 🔴 | P1 |
 | Whisper / build utterance without speak | SFY | 🟡 | Message bar; no whisper mode |
 | Usage history / activation log | TD Snap, Grid | 🟡 | API `POST/GET /v1/events/activations*` + client log (2026-06-08); SLP UI P1 |
@@ -142,7 +142,7 @@ Mapped from [OpenAAC considerations](https://www.openaac.org/considerations). �
 | ✅ Upload sounds | P1 | 🔴 |
 | ⭐ Row/column scanning | P1 | 🟡 |
 | ⭐ Hold to select / dwell duration | P1 | 🟡 |
-| ⭐ Symbol library search | P1 | 🔴 |
+| ⭐ Symbol library search | P1 | 🟡 |
 | ⭐ Fitzgerald color by POS | P1 | ✅ |
 | 💡 Babble (show all hidden) | P2 | 🔴 |
 | 💡 Lock editing behind PIN | P1 | 🟡 | Admin settings + role gate (2026-06-08) |

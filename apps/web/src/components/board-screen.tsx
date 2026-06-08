@@ -8,6 +8,7 @@ import {
   buttonBorderColor,
   buttonLabel,
   buttonSpeech,
+  buttonSymbolUrl,
   downloadTextFile,
   posOptions,
   useObfFileInput,
@@ -25,6 +26,7 @@ import {
 } from '@/lib/editor-pin';
 import { logButtonActivation } from '@/lib/log-activation';
 import { PredictionStrip } from '@/components/prediction-strip';
+import { SymbolSearchPanel } from '@/components/symbol-search-panel';
 import { SettingsPanel } from '@/components/settings-panel';
 
 const headerBtn: React.CSSProperties = {
@@ -411,6 +413,7 @@ export function BoardScreen(): React.ReactNode {
             <AacButton
               key={btn.id as string}
               label={buttonLabel(btn)}
+              symbolUrl={buttonSymbolUrl(btn)}
               borderColor={buttonBorderColor(btn)}
               targetScale={settings.targetScale}
               hideSymbol={settings.hideSymbols}
@@ -456,6 +459,7 @@ export function BoardScreen(): React.ReactNode {
         {isEditor && editingId && (
           <EditorPanel
             button={sorted.find((b) => (b.id as string) === editingId)!}
+            accessToken={accessToken}
             onClose={() => setEditingId(null)}
             onChange={(patch) => updateButton(editingId, patch)}
           />
@@ -489,10 +493,12 @@ export function BoardScreen(): React.ReactNode {
 
 function EditorPanel({
   button,
+  accessToken,
   onClose,
   onChange,
 }: {
   button: BoardButton;
+  accessToken?: string;
   onClose: () => void;
   onChange: (patch: Partial<BoardButton>) => void;
 }) {
@@ -512,6 +518,13 @@ function EditorPanel({
       }}
     >
       <h2 style={{ margin: '0 0 12px', fontSize: '1rem' }}>Edit button</h2>
+
+      <SymbolSearchPanel
+        accessToken={accessToken}
+        currentUrl={button.symbolUrl}
+        onSelect={(imageUrl) => onChange({ symbolUrl: imageUrl })}
+        onClear={() => onChange({ symbolUrl: undefined })}
+      />
 
       {fieldsLocked ? (
         <p style={{ fontSize: '0.8125rem', color: '#fcd34d', margin: '0 0 12px' }}>

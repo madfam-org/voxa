@@ -55,7 +55,7 @@ Track progress toward general availability at `voxa.madfam.io`.
 - [ ] P1 robust AAC baseline ≥ 80% at M6 (2026-09-30)
 - [ ] Weighted scorecard ≥ 75% at M6
 - [x] Migration guide: OBF import path — [MIGRATION.md](./MIGRATION.md)
-- [ ] Epic B–C: ARASAAC + recorded speech + GLP media (W2)
+- [ ] Epic B–C: ARASAAC + recorded speech + GLP media (W2) — ARASAAC search ✅
 - [ ] Epic D: Mobile store beta (M4)
 - [ ] Epic E: Usage logs + co-edit (W3)
 - [ ] Epic F–G: Hardware access + legacy import (W4–W5)

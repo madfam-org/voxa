@@ -7,7 +7,7 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "node --import tsx --test src/health.test.ts src/store/board-operations.test.ts src/routes/boards.routes.test.ts src/routes/events.routes.test.ts src/lib/janua.test.ts src/lib/board-access.test.ts src/lib/dhanam.test.ts",
+    "test": "node --import tsx --test src/health.test.ts src/store/board-operations.test.ts src/routes/boards.routes.test.ts src/routes/events.routes.test.ts src/routes/symbols.routes.test.ts src/lib/janua.test.ts src/lib/board-access.test.ts src/lib/dhanam.test.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate-cli.ts"
   },
@@ -17,6 +17,7 @@
     "@voxa/ai": "workspace:*",
     "@voxa/core": "workspace:*",
     "@voxa/obf": "workspace:*",
+    "@voxa/symbols": "workspace:*",
     "@voxa/vocabulary": "workspace:*",
     "drizzle-orm": "^0.39.3",
     "hono": "^4.6.14",
