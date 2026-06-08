@@ -6,7 +6,7 @@ This document records deployment state after the Enclii/Janua GA push. Use it wi
 
 ## Executive summary
 
-**Voxa is live in production and staging** with PostgreSQL, Janua SSO, API auth enforcement, billing hooks, and legal pages. CI builds and deploys via Enclii GitOps. GitHub → Enclii webhook signature verification is **resolved** (2026-06-08). **Staging soak in progress** (2026-06-08 → 2026-06-15). Remaining for **full web GA**: GHCR visibility, SLP sign-off, soak completion.
+**Voxa is live in production and staging** with PostgreSQL, Janua SSO, API auth enforcement, billing hooks, and legal pages. CI builds and deploys via Enclii GitOps. GitHub → Enclii webhook signature verification is **resolved** (2026-06-08). **Staging soak in progress** (2026-06-08 → 2026-06-15) with automated scenarios + **OBF auth round-trip passing** (2026-06-08). GHCR packages are **public** and Kyverno PolicyExceptions removed (2026-06-08). Remaining for **full web GA**: SLP sign-off, soak completion through 2026-06-15.
 
 ## Live verification (last confirmed)
 
@@ -33,7 +33,7 @@ curl -sS https://voxa-api-staging.madfam.io/health/ready
 - **ArgoCD apps:** `voxa-services` (branch `main`, `k8s/production/`), `voxa-staging-services` (branch `staging`, `k8s/staging/`).
 - **Domains & junctions:** web → `voxa-web`, API → `voxa-api` (Tulana pattern; tunnel routes via Cloudflare).
 - **Images:** GHCR digest-pinned; CI updates `kustomization.yaml` and deployment YAML.
-- **Kyverno:** temporary `PolicyException` in `k8s/*/signature-policyexception.yaml` until Voxa GHCR packages are public.
+- **GHCR visibility (2026-06-08):** `voxa/voxa-api` and `voxa/voxa-web` confirmed **public**; Kyverno `PolicyException` YAML removed from `k8s/production/` and `k8s/staging/`.
 
 ### Data & auth
 
