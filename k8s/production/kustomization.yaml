@@ -6,6 +6,7 @@ namespace: voxa
 resources:
 - namespace.yaml
 - network-policies.yaml
+- signature-policyexception.yaml
 - voxa-api-deployment.yaml
 - voxa-api-service.yaml
 - voxa-web-deployment.yaml

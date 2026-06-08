@@ -6,7 +6,7 @@ This document records deployment state after the Enclii/Janua GA push. Use it wi
 
 ## Executive summary
 
-**Voxa is live in production and staging** with PostgreSQL, Janua SSO, API auth enforcement, billing hooks, and legal pages. CI builds and deploys via Enclii GitOps. **SLP accessibility sign-off recorded** (owner-authorized, approved with notes — 2026-06-08). **Staging soak in progress** through 2026-06-15 with automated + authenticated API soak green. GitHub Actions secrets for CI auth soak configured. GHCR packages **public**. Remaining for **full commercial GA declaration**: soak log through 2026-06-15, staging browser Janua OAuth pod reload.
+**Voxa is live in production and staging** with PostgreSQL, Janua SSO, API auth enforcement, billing hooks, and legal pages. CI builds and deploys via Enclii GitOps. **SLP accessibility sign-off recorded** (owner-authorized, approved with notes — 2026-06-08). **Staging soak in progress** through 2026-06-15 with automated + authenticated API soak green. GitHub Actions secrets for CI auth soak configured. **Argo sync blocked on new digests** until GHCR packages are public or Kyverno PolicyException is restored (re-added 2026-06-08). Remaining for **full commercial GA declaration**: soak log through 2026-06-15, staging browser Janua OAuth after web rollout.
 
 ## Live verification (last confirmed)
 
@@ -33,7 +33,7 @@ curl -sS https://voxa-api-staging.madfam.io/health/ready
 - **ArgoCD apps:** `voxa-services` (branch `main`, `k8s/production/`), `voxa-staging-services` (branch `staging`, `k8s/staging/`).
 - **Domains & junctions:** web → `voxa-web`, API → `voxa-api` (Tulana pattern; tunnel routes via Cloudflare).
 - **Images:** GHCR digest-pinned; CI updates `kustomization.yaml` and deployment YAML.
-- **GHCR visibility (2026-06-08):** `voxa/voxa-api` and `voxa/voxa-web` confirmed **public**; Kyverno `PolicyException` YAML removed from `k8s/production/` and `k8s/staging/`.
+- **GHCR visibility:** Kyverno still **DENIED** anonymous pull on `ghcr.io/madfam-org/voxa/*` (2026-06-08 Argo `SyncError`). Restored temporary `k8s/*/signature-policyexception.yaml` until org admin confirms packages are public — see [GHCR_ORG_ADMIN.md](./GHCR_ORG_ADMIN.md).
 
 ### Data & auth
 
