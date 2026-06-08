@@ -18,7 +18,7 @@ spec:
   template:
     metadata:
       annotations:
-        kubectl.kubernetes.io/restartedAt: "2026-06-08T04:15:00Z"
+        kubectl.kubernetes.io/restartedAt: "2026-06-08T04:25:00Z"
       labels:
         app: voxa-web
         app.kubernetes.io/name: voxa-web
@@ -64,10 +64,11 @@ spec:
               value: "jnc_4qRWyI-ul_GL28hrSxrX7AvIyotFMBuB"
             - name: NEXT_PUBLIC_BASE_URL
               value: "https://voxa-staging.madfam.io"
-          envFrom:
-            - secretRef:
-                name: voxa-secrets
-                optional: true
+            - name: OIDC_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: voxa-secrets
+                  key: OIDC_CLIENT_SECRET
           resources:
             requests:
               cpu: 50m
