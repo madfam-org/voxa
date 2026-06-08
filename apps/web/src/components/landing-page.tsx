@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { SiteFooter, SiteNav } from '@/components/site-chrome';
+import { PwaInstallBanner } from '@/components/pwa-install-banner';
 
 const section: React.CSSProperties = {
   maxWidth: 1100,
@@ -63,6 +64,7 @@ export function LandingPage(): React.ReactNode {
               Sign in free (parents)
             </Link>
           </div>
+          <PwaInstallBanner />
         </div>
         <div style={{ ...card, background: 'linear-gradient(145deg, #1e3a5f 0%, #171717 60%)' }}>
           <h2 style={{ margin: '0 0 12px', fontSize: '1.125rem' }}>Why AAC is life-changing</h2>

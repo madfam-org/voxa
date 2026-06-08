@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Voxa">
+  <rect width="512" height="512" rx="96" fill="#0a0a0a"/>
+  <rect x="32" y="32" width="448" height="448" rx="72" fill="#111827" stroke="#2563eb" stroke-width="16"/>
+  <path
+    d="M148 360V152h72c56 0 92 34 92 86 0 28-10 50-29 65l49 57h-62l-42-52h-22v52H148zm62-98h22c24 0 38-12 38-32s-14-32-38-32h-22v64z"
+    fill="#f5f5f5"
+  />
+</svg>

@@ -160,7 +160,7 @@ Each epic links to [FEATURE_PARITY.md](./FEATURE_PARITY.md) rows and benchmark d
 | D1 | iOS + Android apps | EAS preview → production | [MOBILE_GA.md](./MOBILE_GA.md), `mobile-eas.yml` CI ✅ 2026-06-08 |
 | D2 | Janua mobile OAuth | Universal links / app links | `expo-auth-session` + SecureStore ✅ 2026-06-09 |
 | D3 | Offline on device | SQLite/AsyncStorage + sync queue | AsyncStorage cache, NetInfo flush, retry UI ✅ 2026-06-09 |
-| D4 | PWA install | Web manifest + install prompt on landing | `apps/web` |
+| D4 | PWA install | Web manifest + install prompt on landing | `manifest.webmanifest` + install banner ✅ 2026-06-09 |
 | D5 | Windows | Edge/Chrome PWA + optional Electron wrapper | Post-M5 optional |
 
 **Acceptance (M5):**
@@ -425,6 +425,7 @@ pnpm test && pnpm typecheck
 | 22 | Touch-release activation setting (A2) | A | Engineering ✅ 2026-06-09 |
 | 23 | Remote SLP editor + audit log (E3) | E | Engineering ✅ 2026-06-09 |
 | 24 | Mobile Janua OAuth + offline sync (D2/D3) | D | Mobile ✅ 2026-06-09 |
+| 25 | PWA manifest + install prompt (D4) | D | Engineering ✅ 2026-06-09 |
 
 ---
 

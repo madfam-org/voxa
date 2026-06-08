@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { PwaInstallBanner } from '@/components/pwa-install-banner';
 
 const navLink: React.CSSProperties = {
   color: '#d4d4d4',
@@ -39,6 +40,7 @@ export function SiteNav({ active }: { active?: 'home' | 'demo' | 'app' }): React
         <Link href="/#pricing" style={navLink}>
           Pricing
         </Link>
+        <PwaInstallBanner compact />
         <Link
           href="/auth/signin?redirect_to=%2Fapp"
           style={{

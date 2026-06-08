@@ -1,0 +1,26 @@
+{
+  "name": "Voxa AAC Communicator",
+  "short_name": "Voxa",
+  "description": "Augmentative and alternative communication with motor planning, CVI themes, and cloud sync.",
+  "start_url": "/app",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "categories": ["medical", "education", "accessibility"],
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

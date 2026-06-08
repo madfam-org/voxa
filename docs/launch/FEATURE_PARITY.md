@@ -67,6 +67,7 @@ Actionable **feature parity match** against the AAC platform benchmark. Each row
 | Remote SLP edit without device handoff | Cloud AAC | 🟡 | `/app/edit` remote editor + audit log (2026-06-09) |
 | iOS + Android store apps | All Tier A | 🟡 | EAS preview CI + Janua OAuth + offline cache (2026-06-09); store submit M4 |
 | Cross-platform single account | Fragmented | 🟡 | Web + mobile share Janua token + board list (2026-06-09) |
+| PWA install (home screen) | Cboard, web AAC | 🟡 | `manifest.webmanifest` + install banner on landing (2026-06-09) |
 | Hardware switch (Bluetooth/USB) | Grid, TD Snap | 🔴 | P1 mobile + web |
 | Keyguard / touch guard support | Clinical | 🔴 | P2 |
 
