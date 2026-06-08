@@ -30,7 +30,7 @@ Actionable **feature parity match** against the AAC platform benchmark. Each row
 | 1 cm touch targets | WCAG 2.2 / OpenAAC 🟢 | ✅ | `@voxa/ui` AacButton |
 | ARIA grid structure | WCAG / access | ✅ | BoardGrid row/cell (2026-06-08) |
 | CVI themes | OpenAAC ⭐ / TD Snap HC | ✅ | cvi-dark, cvi-high-contrast |
-| Switch scanning (configurable) | OpenAAC ⭐ | 🟡 | Web; voice cue + USB switch key map (2026-06-09) |
+| Switch scanning (configurable) | OpenAAC ⭐ | 🟡 | Web voice cue + USB keys; mobile on-screen scan (2026-06-09) |
 | Eye dwell (configurable) | OpenAAC ⭐ | 🟡 | Pointer sim; touch-release option; not Tobii SDK (2026-06-09) |
 | Message bar + speak utterance | OpenAAC 🟢 | ✅ | Web Speech API |
 | OBF export | OpenAAC / Cboard | ✅ | API + editor UI |

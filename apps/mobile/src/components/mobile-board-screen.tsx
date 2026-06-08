@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
   Pressable,
@@ -12,13 +12,24 @@ import { fitzgeraldColor, resolvePartOfSpeech } from '@voxa/vocabulary';
 import { buttonLabel, buttonSpeech } from '@/lib/board-utils';
 import { speakButton, speakText } from '@/lib/play-button-speech';
 import { useMobileAuth } from '@/hooks/use-mobile-auth';
+import { useMobileSwitchScan } from '@/hooks/use-mobile-switch-scan';
 import { useMobileSyncedBoard } from '@/hooks/use-mobile-synced-board';
+import {
+  loadMobileSettings,
+  saveMobileSettings,
+  type MobileCommunicatorSettings,
+} from '@/lib/mobile-settings';
 
 /** 1 cm minimum touch target @ 96 dpi, scaled 1.2× */
 const TARGET = Math.round(38 * 1.2);
 
 export function MobileBoardScreen() {
   const [utterance, setUtterance] = useState<string[]>([]);
+  const [settings, setSettings] = useState<MobileCommunicatorSettings>({
+    accessMode: 'touch',
+    switchIntervalMs: 1200,
+    switchOrder: 'row-major',
+  });
   const { accessToken, userId, isAuthenticated, configured, signIn, signOut, loading: authLoading } =
     useMobileAuth();
   const {
@@ -31,6 +42,12 @@ export function MobileBoardScreen() {
     setBoardId,
     retryPendingSave,
   } = useMobileSyncedBoard({ accessToken, userId });
+
+  useEffect(() => {
+    void loadMobileSettings().then(setSettings);
+  }, []);
+
+  const switchScanEnabled = settings.accessMode === 'switch';
 
   const sorted = [...board.grid.buttons].sort(
     (a, b) => a.position.row - b.position.row || a.position.column - b.position.column,
@@ -48,6 +65,23 @@ export function MobileBoardScreen() {
     },
     [accessToken, setBoardId],
   );
+
+  const { isHighlighted, advance, select, activeLabel } = useMobileSwitchScan({
+    enabled: switchScanEnabled,
+    rows: board.grid.rows,
+    columns: board.grid.columns,
+    buttons: sorted,
+    intervalMs: settings.switchIntervalMs,
+    order: settings.switchOrder,
+    onSelect: activate,
+  });
+
+  const toggleSwitchMode = useCallback(() => {
+    const nextMode = settings.accessMode === 'switch' ? 'touch' : 'switch';
+    const next = { ...settings, accessMode: nextMode as MobileCommunicatorSettings['accessMode'] };
+    setSettings(next);
+    void saveMobileSettings(next);
+  }, [settings]);
 
   const pickBoard = useCallback(() => {
     if (boardCatalog.length <= 1) return;
@@ -82,6 +116,11 @@ export function MobileBoardScreen() {
             <Text style={styles.headerBtnText}>Boards</Text>
           </Pressable>
         ) : null}
+        <Pressable style={styles.headerBtnSecondary} onPress={toggleSwitchMode}>
+          <Text style={styles.headerBtnText}>
+            {switchScanEnabled ? 'Switch on' : 'Switch off'}
+          </Text>
+        </Pressable>
         {!authLoading && configured ? (
           isAuthenticated ? (
             <Pressable style={styles.headerBtnSecondary} onPress={() => void signOut()}>
@@ -131,16 +170,42 @@ export function MobileBoardScreen() {
         </View>
       ) : null}
 
+      {switchScanEnabled ? (
+        <View style={styles.switchBar}>
+          <Text style={styles.switchMeta} numberOfLines={1}>
+            Scan: {activeLabel || '—'}
+          </Text>
+          <Pressable style={styles.switchBtn} onPress={advance} accessibilityLabel="Advance scan">
+            <Text style={styles.switchBtnText}>Next</Text>
+          </Pressable>
+          <Pressable style={styles.switchBtnPrimary} onPress={select} accessibilityLabel="Select scanned cell">
+            <Text style={styles.switchBtnText}>Select</Text>
+          </Pressable>
+        </View>
+      ) : null}
+
       <ScrollView contentContainerStyle={styles.grid}>
         {sorted.map((btn) => {
           const borderColor = fitzgeraldColor(resolvePartOfSpeech(btn));
+          const highlighted = isHighlighted(btn);
           return (
             <Pressable
               key={btn.id as string}
               accessibilityRole="button"
               accessibilityLabel={buttonLabel(btn)}
-              onPress={() => activate(btn)}
-              style={[styles.cell, { borderColor }]}
+              accessibilityState={{ selected: highlighted }}
+              onPress={() => {
+                if (switchScanEnabled) {
+                  if (highlighted) activate(btn);
+                  return;
+                }
+                activate(btn);
+              }}
+              style={[
+                styles.cell,
+                { borderColor: highlighted ? '#60a5fa' : borderColor },
+                highlighted ? styles.cellHighlighted : null,
+              ]}
             >
               <Text style={styles.cellLabel}>{buttonLabel(btn)}</Text>
             </Pressable>
@@ -216,6 +281,30 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   retryBtnText: { color: '#fff', fontWeight: '600', fontSize: 13 },
+  switchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: '#172554',
+  },
+  switchMeta: { flex: 1, color: '#bfdbfe', fontSize: 13 },
+  switchBtn: {
+    backgroundColor: '#262626',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: '#404040',
+  },
+  switchBtnPrimary: {
+    backgroundColor: '#2563eb',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  switchBtnText: { color: '#fff', fontWeight: '700', fontSize: 13 },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -232,6 +321,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 8,
     backgroundColor: '#111',
+  },
+  cellHighlighted: {
+    backgroundColor: '#1e3a8a',
   },
   cellLabel: { color: '#f5f5f5', fontWeight: '600', textAlign: 'center' },
 });

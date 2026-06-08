@@ -1,0 +1,30 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { ScanOrder } from '@voxa/access';
+
+const SETTINGS_KEY = 'voxa-mobile-communicator-settings';
+
+export interface MobileCommunicatorSettings {
+  accessMode: 'touch' | 'switch';
+  switchIntervalMs: number;
+  switchOrder: ScanOrder;
+}
+
+const DEFAULTS: MobileCommunicatorSettings = {
+  accessMode: 'touch',
+  switchIntervalMs: 1200,
+  switchOrder: 'row-major',
+};
+
+export async function loadMobileSettings(): Promise<MobileCommunicatorSettings> {
+  try {
+    const raw = await AsyncStorage.getItem(SETTINGS_KEY);
+    if (!raw) return DEFAULTS;
+    return { ...DEFAULTS, ...(JSON.parse(raw) as Partial<MobileCommunicatorSettings>) };
+  } catch {
+    return DEFAULTS;
+  }
+}
+
+export async function saveMobileSettings(settings: MobileCommunicatorSettings): Promise<void> {
+  await AsyncStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+}

@@ -61,6 +61,16 @@ check "GET / landing → 200" test "${home_code}" = "200"
 demo_code="$(curl -sS -o /dev/null -w '%{http_code}' "${WEB_BASE}/demo" 2>/dev/null || echo 000)"
 check "GET /demo → 200" test "${demo_code}" = "200"
 
+manifest_code="$(curl -sS -o /dev/null -w '%{http_code}' "${WEB_BASE}/manifest.webmanifest" 2>/dev/null || echo 000)"
+check "GET /manifest.webmanifest → 200" test "${manifest_code}" = "200"
+
+icon_code="$(curl -sS -o /dev/null -w '%{http_code}' "${WEB_BASE}/icons/icon.svg" 2>/dev/null || echo 000)"
+check "GET /icons/icon.svg → 200" test "${icon_code}" = "200"
+
+echo "== Sync hub =="
+sync_hub="$(python3 -c "import json,sys; print(json.load(sys.stdin).get('syncHub','unknown'))" <<<"${ready_body:-$(curl -sf "${API_BASE}/health/ready" 2>/dev/null || echo '{}')}")"
+check "API reports syncHub mode" test "${sync_hub}" = "local" -o "${sync_hub}" = "redis"
+
 echo "== API auth gates =="
 for path in /v1/billing/entitlement; do
   code="$(curl -sS -o /dev/null -w '%{http_code}' "${API_BASE}${path}" 2>/dev/null || echo 000)"
@@ -144,6 +154,25 @@ EOF
       -H "Authorization: Bearer ${token}")"
     check "GET OBF export non-empty" test -n "${export_body}"
     check "OBF export contains demo-core board id" grep -q 'demo-core' <<<"${export_body}"
+
+    echo "== Co-edit version guard =="
+    board_body="$(curl -sS "${API_BASE}/v1/boards/demo-core" \
+      -H "Authorization: Bearer ${token}" \
+      -H 'X-Voxa-Role: editor')"
+    current_version="$(python3 -c "import json,sys; print(json.load(sys.stdin).get('version', 1))" <<<"${board_body}")"
+    stale_version=$((current_version > 1 ? current_version - 1 : 0))
+    conflict_payload="$(python3 -c "
+import json, sys
+board = json.load(sys.stdin)
+board['expectedVersion'] = ${stale_version}
+print(json.dumps(board))
+" <<<"${board_body}")"
+    conflict_code="$(curl -sS -o /dev/null -w '%{http_code}' -X PUT "${API_BASE}/v1/boards/demo-core" \
+      -H "Authorization: Bearer ${token}" \
+      -H 'Content-Type: application/json' \
+      -H 'X-Voxa-Role: editor' \
+      -d "${conflict_payload}")"
+    check "PUT /v1/boards/demo-core stale version → 409" test "${conflict_code}" = "409"
   fi
 fi
 

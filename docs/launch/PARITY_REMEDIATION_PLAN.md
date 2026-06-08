@@ -431,6 +431,7 @@ pnpm test && pnpm typecheck
 | 28 | WS auth + client self-event filter + declaration-day script (E4/W0) | E/W0 | Engineering ✅ 2026-06-09 |
 | 29 | Save conflict refetch UX + mobile OAuth refresh (A4/D2) | A/D | Engineering ✅ 2026-06-09 |
 | 30 | Sync status banner + USB switch keys + save conflict toast (A4/A1) | A | Engineering ✅ 2026-06-09 |
+| 31 | Soak progress CI + mobile switch scan mode (W0/A1) | W0/A | Engineering ✅ 2026-06-09 |
 
 ---
 

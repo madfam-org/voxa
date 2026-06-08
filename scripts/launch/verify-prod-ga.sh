@@ -47,6 +47,9 @@ check "GET / landing → 200" test "${landing_code}" = "200"
 check "GET /demo → 200" test "${demo_code}" = "200"
 check "GET /auth/signin → 200" test "${signin_code}" = "200"
 
+manifest_code="$(curl -sS -o /dev/null -w '%{http_code}' "${WEB_BASE}/manifest.webmanifest" 2>/dev/null || echo 000)"
+check "GET /manifest.webmanifest → 200" test "${manifest_code}" = "200"
+
 echo "== Legal pages =="
 for path in /legal/privacy /legal/terms /legal/accessibility; do
   code="$(curl -sS -o /dev/null -w '%{http_code}' "${WEB_BASE}${path}" 2>/dev/null || echo 000)"
