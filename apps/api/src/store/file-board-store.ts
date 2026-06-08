@@ -7,9 +7,12 @@ import {
   type BoardId,
   type BoardUpdateResult,
   type SyncEvent,
+  type TeamRole,
 } from '@voxa/core';
+import { canEditBoard } from '../lib/board-access.js';
 import {
   applyCreateBoard,
+  applyDeleteBoard,
   applyImportObfBoard,
   applyImportObzBoard,
   applyUpdateBoard,
@@ -95,6 +98,18 @@ export function createFileBoardStore(initialState?: StoreState): BoardStore {
 
     async exportObzBoard(boardId: string) {
       return exportBoardObz(state.boards, boardId);
+    },
+
+    async deleteBoard(boardId: string, actorUserId: string, role: TeamRole) {
+      const board = state.boards[boardId];
+      if (!board) throw new Error(`Board not found: ${boardId}`);
+      if (!canEditBoard(boardId, board.ownerUserId, actorUserId, role)) {
+        const err = new Error('Forbidden');
+        (err as Error & { status: number }).status = 403;
+        throw err;
+      }
+      applyDeleteBoard(state.boards, boardId);
+      persist();
     },
 
     async appendSyncEvents(events: SyncEvent[]) {

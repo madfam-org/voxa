@@ -109,10 +109,10 @@ Each epic links to [FEATURE_PARITY.md](./FEATURE_PARITY.md) rows and benchmark d
 
 | ID | Feature | Remediation | Implementation |
 |----|---------|-------------|----------------|
-| B1 | Multi-board library | Board list UX; rename/duplicate/delete; default board per profile | `use-synced-board.ts`, API `GET/POST /v1/boards`, web board picker |
+| B1 | Multi-board library | Board list UX; rename/duplicate/delete; default board per profile | Picker + create/rename/duplicate/delete ✅ 2026-06-09 |
 | B2 | Motor-plan locks | Visual lock indicator; prevent move/delete of locked slots; SLP override | `@voxa/core`, editor drag-drop guards |
 | B3 | Hide/show + babble | Toggle `hidden`; “show all” babble mode (communicator) | `hidden` in editor + **Babble** session toggle ✅ 2026-06-08 |
-| B4 | Custom grid 9–144+ | Editor rows/cols with validation; reflow rules | `@voxa/core` `BoardGrid`, editor |
+| B4 | Custom grid 9–144+ | Editor rows/cols with validation; reflow rules | `resizeBoardGrid` + editor **Grid** panel ✅ 2026-06-09 |
 | B5 | Symbol/label modes | ✅ partial | Unify `hideLabels`/`hideSymbols` per board + profile | `communicator-settings.ts`, `AacButton` |
 | B6 | Fitzgerald POS | ✅ colors | Apply POS colors on **all** buttons including imports | `@voxa/ui` borderColor from `partOfSpeech` |
 | B7 | Word forms / inflection | Morphology table for top 200 core verbs/nouns | New `@voxa/vocabulary` inflection module; optional button `forms[]` |
@@ -414,6 +414,8 @@ pnpm test && pnpm typecheck
 | 11 | EAS preview CI workflow (D1) | D | Mobile ✅ 2026-06-08 |
 | 12 | Babble + whisper communicator modes (B3/B8) | B | Engineering ✅ 2026-06-08 |
 | 13 | OBZ import/export with images (C5) | C | Engineering ✅ 2026-06-08 |
+| 14 | Custom grid editor + reflow (B4) | B | Engineering ✅ 2026-06-09 |
+| 15 | Board rename/duplicate/delete (B1) | B | Engineering ✅ 2026-06-09 |
 
 ---
 

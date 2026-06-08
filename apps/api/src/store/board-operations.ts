@@ -170,3 +170,16 @@ export function trimSyncEvents(events: SyncEvent[], max = 5000): SyncEvent[] {
   if (events.length <= max) return events;
   return events.slice(-max);
 }
+
+export function applyDeleteBoard(
+  boards: Record<string, Board>,
+  boardId: string,
+): void {
+  if (boardId === 'demo-core') {
+    throw new Error('The demo board cannot be deleted');
+  }
+  if (!boards[boardId]) {
+    throw new Error(`Board not found: ${boardId}`);
+  }
+  delete boards[boardId];
+}

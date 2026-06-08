@@ -6,7 +6,9 @@ import {
   type BoardId,
   type BoardUpdateResult,
   type SyncEvent,
+  type TeamRole,
 } from '@voxa/core';
+import { canEditBoard } from '../lib/board-access.js';
 import { createDb } from '../db/client.js';
 import { boards, syncEvents } from '../db/schema.js';
 import {
@@ -148,6 +150,20 @@ export function createPgBoardStore(databaseUrl: string): BoardStore {
     async exportObzBoard(boardId: string) {
       const map = await loadBoardMap();
       return exportBoardObz(map, boardId);
+    },
+
+    async deleteBoard(boardId: string, actorUserId: string, role: TeamRole) {
+      const board = await this.getBoard(boardId);
+      if (!board) throw new Error(`Board not found: ${boardId}`);
+      if (!canEditBoard(boardId, board.ownerUserId, actorUserId, role)) {
+        const err = new Error('Forbidden');
+        (err as Error & { status: number }).status = 403;
+        throw err;
+      }
+      if (boardId === DEMO_BOARD_ID) {
+        throw new Error('The demo board cannot be deleted');
+      }
+      await db.delete(boards).where(eq(boards.id, boardId));
     },
 
     async appendSyncEvents(events: SyncEvent[]) {

@@ -1,8 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import type { BoardButton, PartOfSpeechTag, TeamRole } from '@voxa/core';
-import { fitzgeraldColor, type PartOfSpeech } from '@voxa/vocabulary';
+import { DEMO_BOARD_ID, type BoardButton, type PartOfSpeechTag, type TeamRole } from '@voxa/core';
+import { fitzgeraldColor, resizeBoardGrid, type PartOfSpeech } from '@voxa/vocabulary';
 import { AacButton, BoardGrid, CVI_THEMES, themeStyles } from '@voxa/ui';
 import {
   buttonBorderColor,
@@ -32,6 +32,7 @@ import { PredictionStrip } from '@/components/prediction-strip';
 import { SymbolSearchPanel } from '@/components/symbol-search-panel';
 import { SettingsPanel } from '@/components/settings-panel';
 import { UsageReportPanel } from '@/components/usage-report-panel';
+import { GridSettingsPanel } from '@/components/grid-settings-panel';
 import { RecordedMediaPanel } from '@/components/recorded-media-panel';
 
 const headerBtn: React.CSSProperties = {
@@ -59,6 +60,7 @@ export function BoardScreen(): React.ReactNode {
   const [busy, setBusy] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [usageOpen, setUsageOpen] = useState(false);
+  const [gridOpen, setGridOpen] = useState(false);
   const [babbleActive, setBabbleActive] = useState(false);
 
   const [recentButtonIds, setRecentButtonIds] = useState<string[]>([]);
@@ -69,6 +71,9 @@ export function BoardScreen(): React.ReactNode {
     boardCatalog,
     setBoardId,
     createBoard,
+    renameBoard,
+    duplicateBoard,
+    deleteBoard,
     setBoard,
     syncStatus,
     error,
@@ -229,6 +234,69 @@ export function BoardScreen(): React.ReactNode {
     }
   }, [createBoard]);
 
+  const handleRenameBoard = useCallback(async () => {
+    const name = window.prompt('Board name', board.name);
+    if (!name?.trim() || name.trim() === board.name) return;
+    setBusy(true);
+    try {
+      await renameBoard(name.trim());
+    } catch (err) {
+      alert((err as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }, [board.name, renameBoard]);
+
+  const handleDuplicateBoard = useCallback(async () => {
+    setBusy(true);
+    try {
+      await duplicateBoard();
+    } catch (err) {
+      alert((err as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }, [duplicateBoard]);
+
+  const handleDeleteBoard = useCallback(async () => {
+    if (boardId === DEMO_BOARD_ID) {
+      alert('The demo board cannot be deleted.');
+      return;
+    }
+    if (!window.confirm(`Delete board "${board.name}"? This cannot be undone.`)) return;
+    setBusy(true);
+    try {
+      await deleteBoard();
+    } catch (err) {
+      alert((err as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }, [board.name, boardId, deleteBoard]);
+
+  const handleApplyGrid = useCallback(
+    (rows: number, columns: number) => {
+      try {
+        const result = resizeBoardGrid(board.grid.buttons, rows, columns);
+        setBoard({
+          ...board,
+          grid: {
+            rows: result.rows,
+            columns: result.columns,
+            buttons: result.buttons,
+          },
+        });
+        if (result.warnings.length > 0) {
+          window.alert(result.warnings.join('\n'));
+        }
+        setGridOpen(false);
+      } catch (err) {
+        alert((err as Error).message);
+      }
+    },
+    [board, setBoard],
+  );
+
   const handleRoleChange = useCallback(
     (nextRole: TeamRole) => {
       if (nextRole === 'communicator') {
@@ -343,9 +411,22 @@ export function BoardScreen(): React.ReactNode {
         )}
 
         {isEditor && isAuthenticated && (
-          <button type="button" onClick={handleCreateBoard} disabled={busy} style={secondaryBtn}>
-            New board
-          </button>
+          <>
+            <button type="button" onClick={handleCreateBoard} disabled={busy} style={secondaryBtn}>
+              New board
+            </button>
+            <button type="button" onClick={() => void handleRenameBoard()} disabled={busy} style={secondaryBtn}>
+              Rename
+            </button>
+            <button type="button" onClick={() => void handleDuplicateBoard()} disabled={busy} style={secondaryBtn}>
+              Duplicate
+            </button>
+            {boardId !== DEMO_BOARD_ID ? (
+              <button type="button" onClick={() => void handleDeleteBoard()} disabled={busy} style={secondaryBtn}>
+                Delete
+              </button>
+            ) : null}
+          </>
         )}
 
         <span
@@ -430,6 +511,17 @@ export function BoardScreen(): React.ReactNode {
 
         {isEditor && (
           <>
+            <button
+              type="button"
+              onClick={() => {
+                setSettingsOpen(false);
+                setUsageOpen(false);
+                setGridOpen((v) => !v);
+              }}
+              style={secondaryBtn}
+            >
+              Grid
+            </button>
             <button type="button" onClick={openObfImport} disabled={busy} style={secondaryBtn}>
               Import OBF
             </button>
@@ -570,6 +662,16 @@ export function BoardScreen(): React.ReactNode {
             accessToken={accessToken}
             buttons={sorted}
             onClose={() => setUsageOpen(false)}
+          />
+        ) : null}
+
+        {gridOpen && isEditor ? (
+          <GridSettingsPanel
+            rows={board.grid.rows}
+            columns={board.grid.columns}
+            buttonCount={board.grid.buttons.length}
+            onApply={handleApplyGrid}
+            onClose={() => setGridOpen(false)}
           />
         ) : null}
 

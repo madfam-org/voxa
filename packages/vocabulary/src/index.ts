@@ -47,3 +47,13 @@ export function findMotorPlanningViolations(
 export function isGlpPhrase(text: string): boolean {
   return text.trim().split(/\s+/).length > 1;
 }
+
+export {
+  GRID_MAX_CELLS,
+  GRID_MAX_DIMENSION,
+  GRID_MIN_CELLS,
+  GRID_MIN_DIMENSION,
+  resizeBoardGrid,
+  validateGridDimensions,
+  type GridResizeResult,
+} from './grid.js';

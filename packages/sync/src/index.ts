@@ -124,6 +124,17 @@ export class VoxaClient {
     return res.arrayBuffer();
   }
 
+  async deleteBoard(boardId: string): Promise<void> {
+    const res = await fetch(this.url(`/v1/boards/${boardId}`), {
+      method: 'DELETE',
+      headers: teamHeaders(this.options),
+    });
+    if (!res.ok) {
+      const err = (await res.json().catch(() => ({}))) as { error?: string };
+      throw new Error(err.error ?? `Delete failed: ${res.status}`);
+    }
+  }
+
   connectBoardSync(
     boardId: string,
     onEvent: (event: SyncEvent) => void,

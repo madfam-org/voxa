@@ -91,6 +91,24 @@ boardRoutes.put('/:boardId', async (c) => {
   }
 });
 
+boardRoutes.delete('/:boardId', async (c) => {
+  if (!requireEditor(c)) {
+    return c.json({ error: 'Editor role required' }, 403);
+  }
+
+  const boardId = c.req.param('boardId');
+  const { userId, role } = c.get('team');
+
+  try {
+    await getStore().deleteBoard(boardId, userId, role);
+    return c.body(null, 204);
+  } catch (err) {
+    const error = err as Error & { status?: number };
+    if (error.status === 403) return c.json({ error: 'Forbidden' }, 403);
+    return c.json({ error: error.message }, 400);
+  }
+});
+
 boardRoutes.post('/:boardId/import/obf', async (c) => {
   if (!requireEditor(c)) {
     return c.json({ error: 'Editor role required' }, 403);

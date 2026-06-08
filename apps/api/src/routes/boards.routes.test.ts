@@ -90,4 +90,36 @@ describe('board routes', () => {
     assert.equal(updated.board.name, 'Updated core');
     assert.equal(updated.board.version, board.version + 1);
   });
+
+  it('deletes a user board but not demo-core', async () => {
+    const create = await app.request('/v1/boards', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Voxa-User-Id': 'owner-a',
+        'X-Voxa-Role': 'editor',
+      },
+      body: JSON.stringify({
+        id: 'temp-board',
+        name: 'Temp',
+        profileId: 'default',
+        version: 1,
+        updatedAt: new Date().toISOString(),
+        grid: { rows: 3, columns: 3, buttons: [] },
+      }),
+    });
+    assert.equal(create.status, 201);
+
+    const deleted = await app.request('/v1/boards/temp-board', {
+      method: 'DELETE',
+      headers: { 'X-Voxa-User-Id': 'owner-a', 'X-Voxa-Role': 'editor' },
+    });
+    assert.equal(deleted.status, 204);
+
+    const demoDelete = await app.request(`/v1/boards/${DEMO_BOARD_ID}`, {
+      method: 'DELETE',
+      headers: { 'X-Voxa-User-Id': 'owner-a', 'X-Voxa-Role': 'editor' },
+    });
+    assert.equal(demoDelete.status, 400);
+  });
 });

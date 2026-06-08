@@ -1,4 +1,4 @@
-import type { Board, BoardId, BoardUpdateResult, SyncEvent } from '@voxa/core';
+import type { Board, BoardId, BoardUpdateResult, SyncEvent, TeamRole } from '@voxa/core';
 
 export interface ImportObfResult extends BoardUpdateResult {
   warnings: string[];
@@ -26,6 +26,7 @@ export interface BoardStore {
   ): Promise<ImportObfResult>;
   exportObfBoard(boardId: string): Promise<string>;
   exportObzBoard(boardId: string): Promise<Uint8Array>;
+  deleteBoard(boardId: string, actorUserId: string, role: TeamRole): Promise<void>;
   appendSyncEvents(events: SyncEvent[]): Promise<void>;
   getRecentEvents(boardId: BoardId, sinceVersion?: number): Promise<SyncEvent[]>;
   ensureSeeded?(): Promise<void>;

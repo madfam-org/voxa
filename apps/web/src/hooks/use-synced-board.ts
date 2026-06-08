@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   createBoardId,
+  createButtonId,
   createDemoBoard,
   createProfileId,
   DEMO_BOARD_ID,
@@ -331,12 +332,62 @@ export function useSyncedBoard(role: TeamRole) {
     [client, setBoard, setBoardId],
   );
 
+  const renameBoard = useCallback(
+    async (name: string) => {
+      const result = await client.saveBoard(
+        { ...boardRef.current, name },
+        boardRef.current.version,
+      );
+      setBoard(result.board);
+      setBoardCatalog((prev) =>
+        prev.map((item) => (item.id === boardId ? { ...item, name: result.board.name } : item)),
+      );
+      return result.board;
+    },
+    [boardId, client, setBoard],
+  );
+
+  const duplicateBoard = useCallback(async () => {
+    const id = `board-${Date.now()}`;
+    const source = boardRef.current;
+    const template: Board = {
+      ...source,
+      id: createBoardId(id),
+      name: `${source.name} copy`,
+      version: 1,
+      updatedAt: new Date().toISOString(),
+      grid: {
+        rows: source.grid.rows,
+        columns: source.grid.columns,
+        buttons: source.grid.buttons.map((btn, index) => ({
+          ...btn,
+          id: createButtonId(`${btn.id as string}-dup-${index}-${Date.now()}`),
+        })),
+      },
+    };
+    const result = await client.createBoard(template);
+    const summary = { id: result.board.id as string, name: result.board.name };
+    setBoardCatalog((prev) => [...prev.filter((b) => b.id !== summary.id), summary]);
+    setBoardId(summary.id);
+    setBoard(result.board);
+    return result.board;
+  }, [client, setBoard, setBoardId]);
+
+  const deleteBoard = useCallback(async () => {
+    await client.deleteBoard(boardId);
+    setBoardCatalog((prev) => prev.filter((item) => item.id !== boardId));
+    setBoardId(DEMO_BOARD_ID);
+  }, [boardId, client, setBoardId]);
+
   return {
     board,
     boardId,
     boardCatalog,
     setBoardId,
     createBoard,
+    renameBoard,
+    duplicateBoard,
+    deleteBoard,
     setBoard,
     syncStatus,
     error,
