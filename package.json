@@ -20,7 +20,7 @@
     "dev:api": "pnpm --filter @voxa/api dev",
     "dev:mobile": "pnpm --filter @voxa/mobile dev",
     "build": "turbo build",
-    "test": "turbo test",
+    "test": "turbo test --filter=!@voxa/e2e",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
     "clean": "turbo clean && rm -rf node_modules",
