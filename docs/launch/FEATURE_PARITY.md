@@ -80,10 +80,10 @@ Actionable **feature parity match** against the AAC platform benchmark. Each row
 | Eye gaze (Tobii/IrisBond SDK) | TD Snap, Grid | 🟡 | Tobii bridge POC via `voxa:gaze` + pointer sim (2026-06-09) |
 | Auditory scanning prompts | TD Snap Scanning | 🔴 | P2 |
 | Group / region scanning | Grid | 🔴 | P2 |
-| Core word page sets (Crescendo-class) | Proloquo2Go | 🔴 | P2 content |
+| Core word page sets (Crescendo-class) | Proloquo2Go | 🟡 | Core 47 + Core 100 templates in editor (2026-06-09) |
 | PODD / Gateway page set option | TD Snap IAP | 🔴 | P2 or partner content |
-| `.gridset` import | Grid 3 | 🔴 | P2 via AACProcessors |
-| Grid 3 `.gridset` import | Grid | 🟡 | MVP zip parser + editor Import Grid (2026-06-09) |
+| `.gridset` import | Grid 3 | 🟡 | MVP zip parser + editor Import Grid (2026-06-09) |
+| Snap `.spb` import | TD Snap | 🟡 | SQLite adapter + editor Import Snap (2026-06-09) |
 | Visual schedules / timers | TD Snap tools | 🔴 | P2 |
 | Diversity / skin tone on symbols | Proloquo, TD Snap | 🔴 | P2 |
 | High-quality neural TTS voices | Proloquo, Acapela | 🟡 | Browser TTS today |

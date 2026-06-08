@@ -1,7 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { DEMO_BOARD_ID, type BoardButton, type BoardDisplayPreferences, type PartOfSpeechTag, type TeamRole } from '@voxa/core';
+import type { BoardButton, BoardDisplayPreferences, PartOfSpeechTag, StarterTemplateId, TeamRole } from '@voxa/core';
+import { DEMO_BOARD_ID } from '@voxa/core';
 import { fitzgeraldColor, createButtonAtCell, moveButtonToCell, resizeBoardGrid, type PartOfSpeech } from '@voxa/vocabulary';
 import { AacButton, BoardGrid, CVI_THEMES, themeStyles } from '@voxa/ui';
 import {
@@ -15,6 +16,7 @@ import {
   useObfFileInput,
   useObzFileInput,
   useGridsetFileInput,
+  useSnapFileInput,
 } from '@/lib/board-utils';
 import { effectiveDisplaySettings } from '@/lib/communicator-settings';
 import { useCommunicatorSettings } from '@/hooks/use-communicator-settings';
@@ -76,6 +78,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
   const [gridOpen, setGridOpen] = useState(false);
   const [babbleActive, setBabbleActive] = useState(false);
   const [speechActive, setSpeechActive] = useState(false);
+  const [newBoardTemplate, setNewBoardTemplate] = useState<'' | StarterTemplateId>('core-47');
   const pendingTouchRef = useRef<string | null>(null);
 
   const [recentButtonIds, setRecentButtonIds] = useState<string[]>([]);
@@ -104,6 +107,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
     exportObf,
     importObz,
     importGridset,
+    importSnap,
     exportObz,
     isEditor,
     isAuthenticated,
@@ -274,9 +278,24 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
     [importGridset],
   );
 
+  const handleImportSnap = useCallback(
+    async (archive: ArrayBuffer) => {
+      setBusy(true);
+      try {
+        await importSnap(archive);
+      } catch (err) {
+        alert((err as Error).message);
+      } finally {
+        setBusy(false);
+      }
+    },
+    [importSnap],
+  );
+
   const { open: openObfImport, input: obfInput } = useObfFileInput(handleImport);
   const { open: openObzImport, input: obzInput } = useObzFileInput(handleImportObz);
   const { open: openGridsetImport, input: gridsetInput } = useGridsetFileInput(handleImportGridset);
+  const { open: openSnapImport, input: snapInput } = useSnapFileInput(handleImportSnap);
 
   const handleExportObz = useCallback(async () => {
     setBusy(true);
@@ -307,13 +326,13 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
     if (!name?.trim()) return;
     setBusy(true);
     try {
-      await createBoard(name.trim());
+      await createBoard(name.trim(), newBoardTemplate || undefined);
     } catch (err) {
       alert((err as Error).message);
     } finally {
       setBusy(false);
     }
-  }, [createBoard]);
+  }, [createBoard, newBoardTemplate]);
 
   const handleRenameBoard = useCallback(async () => {
     const name = window.prompt('Board name', board.name);
@@ -631,6 +650,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
       {obfInput}
       {obzInput}
       {gridsetInput}
+      {snapInput}
       <div ref={liveRef} aria-live="polite" aria-atomic="true" style={visuallyHidden} />
 
       {remoteEditor ? (
@@ -699,6 +719,18 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
 
         {isEditor && isAuthenticated && (
           <>
+            <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: '0.8125rem' }}>
+              Template
+              <select
+                value={newBoardTemplate}
+                onChange={(e) => setNewBoardTemplate(e.target.value as '' | StarterTemplateId)}
+                style={{ background: '#262626', color: '#f5f5f5', border: '1px solid #404040', borderRadius: 6 }}
+              >
+                <option value="">Blank 4×4</option>
+                <option value="core-47">Core 47</option>
+                <option value="core-100">Core 100</option>
+              </select>
+            </label>
             <button type="button" onClick={handleCreateBoard} disabled={busy} style={secondaryBtn}>
               New board
             </button>
@@ -841,6 +873,9 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
             </button>
             <button type="button" onClick={openGridsetImport} disabled={busy} style={secondaryBtn}>
               Import Grid
+            </button>
+            <button type="button" onClick={openSnapImport} disabled={busy} style={secondaryBtn}>
+              Import Snap
             </button>
             <button type="button" onClick={handleExport} disabled={busy} style={secondaryBtn}>
               Export OBF

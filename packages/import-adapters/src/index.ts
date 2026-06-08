@@ -60,3 +60,12 @@ export function buildSampleGridsetArchive(): Uint8Array {
     'Grids/core-home/grid.xml': new TextEncoder().encode(gridXml),
   });
 }
+
+export {
+  buildSampleSnapArchive,
+  parseSnapArchive,
+  snapArchiveToBoardUpdate,
+  snapCellsToBoardButtons,
+  type SnapCell,
+  type SnapPage,
+} from './snap.js';

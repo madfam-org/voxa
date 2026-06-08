@@ -16,6 +16,7 @@ import {
   applyImportObfBoard,
   applyImportObzBoard,
   applyImportGridsetBoard,
+  applyImportSnapBoard,
   applyUpdateBoard,
   exportBoardObf,
   exportBoardObz,
@@ -146,6 +147,14 @@ export function createPgBoardStore(databaseUrl: string): BoardStore {
     async importGridsetBoard(boardId, archive, actorUserId): Promise<ImportObfResult> {
       const map = await loadBoardMap();
       const result = applyImportGridsetBoard(map, boardId, archive, actorUserId);
+      await persistBoard(result.board);
+      await persistEvent(result.event);
+      return result;
+    },
+
+    async importSnapBoard(boardId, archive, actorUserId): Promise<ImportObfResult> {
+      const map = await loadBoardMap();
+      const result = await applyImportSnapBoard(map, boardId, archive, actorUserId);
       await persistBoard(result.board);
       await persistEvent(result.event);
       return result;

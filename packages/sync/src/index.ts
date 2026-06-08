@@ -1,4 +1,4 @@
-import type { Board, BoardUpdateResult, SyncEvent, TeamRole } from '@voxa/core';
+import type { Board, BoardUpdateResult, StarterTemplateId, SyncEvent, TeamRole } from '@voxa/core';
 import { VoxaSyncError } from './errors.js';
 import { buildBoardSyncWsUrl } from './ws-url.js';
 
@@ -64,11 +64,11 @@ export class VoxaClient {
     return body.boards;
   }
 
-  async createBoard(board: Board): Promise<BoardUpdateResult> {
+  async createBoard(board: Board, templateId?: StarterTemplateId): Promise<BoardUpdateResult> {
     const res = await fetch(this.url('/v1/boards'), {
       method: 'POST',
       headers: teamHeaders(this.options),
-      body: JSON.stringify(board),
+      body: JSON.stringify(templateId ? { ...board, templateId } : board),
     });
     if (!res.ok) {
       await throwApiError(res, 'Create failed');
@@ -136,6 +136,29 @@ export class VoxaClient {
       throw new Error(err.error ?? `Import failed: ${res.status}`);
     }
     return res.json() as Promise<ObfImportResult>;
+  }
+
+  async importSnap(boardId: string, archive: ArrayBuffer): Promise<ObfImportResult> {
+    const headers = { ...teamHeaders(this.options), 'Content-Type': 'application/octet-stream' };
+    const res = await fetch(this.url(`/v1/boards/${boardId}/import/snap`), {
+      method: 'POST',
+      headers,
+      body: archive,
+    });
+    if (!res.ok) {
+      const err = (await res.json().catch(() => ({}))) as { error?: string };
+      throw new Error(err.error ?? `Import failed: ${res.status}`);
+    }
+    return res.json() as Promise<ObfImportResult>;
+  }
+
+  async listStarterTemplates(): Promise<Array<{ id: string; name: string; description: string }>> {
+    const res = await fetch(this.url('/v1/boards/templates/list'), {
+      headers: teamHeaders(this.options),
+    });
+    if (!res.ok) throw new Error(`Failed to load templates: ${res.status}`);
+    const body = (await res.json()) as { templates: Array<{ id: string; name: string; description: string }> };
+    return body.templates;
   }
 
   async exportObz(boardId: string): Promise<ArrayBuffer> {

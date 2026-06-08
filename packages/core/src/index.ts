@@ -200,4 +200,10 @@ export function resolveButtonSpeech(btn: BoardButton, formIndex?: number): strin
 }
 
 export { createDemoBoard, DEMO_BOARD_ID } from './demo-board.js';
+export {
+  createStarterBoard,
+  listStarterTemplates,
+  type StarterTemplateId,
+  type StarterTemplateMeta,
+} from './starter-boards.js';
 export { mapTeamRoleFromClaims } from './team-role.js';

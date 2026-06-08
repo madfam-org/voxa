@@ -445,6 +445,8 @@ pnpm test && pnpm typecheck
 | 42 | Tobii gaze bridge + Gamepad switch scan (F4/F1 web) | F | Engineering ✅ 2026-06-09 |
 | 43 | Grid 3 gridset import adapter + API/editor (G1) | G | Engineering ✅ 2026-06-09 |
 | 44 | Redis rollout verify scripts staging + prod (E4) | E | Ops ✅ 2026-06-09 |
+| 45 | Core 47/100 starter templates + new-board template picker (H1) | H | Engineering ✅ 2026-06-09 |
+| 46 | TD Snap `.spb` import adapter + API/editor (G3) | G | Engineering ✅ 2026-06-09 |
 
 ---
 

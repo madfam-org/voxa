@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { createBoardId, createDemoBoard, DEMO_BOARD_ID } from '@voxa/core';
-import { buildSampleGridsetArchive } from '@voxa/import-adapters';
-import { applyCreateBoard, applyImportGridsetBoard, applyUpdateBoard } from './board-operations.js';
+import { buildSampleGridsetArchive, buildSampleSnapArchive } from '@voxa/import-adapters';
+import { applyCreateBoard, applyImportGridsetBoard, applyImportSnapBoard, applyUpdateBoard } from './board-operations.js';
 
 describe('board operations', () => {
   it('creates a board and increments version on update', () => {
@@ -80,5 +80,14 @@ describe('board operations', () => {
     assert.equal(result.board.name, 'Core');
     assert.equal(result.board.grid.buttons.length, 3);
     assert.equal(result.event.payload?.action, 'import.gridset');
+  });
+
+  it('imports a TD Snap sqlite archive into a board', async () => {
+    const boards: Record<string, ReturnType<typeof createDemoBoard>> = {};
+    applyCreateBoard(boards, createDemoBoard(), 'editor-1');
+    const archive = await buildSampleSnapArchive();
+    const result = await applyImportSnapBoard(boards, DEMO_BOARD_ID, archive, 'editor-1');
+    assert.equal(result.board.grid.buttons.length, 3);
+    assert.equal(result.event.payload?.action, 'import.snap');
   });
 });

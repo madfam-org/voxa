@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { createBoardId, type Board } from '@voxa/core';
+import { createBoardId, createStarterBoard, listStarterTemplates, type Board, type StarterTemplateId } from '@voxa/core';
 import { canAccessBoard, canEditBoard } from '../lib/board-access.js';
 import { maxBoardCount, resolveEntitlement } from '../lib/dhanam.js';
 import { requireEditor } from '../middleware/team-auth.js';
@@ -15,6 +15,10 @@ boardRoutes.get('/', async (c) => {
     canAccessBoard(board.id as string, board.ownerUserId, userId, role, board.orgId, orgId),
   );
   return c.json({ boards });
+});
+
+boardRoutes.get('/templates/list', async (c) => {
+  return c.json({ templates: listStarterTemplates() });
 });
 
 boardRoutes.get('/:boardId/audit', async (c) => {
@@ -57,7 +61,7 @@ boardRoutes.post('/', async (c) => {
     return c.json({ error: 'Editor role required' }, 403);
   }
 
-  const body = (await c.req.json()) as Board;
+  const body = (await c.req.json()) as Board & { templateId?: StarterTemplateId };
   const { userId, orgId } = c.get('team');
 
   const entitlement = await resolveEntitlement(userId);
@@ -68,11 +72,21 @@ boardRoutes.post('/', async (c) => {
     return c.json({ error: 'Board limit reached for your plan', tier: entitlement.tier }, 402);
   }
 
-  const board: Board = {
-    ...body,
-    ownerUserId: userId,
-    orgId: orgId ?? body.orgId,
-  };
+  const board: Board = body.templateId
+    ? {
+        ...createStarterBoard(body.templateId, {
+          boardId: body.id as string,
+          name: body.name,
+          profileId: body.profileId as string,
+        }),
+        ownerUserId: userId,
+        orgId: orgId ?? body.orgId,
+      }
+    : {
+        ...body,
+        ownerUserId: userId,
+        orgId: orgId ?? body.orgId,
+      };
 
   try {
     const result = await getStore().createBoard(board, userId);
@@ -214,6 +228,34 @@ boardRoutes.post('/:boardId/import/gridset', async (c) => {
 
   try {
     const result = await getStore().importGridsetBoard(boardId, archive, userId);
+    broadcastBoardEvent(result.event);
+    return c.json(result);
+  } catch (err) {
+    const error = err as Error & { status?: number; details?: unknown };
+    if (error.status === 422 && error.details) {
+      return c.json({ error: error.message, details: error.details }, 422);
+    }
+    return c.json({ error: error.message, details: error.details }, 400);
+  }
+});
+
+boardRoutes.post('/:boardId/import/snap', async (c) => {
+  if (!requireEditor(c)) {
+    return c.json({ error: 'Editor role required' }, 403);
+  }
+
+  const boardId = c.req.param('boardId');
+  const archive = new Uint8Array(await c.req.arrayBuffer());
+  const { userId, role, orgId } = c.get('team');
+
+  const current = await getStore().getBoard(boardId);
+  if (!current) return c.json({ error: 'Board not found' }, 404);
+  if (!canEditBoard(boardId, current.ownerUserId, userId, role, current.orgId, orgId)) {
+    return c.json({ error: 'Forbidden' }, 403);
+  }
+
+  try {
+    const result = await getStore().importSnapBoard(boardId, archive, userId);
     broadcastBoardEvent(result.event);
     return c.json(result);
   } catch (err) {

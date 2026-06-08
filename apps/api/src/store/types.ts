@@ -29,6 +29,11 @@ export interface BoardStore {
     archive: Uint8Array,
     actorUserId: string,
   ): Promise<ImportObfResult>;
+  importSnapBoard(
+    boardId: string,
+    archive: Uint8Array,
+    actorUserId: string,
+  ): Promise<ImportObfResult>;
   exportObfBoard(boardId: string): Promise<string>;
   exportObzBoard(boardId: string): Promise<Uint8Array>;
   deleteBoard(boardId: string, actorUserId: string, role: TeamRole, actorOrgId?: string): Promise<void>;

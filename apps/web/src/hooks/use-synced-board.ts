@@ -9,6 +9,7 @@ import {
   DEMO_BOARD_ID,
   type Board,
   type BoardUpdateResult,
+  type StarterTemplateId,
   type SyncEvent,
   type TeamRole,
 } from '@voxa/core';
@@ -362,12 +363,22 @@ export function useSyncedBoard(role: TeamRole) {
     [boardId, client, setBoard],
   );
 
+  const importSnap = useCallback(
+    async (archive: ArrayBuffer) => {
+      const result = await client.importSnap(boardId, archive);
+      setBoard(result.board);
+      setWarnings(result.warnings);
+      return result;
+    },
+    [boardId, client, setBoard],
+  );
+
   const exportObz = useCallback(async () => {
     return client.exportObz(boardId);
   }, [boardId, client]);
 
   const createBoard = useCallback(
-    async (name: string) => {
+    async (name: string, templateId?: StarterTemplateId) => {
       const id = `board-${Date.now()}`;
       const template: Board = {
         id: createBoardId(id),
@@ -377,7 +388,7 @@ export function useSyncedBoard(role: TeamRole) {
         updatedAt: new Date().toISOString(),
         grid: { rows: 4, columns: 4, buttons: [] },
       };
-      const result = await client.createBoard(template);
+      const result = await client.createBoard(template, templateId);
       const summary = { id: result.board.id as string, name: result.board.name };
       setBoardCatalog((prev) => [...prev.filter((b) => b.id !== summary.id), summary]);
       setBoardId(summary.id);
@@ -458,6 +469,7 @@ export function useSyncedBoard(role: TeamRole) {
     exportObf,
     importObz,
     importGridset,
+    importSnap,
     exportObz,
     isEditor,
     isAuthenticated: Boolean(accessToken),

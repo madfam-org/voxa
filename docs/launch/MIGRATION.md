@@ -57,6 +57,35 @@ curl -X POST "https://voxa-api.madfam.io/v1/boards/{boardId}/import/gridset" \
 
 Multi-grid gridsets import one page today; link targets map to `navigateToBoardId` when present.
 
+### TD Snap (`.spb` / `.sps`)
+
+1. Editor → **Import Snap** and select a Snap backup SQLite archive.
+2. Button labels and messages import with grid positions when available.
+
+**API import:**
+
+```bash
+curl -X POST "https://voxa-api.madfam.io/v1/boards/{boardId}/import/snap" \
+  -H "Authorization: Bearer ${VOXA_ACCESS_TOKEN}" \
+  -H "Content-Type: application/octet-stream" \
+  --data-binary @my-board.spb
+```
+
+Symbols and multi-page navigation are not migrated in this MVP adapter.
+
+### Starter templates
+
+Create boards from **Core 47** (6×8, motor-plan locked core) or **Core 100** (10×10) via the editor template picker, or:
+
+```bash
+curl -X POST "https://voxa-api.madfam.io/v1/boards" \
+  -H "Authorization: Bearer ${VOXA_ACCESS_TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d '{"id":"board-my-core","name":"Therapy core","templateId":"core-100","profileId":"default","version":1,"grid":{"rows":4,"columns":4,"buttons":[]}}'
+```
+
+List templates: `GET /v1/boards/templates/list`
+
 ## Coming soon (P2)
 
 | Source | Format | Target |

@@ -14,16 +14,18 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "node --import tsx --test src/gridset.test.ts",
+    "test": "node --import tsx --test src/gridset.test.ts src/snap.test.ts",
     "clean": "rm -rf dist"
   },
   "dependencies": {
     "@voxa/core": "workspace:*",
     "@voxa/obf": "workspace:*",
     "@voxa/vocabulary": "workspace:*",
-    "fflate": "^0.8.2"
+    "fflate": "^0.8.2",
+    "sql.js": "^1.12.0"
   },
   "devDependencies": {
+    "@types/sql.js": "^1.4.9",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"
   }
