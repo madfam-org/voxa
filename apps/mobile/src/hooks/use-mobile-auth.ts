@@ -1,3 +1,5 @@
+'use client';
+
 import { useCallback, useEffect, useState } from 'react';
 import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
@@ -5,12 +7,16 @@ import {
   clearMobileSession,
   getOidcConfig,
   isOidcConfigured,
+  isSessionExpiring,
   loadMobileSession,
+  refreshMobileSession,
   saveMobileSession,
   type MobileSession,
 } from '@/lib/auth';
 
 WebBrowser.maybeCompleteAuthSession();
+
+const REFRESH_INTERVAL_MS = 60_000;
 
 export function useMobileAuth() {
   const [session, setSession] = useState<MobileSession | null>(null);
@@ -37,6 +43,36 @@ export function useMobileAuth() {
       setLoading(false);
     });
   }, []);
+
+  useEffect(() => {
+    if (!discovery || !session?.refreshToken) return;
+    if (!isSessionExpiring(session)) return;
+
+    let cancelled = false;
+    void refreshMobileSession(session, discovery).then((next) => {
+      if (cancelled) return;
+      setSession(next);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [discovery, session]);
+
+  useEffect(() => {
+    if (!discovery || !session?.refreshToken) return;
+
+    const timer = setInterval(() => {
+      void (async () => {
+        const current = await loadMobileSession();
+        if (!current?.refreshToken || !isSessionExpiring(current)) return;
+        const refreshed = await refreshMobileSession(current, discovery);
+        setSession(refreshed);
+      })();
+    }, REFRESH_INTERVAL_MS);
+
+    return () => clearInterval(timer);
+  }, [discovery, session?.refreshToken]);
 
   useEffect(() => {
     if (response?.type !== 'success' || !discovery || !request?.codeVerifier) return;

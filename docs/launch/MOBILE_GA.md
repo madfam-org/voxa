@@ -52,7 +52,7 @@ Replace placeholder values in `eas.json` submit block (`appleId`, `ascAppId`, `a
 
 - [ ] EAS project linked (`eas init` → real `extra.eas.projectId`)
 - [ ] Preview builds on TestFlight + Play internal testing
-- [ ] Janua OAuth deep link — `voxa://auth/callback` ✅ scaffold 2026-06-09
+- [ ] Janua OAuth deep link — `voxa://auth/callback` + refresh token rotation ✅ 2026-06-09
 - [ ] Offline board cache + sync conflict handling verified — AsyncStorage + NetInfo retry ✅ 2026-06-09
 - [ ] Switch scanning on reference hardware (iOS/Android)
 - [ ] Store screenshots, descriptions, privacy nutrition labels

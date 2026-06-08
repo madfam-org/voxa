@@ -1,6 +1,8 @@
 import type { Board, BoardUpdateResult, SyncEvent, TeamRole } from '@voxa/core';
+import { VoxaSyncError } from './errors.js';
 import { buildBoardSyncWsUrl } from './ws-url.js';
 
+export { VoxaSyncError, isVersionConflictError } from './errors.js';
 export { buildBoardSyncWsUrl } from './ws-url.js';
 
 export interface VoxaClientOptions {
@@ -31,6 +33,11 @@ function teamHeaders(options: VoxaClientOptions): HeadersInit {
   headers['X-Voxa-User-Id'] = options.userId ?? 'dev-user';
   headers['X-Voxa-Role'] = options.role ?? 'editor';
   return headers;
+}
+
+async function throwApiError(res: Response, fallback: string): Promise<never> {
+  const err = (await res.json().catch(() => ({}))) as { error?: string };
+  throw new VoxaSyncError(err.error ?? `${fallback}: ${res.status}`, res.status);
 }
 
 export class VoxaClient {
@@ -64,8 +71,7 @@ export class VoxaClient {
       body: JSON.stringify(board),
     });
     if (!res.ok) {
-      const err = (await res.json().catch(() => ({}))) as { error?: string };
-      throw new Error(err.error ?? `Create failed: ${res.status}`);
+      await throwApiError(res, 'Create failed');
     }
     return res.json() as Promise<BoardUpdateResult>;
   }
@@ -77,8 +83,7 @@ export class VoxaClient {
       body: JSON.stringify({ ...board, expectedVersion }),
     });
     if (!res.ok) {
-      const err = (await res.json().catch(() => ({}))) as { error?: string };
-      throw new Error(err.error ?? `Save failed: ${res.status}`);
+      await throwApiError(res, 'Save failed');
     }
     return res.json() as Promise<BoardUpdateResult>;
   }

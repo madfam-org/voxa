@@ -11,7 +11,7 @@ import {
   type SyncEvent,
   type TeamRole,
 } from '@voxa/core';
-import { createVoxaClient } from '@voxa/sync';
+import { createVoxaClient, isVersionConflictError } from '@voxa/sync';
 import { BOARD_CACHE_KEY, SELECTED_BOARD_KEY } from '@/lib/communicator-settings';
 import { registerBackgroundSync } from '@/lib/offline-idb';
 import {
@@ -153,6 +153,20 @@ export function useSyncedBoard(role: TeamRole) {
     setPendingSave(await hasPendingBoardSave(boardId));
   }, [boardId]);
 
+  const applyVersionConflict = useCallback(async () => {
+    try {
+      const fresh = await client.getBoard(boardId);
+      setBoard(fresh);
+      await clearPendingBoardSave(boardId);
+      setPendingSave(false);
+      setSyncError(
+        'Another editor saved changes first — your board was refreshed to the latest version.',
+      );
+    } catch {
+      setSyncError('Version conflict — reload the page and try again.');
+    }
+  }, [boardId, client, setBoard]);
+
   const flushPendingSave = useCallback(async () => {
     const pending = await loadPendingBoardSave(boardId);
     if (!pending) {
@@ -169,10 +183,14 @@ export function useSyncedBoard(role: TeamRole) {
       setSyncError(null);
       setError(null);
     } catch (err) {
+      if (isVersionConflictError(err)) {
+        await applyVersionConflict();
+        return;
+      }
       setPendingSave(true);
       setSyncError((err as Error).message);
     }
-  }, [boardId, client, setBoard]);
+  }, [applyVersionConflict, boardId, client, setBoard]);
 
   const reload = useCallback(async () => {
     try {
@@ -279,13 +297,17 @@ export function useSyncedBoard(role: TeamRole) {
       setPendingSave(false);
       setSyncError(null);
       return result;
-    } catch {
+    } catch (err) {
+      if (isVersionConflictError(err)) {
+        await applyVersionConflict();
+        throw new Error('Board refreshed after a version conflict — review and save again.');
+      }
       await queuePendingBoardSave(boardId, boardRef.current);
       setPendingSave(true);
       void registerBackgroundSync();
       throw new Error('Save queued — will sync when back online');
     }
-  }, [boardId, client, setBoard]);
+  }, [applyVersionConflict, boardId, client, setBoard]);
 
   const importObf = useCallback(
     async (raw: string) => {

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import NetInfo from '@react-native-community/netinfo';
 import { createDemoBoard, DEMO_BOARD_ID, type Board, type SyncEvent } from '@voxa/core';
-import { createVoxaClient } from '@voxa/sync';
+import { createVoxaClient, isVersionConflictError } from '@voxa/sync';
 import {
   cacheBoard,
   clearPendingSave,
@@ -61,6 +61,21 @@ export function useMobileSyncedBoard(options: UseMobileSyncedBoardOptions = {}) 
     setPendingSave(Boolean(await loadPendingSave(boardId)));
   }, [boardId]);
 
+  const applyVersionConflict = useCallback(async () => {
+    try {
+      const fresh = await client.getBoard(boardId);
+      setBoardState(fresh);
+      await cacheBoard(fresh, boardId);
+      await clearPendingSave(boardId);
+      setPendingSave(false);
+      setSyncError(
+        'Another editor saved changes first — your board was refreshed to the latest version.',
+      );
+    } catch {
+      setSyncError('Version conflict — switch boards or sign in again.');
+    }
+  }, [boardId, client]);
+
   const flushPendingSave = useCallback(async () => {
     const pending = await loadPendingSave(boardId);
     if (!pending) {
@@ -76,10 +91,14 @@ export function useMobileSyncedBoard(options: UseMobileSyncedBoardOptions = {}) 
       setPendingSave(false);
       setSyncError(null);
     } catch (err) {
+      if (isVersionConflictError(err)) {
+        await applyVersionConflict();
+        return;
+      }
       setPendingSave(true);
       setSyncError((err as Error).message);
     }
-  }, [boardId, client, setBoard]);
+  }, [applyVersionConflict, boardId, client, setBoard]);
 
   const setBoardId = useCallback(
     async (nextId: string) => {

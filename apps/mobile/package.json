@@ -7,7 +7,8 @@
     "dev": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --import tsx --test src/lib/auth.test.ts"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.1.2",
@@ -32,6 +33,7 @@
   },
   "devDependencies": {
     "@types/react": "~18.3.12",
+    "tsx": "^4.19.2",
     "typescript": "^5.7.2"
   }
 }

@@ -14,7 +14,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "node --import tsx --test src/ws-url.test.ts",
+    "test": "node --import tsx --test src/ws-url.test.ts src/errors.test.ts",
     "clean": "rm -rf dist"
   },
   "dependencies": {

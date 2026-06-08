@@ -88,7 +88,7 @@ Each epic links to [FEATURE_PARITY.md](./FEATURE_PARITY.md) rows and benchmark d
 | A1 | Switch scanning | 🟡 web only | Auditory voice cue + scan pause on speak; document hardware path | `@voxa/access`, `use-switch-scan`, `settings-panel.tsx` ✅ 2026-06-09 |
 | A2 | Eye dwell | 🟡 pointer sim | Configurable dwell; touch-release vs touch-start; snap-to-cell | `@voxa/access` `EyeTrackingConfig`, touch activation setting ✅ 2026-06-09 (partial) |
 | A3 | SLP editor | 🟡 basic | Editor PIN lock; grid resize validation; slot lock enforcement in UI | `board-screen.tsx` `EditorPanel`, `@voxa/core` `locked` |
-| A4 | Offline cache | 🟡 IndexedDB pending | Queue failed writes; conflict resolution; “offline” banner | `@voxa/sync`, `use-synced-board.ts`, service worker (web) |
+| A4 | Offline cache | 🟡 IndexedDB pending | Queue + 409 conflict refetch UX (2026-06-09); offline banner |
 | A5 | A11y CI scope | ✅ legal/home | Extend axe to `/app`, `/demo`, editor, settings | `e2e/specs/a11y.spec.ts` |
 | A6 | Soak / clinical | ✅ SLP 2026-06-08 | Extend SLP sign-off template for mobile when M4 ready | [SLP_SIGNOFF.md](./SLP_SIGNOFF.md) |
 
@@ -158,7 +158,7 @@ Each epic links to [FEATURE_PARITY.md](./FEATURE_PARITY.md) rows and benchmark d
 | ID | Feature | Remediation | Implementation |
 |----|---------|-------------|----------------|
 | D1 | iOS + Android apps | EAS preview → production | [MOBILE_GA.md](./MOBILE_GA.md), `app.config.js` env + icons + CI guard ✅ 2026-06-09 |
-| D2 | Janua mobile OAuth | Universal links / app links | `expo-auth-session` + SecureStore ✅ 2026-06-09 |
+| D2 | Janua mobile OAuth | Universal links / app links | `expo-auth-session` + SecureStore + token refresh ✅ 2026-06-09 |
 | D3 | Offline on device | SQLite/AsyncStorage + sync queue | AsyncStorage cache, NetInfo flush, retry UI ✅ 2026-06-09 |
 | D4 | PWA install | Web manifest + install prompt on landing | `manifest.webmanifest` + install banner ✅ 2026-06-09 |
 | D5 | Windows | Edge/Chrome PWA + optional Electron wrapper | Post-M5 optional |
@@ -429,6 +429,7 @@ pnpm test && pnpm typecheck
 | 26 | Mobile EAS env wiring + icons + CI guard (D1) | D | Mobile ✅ 2026-06-09 |
 | 27 | Redis-backed WebSocket sync fan-out (E4) | E | Engineering ✅ 2026-06-09 |
 | 28 | WS auth + client self-event filter + declaration-day script (E4/W0) | E/W0 | Engineering ✅ 2026-06-09 |
+| 29 | Save conflict refetch UX + mobile OAuth refresh (A4/D2) | A/D | Engineering ✅ 2026-06-09 |
 
 ---
 
