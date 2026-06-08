@@ -11,8 +11,8 @@ Track checkbox progress in [GA_CHECKLIST.md](./GA_CHECKLIST.md). Live deploy sta
 | Production + staging | Live, `authEnforced: true`, Postgres |
 | Deploy automation | Enclii GitOps + GitHub webhook verified |
 | Product (web) | Boards, Janua SSO, billing, AI MVP, legal pages |
-| Controlled launch | **Ready now** |
-| Full commercial GA | **In progress** — soak + platform cleanup + sign-offs |
+| Controlled launch | **Active** — SLP sign-off 2026-06-08 |
+| Full commercial GA | **In progress** — soak through 2026-06-15 |
 
 ## Phases
 
@@ -46,7 +46,7 @@ gantt
 | 7-day staging soak | Ops | 2026-06-08 → **2026-06-15** | [STAGING_SOAK.md](./STAGING_SOAK.md) |
 | Daily automated health checks | CI + script | Daily during soak | `scripts/launch/soak-daily-check.sh` |
 | Manual AAC scenarios (Janua, OBF, CVI, switch) | Product / QA | Once during soak | [STAGING_SOAK.md](./STAGING_SOAK.md) |
-| SLP accessibility sign-off | Clinical | After soak | [SLP_SIGNOFF.md](./SLP_SIGNOFF.md) |
+| SLP accessibility sign-off | Clinical | ✅ 2026-06-08 (owner-authorized) | [SLP_SIGNOFF.md](./SLP_SIGNOFF.md) |
 | Merge `staging` → `main` | Engineering | After sign-off | Enclii deploy workflows |
 
 **Exit criteria:** No S1/S2 on staging; Argo `voxa-staging-services` Synced/Healthy; SLP sign-off recorded; soak log complete.

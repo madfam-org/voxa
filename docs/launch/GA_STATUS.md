@@ -6,7 +6,7 @@ This document records deployment state after the Enclii/Janua GA push. Use it wi
 
 ## Executive summary
 
-**Voxa is live in production and staging** with PostgreSQL, Janua SSO, API auth enforcement, billing hooks, and legal pages. CI builds and deploys via Enclii GitOps. GitHub → Enclii webhook signature verification is **resolved** (2026-06-08). **Staging soak in progress** (2026-06-08 → 2026-06-15) with automated scenarios + **full authenticated soak passing** (OIDC, OBF, AI consent, billing gates — 2026-06-08). GitHub Actions secrets for CI auth soak are **configured** (`VOXA_STAGING_*`). GHCR packages are **public** and Kyverno PolicyExceptions removed (2026-06-08). Remaining for **full web GA**: SLP sign-off, soak completion through 2026-06-15.
+**Voxa is live in production and staging** with PostgreSQL, Janua SSO, API auth enforcement, billing hooks, and legal pages. CI builds and deploys via Enclii GitOps. **SLP accessibility sign-off recorded** (owner-authorized, approved with notes — 2026-06-08). **Staging soak in progress** through 2026-06-15 with automated + authenticated API soak green. GitHub Actions secrets for CI auth soak configured. GHCR packages **public**. Remaining for **full commercial GA declaration**: soak log through 2026-06-15, staging browser Janua OAuth pod reload.
 
 ## Live verification (last confirmed)
 
@@ -79,7 +79,7 @@ Full operator pass: `ENCLII_TOKEN='…' ./scripts/deploy/complete-ga-operator.sh
 |----------|------|----------------|
 | ~~**P0**~~ | Enclii webhook signature verified | **Done** (2026-06-08) |
 | **Launch** | Staging soak (7 days) | **In progress** 2026-06-08 → 2026-06-15 — [STAGING_SOAK.md](./STAGING_SOAK.md), [SOAK_LOG.md](./SOAK_LOG.md), `scripts/launch/soak-daily-check.sh` |
-| **Launch** | SLP accessibility sign-off | After soak — [SLP_SIGNOFF.md](./SLP_SIGNOFF.md) |
+| **Launch** | SLP accessibility sign-off | **Done** (owner-authorized, approved with notes — 2026-06-08) — [SLP_SIGNOFF.md](./SLP_SIGNOFF.md) |
 | ~~**P1**~~ | GHCR packages public; PolicyExceptions removed | **Done** 2026-06-08 |
 | **P2** | PgBouncer entries for `voxa` / `voxa_staging` | Platform RBAC; direct Postgres OK |
 | **P2** | `REDIS_URL` | Post-GA multi-replica WebSocket scaling |
