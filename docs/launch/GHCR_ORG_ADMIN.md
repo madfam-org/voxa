@@ -4,10 +4,10 @@ Required for **M3 full web GA** — removes temporary Kyverno `PolicyException` 
 
 ## Packages
 
-| Package | GHCR path |
-|---------|-----------|
-| voxa-api | `ghcr.io/madfam-org/voxa/voxa-api` |
-| voxa-web | `ghcr.io/madfam-org/voxa/voxa-web` |
+| Package | GHCR path | GitHub API slug |
+|---------|-----------|-----------------|
+| voxa-api | `ghcr.io/madfam-org/voxa/voxa-api` | `voxa%2Fvoxa-api` |
+| voxa-web | `ghcr.io/madfam-org/voxa/voxa-web` | `voxa%2Fvoxa-web` |
 
 ## Prerequisites
 
@@ -25,7 +25,18 @@ gh auth refresh -s read:packages,write:packages
 ./scripts/deploy/make-ghcr-packages-public.sh --check
 ```
 
-If the script returns **404 Package not found**, the packages may live under a different org path or the token lacks package scope — use Option B.
+If the script returns **404 Package not found**, the packages may live under a different org path or the token lacks package scope — use Option B or C.
+
+## Option C — GitHub Actions (repo `workflow_dispatch`)
+
+After merging `.github/workflows/ghcr-public.yml`:
+
+```bash
+gh workflow run ghcr-public.yml --repo madfam-org/voxa
+gh run watch --repo madfam-org/voxa
+```
+
+Uses `GITHUB_TOKEN` with `packages: write`. Org owners may still need to allow this in **Settings → Actions → General** if visibility changes are denied.
 
 ## Option B — GitHub UI
 
