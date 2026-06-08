@@ -56,6 +56,8 @@ Track detailed rows in [FEATURE_PARITY.md](./FEATURE_PARITY.md). Research: [AAC_
 
 ## Launch
 
+- [x] `VOXA_STAGING_*` GitHub secrets for CI auth soak (`bootstrap-authenticated-soak.sh`, 2026-06-08)
+- [x] Weekday `e2e-smoke` CI (health + auth API soak + Playwright) — green 2026-06-08
 - [ ] Staging soak (1 week) — **in progress** 2026-06-08 → 2026-06-15 — [STAGING_SOAK.md](./STAGING_SOAK.md) · [SOAK_LOG.md](./SOAK_LOG.md)
 - [x] Version `1.0.0` tag (`v1.0.0` on `313a4e6`)
 - [x] API `1.0.0` live on prod + staging (2026-06-07)
