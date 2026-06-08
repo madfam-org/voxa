@@ -32,6 +32,9 @@ gantt
   Mobile EAS + store listings   :mobile, 2026-06-15, 21d
   section Post-GA
   REDIS_URL multi-replica WS    :redis, 2026-06-22, 14d
+  section Parity
+  Feature parity P1 baseline    :parity, 2026-06-18, 42d
+  Tier A competitive match      :parity2, 2026-07-20, 60d
 ```
 
 ### Phase 1 — Launch gate (product / clinical)
@@ -90,6 +93,26 @@ Web GA does **not** block on mobile store listings; mobile is tracked as **Phase
 | `SENTRY_DSN` in prod | When DSN provisioned | Hook already in API |
 | Symbol generation / PictoBERT | Product roadmap | [ai-roadmap.md](../ai-roadmap.md) |
 
+### Phase 6 — Competitive feature parity
+
+**Goal:** Close gaps vs Tier A AAC apps (Proloquo2Go, TD Snap, LAMP, SFY, Grid) documented in [AAC_PLATFORM_BENCHMARK.md](./AAC_PLATFORM_BENCHMARK.md). Track rows in [FEATURE_PARITY.md](./FEATURE_PARITY.md).
+
+**Not a single-release gate:** Web GA (M3) requires P0 parity + SLP sign-off (~52% weighted score). Platform GA (M5) targets **~75%+ weighted parity** plus differentiation.
+
+| Work stream | Priority | Target | Parity doc section |
+|-------------|----------|--------|-------------------|
+| Multi-board library + motor-plan locks in UI | P1 | Q3 2026 | P1 vocabulary |
+| ARASAAC / OpenSymbols integration | P1 | Q3 2026 | P1 symbols |
+| Recorded speech + GLP media upload | P1 | Q3 2026 | P1 GLP |
+| Hide/show + babble mode | P1 | Q3 2026 | OpenAAC backlog |
+| Usage logs + SLP reporting UI | P1 | Q3 2026 | P1 analytics |
+| Grid/TouchChat/Snap import (AACProcessors) | P2 | Q4 2026 | Migration paths |
+| Hardware switch + Tobii eye gaze SDK | P2 | Q4 2026 | P2 access |
+| Neural bilingual TTS | P2 | Q4 2026 | P2 speech |
+| PictoBERT + symbol generation GA | P3 | 2026 H2 | P3 differentiation |
+
+**Exit criteria (M5+ parity):** P0 all ✅; P1 ≥ 80% ✅/🟡; weighted scorecard ≥ 75%; quarterly benchmark doc refresh.
+
 ## Milestones
 
 | Milestone | Date (target) | Definition of done |
@@ -100,6 +123,7 @@ Web GA does **not** block on mobile store listings; mobile is tracked as **Phase
 | **M3 — Full web GA** | 2026-06-18 | SLP sign-off + GHCR public + PolicyExceptions removed |
 | **M4 — Mobile beta** | 2026-07-06 | EAS builds in TestFlight / Play internal |
 | **M5 — Full platform GA** | 2026-07-20 | Web + mobile store listings live |
+| **M6 — Tier A parity baseline** | 2026-09-30 | P1 ≥ 80%; scorecard ≥ 75% ([FEATURE_PARITY.md](./FEATURE_PARITY.md)) |
 
 ## Operator commands
 
@@ -122,6 +146,8 @@ git rm k8s/production/signature-policyexception.yaml k8s/staging/signature-polic
 
 - [GA_CHECKLIST.md](./GA_CHECKLIST.md) — checkbox tracker
 - [GA_STATUS.md](./GA_STATUS.md) — deploy state and platform IDs
+- [AAC_PLATFORM_BENCHMARK.md](./AAC_PLATFORM_BENCHMARK.md) — competitive research
+- [FEATURE_PARITY.md](./FEATURE_PARITY.md) — parity checklist vs Tier A AAC
 - [STAGING_SOAK.md](./STAGING_SOAK.md) — soak procedures and log
 - [SLP_SIGNOFF.md](./SLP_SIGNOFF.md) — clinical accessibility gate
 - [MOBILE_GA.md](./MOBILE_GA.md) — Expo / EAS store path

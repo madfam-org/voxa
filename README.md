@@ -80,6 +80,8 @@ See [docs/deploy/ENCLII.md](./docs/deploy/ENCLII.md) for CI, onboarding, and ope
 - [Architecture](./docs/architecture.md) — system design and platform targets
 - [Data model](./docs/data-model.md) — PostgreSQL schema and migrations
 - [Janua authentication](./docs/auth/JANUA.md) — SSO for web and API
+- [AAC platform benchmark](./docs/launch/AAC_PLATFORM_BENCHMARK.md) — competitive research (commercial + OSS)
+- [Feature parity tracker](./docs/launch/FEATURE_PARITY.md) — GA parity checklist vs Tier A AAC
 - [GA roadmap](./docs/launch/GA_ROADMAP.md) — phased plan to full commercial GA
 - [GA checklist](./docs/launch/GA_CHECKLIST.md) — commercial launch criteria
 - [GA status](./docs/launch/GA_STATUS.md) — production deploy wrap-up and remaining platform items
