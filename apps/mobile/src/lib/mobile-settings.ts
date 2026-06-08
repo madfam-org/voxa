@@ -19,11 +19,19 @@ const DEFAULTS: MobileCommunicatorSettings = {
   auditoryScanVoice: false,
 };
 
+export function parseMobileSettings(raw: string | null): MobileCommunicatorSettings {
+  if (!raw) return DEFAULTS;
+  try {
+    return { ...DEFAULTS, ...(JSON.parse(raw) as Partial<MobileCommunicatorSettings>) };
+  } catch {
+    return DEFAULTS;
+  }
+}
+
 export async function loadMobileSettings(): Promise<MobileCommunicatorSettings> {
   try {
     const raw = await AsyncStorage.getItem(SETTINGS_KEY);
-    if (!raw) return DEFAULTS;
-    return { ...DEFAULTS, ...(JSON.parse(raw) as Partial<MobileCommunicatorSettings>) };
+    return parseMobileSettings(raw);
   } catch {
     return DEFAULTS;
   }

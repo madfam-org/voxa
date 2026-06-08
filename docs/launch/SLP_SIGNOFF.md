@@ -61,4 +61,12 @@ Reviewer: MADFAM Product (owner-authorized)   Date: 2026-06-08
 Outcome: Approved with notes (see above)
 ```
 
+## Mobile native (extend before M4 TestFlight)
+
+- [ ] Preview build on TestFlight / Play internal — pending `EXPO_TOKEN` + `eas init`
+- [x] Janua OAuth deep link + offline sync — `apps/mobile` ✅ 2026-06-09
+- [x] Switch scan mode with auditory cues — mobile settings + `@voxa/access` ✅ 2026-06-09
+- [ ] Communicator tap → TTS on reference device — manual after first preview build
+- [ ] Switch hardware on iOS/Android — manual after preview build
+
 After approval, check **SLP accessibility sign-off** in [GA_CHECKLIST.md](./GA_CHECKLIST.md) and proceed with prod promotion per [GA_ROADMAP.md](./GA_ROADMAP.md) Phase 1.

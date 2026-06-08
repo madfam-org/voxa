@@ -33,8 +33,14 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - name: Verify EAS configuration
+        run: ./scripts/mobile/verify-eas-config.sh
+
       - name: Typecheck mobile app
         run: pnpm --filter @voxa/mobile typecheck
+
+      - name: Test mobile app
+        run: pnpm --filter @voxa/mobile test
 
       - name: Skip when EXPO_TOKEN is not configured
         if: secrets.EXPO_TOKEN == ''
@@ -47,6 +53,10 @@ jobs:
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Require linked EAS project before build
+        if: secrets.EXPO_TOKEN != ''
+        run: REQUIRE_LINKED=1 ./scripts/mobile/verify-eas-config.sh
 
       - name: EAS preview build (staging API)
         if: secrets.EXPO_TOKEN != ''

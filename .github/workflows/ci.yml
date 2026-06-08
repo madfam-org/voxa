@@ -24,6 +24,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
       - run: pnpm test
+      - run: ./scripts/mobile/verify-eas-config.sh
       - run: pnpm build
 
   a11y:

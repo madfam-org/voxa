@@ -438,6 +438,7 @@ pnpm test && pnpm typecheck
 | 35 | Editor workflow e2e: 3-board OBF, locked core, babble reset (B/W2) | B | Engineering ✅ 2026-06-09 |
 | 36 | Media workflow e2e: ARASAAC, GLP audio, OBZ images (C/W2) | C | Engineering ✅ 2026-06-09 |
 | 37 | Clinical workflow e2e: usage report, remote edit, audit (E/W3) | E | Engineering ✅ 2026-06-09 |
+| 38 | EAS config guard + mobile settings tests (D1/W3) | D | Mobile ✅ 2026-06-09 |
 
 ---
 

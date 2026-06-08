@@ -12,6 +12,7 @@ Expo / EAS track for Voxa native communicator apps. **Web GA does not block on m
 | EAS profiles | `eas.json` — development, preview (staging API), production |
 | Store listings | Not started |
 | CI build workflow | `.github/workflows/mobile-eas.yml` — typecheck + preview (requires `EXPO_TOKEN`) |
+| EAS config guard | `scripts/mobile/verify-eas-config.sh` in CI + mobile-eas ✅ 2026-06-09 |
 
 ## Prerequisites
 
