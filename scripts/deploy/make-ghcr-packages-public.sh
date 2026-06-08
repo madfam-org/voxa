@@ -15,7 +15,8 @@
 set -euo pipefail
 
 ORG="${GHCR_ORG:-madfam-org}"
-PACKAGES=(voxa-api voxa-web)
+# GHCR image paths are ghcr.io/madfam-org/voxa/voxa-{api,web}
+PACKAGES=(voxa%2Fvoxa-api voxa%2Fvoxa-web)
 CHECK_ONLY=false
 
 if [[ "${1:-}" == "--check" ]]; then

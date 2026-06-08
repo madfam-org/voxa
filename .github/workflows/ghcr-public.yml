@@ -1,0 +1,30 @@
+name: GHCR public visibility
+
+on:
+  workflow_dispatch:
+
+permissions:
+  packages: write
+
+jobs:
+  public:
+    name: Set Voxa packages public
+    runs-on: ubuntu-latest
+    steps:
+      - name: Patch package visibility
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          for pkg in voxa%2Fvoxa-api voxa%2Fvoxa-web; do
+            echo "== madfam-org/${pkg} =="
+            visibility="$(gh api "orgs/madfam-org/packages/container/${pkg}" --jq '.visibility')"
+            echo "  current: ${visibility}"
+            if [[ "${visibility}" == "public" ]]; then
+              echo "  already public"
+              continue
+            fi
+            gh api -X PATCH "orgs/madfam-org/packages/container/${pkg}" \
+              -f visibility=public \
+              --jq '{name, visibility, updated_at}'
+          done

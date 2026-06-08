@@ -87,7 +87,7 @@ if [[ "${WITH_AUTH}" == true ]]; then
     export_body="$(curl -sS "${API_BASE}/v1/boards/demo-core/export/obf" \
       -H "Authorization: Bearer ${token}")"
     check "GET OBF export non-empty" test -n "${export_body}"
-    check "OBF export contains soak-minimal id" grep -q 'soak-minimal' <<<"${export_body}"
+    check "OBF export contains demo-core board id" grep -q 'demo-core' <<<"${export_body}"
   fi
 fi
 
