@@ -184,8 +184,8 @@ Each epic links to [FEATURE_PARITY.md](./FEATURE_PARITY.md) rows and benchmark d
 
 **Acceptance (W3):**
 
-- [ ] With consent, SLP sees weekly activation counts per board
-- [ ] Two editors see live cursor/lock (or last-write-wins v1)
+- [x] With consent, SLP sees weekly activation counts per board (2026-06-09)
+- [x] Two editors see live cursor/lock (or last-write-wins v1) — 409 refetch + WS peer refresh (2026-06-09)
 
 **Infra:** Provision Redis ([GA_STATUS](../launch/GA_STATUS.md) P2); scale API replicas.
 
@@ -437,6 +437,7 @@ pnpm test && pnpm typecheck
 | 34 | Offline OBF export fallback + edit/speak/sync e2e (A4/W1) | A | Engineering ✅ 2026-06-09 |
 | 35 | Editor workflow e2e: 3-board OBF, locked core, babble reset (B/W2) | B | Engineering ✅ 2026-06-09 |
 | 36 | Media workflow e2e: ARASAAC, GLP audio, OBZ images (C/W2) | C | Engineering ✅ 2026-06-09 |
+| 37 | Clinical workflow e2e: usage report, remote edit, audit (E/W3) | E | Engineering ✅ 2026-06-09 |
 
 ---
 

@@ -62,3 +62,13 @@ export async function exportObzPath(page: Page): Promise<string> {
   if (!path) throw new Error('OBZ download missing path');
   return path;
 }
+
+export async function openUsageReport(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Usage' }).click();
+  await expect(page.getByRole('dialog', { name: 'Usage report' })).toBeVisible();
+}
+
+export async function openAuditLog(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Audit' }).click();
+  await expect(page.getByRole('dialog', { name: 'Edit audit log' })).toBeVisible();
+}

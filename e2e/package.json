@@ -6,7 +6,7 @@
     "test": "playwright test -c playwright.config.ts",
     "test:smoke": "playwright test -c playwright.config.ts specs/smoke.spec.ts",
     "test:a11y": "playwright test -c playwright.config.ts specs/a11y.spec.ts",
-    "test:staging": "playwright test -c playwright.config.ts specs/staging-ux.spec.ts specs/staging-auth.spec.ts specs/staging-auth-ux.spec.ts specs/offline-sync.spec.ts specs/editor-workflow.spec.ts specs/media-workflow.spec.ts"
+    "test:staging": "playwright test -c playwright.config.ts specs/staging-ux.spec.ts specs/staging-auth.spec.ts specs/staging-auth-ux.spec.ts specs/offline-sync.spec.ts specs/editor-workflow.spec.ts specs/media-workflow.spec.ts specs/clinical-workflow.spec.ts"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.3",

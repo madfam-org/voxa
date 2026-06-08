@@ -62,9 +62,9 @@ Actionable **feature parity match** against the AAC platform benchmark. Each row
 | Symbol library search (ARASAAC) | OpenAAC ⭐ | 🟡 | API + editor search + staging e2e attach (2026-06-09) |
 | Word forms / inflection | OpenAAC / Proloquo grammar | 🟡 | `speechForms` + suggest/apply in editor; double-tap cycle (2026-06-09) |
 | Whisper / build utterance without speak | SFY | 🟡 | **Whisper mode** in settings (2026-06-08) |
-| Usage history / activation log | TD Snap, Grid | 🟡 | API + client log (2026-06-08); SLP **Usage** panel in `/app` for editors (2026-06-08) |
+| Usage history / activation log | TD Snap, Grid | 🟡 | API + SLP Usage panel + staging e2e (2026-06-09) |
 | Real-time team co-edit | TD Snap, Grid | 🟡 | Redis pub/sub + WS auth + peer refetch; apply `REDIS_URL` in prod (2026-06-09) |
-| Remote SLP edit without device handoff | Cloud AAC | 🟡 | `/app/edit` remote editor + audit log (2026-06-09) |
+| Remote SLP edit without device handoff | Cloud AAC | 🟡 | `/app/edit` + audit log + clinical e2e (2026-06-09) |
 | iOS + Android store apps | All Tier A | 🟡 | EAS env wiring + icons + CI guard (2026-06-09); `eas init` + TestFlight pending |
 | Cross-platform single account | Fragmented | 🟡 | Web + mobile share Janua token + board list (2026-06-09) |
 | PWA install (home screen) | Cboard, web AAC | 🟡 | `manifest.webmanifest` + install banner on landing (2026-06-09) |
