@@ -31,7 +31,7 @@ export default async function SignInPage({
 }): Promise<React.ReactNode> {
   const params = (await searchParams) ?? {};
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-  const redirectTo = normalizeAuthRedirectPath(firstParam(params?.redirect_to) || '/');
+  const redirectTo = normalizeAuthRedirectPath(firstParam(params?.redirect_to) || '/app');
   const configured = isOidcConfigured();
   const session = await getSession();
 

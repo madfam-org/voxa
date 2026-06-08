@@ -228,7 +228,11 @@ export function BoardScreen(): React.ReactNode {
           flexWrap: 'wrap',
         }}
       >
-        <strong style={{ fontSize: '1.125rem' }}>Voxa</strong>
+        <strong style={{ fontSize: '1.125rem' }}>
+          <a href="/" style={{ color: 'inherit', textDecoration: 'none' }}>
+            Voxa
+          </a>
+        </strong>
 
         {isAuthenticated && boardCatalog.length > 0 ? (
           <select
@@ -277,7 +281,7 @@ export function BoardScreen(): React.ReactNode {
           Settings
         </button>
 
-        <a href="/auth/signin" style={{ ...secondaryBtn, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
+        <a href="/auth/signin?redirect_to=%2Fapp" style={{ ...secondaryBtn, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
           Sign in
         </a>
 

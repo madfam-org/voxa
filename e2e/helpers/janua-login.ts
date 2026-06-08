@@ -42,6 +42,6 @@ export async function signInViaJanua(page: Page): Promise<void> {
     }
   });
 
-  await page.goto('/');
+  await page.goto('/app');
   await expect(page.getByRole('button', { name: 'Settings' })).toBeVisible({ timeout: 20000 });
 }

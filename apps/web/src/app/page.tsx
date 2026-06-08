@@ -1,5 +1,5 @@
-import { BoardScreen } from '@/components/board-screen';
+import { LandingPage } from '@/components/landing-page';
 
 export default function HomePage(): React.ReactNode {
-  return <BoardScreen />;
+  return <LandingPage />;
 }

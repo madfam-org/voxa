@@ -57,7 +57,7 @@ check "GET /auth/signin → 200" test "${signin_code}" = "200"
 
 home_code="$(curl -sS -o /dev/null -w '%{http_code}' "${WEB_BASE}/" 2>/dev/null || echo 000)"
 # With Janua enforced, / redirects to sign-in (307) — both are healthy.
-check "GET / (communicator or auth redirect)" test "${home_code}" = "200" -o "${home_code}" = "307" -o "${home_code}" = "302"
+check "GET / (landing or communicator)" test "${home_code}" = "200" -o "${home_code}" = "307" -o "${home_code}" = "302"
 
 echo "== API auth gates =="
 for path in /v1/billing/entitlement; do

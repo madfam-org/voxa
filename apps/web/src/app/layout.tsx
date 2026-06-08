@@ -3,8 +3,9 @@ import { ConsentBanner } from '@/components/consent-banner';
 import { ServiceWorkerRegistration } from '@/components/service-worker-registration';
 
 export const metadata: Metadata = {
-  title: 'Voxa — AAC Communication Board',
-  description: 'Next-generation augmentative and alternative communication',
+  title: 'Voxa — AAC Communication Platform',
+  description:
+    'Modern augmentative and alternative communication (AAC) for families and institutions. Free for parents. Live demo, CVI themes, AI predictions, and cloud sync.',
 };
 
 export const viewport: Viewport = {

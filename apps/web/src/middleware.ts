@@ -8,6 +8,8 @@ export function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
   if (
+    pathname === '/' ||
+    pathname.startsWith('/demo') ||
     pathname.startsWith('/auth') ||
     pathname.startsWith('/api/auth') ||
     pathname.startsWith('/api/health') ||
