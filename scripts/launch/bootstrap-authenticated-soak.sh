@@ -88,7 +88,7 @@ import json, os
 print(json.dumps({
   'namespace': os.environ['APPLY_NS'],
   'secret_name': 'voxa-secrets',
-  'secrets': [{'key': 'OIDC_CLIENT_SECRET', 'value': os.environ['APPLY_SECRET']}],
+  'secrets': [{'key': 'OIDC_CLIENT_SECRET', 'value': os.environ['APPLY_SECRET'].strip()}],
 }))
 PY
 )" | python3 -c "import json,sys; d=json.load(sys.stdin); print(d.get('status', d))"
@@ -109,6 +109,9 @@ restart_web() {
 
 restart_web "3bbcb7f7-ebf2-4c89-bb42-a8953831312c" "prod"
 restart_web "80560128-37a7-462e-a053-bac495241f47" "staging"
+
+echo "== Wait for voxa-web pods to reload secrets =="
+sleep 60
 
 if [[ "${SKIP_GH_SECRETS:-}" != "1" ]]; then
   echo "== GitHub Actions secrets (${REPO}) =="

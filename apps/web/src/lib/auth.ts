@@ -149,8 +149,8 @@ export async function exchangeCode(opts: {
     client_id: getOidcClientId(),
     code_verifier: opts.codeVerifier,
   });
-  if (OIDC_CLIENT_SECRET) {
-    body.set('client_secret', OIDC_CLIENT_SECRET);
+  if (process.env.OIDC_CLIENT_SECRET?.trim()) {
+    body.set('client_secret', process.env.OIDC_CLIENT_SECRET.trim());
   }
 
   const res = await fetch(endpoints.tokenEndpoint, {
