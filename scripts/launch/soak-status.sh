@@ -49,7 +49,6 @@ echo ""
 echo ""
 echo "== Missing pass days =="
 python3 - "${LOG_FILE}" "${START_DATE}" "${REQUIRED}" <<'PY'
-import re
 import sys
 from datetime import date, timedelta
 
@@ -61,7 +60,10 @@ except OSError:
     raise SystemExit(0)
 
 def has_pass(day: str) -> bool:
-    return bool(re.search(rf"\| {re.escape(day)} \|.*\| pass \|", text))
+    for line in text.splitlines():
+        if f"| {day} |" in line and "| pass |" in line:
+            return True
+    return False
 
 day = date.fromisoformat(start)
 missing = []
