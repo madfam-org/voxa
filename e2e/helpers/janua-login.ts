@@ -26,6 +26,22 @@ export async function signInViaJanua(page: Page): Promise<void> {
     await allowButton.click();
   }
 
-  await page.waitForURL(/voxa-staging\.madfam\.io/);
-  await expect(page.getByRole('button', { name: 'Settings' })).toBeVisible();
+  await page.waitForURL(/voxa-staging\.madfam\.io/, { timeout: 30000 });
+  if (page.url().includes('/auth/signin')) {
+    throw new Error(`Janua sign-in failed: still on ${page.url()}`);
+  }
+
+  await page.waitForResponse(
+    (response) =>
+      response.url().includes('/api/auth/session') && response.status() === 200,
+    { timeout: 30000 },
+  ).catch(async () => {
+    const session = await page.request.get('/api/auth/session');
+    if (!session.ok()) {
+      throw new Error(`Session not established (${session.status()}): ${await session.text()}`);
+    }
+  });
+
+  await page.goto('/');
+  await expect(page.getByRole('button', { name: 'Settings' })).toBeVisible({ timeout: 20000 });
 }
