@@ -63,12 +63,16 @@ fi
 
 cat <<'EOF'
 
-Manual platform items:
-- GHCR packages public → remove k8s/*/signature-policyexception.yaml
-- PgBouncer: add voxa / voxa_staging to pgbouncer-config (switchyard-api RBAC)
+Manual platform items (see docs/launch/GA_ROADMAP.md):
+- GHCR public: ./scripts/deploy/make-ghcr-packages-public.sh
+- Remove k8s/*/signature-policyexception.yaml after GHCR public
+- PgBouncer: voxa / voxa_staging (switchyard-api RBAC)
+- Staging soak: ./scripts/launch/soak-daily-check.sh --log docs/launch/SOAK_LOG.md
+- SLP sign-off: docs/launch/SLP_SIGNOFF.md
 
 Verify:
   curl -sS https://voxa-api.madfam.io/health/ready
   curl -sS -o /dev/null -w '%{http_code}\n' https://voxa-api.madfam.io/v1/boards
+  pnpm test:e2e:a11y
   open https://voxa.madfam.io/auth/signin
 EOF

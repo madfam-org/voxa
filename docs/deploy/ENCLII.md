@@ -2,6 +2,8 @@
 
 Voxa deploys to **madfam.io** via Enclii using the [zero-touch contract](https://github.com/madfam-org/enclii/blob/main/docs/guides/ZERO_TOUCH_CONTRACT.md): Dockerfiles, `k8s/`, CI, and `enclii.yaml` live in this repo. ArgoCD apps are registered by Enclii runtime onboarding (`onboard/ensure`); tunnel routing uses junctions on `voxa-web` / `voxa-api` services.
 
+**Commercial GA:** [GA_ROADMAP.md](../launch/GA_ROADMAP.md) · [GA_CHECKLIST.md](../launch/GA_CHECKLIST.md) · [GA_STATUS.md](../launch/GA_STATUS.md)
+
 ## Architecture
 
 ```
@@ -23,8 +25,16 @@ Routing uses Cloudflare Tunnel to cluster services (`http://voxa-web.{namespace}
 
 ## Prerequisites
 
-1. **GitHub secrets** on `madfam-org/voxa`:
-   - `ENCLII_CALLBACK_TOKEN` — lifecycle events to Enclii (same value as other MADFAM repos; see [DEPLOYMENT_TRACKING.md](https://github.com/madfam-org/enclii/blob/main/docs/guides/DEPLOYMENT_TRACKING.md))
+1. **GitHub integration** on `madfam-org/voxa`:
+   - **Webhook** → `https://api.enclii.dev/v1/webhooks/github` (HMAC secret = cluster `enclii/enclii-github-webhook`, key `secret`)
+   - **`ENCLII_CALLBACK_TOKEN`** — lifecycle events from Actions to Enclii (same value as other MADFAM repos; = cluster `enclii/enclii-argocd-webhook`, key `secret`)
+
+   Setup scripts (values from cluster break-glass — see [GA_STATUS.md](../launch/GA_STATUS.md)):
+
+   ```bash
+   ENCLII_WEBHOOK_SECRET='…' ./scripts/deploy/setup-github-webhook.sh
+   ENCLII_CALLBACK_TOKEN='…' ./scripts/deploy/setup-github-secrets.sh
+   ```
 
    Deploy workflows use the built-in `GITHUB_TOKEN` for GHCR push and digest commits (`contents: write`, `packages: write`). No `MADFAM_BOT_PAT` is required unless you prefer a dedicated bot account.
 
@@ -130,6 +140,19 @@ Set `ENCLII_CALLBACK_TOKEN` on the repo (ArgoCD webhook secret — see [DEPLOYME
 ```bash
 ENCLII_CALLBACK_TOKEN='<token>' ./scripts/deploy/setup-github-secrets.sh
 ```
+
+### GitHub push webhook 401 on Enclii
+
+GitHub deliveries show `Invalid signature` when the cluster secret and `switchyard-api` pod env diverge, or after a platform secret rotation without recycling pods.
+
+1. Ensure repo webhook secret matches `enclii/enclii-github-webhook` (update via `setup-github-webhook.sh` or Enclii `POST /v1/admin/provision/secrets`).
+2. Roll `switchyard-api` — Enclii service restart alone may not recycle pods under Argo self-heal:
+
+   ```bash
+   ssh ssh.madfam.io 'sudo /usr/local/bin/k3s kubectl rollout restart deployment/switchyard-api -n enclii'
+   ```
+
+3. Redeliver a hook `ping`; expect **200**. Details: [RUNBOOK.md](../ops/RUNBOOK.md), [GA_STATUS.md](../launch/GA_STATUS.md).
 
 ## Storage
 

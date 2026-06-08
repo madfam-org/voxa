@@ -62,6 +62,23 @@ Symptom: Argo shows **Synced** but `/health/ready` has no `authEnforced` field a
    ```
 5. Sign in at `https://voxa.madfam.io/auth/signin` and confirm `/api/auth/session` returns a token that succeeds against `/v1/boards`.
 
+### GitHub → Enclii webhook returns 401 after secret rotation
+
+Symptom: GitHub hook deliveries show `Invalid HTTP Response: 401`; Enclii responds `{"error":"Invalid signature"}`.
+
+1. Confirm `madfam-org/voxa` has a webhook to `https://api.enclii.dev/v1/webhooks/github` and `ENCLII_CALLBACK_TOKEN` is set (see `scripts/deploy/setup-github-*.sh`).
+2. Platform HMAC secret lives in cluster secret `enclii/enclii-github-webhook` (key `secret`). Update via Enclii `POST /v1/admin/provision/secrets` if rotating.
+3. **Recycle `switchyard-api` pods** so `ENCLII_GITHUB_WEBHOOK_SECRET` reloads. If new pods stay **Pending** (`Insufficient cpu`), scale down first via Enclii API:
+   ```bash
+   ENCLII_TOKEN='…' ENCLII_WEBHOOK_SECRET='…' \
+     ./scripts/deploy/rollout-switchyard-api.sh --via-enclii-scale
+   ```
+   Break-glass (requires Cloudflare Access SSH):
+   ```bash
+   ssh ssh.madfam.io 'sudo /usr/local/bin/k3s kubectl rollout restart deployment/switchyard-api -n enclii'
+   ```
+4. Re-test: GitHub hook **Redeliver** on a `ping` event should return **200**.
+
 ### Rate limit spikes (429)
 
 1. Identify abusive IP or user via ingress logs.

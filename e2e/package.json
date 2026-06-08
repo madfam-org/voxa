@@ -3,9 +3,12 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "test": "playwright test -c playwright.config.ts"
+    "test": "playwright test -c playwright.config.ts",
+    "test:smoke": "playwright test -c playwright.config.ts specs/smoke.spec.ts",
+    "test:a11y": "playwright test -c playwright.config.ts specs/a11y.spec.ts"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.3",
     "@playwright/test": "^1.49.1"
   }
 }
