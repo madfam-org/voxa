@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
-import { hasJanuaTestCredentials, signInViaJanua } from '../helpers/janua-login';
+import { hasJanuaTestCredentials } from '../helpers/janua-login';
+import { openAccessibilitySettings, prepareAuthenticatedApp } from '../helpers/app-session';
 
 test.describe('Staging UX soak', () => {
   test('sign-in page loads Continue with Janua', async ({ page }) => {
@@ -26,13 +27,61 @@ test.describe('Staging UX soak', () => {
   test('accessibility settings expose CVI theme and switch scanning', async ({ page }) => {
     test.skip(!hasJanuaTestCredentials(), 'Requires JANUA_TEST_EMAIL/PASSWORD for staging OAuth');
 
-    await page.addInitScript(() => localStorage.setItem('voxa-ai-consent', 'granted'));
-    await signInViaJanua(page);
+    await prepareAuthenticatedApp(page);
 
-    await page.getByRole('button', { name: 'Settings' }).click();
-    await expect(page.getByRole('dialog', { name: 'Accessibility settings' })).toBeVisible();
+    await openAccessibilitySettings(page);
     await page.getByLabel('Visual theme (CVI)').selectOption('cvi-high-contrast');
     await page.getByLabel('Access method').selectOption('switch');
     await expect(page.getByLabel('Scan speed')).toBeVisible();
+  });
+
+  test('switch scan announces focused button and advances with ArrowRight', async ({ page }) => {
+    test.skip(!hasJanuaTestCredentials(), 'Requires JANUA_TEST_EMAIL/PASSWORD for staging OAuth');
+
+    await page.addInitScript(() => {
+      localStorage.setItem('voxa-ai-consent', 'granted');
+      localStorage.removeItem('voxa-editor-pin');
+      localStorage.setItem(
+        'voxa-communicator-settings',
+        JSON.stringify({
+          accessMode: 'switch',
+          cviTheme: 'cvi-dark',
+          targetScale: 1.2,
+          switchIntervalMs: 10000,
+          switchOrder: 'row-major',
+          eyeDwellMs: 1000,
+          auditoryScanHighlight: true,
+          auditoryScanVoice: false,
+          pauseScanWhileSpeaking: true,
+          touchActivation: 'press',
+          whisperMode: false,
+          hideSymbols: false,
+          hideLabels: false,
+        }),
+      );
+    });
+    await prepareAuthenticatedApp(page);
+
+    const liveRegion = page.locator('[aria-live="polite"]');
+    await expect(liveRegion).toBeAttached();
+    await expect(liveRegion).not.toHaveText('', { timeout: 5000 });
+
+    const firstLabel = (await liveRegion.textContent())?.trim() ?? '';
+    expect(firstLabel.length).toBeGreaterThan(0);
+
+    await page.keyboard.press('ArrowRight');
+    await expect(liveRegion).not.toHaveText(firstLabel, { timeout: 5000 });
+  });
+
+  test('auditory scan voice toggle is available in settings', async ({ page }) => {
+    test.skip(!hasJanuaTestCredentials(), 'Requires JANUA_TEST_EMAIL/PASSWORD for staging OAuth');
+
+    await prepareAuthenticatedApp(page);
+    await openAccessibilitySettings(page);
+    await page.getByLabel('Access method').selectOption('switch');
+    const voiceToggle = page.getByRole('checkbox', { name: 'Speak scanned label aloud' });
+    await expect(voiceToggle).toBeVisible();
+    await voiceToggle.check();
+    await expect(voiceToggle).toBeChecked();
   });
 });

@@ -96,8 +96,8 @@ Each epic links to [FEATURE_PARITY.md](./FEATURE_PARITY.md) rows and benchmark d
 
 - [ ] User can complete board edit → speak → OBF export offline-then-online without data loss
 - [ ] Editor changes respect `locked` buttons (communicator cannot drag locked cells)
-- [ ] axe CI covers communicator + demo
-- [ ] Switch scan e2e on staging passes with auditory prompt toggle
+- [x] axe CI covers communicator, demo, settings dialog, and editor mode (2026-06-09)
+- [x] Switch scan e2e on staging passes with auditory prompt toggle (2026-06-09)
 
 **Tests:** `e2e/specs/staging-ux.spec.ts`, new `offline-sync.spec.ts`, `@voxa/sync` unit tests.
 
@@ -432,6 +432,7 @@ pnpm test && pnpm typecheck
 | 29 | Save conflict refetch UX + mobile OAuth refresh (A4/D2) | A/D | Engineering ✅ 2026-06-09 |
 | 30 | Sync status banner + USB switch keys + save conflict toast (A4/A1) | A | Engineering ✅ 2026-06-09 |
 | 31 | Soak progress CI + mobile switch scan mode (W0/A1) | W0/A | Engineering ✅ 2026-06-09 |
+| 32 | Axe on /app settings + editor; switch scan staging e2e (A5/A1) | A | Engineering ✅ 2026-06-09 |
 
 ---
 

@@ -7,12 +7,16 @@ export interface MobileCommunicatorSettings {
   accessMode: 'touch' | 'switch';
   switchIntervalMs: number;
   switchOrder: ScanOrder;
+  auditoryScanHighlight: boolean;
+  auditoryScanVoice: boolean;
 }
 
 const DEFAULTS: MobileCommunicatorSettings = {
   accessMode: 'touch',
   switchIntervalMs: 1200,
   switchOrder: 'row-major',
+  auditoryScanHighlight: true,
+  auditoryScanVoice: false,
 };
 
 export async function loadMobileSettings(): Promise<MobileCommunicatorSettings> {

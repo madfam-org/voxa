@@ -7,6 +7,11 @@ export const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'
 export async function analyzePage(page: Page, path: string) {
   await page.goto(path);
   await page.waitForLoadState('domcontentloaded');
+  return analyzeCurrentPage(page);
+}
+
+export async function analyzeCurrentPage(page: Page) {
+  await page.waitForLoadState('domcontentloaded');
   return new AxeBuilder({ page }).withTags([...WCAG_TAGS]).analyze();
 }
 

@@ -29,6 +29,8 @@ export function MobileBoardScreen() {
     accessMode: 'touch',
     switchIntervalMs: 1200,
     switchOrder: 'row-major',
+    auditoryScanHighlight: true,
+    auditoryScanVoice: false,
   });
   const { accessToken, userId, isAuthenticated, configured, signIn, signOut, loading: authLoading } =
     useMobileAuth();
@@ -73,6 +75,8 @@ export function MobileBoardScreen() {
     buttons: sorted,
     intervalMs: settings.switchIntervalMs,
     order: settings.switchOrder,
+    auditoryHighlight: settings.auditoryScanHighlight,
+    auditoryVoice: settings.auditoryScanVoice,
     onSelect: activate,
   });
 
