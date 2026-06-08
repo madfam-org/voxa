@@ -30,8 +30,8 @@ Actionable **feature parity match** against the AAC platform benchmark. Each row
 | 1 cm touch targets | WCAG 2.2 / OpenAAC 🟢 | ✅ | `@voxa/ui` AacButton |
 | ARIA grid structure | WCAG / access | ✅ | BoardGrid row/cell (2026-06-08) |
 | CVI themes | OpenAAC ⭐ / TD Snap HC | ✅ | cvi-dark, cvi-high-contrast |
-| Switch scanning (configurable) | OpenAAC ⭐ | 🟡 | Web; row/col/linear; no BT switch |
-| Eye dwell (configurable) | OpenAAC ⭐ | 🟡 | Pointer sim; not Tobii SDK |
+| Switch scanning (configurable) | OpenAAC ⭐ | 🟡 | Web; voice cue + pause on speak; no BT switch (2026-06-09) |
+| Eye dwell (configurable) | OpenAAC ⭐ | 🟡 | Pointer sim; touch-release option; not Tobii SDK (2026-06-09) |
 | Message bar + speak utterance | OpenAAC 🟢 | ✅ | Web Speech API |
 | OBF export | OpenAAC / Cboard | ✅ | API + editor UI |
 | OBZ export (images embedded) | OpenAAC / Cboard | 🟡 | API + editor UI (2026-06-08) |
@@ -56,7 +56,7 @@ Actionable **feature parity match** against the AAC platform benchmark. Each row
 | Hide/show buttons (open/close) | SFY, Proloquo | 🟡 | Per-button `hidden` + **Babble** session mode (2026-06-08) |
 | Custom grid size (9–144+ cells) | Proloquo2Go | 🟡 | Editor **Grid** panel — 9–144 cells, locked-slot reflow (2026-06-09) |
 | Symbol-only / label-only modes | OpenAAC ✅ | 🟡 | Profile + per-board overrides in settings (2026-06-09) |
-| Upload custom symbol / photo | OpenAAC 🟢 | 🟡 | Editor partial |
+| Upload custom symbol / photo | OpenAAC 🟢 | 🟡 | Editor photo upload via `/v1/media` (2026-06-09) |
 | Recorded speech on button | OpenAAC ✅ / GLP | 🟡 | `RecordedSpeech` on buttons; web record/upload + playback over TTS (2026-06-08) |
 | GLP buttons with audio/video | Voxa differentiator | 🟡 | GLP video upload in editor; plays in communicator (2026-06-08) |
 | Symbol library search (ARASAAC) | OpenAAC ⭐ | 🟡 | API + editor search (2026-06-08) |

@@ -3,15 +3,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { BoardButton } from '@voxa/core';
 import { buildGridScanPath, clampSwitchInterval, type ScanOrder } from '@voxa/access';
+import { announceScanLabel } from '@/lib/play-button-speech';
 
 interface UseSwitchScanOptions {
   enabled: boolean;
+  paused?: boolean;
   rows: number;
   columns: number;
   buttons: BoardButton[];
   intervalMs: number;
   order: ScanOrder;
   auditoryHighlight: boolean;
+  auditoryVoice?: boolean;
   onSelect: (button: BoardButton) => void;
   getLabel: (button: BoardButton) => string;
 }
@@ -22,12 +25,14 @@ function findButtonAt(buttons: BoardButton[], row: number, column: number): Boar
 
 export function useSwitchScan({
   enabled,
+  paused = false,
   rows,
   columns,
   buttons,
   intervalMs,
   order,
   auditoryHighlight,
+  auditoryVoice = false,
   onSelect,
   getLabel,
 }: UseSwitchScanOptions) {
@@ -47,19 +52,24 @@ export function useSwitchScan({
   }, [activeButton, onSelect]);
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || paused) return;
 
     const id = window.setInterval(
       () => setStep((s) => s + 1),
       clampSwitchInterval(intervalMs),
     );
     return () => window.clearInterval(id);
-  }, [enabled, intervalMs]);
+  }, [enabled, paused, intervalMs]);
 
   useEffect(() => {
     if (!enabled || !auditoryHighlight || !activeButton || !liveRef.current) return;
     liveRef.current.textContent = getLabel(activeButton);
   }, [enabled, auditoryHighlight, activeButton, step, getLabel]);
+
+  useEffect(() => {
+    if (!enabled || !auditoryVoice || !activeButton) return;
+    announceScanLabel(getLabel(activeButton), activeButton.locale);
+  }, [enabled, auditoryVoice, activeButton, step, getLabel]);
 
   useEffect(() => {
     if (!enabled) return;

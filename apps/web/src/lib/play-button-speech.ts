@@ -2,6 +2,38 @@ import type { BoardButton } from '@voxa/core';
 import { buttonMediaVideo, buttonRecordedSpeech } from '@voxa/core';
 import { buttonSpeech } from '@/lib/board-utils';
 
+type SpeechActivityListener = (active: boolean) => void;
+
+let activeSpeechCount = 0;
+const listeners = new Set<SpeechActivityListener>();
+
+function notifySpeechActivity(): void {
+  const active = activeSpeechCount > 0;
+  for (const listener of listeners) listener(active);
+}
+
+function beginSpeechActivity(): void {
+  activeSpeechCount += 1;
+  notifySpeechActivity();
+}
+
+function endSpeechActivity(): void {
+  activeSpeechCount = Math.max(0, activeSpeechCount - 1);
+  notifySpeechActivity();
+}
+
+export function subscribeSpeechActivity(listener: SpeechActivityListener): () => void {
+  listeners.add(listener);
+  listener(activeSpeechCount > 0);
+  return () => listeners.delete(listener);
+}
+
+/** @internal test helper */
+export function resetSpeechActivityForTests(): void {
+  activeSpeechCount = 0;
+  notifySpeechActivity();
+}
+
 let activeVideo: HTMLVideoElement | null = null;
 
 async function fetchAuthorizedBlob(url: string, accessToken?: string): Promise<Blob> {
@@ -13,6 +45,7 @@ async function fetchAuthorizedBlob(url: string, accessToken?: string): Promise<B
 }
 
 async function playBlobAudio(blob: Blob): Promise<void> {
+  beginSpeechActivity();
   const blobUrl = URL.createObjectURL(blob);
   try {
     const audio = new Audio(blobUrl);
@@ -23,6 +56,7 @@ async function playBlobAudio(blob: Blob): Promise<void> {
     });
   } finally {
     URL.revokeObjectURL(blobUrl);
+    endSpeechActivity();
   }
 }
 
@@ -35,6 +69,7 @@ function stopActiveVideo(): void {
 
 async function playRemoteVideo(url: string, accessToken?: string): Promise<void> {
   stopActiveVideo();
+  beginSpeechActivity();
   const blob = await fetchAuthorizedBlob(url, accessToken);
   const blobUrl = URL.createObjectURL(blob);
   const video = document.createElement('video');
@@ -56,12 +91,17 @@ async function playRemoteVideo(url: string, accessToken?: string): Promise<void>
   } finally {
     stopActiveVideo();
     URL.revokeObjectURL(blobUrl);
+    endSpeechActivity();
   }
 }
 
 function speakWithTts(text: string, locale: string): void {
   if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-  window.speechSynthesis.speak(Object.assign(new SpeechSynthesisUtterance(text), { lang: locale }));
+  beginSpeechActivity();
+  const utterance = Object.assign(new SpeechSynthesisUtterance(text), { lang: locale });
+  utterance.onend = () => endSpeechActivity();
+  utterance.onerror = () => endSpeechActivity();
+  window.speechSynthesis.speak(utterance);
 }
 
 /** Play recorded media when present; otherwise fall back to TTS. */
@@ -87,4 +127,12 @@ export async function speakButton(
 
 export function speakText(text: string, locale = 'en-US'): void {
   speakWithTts(text, locale);
+}
+
+/** Speak a scanned button label without affecting scan-pause activity tracking. */
+export function announceScanLabel(label: string, locale = 'en-US'): void {
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  const utterance = Object.assign(new SpeechSynthesisUtterance(label), { lang: locale, volume: 0.85 });
+  window.speechSynthesis.speak(utterance);
 }

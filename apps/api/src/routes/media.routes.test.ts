@@ -60,4 +60,32 @@ describe('media routes', () => {
     const bytes = new Uint8Array(await get.arrayBuffer());
     assert.deepEqual(bytes, payload);
   });
+
+  it('uploads image symbols and serves them back', async () => {
+    const payload = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);
+    const form = new FormData();
+    form.set('boardId', DEMO_BOARD_ID);
+    form.set('file', new File([payload], 'photo.png', { type: 'image/png' }));
+
+    const post = await app.request('/v1/media', {
+      method: 'POST',
+      headers: {
+        'X-Voxa-User-Id': 'editor-1',
+        'X-Voxa-Role': 'editor',
+      },
+      body: form,
+    });
+    assert.equal(post.status, 201);
+    const body = (await post.json()) as { id: string; mimeType: string };
+    assert.equal(body.mimeType, 'image/png');
+
+    const get = await app.request(`/v1/media/${body.id}`, {
+      headers: {
+        'X-Voxa-User-Id': 'user-1',
+        'X-Voxa-Role': 'communicator',
+      },
+    });
+    assert.equal(get.status, 200);
+    assert.equal(get.headers.get('Content-Type'), 'image/png');
+  });
 });

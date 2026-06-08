@@ -28,7 +28,7 @@ import {
   unlockEditor,
 } from '@/lib/editor-pin';
 import { logButtonActivation } from '@/lib/log-activation';
-import { speakButton, speakText } from '@/lib/play-button-speech';
+import { speakButton, speakText, subscribeSpeechActivity } from '@/lib/play-button-speech';
 import { PredictionStrip } from '@/components/prediction-strip';
 import { SymbolSearchPanel } from '@/components/symbol-search-panel';
 import { SettingsPanel } from '@/components/settings-panel';
@@ -65,6 +65,8 @@ export function BoardScreen(): React.ReactNode {
   const [usageOpen, setUsageOpen] = useState(false);
   const [gridOpen, setGridOpen] = useState(false);
   const [babbleActive, setBabbleActive] = useState(false);
+  const [speechActive, setSpeechActive] = useState(false);
+  const pendingTouchRef = useRef<string | null>(null);
 
   const [recentButtonIds, setRecentButtonIds] = useState<string[]>([]);
   const formTapRef = useRef<{ buttonId: string; at: number; index: number } | null>(null);
@@ -97,6 +99,8 @@ export function BoardScreen(): React.ReactNode {
   } = useSyncedBoard(role);
 
   const displaySettings = effectiveDisplaySettings(settings, board.display);
+
+  useEffect(() => subscribeSpeechActivity(setSpeechActive), []);
 
   useEffect(() => {
     setBabbleActive(false);
@@ -163,15 +167,18 @@ export function BoardScreen(): React.ReactNode {
 
   const switchScanEnabled = settings.accessMode === 'switch' && !isEditor;
   const eyeDwellEnabled = settings.accessMode === 'eye-tracking' && !isEditor;
+  const scanPaused = settings.pauseScanWhileSpeaking && speechActive;
 
   const { isHighlighted, liveRef } = useSwitchScan({
     enabled: switchScanEnabled,
+    paused: scanPaused,
     rows: board.grid.rows,
     columns: board.grid.columns,
     buttons: visibleButtons,
     intervalMs: settings.switchIntervalMs,
     order: settings.switchOrder,
     auditoryHighlight: settings.auditoryScanHighlight,
+    auditoryVoice: settings.auditoryScanVoice,
     onSelect: activate,
     getLabel: buttonLabel,
   });
@@ -449,9 +456,28 @@ export function BoardScreen(): React.ReactNode {
       setEditingId(btn.id as string);
       return;
     }
-    if (settings.accessMode === 'touch') {
+    if (settings.accessMode === 'touch' && settings.touchActivation === 'press') {
       activate(btn);
     }
+  };
+
+  const touchReleaseHandlers = (btn: BoardButton) => {
+    if (isEditor || settings.accessMode !== 'touch' || settings.touchActivation !== 'release') {
+      return {};
+    }
+    const id = btn.id as string;
+    return {
+      onPointerDown: () => {
+        pendingTouchRef.current = id;
+      },
+      onPointerUp: () => {
+        if (pendingTouchRef.current === id) activate(btn);
+        pendingTouchRef.current = null;
+      },
+      onPointerLeave: () => {
+        if (pendingTouchRef.current === id) pendingTouchRef.current = null;
+      },
+    };
   };
 
   const buttonAt = (row: number, column: number): BoardButton | undefined =>
@@ -473,6 +499,7 @@ export function BoardScreen(): React.ReactNode {
         scanHighlighted={isHighlighted(btn)}
         dwellProgress={dwellProgressFor(btn.id as string)}
         onClick={() => handleButtonPress(btn)}
+        {...touchReleaseHandlers(btn)}
         onPointerEnter={() => onEnter(btn.id as string)}
         onPointerLeave={onLeave}
         style={revealedHidden ? { opacity: 0.72, outline: '2px dashed #f59e0b' } : undefined}
@@ -900,8 +927,10 @@ function EditorPanel({
       <h2 style={{ margin: '0 0 12px', fontSize: '1rem' }}>Edit button</h2>
 
       <SymbolSearchPanel
+        boardId={boardId}
         accessToken={accessToken}
         currentUrl={button.symbolUrl}
+        disabled={fieldsLocked}
         onSelect={(imageUrl) => onChange({ symbolUrl: imageUrl })}
         onClear={() => onChange({ symbolUrl: undefined })}
       />

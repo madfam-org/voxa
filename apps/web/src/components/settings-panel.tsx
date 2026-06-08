@@ -124,11 +124,46 @@ export function SettingsPanel({
                 checked={settings.auditoryScanHighlight}
                 onChange={(e) => onChange({ auditoryScanHighlight: e.target.checked })}
               />
-              Announce focused button
+              Announce focused button (screen reader)
+            </label>
+          </Field>
+          <Field label="Auditory scan voice">
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <input
+                type="checkbox"
+                checked={settings.auditoryScanVoice}
+                onChange={(e) => onChange({ auditoryScanVoice: e.target.checked })}
+              />
+              Speak scanned label aloud
+            </label>
+          </Field>
+          <Field label="Pause scan while speaking">
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <input
+                type="checkbox"
+                checked={settings.pauseScanWhileSpeaking}
+                onChange={(e) => onChange({ pauseScanWhileSpeaking: e.target.checked })}
+              />
+              Hold scan step during TTS or recordings
             </label>
           </Field>
           <p style={hintStyle}>Press Space or Enter to select. Arrow Right advances manually.</p>
         </>
+      )}
+
+      {settings.accessMode === 'touch' && (
+        <Field label="Touch activation">
+          <select
+            value={settings.touchActivation}
+            onChange={(e) =>
+              onChange({ touchActivation: e.target.value as CommunicatorSettings['touchActivation'] })
+            }
+            style={fieldStyle}
+          >
+            <option value="press">Press (touch-start)</option>
+            <option value="release">Release (touch-up)</option>
+          </select>
+        </Field>
       )}
 
       {settings.accessMode === 'eye-tracking' && (

@@ -85,8 +85,8 @@ Each epic links to [FEATURE_PARITY.md](./FEATURE_PARITY.md) rows and benchmark d
 
 | ID | Feature | Current | Remediation | Implementation |
 |----|---------|---------|-------------|----------------|
-| A1 | Switch scanning | 🟡 web only | Auditory cue option; scan pause on speak; document hardware path | `@voxa/access`, `use-switch-scan`, `settings-panel.tsx` |
-| A2 | Eye dwell | 🟡 pointer sim | Configurable dwell; touch-release vs touch-start; snap-to-cell | `@voxa/access` `EyeTrackingConfig`, `AacButton` dwell UI |
+| A1 | Switch scanning | 🟡 web only | Auditory voice cue + scan pause on speak; document hardware path | `@voxa/access`, `use-switch-scan`, `settings-panel.tsx` ✅ 2026-06-09 |
+| A2 | Eye dwell | 🟡 pointer sim | Configurable dwell; touch-release vs touch-start; snap-to-cell | `@voxa/access` `EyeTrackingConfig`, touch activation setting ✅ 2026-06-09 (partial) |
 | A3 | SLP editor | 🟡 basic | Editor PIN lock; grid resize validation; slot lock enforcement in UI | `board-screen.tsx` `EditorPanel`, `@voxa/core` `locked` |
 | A4 | Offline cache | 🟡 IndexedDB pending | Queue failed writes; conflict resolution; “offline” banner | `@voxa/sync`, `use-synced-board.ts`, service worker (web) |
 | A5 | A11y CI scope | ✅ legal/home | Extend axe to `/app`, `/demo`, editor, settings | `e2e/specs/a11y.spec.ts` |
@@ -136,7 +136,7 @@ Each epic links to [FEATURE_PARITY.md](./FEATURE_PARITY.md) rows and benchmark d
 | ID | Feature | Remediation | Implementation |
 |----|---------|-------------|----------------|
 | C1 | ARASAAC / OpenSymbols | Symbol search API; attach `symbolUrl` to analytic buttons | New `packages/symbols` or API route `/v1/symbols/search`; cache CDN |
-| C2 | Custom photo upload | S3-compatible object store; signed upload URL | API `POST /v1/media`, `@voxa/core` `mediaId` on buttons |
+| C2 | Custom photo upload | S3-compatible object store; signed upload URL | API `POST /v1/media` image types + editor upload ✅ 2026-06-09 |
 | C3 | Recorded speech | Record/upload audio per button; play instead of TTS when set | `@voxa/core` `RecordedSpeech`; API `POST/GET /v1/media`; web `MediaRecorder` ✅ 2026-06-08 |
 | C4 | GLP video/audio | GLP buttons store `mediaUrl` + intonation notes | GLP video upload + playback ✅ 2026-06-08 |
 | C5 | `.obz` bundles | Import/export ZIP with images | `@voxa/obf` pack/unpack + API + editor ✅ 2026-06-08 |
@@ -420,6 +420,9 @@ pnpm test && pnpm typecheck
 | 17 | Editor drag-move with motor-plan guards (B2) | B | Engineering ✅ 2026-06-09 |
 | 18 | Fitzgerald POS on imports + display (B6) | B | Engineering ✅ 2026-06-09 |
 | 19 | Board + profile symbol/label modes (B5) | B | Engineering ✅ 2026-06-09 |
+| 20 | Custom photo symbol upload (C2) | C | Engineering ✅ 2026-06-09 |
+| 21 | Switch scan voice + pause while speaking (A1) | A | Engineering ✅ 2026-06-09 |
+| 22 | Touch-release activation setting (A2) | A | Engineering ✅ 2026-06-09 |
 
 ---
 

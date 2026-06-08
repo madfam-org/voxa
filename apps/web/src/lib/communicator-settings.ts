@@ -10,6 +10,9 @@ export interface CommunicatorSettings {
   switchOrder: ScanOrder;
   eyeDwellMs: number;
   auditoryScanHighlight: boolean;
+  auditoryScanVoice: boolean;
+  pauseScanWhileSpeaking: boolean;
+  touchActivation: 'press' | 'release';
   whisperMode: boolean;
   hideSymbols: boolean;
   hideLabels: boolean;
@@ -23,6 +26,9 @@ export const DEFAULT_COMMUNICATOR_SETTINGS: CommunicatorSettings = {
   switchOrder: 'row-major',
   eyeDwellMs: 1000,
   auditoryScanHighlight: true,
+  auditoryScanVoice: false,
+  pauseScanWhileSpeaking: true,
+  touchActivation: 'press',
   whisperMode: false,
   hideSymbols: false,
   hideLabels: false,

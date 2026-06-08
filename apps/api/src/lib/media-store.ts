@@ -18,6 +18,7 @@ const fileMedia = new Map<string, MediaAssetRecord>();
 
 const MAX_AUDIO_BYTES = 10 * 1024 * 1024;
 const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
 const ALLOWED_MIME = new Set([
   'audio/webm',
@@ -28,10 +29,16 @@ const ALLOWED_MIME = new Set([
   'video/webm',
   'video/mp4',
   'video/quicktime',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
 ]);
 
 export function maxBytesForMime(mimeType: string): number {
-  return mimeType.startsWith('video/') ? MAX_VIDEO_BYTES : MAX_AUDIO_BYTES;
+  if (mimeType.startsWith('video/')) return MAX_VIDEO_BYTES;
+  if (mimeType.startsWith('image/')) return MAX_IMAGE_BYTES;
+  return MAX_AUDIO_BYTES;
 }
 
 export function isAllowedMediaMime(mimeType: string): boolean {

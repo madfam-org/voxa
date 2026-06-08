@@ -1,6 +1,7 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
+import { uploadBoardMedia } from '@/lib/upload-media';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
 
@@ -13,15 +14,19 @@ export interface SymbolHit {
 }
 
 interface SymbolSearchPanelProps {
+  boardId: string;
   accessToken?: string;
   currentUrl?: string;
+  disabled?: boolean;
   onSelect: (imageUrl: string) => void;
   onClear: () => void;
 }
 
 export function SymbolSearchPanel({
+  boardId,
   accessToken,
   currentUrl,
+  disabled,
   onSelect,
   onClear,
 }: SymbolSearchPanelProps): React.ReactNode {
@@ -30,6 +35,7 @@ export function SymbolSearchPanel({
   const [attribution, setAttribution] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
 
   const search = useCallback(async () => {
     if (query.trim().length < 2) return;
@@ -57,9 +63,29 @@ export function SymbolSearchPanel({
     }
   }, [accessToken, query]);
 
+  const uploadPhoto = useCallback(
+    async (file: File) => {
+      if (!accessToken) {
+        setError('Sign in to upload a custom photo.');
+        return;
+      }
+      setBusy(true);
+      setError(null);
+      try {
+        const uploaded = await uploadBoardMedia(accessToken, boardId, file, file.name);
+        onSelect(uploaded.url);
+      } catch (err) {
+        setError((err as Error).message);
+      } finally {
+        setBusy(false);
+      }
+    },
+    [accessToken, boardId, onSelect],
+  );
+
   return (
     <div style={{ marginBottom: 16 }}>
-      <p style={{ margin: '0 0 8px', fontSize: '0.875rem', fontWeight: 600 }}>Symbol (ARASAAC)</p>
+      <p style={{ margin: '0 0 8px', fontSize: '0.875rem', fontWeight: 600 }}>Symbol</p>
 
       {currentUrl ? (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
@@ -68,23 +94,50 @@ export function SymbolSearchPanel({
             alt=""
             style={{ width: 48, height: 48, objectFit: 'contain', background: '#0a0a0a', borderRadius: 6 }}
           />
-          <button type="button" onClick={onClear} style={smallBtn}>
+          <button type="button" onClick={onClear} disabled={disabled} style={smallBtn}>
             Remove symbol
           </button>
         </div>
       ) : null}
+
+      <div style={{ marginBottom: 12 }}>
+        <p style={{ margin: '0 0 6px', fontSize: '0.8125rem', color: '#a3a3a3' }}>Custom photo</p>
+        <input
+          ref={photoInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          style={{ display: 'none' }}
+          disabled={disabled || busy}
+          onChange={async (e) => {
+            const file = e.target.files?.[0];
+            if (file) await uploadPhoto(file);
+            e.target.value = '';
+          }}
+        />
+        <button
+          type="button"
+          disabled={disabled || busy}
+          style={{ ...smallBtn, width: '100%' }}
+          onClick={() => photoInputRef.current?.click()}
+        >
+          {busy ? 'Uploading…' : 'Upload photo (JPEG, PNG, WebP)'}
+        </button>
+      </div>
+
+      <p style={{ margin: '0 0 6px', fontSize: '0.8125rem', color: '#a3a3a3' }}>ARASAAC library</p>
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
         <input
           style={{ ...fieldStyle, flex: 1 }}
           value={query}
           placeholder="Search symbols…"
+          disabled={disabled}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Enter') void search();
           }}
         />
-        <button type="button" onClick={() => void search()} disabled={busy} style={smallBtn}>
+        <button type="button" onClick={() => void search()} disabled={busy || disabled} style={smallBtn}>
           {busy ? '…' : 'Search'}
         </button>
       </div>
@@ -106,13 +159,14 @@ export function SymbolSearchPanel({
               key={hit.id}
               type="button"
               title={hit.keyword}
+              disabled={disabled}
               onClick={() => onSelect(hit.imageUrl)}
               style={{
                 border: '1px solid #404040',
                 borderRadius: 6,
                 background: '#0a0a0a',
                 padding: 4,
-                cursor: 'pointer',
+                cursor: disabled ? 'not-allowed' : 'pointer',
               }}
             >
               <img

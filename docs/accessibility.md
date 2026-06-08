@@ -30,7 +30,9 @@ Users can disable decorative imagery, reduce grid chrome, and enlarge symbol-onl
 
 - Configurable scan order: row-major, column-major, linear, custom groups
 - Adjustable scan interval (300 ms – 5 s)
-- Auditory scan highlight optional
+- Auditory scan highlight optional (screen reader live region)
+- Optional spoken scan voice for each focused cell
+- Scan pauses automatically while TTS or recorded speech plays (configurable)
 
 ### Eye Tracking
 
