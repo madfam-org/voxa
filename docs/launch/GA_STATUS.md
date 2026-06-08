@@ -34,7 +34,7 @@ curl -sS https://voxa-api-staging.madfam.io/health/ready
 - **ArgoCD apps:** `voxa-services` (branch `main`, `k8s/production/`), `voxa-staging-services` (branch `staging`, `k8s/staging/`).
 - **Domains & junctions:** web → `voxa-web`, API → `voxa-api` (Tulana pattern; tunnel routes via Cloudflare).
 - **Images:** GHCR digest-pinned; CI updates `kustomization.yaml` and deployment YAML.
-- **GHCR visibility:** Kyverno still **DENIED** anonymous pull on `ghcr.io/madfam-org/voxa/*` (2026-06-08 Argo `SyncError`). Restored temporary `k8s/*/signature-policyexception.yaml` until org admin confirms packages are public — see [GHCR_ORG_ADMIN.md](./GHCR_ORG_ADMIN.md).
+- **GHCR visibility:** Packages public; anonymous `ghcr.io/token` pull verified 2026-06-08. Kyverno `PolicyException` removed from `k8s/*` — cosign verification enforced via cluster policy.
 
 ### Data & auth
 
@@ -81,7 +81,7 @@ Full operator pass: `ENCLII_TOKEN='…' ./scripts/deploy/complete-ga-operator.sh
 | ~~**P0**~~ | Enclii webhook signature verified | **Done** (2026-06-08) |
 | **Launch** | Staging soak (7 days) | **In progress** 2026-06-08 → 2026-06-15 — [STAGING_SOAK.md](./STAGING_SOAK.md), [SOAK_LOG.md](./SOAK_LOG.md), `scripts/launch/soak-daily-check.sh` |
 | **Launch** | SLP accessibility sign-off | **Done** (owner-authorized, approved with notes — 2026-06-08) — [SLP_SIGNOFF.md](./SLP_SIGNOFF.md) |
-| ~~**P1**~~ | GHCR packages public; PolicyExceptions removed | **Pending** — GitHub API reports public; anonymous `ghcr.io` pull still **401** locally; PolicyException retained ([GHCR_ORG_ADMIN.md](./GHCR_ORG_ADMIN.md)) |
+| ~~**P1**~~ | GHCR packages public; PolicyExceptions removed | **Done** 2026-06-08 — anonymous pull + cosign policy ([GHCR_ORG_ADMIN.md](./GHCR_ORG_ADMIN.md)) |
 | **P2** | PgBouncer entries for `voxa` / `voxa_staging` | Platform RBAC; direct Postgres OK |
 | **P2** | `REDIS_URL` | Post-GA multi-replica WebSocket scaling |
 | **Quality** | `@axe-core/playwright` in CI | **Done** — `e2e/specs/a11y.spec.ts`, CI `a11y` job |

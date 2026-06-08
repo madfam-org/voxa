@@ -14,7 +14,7 @@
 | SLP accessibility sign-off | ✅ 2026-06-08 ([SLP_SIGNOFF.md](./SLP_SIGNOFF.md)) |
 | Commercial landing + visitor demo | ✅ 2026-06-08 |
 | Staging soak (7 consecutive green days) | **In progress** → 2026-06-15 ([SOAK_LOG.md](./SOAK_LOG.md)) |
-| GHCR public (remove Kyverno PolicyException) | ⏳ Org admin ([GHCR_ORG_ADMIN.md](./GHCR_ORG_ADMIN.md)) |
+| GHCR public (Kyverno PolicyException removed) | ✅ 2026-06-08 — anonymous pull verified ([GHCR_ORG_ADMIN.md](./GHCR_ORG_ADMIN.md)) |
 
 ## Pre-declaration verification (run on declaration day)
 

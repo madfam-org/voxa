@@ -58,7 +58,8 @@ Verify Argo apps `voxa-services` and `voxa-staging-services` stay **Synced / Hea
 ## Checklist
 
 - [x] Both packages public (verified 2026-06-08 via `ghcr-public.yml` workflow)
-- [x] PolicyException YAML removed
-- [x] Argo sync green on prod + staging (health verified 2026-06-08 post-push)
+- [x] Anonymous registry pull verified (`make-ghcr-packages-public.sh --check`)
+- [x] PolicyException YAML removed (2026-06-08)
+- [ ] Argo sync green on prod + staging after PolicyException removal
 
 See [GA_ROADMAP.md](./GA_ROADMAP.md) Phase 2 and [GA_CHECKLIST.md](./GA_CHECKLIST.md).

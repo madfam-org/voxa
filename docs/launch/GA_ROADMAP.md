@@ -58,7 +58,7 @@ gantt
 | Work item | Owner | Target | Notes |
 |-----------|-------|--------|-------|
 | GHCR packages public (`voxa-api`, `voxa-web`) | Org admin | ✅ 2026-06-08 | [GHCR_ORG_ADMIN.md](./GHCR_ORG_ADMIN.md) |
-| Remove `k8s/*/signature-policyexception.yaml` | Engineering | ⏳ After GHCR public verified | [GHCR_ORG_ADMIN.md](./GHCR_ORG_ADMIN.md) |
+| Remove `k8s/*/signature-policyexception.yaml` | Engineering | ✅ 2026-06-08 | [GHCR_ORG_ADMIN.md](./GHCR_ORG_ADMIN.md) |
 | PgBouncer entries for `voxa` / `voxa_staging` | Platform | Non-blocking | Direct Postgres OK today |
 | Cluster CPU headroom | Platform | Ongoing | Prevents `switchyard-api` Pending rollouts |
 

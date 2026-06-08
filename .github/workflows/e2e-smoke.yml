@@ -26,6 +26,9 @@ jobs:
         working-directory: e2e
       - name: Staging soak health
         run: ./scripts/launch/soak-daily-check.sh --log docs/launch/SOAK_LOG.md
+      - name: Soak window progress
+        continue-on-error: true
+        run: ./scripts/launch/verify-soak-window.sh --required 7 --start 2026-06-08
       - name: Staging soak scenarios
         run: ./scripts/launch/soak-scenarios.sh
       - name: Production GA gate
