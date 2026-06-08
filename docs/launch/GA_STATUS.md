@@ -145,9 +145,10 @@ Local `kubectl` and non-interactive SSH to `ssh.madfam.io` require **Cloudflare 
 
 ```bash
 JANUA_ADMIN_EMAIL='…' JANUA_ADMIN_PASSWORD='…' ./scripts/launch/bootstrap-authenticated-soak.sh
-# Confirm GitOps synced k8s/staging/voxa-web-deployment.yaml (secretKeyRef + restartedAt)
-curl -sS https://voxa-staging.madfam.io/api/health  # oidcClientSecretSet: true after next web deploy
-./scripts/launch/verify-staging-web-oidc.sh  # optional curl-based callback check
+# GitOps: k8s/*/voxa-web-deployment.yaml uses secretKeyRef + Stakater Reloader on voxa-secrets
+# Confirm Argo synced voxa-staging-services / voxa-services, then:
+./scripts/launch/verify-staging-web-oidc.sh
+curl -sS https://voxa-staging.madfam.io/api/health  # oidcClientSecretSet: true after web deploy
 ```
 
 Remove stray keys: `./scripts/launch/prune-staging-secret-key.sh TEST_PROBE` (break-glass SSH).
