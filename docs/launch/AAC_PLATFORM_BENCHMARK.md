@@ -246,7 +246,7 @@ Reference tooling: [willwade/AACProcessors](https://github.com/willwade/AACProce
 | Cloud backup | ✅ | ✅ | 🟡 iCloud | ✅ Postgres |
 | Remote editor role | ✅ | ✅ | 🟡 | 🟡 roles in API |
 | Real-time co-edit | 🟡 | 🟡 | ❌ | 🔴 WebSocket |
-| Usage analytics | ✅ | ✅ | 🟡 | 🔴 consent-gated |
+| Usage analytics | ✅ | ✅ | 🟡 | 🟡 consent-gated API + SLP Usage panel |
 | SSO / org auth | 🟡 enterprise | 🟡 | ❌ | ✅ Janua |
 | Billing / entitlements | ✅ devices | ✅ | ❌ | ✅ Dhanam |
 

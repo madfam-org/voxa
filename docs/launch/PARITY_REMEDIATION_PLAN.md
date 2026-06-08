@@ -177,7 +177,7 @@ Each epic links to [FEATURE_PARITY.md](./FEATURE_PARITY.md) rows and benchmark d
 | ID | Feature | Remediation | Implementation |
 |----|---------|-------------|----------------|
 | E1 | Usage / activation log | Append-only events; consent gate | API `POST /v1/events`, Postgres `activations`; `@voxa/core` event schema |
-| E2 | SLP reporting UI | Aggregate charts (no PII by default) | Web `/app/reports` institutional tier |
+| E2 | SLP reporting UI | Aggregate charts (no PII by default) | Web **Usage** panel in `/app` for editors (2026-06-08); `/app/reports` institutional tier later |
 | E3 | Remote SLP edit | Role `editor` vs `communicator`; audit log | Existing API roles; UX for “edit without device” |
 | E4 | Real-time co-edit | Multi-user board sync | `REDIS_URL` + WS fan-out ([GA_ROADMAP Phase 5](./GA_ROADMAP.md)); `packages/sync` |
 | E5 | Share vocabulary sets | Export board pack to org library | Org-scoped board templates API |
@@ -408,6 +408,7 @@ pnpm test && pnpm typecheck
 | 5 | Kickoff `@voxa/symbols` ARASAAC spike | C1 | Engineering ✅ 2026-06-08 |
 | 6 | EAS preview build on staging API | D1 | Mobile |
 | 7 | Usage event schema + API | E1 | Engineering ✅ 2026-06-08 |
+| 8 | SLP usage summary UI in `/app` | E2 | Engineering ✅ 2026-06-08 |
 
 ---
 

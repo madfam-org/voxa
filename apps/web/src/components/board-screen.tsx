@@ -28,6 +28,7 @@ import { logButtonActivation } from '@/lib/log-activation';
 import { PredictionStrip } from '@/components/prediction-strip';
 import { SymbolSearchPanel } from '@/components/symbol-search-panel';
 import { SettingsPanel } from '@/components/settings-panel';
+import { UsageReportPanel } from '@/components/usage-report-panel';
 
 const headerBtn: React.CSSProperties = {
   background: '#2563eb',
@@ -53,6 +54,7 @@ export function BoardScreen(): React.ReactNode {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [usageOpen, setUsageOpen] = useState(false);
 
   const [recentButtonIds, setRecentButtonIds] = useState<string[]>([]);
   const { settings, setSettings } = useCommunicatorSettings();
@@ -321,9 +323,29 @@ export function BoardScreen(): React.ReactNode {
           <option value="admin">Admin</option>
         </select>
 
-        <button type="button" onClick={() => setSettingsOpen((v) => !v)} style={secondaryBtn}>
+        <button
+          type="button"
+          onClick={() => {
+            setUsageOpen(false);
+            setSettingsOpen((v) => !v);
+          }}
+          style={secondaryBtn}
+        >
           Settings
         </button>
+
+        {isEditor && isAuthenticated ? (
+          <button
+            type="button"
+            onClick={() => {
+              setSettingsOpen(false);
+              setUsageOpen((v) => !v);
+            }}
+            style={secondaryBtn}
+          >
+            Usage
+          </button>
+        ) : null}
 
         <a href="/auth/signin?redirect_to=%2Fapp" style={{ ...secondaryBtn, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
           Sign in
@@ -455,6 +477,15 @@ export function BoardScreen(): React.ReactNode {
             showEditorPinSettings={role === 'admin'}
           />
         )}
+
+        {usageOpen && isEditor && isAuthenticated ? (
+          <UsageReportPanel
+            boardId={boardId}
+            accessToken={accessToken}
+            buttons={sorted}
+            onClose={() => setUsageOpen(false)}
+          />
+        ) : null}
 
         {isEditor && editingId && (
           <EditorPanel

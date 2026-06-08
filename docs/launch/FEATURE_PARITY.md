@@ -60,7 +60,7 @@ Actionable **feature parity match** against the AAC platform benchmark. Each row
 | Symbol library search (ARASAAC) | OpenAAC ⭐ | 🟡 | API + editor search (2026-06-08) |
 | Word forms / inflection | OpenAAC / Proloquo grammar | 🔴 | P1 |
 | Whisper / build utterance without speak | SFY | 🟡 | Message bar; no whisper mode |
-| Usage history / activation log | TD Snap, Grid | 🟡 | API `POST/GET /v1/events/activations*` + client log (2026-06-08); SLP UI P1 |
+| Usage history / activation log | TD Snap, Grid | 🟡 | API + client log (2026-06-08); SLP **Usage** panel in `/app` for editors (2026-06-08) |
 | Real-time team co-edit | TD Snap, Grid | 🔴 | WebSocket + REDIS_URL phase |
 | Remote SLP edit without device handoff | Cloud AAC | 🟡 | Roles in API; UX P1 |
 | iOS + Android store apps | All Tier A | 🔴 | [MOBILE_GA.md](./MOBILE_GA.md) M4 |
