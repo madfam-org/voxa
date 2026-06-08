@@ -75,7 +75,7 @@ export function SiteFooter(): React.ReactNode {
       style={{
         padding: '32px 24px 48px',
         borderTop: '1px solid #262626',
-        color: '#737373',
+        color: '#a3a3a3',
         fontSize: '0.875rem',
         display: 'flex',
         flexWrap: 'wrap',

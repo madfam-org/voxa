@@ -27,6 +27,8 @@ jobs:
         run: ./scripts/launch/soak-daily-check.sh --log docs/launch/SOAK_LOG.md
       - name: Staging soak scenarios
         run: ./scripts/launch/soak-scenarios.sh
+      - name: Production GA gate
+        run: ./scripts/launch/verify-prod-ga.sh
       - name: Authenticated staging soak
         id: auth_soak
         env:
