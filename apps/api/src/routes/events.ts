@@ -26,10 +26,10 @@ eventRoutes.post('/activations', async (c) => {
     return c.json({ error: 'boardId and buttonId are required' }, 400);
   }
 
-  const { userId, role } = c.get('team');
+  const { userId, role, orgId } = c.get('team');
   const board = await getStore().getBoard(body.boardId);
   if (!board) return c.json({ error: 'Board not found' }, 404);
-  if (!canAccessBoard(body.boardId, board.ownerUserId, userId, role)) {
+  if (!canAccessBoard(body.boardId, board.ownerUserId, userId, role, board.orgId, orgId)) {
     return c.json({ error: 'Forbidden' }, 403);
   }
 
@@ -55,10 +55,10 @@ eventRoutes.get('/activations/summary', async (c) => {
     return c.json({ error: 'boardId query parameter required' }, 400);
   }
 
-  const { userId, role } = c.get('team');
+  const { userId, role, orgId } = c.get('team');
   const board = await getStore().getBoard(boardId);
   if (!board) return c.json({ error: 'Board not found' }, 404);
-  if (!canAccessBoard(boardId, board.ownerUserId, userId, role)) {
+  if (!canAccessBoard(boardId, board.ownerUserId, userId, role, board.orgId, orgId)) {
     return c.json({ error: 'Forbidden' }, 403);
   }
 

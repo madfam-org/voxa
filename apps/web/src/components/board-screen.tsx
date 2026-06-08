@@ -36,6 +36,7 @@ import { UsageReportPanel } from '@/components/usage-report-panel';
 import { GridSettingsPanel } from '@/components/grid-settings-panel';
 import { RecordedMediaPanel } from '@/components/recorded-media-panel';
 import { WordFormsPanel } from '@/components/word-forms-panel';
+import { BoardAuditPanel } from '@/components/board-audit-panel';
 import { DraggableButtonShell, EditorGridCell } from '@/components/editor-grid-cell';
 
 const headerBtn: React.CSSProperties = {
@@ -56,13 +57,19 @@ const secondaryBtn: React.CSSProperties = {
   border: '1px solid #404040',
 };
 
-export function BoardScreen(): React.ReactNode {
-  const [role, setRole] = useState<TeamRole>('communicator');
+export interface BoardScreenProps {
+  mode?: 'communicator' | 'remote-editor';
+}
+
+export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.ReactNode {
+  const remoteEditor = mode === 'remote-editor';
+  const [role, setRole] = useState<TeamRole>(remoteEditor ? 'editor' : 'communicator');
   const [utterance, setUtterance] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [usageOpen, setUsageOpen] = useState(false);
+  const [auditOpen, setAuditOpen] = useState(false);
   const [gridOpen, setGridOpen] = useState(false);
   const [babbleActive, setBabbleActive] = useState(false);
   const [speechActive, setSpeechActive] = useState(false);
@@ -96,11 +103,20 @@ export function BoardScreen(): React.ReactNode {
     isAuthenticated,
     accessToken,
     sessionUserId,
+    sessionTeamRole,
   } = useSyncedBoard(role);
+
+  const trustedEditorSession =
+    isAuthenticated && (sessionTeamRole === 'editor' || sessionTeamRole === 'admin');
 
   const displaySettings = effectiveDisplaySettings(settings, board.display);
 
   useEffect(() => subscribeSpeechActivity(setSpeechActive), []);
+
+  useEffect(() => {
+    if (!remoteEditor || !isAuthenticated) return;
+    setRole(sessionTeamRole === 'admin' ? 'admin' : sessionTeamRole === 'editor' ? 'editor' : 'communicator');
+  }, [remoteEditor, isAuthenticated, sessionTeamRole]);
 
   useEffect(() => {
     setBabbleActive(false);
@@ -339,7 +355,8 @@ export function BoardScreen(): React.ReactNode {
       }
       setBabbleActive(false);
 
-      if (!editorPinIsConfigured() || isEditorUnlocked()) {
+      const skipPin = remoteEditor || trustedEditorSession;
+      if (skipPin || !editorPinIsConfigured() || isEditorUnlocked()) {
         setRole(nextRole);
         return;
       }
@@ -354,7 +371,7 @@ export function BoardScreen(): React.ReactNode {
         window.alert('Incorrect PIN. Editor mode stays locked.');
       }
     },
-    [],
+    [remoteEditor, trustedEditorSession],
   );
 
   const handleSave = useCallback(async () => {
@@ -580,6 +597,35 @@ export function BoardScreen(): React.ReactNode {
       {obzInput}
       <div ref={liveRef} aria-live="polite" aria-atomic="true" style={visuallyHidden} />
 
+      {remoteEditor ? (
+        <div
+          style={{
+            padding: '10px 16px',
+            background: '#172554',
+            color: '#dbeafe',
+            borderBottom: '1px solid #1d4ed8',
+            fontSize: '0.875rem',
+            lineHeight: 1.5,
+          }}
+        >
+          {trustedEditorSession ? (
+            <>
+              <strong>Remote SLP editor</strong> — edit vocabulary without the communicator device. Changes
+              sync to the cloud; the communicator app picks them up automatically.
+            </>
+          ) : isAuthenticated ? (
+            <>Your signed-in account does not have SLP editor permissions. Contact your organization admin.</>
+          ) : (
+            <>
+              Sign in with your clinician account to edit boards remotely.{' '}
+              <a href="/auth/signin?redirect_to=%2Fapp%2Fedit" style={{ color: '#93c5fd' }}>
+                Sign in
+              </a>
+            </>
+          )}
+        </div>
+      ) : null}
+
       <header
         style={{
           padding: '12px 16px',
@@ -648,11 +694,16 @@ export function BoardScreen(): React.ReactNode {
           onChange={(e) => handleRoleChange(e.target.value as TeamRole)}
           style={selectStyle}
           aria-label="Team role"
+          disabled={remoteEditor}
         >
           <option value="communicator">Communicator</option>
           <option value="editor">Editor (SLP)</option>
           <option value="admin">Admin</option>
         </select>
+
+        {remoteEditor ? (
+          <span style={{ fontSize: '0.75rem', opacity: 0.85 }}>Role from your account</span>
+        ) : null}
 
         {!isEditor ? (
           <button
@@ -681,21 +732,40 @@ export function BoardScreen(): React.ReactNode {
         </button>
 
         {isEditor && isAuthenticated ? (
-          <button
-            type="button"
-            onClick={() => {
-              setSettingsOpen(false);
-              setUsageOpen((v) => !v);
-            }}
-            style={secondaryBtn}
-          >
-            Usage
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={() => {
+                setSettingsOpen(false);
+                setAuditOpen((v) => !v);
+                setUsageOpen(false);
+              }}
+              style={secondaryBtn}
+            >
+              Audit
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setSettingsOpen(false);
+                setUsageOpen((v) => !v);
+                setAuditOpen(false);
+              }}
+              style={secondaryBtn}
+            >
+              Usage
+            </button>
+          </>
         ) : null}
 
-        <a href="/auth/signin?redirect_to=%2Fapp" style={{ ...secondaryBtn, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
-          Sign in
-        </a>
+        {!isAuthenticated ? (
+          <a
+            href={remoteEditor ? '/auth/signin?redirect_to=%2Fapp%2Fedit' : '/auth/signin?redirect_to=%2Fapp'}
+            style={{ ...secondaryBtn, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}
+          >
+            Sign in
+          </a>
+        ) : null}
 
         {isAuthenticated && (
           <a href="/auth/signout" style={{ ...secondaryBtn, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
@@ -841,6 +911,14 @@ export function BoardScreen(): React.ReactNode {
             accessToken={accessToken}
             buttons={sorted}
             onClose={() => setUsageOpen(false)}
+          />
+        ) : null}
+
+        {auditOpen && isEditor && isAuthenticated ? (
+          <BoardAuditPanel
+            boardId={boardId}
+            accessToken={accessToken}
+            onClose={() => setAuditOpen(false)}
           />
         ) : null}
 

@@ -1,4 +1,5 @@
 import type { TeamRole } from '@voxa/core';
+import { mapTeamRoleFromClaims } from '@voxa/core';
 import { createRemoteJWKSet, jwtVerify, type JWTPayload } from 'jose';
 
 const ISSUER = process.env.JANUA_ISSUER_URL || 'https://auth.madfam.io';
@@ -27,16 +28,7 @@ export interface JanuaClaims extends JWTPayload {
 }
 
 export function mapJanuaRole(claims: JanuaClaims | Record<string, unknown>): TeamRole {
-  const roles = claims.roles;
-  if (Array.isArray(roles)) {
-    if (roles.includes('admin')) return 'admin';
-    if (roles.includes('editor') || roles.includes('slp')) return 'editor';
-  }
-
-  const role = String(claims.role ?? claims.voxa_role ?? '').toLowerCase();
-  if (role === 'admin') return 'admin';
-  if (role === 'editor' || role === 'slp') return 'editor';
-  return 'communicator';
+  return mapTeamRoleFromClaims(claims as Record<string, unknown>);
 }
 
 export async function verifyAccessToken(token: string): Promise<JanuaClaims> {

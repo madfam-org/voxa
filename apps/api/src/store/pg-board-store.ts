@@ -152,10 +152,10 @@ export function createPgBoardStore(databaseUrl: string): BoardStore {
       return exportBoardObz(map, boardId);
     },
 
-    async deleteBoard(boardId: string, actorUserId: string, role: TeamRole) {
+    async deleteBoard(boardId: string, actorUserId: string, role: TeamRole, actorOrgId?: string) {
       const board = await this.getBoard(boardId);
       if (!board) throw new Error(`Board not found: ${boardId}`);
-      if (!canEditBoard(boardId, board.ownerUserId, actorUserId, role)) {
+      if (!canEditBoard(boardId, board.ownerUserId, actorUserId, role, board.orgId, actorOrgId)) {
         const err = new Error('Forbidden');
         (err as Error & { status: number }).status = 403;
         throw err;

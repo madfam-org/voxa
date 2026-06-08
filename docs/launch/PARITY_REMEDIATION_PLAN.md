@@ -178,7 +178,7 @@ Each epic links to [FEATURE_PARITY.md](./FEATURE_PARITY.md) rows and benchmark d
 |----|---------|-------------|----------------|
 | E1 | Usage / activation log | Append-only events; consent gate | API `POST /v1/events`, Postgres `activations`; `@voxa/core` event schema |
 | E2 | SLP reporting UI | Aggregate charts (no PII by default) | Web **Usage** panel in `/app` for editors (2026-06-08); `/app/reports` institutional tier later |
-| E3 | Remote SLP edit | Role `editor` vs `communicator`; audit log | Existing API roles; UX for “edit without device” |
+| E3 | Remote SLP edit | Role `editor` vs `communicator`; audit log | `/app/edit`, org-scoped access, audit API + panel ✅ 2026-06-09 |
 | E4 | Real-time co-edit | Multi-user board sync | `REDIS_URL` + WS fan-out ([GA_ROADMAP Phase 5](./GA_ROADMAP.md)); `packages/sync` |
 | E5 | Share vocabulary sets | Export board pack to org library | Org-scoped board templates API |
 
@@ -423,6 +423,7 @@ pnpm test && pnpm typecheck
 | 20 | Custom photo symbol upload (C2) | C | Engineering ✅ 2026-06-09 |
 | 21 | Switch scan voice + pause while speaking (A1) | A | Engineering ✅ 2026-06-09 |
 | 22 | Touch-release activation setting (A2) | A | Engineering ✅ 2026-06-09 |
+| 23 | Remote SLP editor + audit log (E3) | E | Engineering ✅ 2026-06-09 |
 
 ---
 

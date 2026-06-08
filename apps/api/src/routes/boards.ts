@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import type { Board } from '@voxa/core';
+import { createBoardId, type Board } from '@voxa/core';
 import { canAccessBoard, canEditBoard } from '../lib/board-access.js';
 import { maxBoardCount, resolveEntitlement } from '../lib/dhanam.js';
 import { requireEditor } from '../middleware/team-auth.js';
@@ -9,18 +9,44 @@ import { broadcastBoardEvent } from '../ws/hub.js';
 export const boardRoutes = new Hono();
 
 boardRoutes.get('/', async (c) => {
-  const { userId, role } = c.get('team');
+  const { userId, role, orgId } = c.get('team');
   const all = await getStore().listBoards();
-  const boards = all.filter((board) => canAccessBoard(board.id, board.ownerUserId, userId, role));
+  const boards = all.filter((board) =>
+    canAccessBoard(board.id as string, board.ownerUserId, userId, role, board.orgId, orgId),
+  );
   return c.json({ boards });
+});
+
+boardRoutes.get('/:boardId/audit', async (c) => {
+  if (!requireEditor(c)) {
+    return c.json({ error: 'Editor role required' }, 403);
+  }
+
+  const boardId = c.req.param('boardId');
+  const { userId, role, orgId } = c.get('team');
+  const board = await getStore().getBoard(boardId);
+  if (!board) return c.json({ error: 'Board not found' }, 404);
+  if (!canAccessBoard(boardId, board.ownerUserId, userId, role, board.orgId, orgId)) {
+    return c.json({ error: 'Forbidden' }, 403);
+  }
+
+  const since = Number(c.req.query('since') ?? 0);
+  const limit = Math.min(Math.max(Number(c.req.query('limit') ?? 50) || 50, 1), 200);
+  const events = await getStore().getRecentEvents(createBoardId(boardId), since);
+  const audit = events
+    .filter((event) => event.type === 'board.updated' || event.type === 'board.created')
+    .slice(-limit)
+    .reverse();
+
+  return c.json({ events: audit });
 });
 
 boardRoutes.get('/:boardId', async (c) => {
   const boardId = c.req.param('boardId');
-  const { userId, role } = c.get('team');
+  const { userId, role, orgId } = c.get('team');
   const board = await getStore().getBoard(boardId);
   if (!board) return c.json({ error: 'Board not found' }, 404);
-  if (!canAccessBoard(boardId, board.ownerUserId, userId, role)) {
+  if (!canAccessBoard(boardId, board.ownerUserId, userId, role, board.orgId, orgId)) {
     return c.json({ error: 'Forbidden' }, 403);
   }
   return c.json(board);
@@ -64,11 +90,11 @@ boardRoutes.put('/:boardId', async (c) => {
 
   const boardId = c.req.param('boardId');
   const body = (await c.req.json()) as Board & { expectedVersion?: number; forceMotorPlanning?: boolean };
-  const { userId, role } = c.get('team');
+  const { userId, role, orgId } = c.get('team');
 
   const current = await getStore().getBoard(boardId);
   if (!current) return c.json({ error: 'Board not found' }, 404);
-  if (!canEditBoard(boardId, current.ownerUserId, userId, role)) {
+  if (!canEditBoard(boardId, current.ownerUserId, userId, role, current.orgId, orgId)) {
     return c.json({ error: 'Forbidden' }, 403);
   }
 
@@ -97,10 +123,16 @@ boardRoutes.delete('/:boardId', async (c) => {
   }
 
   const boardId = c.req.param('boardId');
-  const { userId, role } = c.get('team');
+  const { userId, role, orgId } = c.get('team');
+
+  const current = await getStore().getBoard(boardId);
+  if (!current) return c.json({ error: 'Board not found' }, 404);
+  if (!canEditBoard(boardId, current.ownerUserId, userId, role, current.orgId, orgId)) {
+    return c.json({ error: 'Forbidden' }, 403);
+  }
 
   try {
-    await getStore().deleteBoard(boardId, userId, role);
+    await getStore().deleteBoard(boardId, userId, role, orgId);
     return c.body(null, 204);
   } catch (err) {
     const error = err as Error & { status?: number };
@@ -116,11 +148,11 @@ boardRoutes.post('/:boardId/import/obf', async (c) => {
 
   const boardId = c.req.param('boardId');
   const raw = await c.req.text();
-  const { userId, role } = c.get('team');
+  const { userId, role, orgId } = c.get('team');
 
   const current = await getStore().getBoard(boardId);
   if (!current) return c.json({ error: 'Board not found' }, 404);
-  if (!canEditBoard(boardId, current.ownerUserId, userId, role)) {
+  if (!canEditBoard(boardId, current.ownerUserId, userId, role, current.orgId, orgId)) {
     return c.json({ error: 'Forbidden' }, 403);
   }
 
@@ -144,11 +176,11 @@ boardRoutes.post('/:boardId/import/obz', async (c) => {
 
   const boardId = c.req.param('boardId');
   const archive = new Uint8Array(await c.req.arrayBuffer());
-  const { userId, role } = c.get('team');
+  const { userId, role, orgId } = c.get('team');
 
   const current = await getStore().getBoard(boardId);
   if (!current) return c.json({ error: 'Board not found' }, 404);
-  if (!canEditBoard(boardId, current.ownerUserId, userId, role)) {
+  if (!canEditBoard(boardId, current.ownerUserId, userId, role, current.orgId, orgId)) {
     return c.json({ error: 'Forbidden' }, 403);
   }
 
@@ -167,11 +199,11 @@ boardRoutes.post('/:boardId/import/obz', async (c) => {
 
 boardRoutes.get('/:boardId/export/obz', async (c) => {
   const boardId = c.req.param('boardId');
-  const { userId, role } = c.get('team');
+  const { userId, role, orgId } = c.get('team');
 
   const board = await getStore().getBoard(boardId);
   if (!board) return c.json({ error: 'Board not found' }, 404);
-  if (!canAccessBoard(boardId, board.ownerUserId, userId, role)) {
+  if (!canAccessBoard(boardId, board.ownerUserId, userId, role, board.orgId, orgId)) {
     return c.json({ error: 'Forbidden' }, 403);
   }
 
@@ -190,11 +222,11 @@ boardRoutes.get('/:boardId/export/obz', async (c) => {
 
 boardRoutes.get('/:boardId/export/obf', async (c) => {
   const boardId = c.req.param('boardId');
-  const { userId, role } = c.get('team');
+  const { userId, role, orgId } = c.get('team');
 
   const board = await getStore().getBoard(boardId);
   if (!board) return c.json({ error: 'Board not found' }, 404);
-  if (!canAccessBoard(boardId, board.ownerUserId, userId, role)) {
+  if (!canAccessBoard(boardId, board.ownerUserId, userId, role, board.orgId, orgId)) {
     return c.json({ error: 'Forbidden' }, 403);
   }
 

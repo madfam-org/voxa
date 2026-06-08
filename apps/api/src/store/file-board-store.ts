@@ -100,10 +100,10 @@ export function createFileBoardStore(initialState?: StoreState): BoardStore {
       return exportBoardObz(state.boards, boardId);
     },
 
-    async deleteBoard(boardId: string, actorUserId: string, role: TeamRole) {
+    async deleteBoard(boardId: string, actorUserId: string, role: TeamRole, actorOrgId?: string) {
       const board = state.boards[boardId];
       if (!board) throw new Error(`Board not found: ${boardId}`);
-      if (!canEditBoard(boardId, board.ownerUserId, actorUserId, role)) {
+      if (!canEditBoard(boardId, board.ownerUserId, actorUserId, role, board.orgId, actorOrgId)) {
         const err = new Error('Forbidden');
         (err as Error & { status: number }).status = 403;
         throw err;

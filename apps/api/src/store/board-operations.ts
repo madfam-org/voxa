@@ -114,6 +114,7 @@ export function applyImportObfBoard(
     expectedVersion: current.version,
     forceMotorPlanning: true,
   });
+  result.event.payload = { action: 'import.obf' };
 
   return { ...result, warnings };
 }
@@ -146,6 +147,7 @@ export function applyImportObzBoard(
     expectedVersion: current.version,
     forceMotorPlanning: true,
   });
+  result.event.payload = { action: 'import.obz' };
 
   return { ...result, warnings: unpacked.warnings };
 }

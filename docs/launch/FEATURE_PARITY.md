@@ -64,7 +64,7 @@ Actionable **feature parity match** against the AAC platform benchmark. Each row
 | Whisper / build utterance without speak | SFY | 🟡 | **Whisper mode** in settings (2026-06-08) |
 | Usage history / activation log | TD Snap, Grid | 🟡 | API + client log (2026-06-08); SLP **Usage** panel in `/app` for editors (2026-06-08) |
 | Real-time team co-edit | TD Snap, Grid | 🔴 | WebSocket + REDIS_URL phase |
-| Remote SLP edit without device handoff | Cloud AAC | 🟡 | Roles in API; UX P1 |
+| Remote SLP edit without device handoff | Cloud AAC | 🟡 | `/app/edit` remote editor + audit log (2026-06-09) |
 | iOS + Android store apps | All Tier A | 🟡 | EAS preview CI + recorded-speech playback in mobile scaffold (2026-06-08); store submit M4 |
 | Hardware switch (Bluetooth/USB) | Grid, TD Snap | 🔴 | P1 mobile + web |
 | Keyguard / touch guard support | Clinical | 🔴 | P2 |

@@ -122,4 +122,30 @@ describe('board routes', () => {
     });
     assert.equal(demoDelete.status, 400);
   });
+
+  it('returns edit audit log for editors', async () => {
+    const getRes = await app.request(`/v1/boards/${DEMO_BOARD_ID}`);
+    const board = (await getRes.json()) as { name: string; version: number };
+
+    await app.request(`/v1/boards/${DEMO_BOARD_ID}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Voxa-Role': 'editor',
+        'X-Voxa-User-Id': 'slp-remote',
+      },
+      body: JSON.stringify({ ...board, name: 'Audit test board', expectedVersion: board.version }),
+    });
+
+    const audit = await app.request(`/v1/boards/${DEMO_BOARD_ID}/audit`, {
+      headers: {
+        'X-Voxa-Role': 'editor',
+        'X-Voxa-User-Id': 'slp-remote',
+      },
+    });
+    assert.equal(audit.status, 200);
+    const body = (await audit.json()) as { events: Array<{ actorUserId: string }> };
+    assert.ok(body.events.length >= 1);
+    assert.equal(body.events[0]?.actorUserId, 'slp-remote');
+  });
 });

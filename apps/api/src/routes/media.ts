@@ -33,10 +33,10 @@ mediaRoutes.post('/', async (c) => {
     return c.json({ error: `Unsupported media type: ${mimeType}` }, 415);
   }
 
-  const { userId, role } = c.get('team');
+  const { userId, role, orgId } = c.get('team');
   const board = await getStore().getBoard(boardId);
   if (!board) return c.json({ error: 'Board not found' }, 404);
-  if (!canEditBoard(boardId, board.ownerUserId, userId, role)) {
+  if (!canEditBoard(boardId, board.ownerUserId, userId, role, board.orgId, orgId)) {
     return c.json({ error: 'Forbidden' }, 403);
   }
 
@@ -68,10 +68,10 @@ mediaRoutes.get('/:id', async (c) => {
   const asset = await getMediaAsset(process.env.DATABASE_URL, id);
   if (!asset) return c.json({ error: 'Not found' }, 404);
 
-  const { userId, role } = c.get('team');
+  const { userId, role, orgId } = c.get('team');
   const board = await getStore().getBoard(asset.boardId);
   if (!board) return c.json({ error: 'Board not found' }, 404);
-  if (!canAccessBoard(asset.boardId, board.ownerUserId, userId, role)) {
+  if (!canAccessBoard(asset.boardId, board.ownerUserId, userId, role, board.orgId, orgId)) {
     return c.json({ error: 'Forbidden' }, 403);
   }
 

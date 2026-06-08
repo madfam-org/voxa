@@ -90,6 +90,7 @@ export function useSyncedBoard(role: TeamRole) {
 
   const [accessToken, setAccessToken] = useState<string | undefined>();
   const [sessionUserId, setSessionUserId] = useState<string>('web-user');
+  const [sessionTeamRole, setSessionTeamRole] = useState<TeamRole>('communicator');
 
   useEffect(() => {
     let cancelled = false;
@@ -100,10 +101,12 @@ export function useSyncedBoard(role: TeamRole) {
         const body = (await res.json()) as {
           accessToken?: string;
           user?: { id?: string };
+          teamRole?: TeamRole;
         };
         if (cancelled) return;
         if (body.accessToken) setAccessToken(body.accessToken);
         if (body.user?.id) setSessionUserId(body.user.id);
+        if (body.teamRole) setSessionTeamRole(body.teamRole);
       } catch {
         /* unauthenticated or OIDC not configured */
       }
@@ -405,5 +408,6 @@ export function useSyncedBoard(role: TeamRole) {
     isAuthenticated: Boolean(accessToken),
     accessToken,
     sessionUserId,
+    sessionTeamRole,
   };
 }
