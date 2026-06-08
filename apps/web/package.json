@@ -8,12 +8,13 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "node --import tsx --test src/app/api/health/route.test.ts src/components/consent-banner.test.ts src/lib/editor-pin.test.ts src/lib/pending-board-save.test.ts src/lib/pwa-install.test.ts"
+    "test": "node --import tsx --test src/app/api/health/route.test.ts src/components/consent-banner.test.ts src/lib/editor-pin.test.ts src/lib/local-obf-export.test.ts src/lib/pending-board-save.test.ts src/lib/pwa-install.test.ts"
   },
   "dependencies": {
     "@voxa/access": "workspace:*",
     "@voxa/ai": "workspace:*",
     "@voxa/core": "workspace:*",
+    "@voxa/obf": "workspace:*",
     "@voxa/sync": "workspace:*",
     "@voxa/symbols": "workspace:*",
     "@voxa/ui": "workspace:*",

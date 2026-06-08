@@ -20,3 +20,8 @@ export async function enterEditorMode(page: Page): Promise<void> {
   await page.getByLabel('Team role').selectOption('editor');
   await page.getByRole('button', { name: 'New board' }).waitFor();
 }
+
+export async function enterCommunicatorMode(page: Page): Promise<void> {
+  await page.getByLabel('Team role').selectOption('communicator');
+  await page.getByRole('button', { name: 'Babble' }).waitFor();
+}

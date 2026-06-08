@@ -39,7 +39,7 @@ Actionable **feature parity match** against the AAC platform benchmark. Each row
 | Board-to-board navigation (OBF `load_board_id`) | OpenAAC / Cboard | 🟡 | Import/export + editor link + activate navigate (2026-06-08) |
 | SLP editor mode | OpenAAC 🟢 | 🟡 | EditorPanel + PIN lock (2026-06-08); full vocab tools P1 |
 | Cloud board persistence | OpenAAC 💡 | ✅ | PostgreSQL + sync client |
-| Offline cache + retry | OpenAAC 💡 | 🟡 | IndexedDB queue + sync banner + offline-sync e2e (2026-06-09) |
+| Offline cache + retry | OpenAAC 💡 | 🟡 | IndexedDB queue + local OBF export + offline e2e (2026-06-09) |
 | Legal / privacy / a11y pages | Commercial GA | ✅ | `/legal/*` |
 | Automated a11y CI | WCAG regression | ✅ | axe on `/`, `/demo`, legal, sign-in; `/app` when Janua creds in CI |
 | Staging soak + SLP sign-off | Clinical gate | ✅ | Automated soak in CI; SLP 2026-06-08 ([SLP_SIGNOFF.md](./SLP_SIGNOFF.md)) |

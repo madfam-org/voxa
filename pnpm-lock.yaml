@@ -154,6 +154,9 @@ importers:
       '@voxa/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@voxa/obf':
+        specifier: workspace:*
+        version: link:../../packages/obf
       '@voxa/symbols':
         specifier: workspace:*
         version: link:../../packages/symbols

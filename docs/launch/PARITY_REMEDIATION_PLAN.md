@@ -88,13 +88,13 @@ Each epic links to [FEATURE_PARITY.md](./FEATURE_PARITY.md) rows and benchmark d
 | A1 | Switch scanning | 🟡 web only | Voice cue + pause on speak; USB switch keys (Space/Tab/F13) ✅ 2026-06-09 |
 | A2 | Eye dwell | 🟡 pointer sim | Configurable dwell; touch-release vs touch-start; snap-to-cell | `@voxa/access` `EyeTrackingConfig`, touch activation setting ✅ 2026-06-09 (partial) |
 | A3 | SLP editor | 🟡 basic | Editor PIN lock; grid resize validation; slot lock enforcement in UI | `board-screen.tsx` `EditorPanel`, `@voxa/core` `locked` |
-| A4 | Offline cache | 🟡 IndexedDB pending | Sync status banner + 409 conflict refetch (2026-06-09) |
+| A4 | Offline cache | 🟡 IndexedDB pending | Sync banner + local OBF export fallback + offline e2e (2026-06-09) |
 | A5 | A11y CI scope | ✅ legal/home | Extend axe to `/app`, `/demo`, editor, settings | `e2e/specs/a11y.spec.ts` |
 | A6 | Soak / clinical | ✅ SLP 2026-06-08 | Extend SLP sign-off template for mobile when M4 ready | [SLP_SIGNOFF.md](./SLP_SIGNOFF.md) |
 
 **Acceptance (W1):**
 
-- [ ] User can complete board edit → speak → OBF export offline-then-online without data loss
+- [x] User can complete board edit → speak → OBF export offline-then-online without data loss (2026-06-09)
 - [x] Editor changes respect `locked` buttons (communicator cannot drag locked cells) (2026-06-09)
 - [x] axe CI covers communicator, demo, settings dialog, and editor mode (2026-06-09)
 - [x] Switch scan e2e on staging passes with auditory prompt toggle (2026-06-09)
@@ -434,6 +434,7 @@ pnpm test && pnpm typecheck
 | 31 | Soak progress CI + mobile switch scan mode (W0/A1) | W0/A | Engineering ✅ 2026-06-09 |
 | 32 | Axe on /app settings + editor; switch scan staging e2e (A5/A1) | A | Engineering ✅ 2026-06-09 |
 | 33 | Offline save queue tests + locked-slot drag guard e2e (A4/A3) | A | Engineering ✅ 2026-06-09 |
+| 34 | Offline OBF export fallback + edit/speak/sync e2e (A4/W1) | A | Engineering ✅ 2026-06-09 |
 
 ---
 

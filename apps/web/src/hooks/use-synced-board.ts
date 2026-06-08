@@ -13,6 +13,7 @@ import {
   type TeamRole,
 } from '@voxa/core';
 import { createVoxaClient, isVersionConflictError } from '@voxa/sync';
+import { exportBoardObfJson } from '@/lib/local-obf-export';
 import { BOARD_CACHE_KEY, SELECTED_BOARD_KEY } from '@/lib/communicator-settings';
 import { registerBackgroundSync } from '@/lib/offline-idb';
 import {
@@ -334,7 +335,11 @@ export function useSyncedBoard(role: TeamRole) {
   );
 
   const exportObf = useCallback(async () => {
-    return client.exportObf(boardId);
+    try {
+      return await client.exportObf(boardId);
+    } catch {
+      return exportBoardObfJson(boardRef.current);
+    }
   }, [boardId, client]);
 
   const importObz = useCallback(
