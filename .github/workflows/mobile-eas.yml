@@ -9,6 +9,8 @@ on:
       - 'packages/core/**'
       - 'packages/sync/**'
       - 'packages/vocabulary/**'
+      - 'packages/access/**'
+      - 'scripts/mobile/**'
       - '.github/workflows/mobile-eas.yml'
 
 concurrency:
@@ -36,6 +38,9 @@ jobs:
       - name: Verify EAS configuration
         run: ./scripts/mobile/verify-eas-config.sh
 
+      - name: TestFlight readiness summary
+        run: ./scripts/mobile/verify-testflight-readiness.sh || true
+
       - name: Typecheck mobile app
         run: pnpm --filter @voxa/mobile typecheck
 
@@ -61,6 +66,12 @@ jobs:
       - name: EAS preview build (staging API)
         if: secrets.EXPO_TOKEN != ''
         working-directory: apps/mobile
-        run: eas build --profile preview --platform all --non-interactive
+        run: |
+          args=(build --profile preview --platform all --non-interactive)
+          if [[ "${{ vars.EAS_AUTO_SUBMIT }}" == 'true' ]]; then
+            REQUIRE_SUBMIT=1 "${GITHUB_WORKSPACE}/scripts/mobile/verify-testflight-readiness.sh"
+            args+=(--auto-submit)
+          fi
+          eas "${args[@]}"
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}

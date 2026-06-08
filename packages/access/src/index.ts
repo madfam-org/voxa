@@ -100,7 +100,10 @@ export function snapHitBox(
 
 export {
   classifySwitchKey,
+  classifySwitchNativeKey,
   SWITCH_ADVANCE_KEY_CODES,
+  SWITCH_ADVANCE_NATIVE_KEYS,
   SWITCH_SELECT_KEY_CODES,
+  SWITCH_SELECT_NATIVE_KEYS,
   type SwitchKeyAction,
 } from './switch-input.js';

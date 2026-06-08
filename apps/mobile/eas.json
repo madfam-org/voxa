@@ -17,6 +17,9 @@
         "EXPO_PUBLIC_API_URL": "https://voxa-api-staging.madfam.io",
         "EXPO_PUBLIC_OIDC_ISSUER": "https://auth.madfam.io",
         "EXPO_PUBLIC_OIDC_CLIENT_ID": "voxa"
+      },
+      "ios": {
+        "simulator": false
       }
     },
     "production": {
@@ -29,6 +32,17 @@
     }
   },
   "submit": {
+    "preview": {
+      "ios": {
+        "appleId": "REPLACE_WITH_APPLE_ID",
+        "ascAppId": "REPLACE_WITH_ASC_APP_ID",
+        "appleTeamId": "REPLACE_WITH_TEAM_ID"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./secrets/google-play-service-account.json",
+        "track": "internal"
+      }
+    },
     "production": {
       "ios": {
         "appleId": "REPLACE_WITH_APPLE_ID",

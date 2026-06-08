@@ -65,7 +65,7 @@ Actionable **feature parity match** against the AAC platform benchmark. Each row
 | Usage history / activation log | TD Snap, Grid | 🟡 | API + SLP Usage panel + staging e2e (2026-06-09) |
 | Real-time team co-edit | TD Snap, Grid | 🟡 | Redis pub/sub + WS auth + peer refetch; apply `REDIS_URL` in prod (2026-06-09) |
 | Remote SLP edit without device handoff | Cloud AAC | 🟡 | `/app/edit` + audit log + clinical e2e (2026-06-09) |
-| iOS + Android store apps | All Tier A | 🟡 | EAS CI guard + settings tests; `eas init` + TestFlight pending (2026-06-09) |
+| iOS + Android store apps | All Tier A | 🟡 | EAS bootstrap + submit CI; `eas init` + TestFlight pending (2026-06-09) |
 | Cross-platform single account | Fragmented | 🟡 | Web + mobile share Janua token + board list (2026-06-09) |
 | PWA install (home screen) | Cboard, web AAC | 🟡 | `manifest.webmanifest` + install banner on landing (2026-06-09) |
 | Hardware switch (Bluetooth/USB) | Grid, TD Snap | 🟡 | Web USB key map via `@voxa/access`; native BT adapter P2 |

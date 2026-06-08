@@ -85,7 +85,7 @@ Full operator pass: `ENCLII_TOKEN='…' ./scripts/deploy/complete-ga-operator.sh
 | **P2** | PgBouncer entries for `voxa` / `voxa_staging` | Platform RBAC; direct Postgres OK |
 | **P2** | `REDIS_URL` | Post-GA multi-replica WebSocket scaling — verify: `./scripts/launch/verify-prod-redis.sh` |
 | **Quality** | `@axe-core/playwright` in CI | **Done** — `e2e/specs/a11y.spec.ts`, CI `a11y` job |
-| **Quality** | Mobile EAS + store listings | [MOBILE_GA.md](./MOBILE_GA.md) — Phase 4, parallel to web GA |
+| **Quality** | Mobile EAS + store listings | [MOBILE_GA.md](./MOBILE_GA.md) — `./scripts/mobile/bootstrap-eas.sh`; submit workflow ready |
 | **Parity** | AAC benchmark + feature parity tracker | [AAC_PLATFORM_BENCHMARK.md](./AAC_PLATFORM_BENCHMARK.md) · [FEATURE_PARITY.md](./FEATURE_PARITY.md) · [PARITY_REMEDIATION_PLAN.md](./PARITY_REMEDIATION_PLAN.md) — M6 target 2026-09-30 |
 
 Phased plan: [GA_ROADMAP.md](./GA_ROADMAP.md)

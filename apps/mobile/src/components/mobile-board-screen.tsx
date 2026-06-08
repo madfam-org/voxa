@@ -15,6 +15,7 @@ import { speakButton, speakText } from '@/lib/play-button-speech';
 import { useMobileAuth } from '@/hooks/use-mobile-auth';
 import { useMobileSwitchScan } from '@/hooks/use-mobile-switch-scan';
 import { useMobileSyncedBoard } from '@/hooks/use-mobile-synced-board';
+import { MobileSwitchKeyCapture } from '@/components/mobile-switch-key-capture';
 import {
   loadMobileSettings,
   saveMobileSettings,
@@ -138,6 +139,7 @@ export function MobileBoardScreen() {
 
   return (
     <View style={styles.root}>
+      <MobileSwitchKeyCapture enabled={switchScanEnabled} onAdvance={advance} onSelect={select} />
       <View style={styles.header}>
         <Text style={styles.title}>Voxa</Text>
         <Text style={styles.meta}>

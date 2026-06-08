@@ -441,6 +441,7 @@ pnpm test && pnpm typecheck
 | 38 | EAS config guard + mobile settings tests (D1/W3) | D | Mobile ✅ 2026-06-09 |
 | 39 | Soak status + prod Redis verify + mobile scan tune (W0/E4/D) | W0/E4/D | Ops/Engineering ✅ 2026-06-09 |
 | 40 | Fix soak-status pass-day detection (W0) | W0 | Engineering ✅ 2026-06-09 |
+| 41 | TestFlight bootstrap + submit CI + mobile BT switch keys (D1/F1) | D/F | Mobile ✅ 2026-06-09 |
 
 ---
 

@@ -34,6 +34,7 @@ Users can disable decorative imagery, reduce grid chrome, and enlarge symbol-onl
 - Optional spoken scan voice for each focused cell
 - Scan pauses automatically while TTS or recorded speech plays (configurable)
 - **Hardware USB/BT switches (web):** select via Space/Enter; advance scan via ArrowRight, Tab, ArrowDown, or F13/F14 (`classifySwitchKey` in `@voxa/access`)
+- **Hardware USB/BT switches (mobile):** BT switches that emulate a keyboard drive scan via hidden focus capture (`MobileSwitchKeyCapture`, `classifySwitchNativeKey`); on-screen Next/Select/Tune always available
 
 ### Eye Tracking
 

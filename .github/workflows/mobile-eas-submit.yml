@@ -1,0 +1,67 @@
+name: Mobile EAS Submit
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: EAS submit profile
+        required: true
+        default: preview
+        type: choice
+        options:
+          - preview
+          - production
+      platform:
+        description: Target platform
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - ios
+          - android
+
+concurrency:
+  group: mobile-eas-submit
+  cancel-in-progress: false
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    if: github.repository == 'madfam-org/voxa'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Skip when EXPO_TOKEN is not configured
+        if: secrets.EXPO_TOKEN == ''
+        run: |
+          echo 'EXPO_TOKEN GitHub secret is not set; cannot submit to TestFlight / Play.'
+          exit 1
+
+      - name: Verify TestFlight readiness
+        env:
+          REQUIRE_LINKED: '1'
+          REQUIRE_SUBMIT: '1'
+        run: ./scripts/mobile/verify-testflight-readiness.sh
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: EAS submit (${{ inputs.profile }})
+        working-directory: apps/mobile
+        run: eas submit --profile ${{ inputs.profile }} --platform ${{ inputs.platform }} --non-interactive --latest
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}

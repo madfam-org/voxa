@@ -13,6 +13,8 @@ Expo / EAS track for Voxa native communicator apps. **Web GA does not block on m
 | Store listings | Not started |
 | CI build workflow | `.github/workflows/mobile-eas.yml` — typecheck + preview (requires `EXPO_TOKEN`) |
 | EAS config guard | `scripts/mobile/verify-eas-config.sh` in CI + mobile-eas ✅ 2026-06-09 |
+| TestFlight bootstrap | `scripts/mobile/bootstrap-eas.sh` + `verify-testflight-readiness.sh` ✅ 2026-06-09 |
+| Submit workflow | `.github/workflows/mobile-eas-submit.yml` (manual dispatch) ✅ 2026-06-09 |
 
 ## Prerequisites
 
@@ -40,12 +42,15 @@ Expo / EAS track for Voxa native communicator apps. **Web GA does not block on m
 | `production` | `voxa-api.madfam.io` | App Store / Play production |
 
 ```bash
+./scripts/mobile/bootstrap-eas.sh          # operator checklist
 cd apps/mobile
 npx eas-cli login
 npx eas init   # links projectId — replaces REPLACE_WITH_EAS_PROJECT_ID in app.json
 npx eas-cli build --profile preview --platform all
 npx eas-cli build --profile production --platform all
 ```
+
+After `EXPO_TOKEN` is in GitHub secrets, trigger **Mobile EAS Preview** workflow. Set repo variable `EAS_AUTO_SUBMIT=true` once App Store Connect + Play submit credentials replace `REPLACE_WITH_*` in `eas.json`.
 
 Replace placeholder values in `eas.json` submit block (`appleId`, `ascAppId`, `appleTeamId`) before store submit.
 
@@ -55,7 +60,7 @@ Replace placeholder values in `eas.json` submit block (`appleId`, `ascAppId`, `a
 - [ ] Preview builds on TestFlight + Play internal testing
 - [ ] Janua OAuth deep link — `voxa://auth/callback` + refresh token rotation ✅ 2026-06-09
 - [ ] Offline board cache + sync conflict handling verified — AsyncStorage + NetInfo retry ✅ 2026-06-09
-- [ ] Switch scanning on reference hardware (iOS/Android) — on-screen scan + **Tune** speed/order ✅ 2026-06-09; BT adapter P2
+- [ ] Switch scanning on reference hardware (iOS/Android) — on-screen scan + **Tune** + BT keyboard capture ✅ 2026-06-09; dedicated BT adapter P2
 - [ ] Store screenshots, descriptions, privacy nutrition labels
 - [ ] SLP sign-off on mobile communicator flows ([SLP_SIGNOFF.md](./SLP_SIGNOFF.md) — extend for native)
 - [ ] `production` submit via `eas submit`
@@ -80,19 +85,7 @@ npx eas-cli build --profile preview --platform all
 
 ## CI (store submit — planned)
 
-Manual `workflow_dispatch` job (add when App Store Connect + Play credentials are ready):
-
-```yaml
-# .github/workflows/mobile-eas-submit.yml (future)
-jobs:
-  submit:
-    steps:
-      - uses: expo/expo-github-action@v8
-        with:
-          token: ${{ secrets.EXPO_TOKEN }}
-      - run: eas submit --profile production --platform all --non-interactive
-        working-directory: apps/mobile
-```
+Manual `workflow_dispatch` via `.github/workflows/mobile-eas-submit.yml` when App Store Connect + Play credentials are ready:
 
 Secrets: `EXPO_TOKEN`, optional `GOOGLE_SERVICE_ACCOUNT_KEY` (or file at `apps/mobile/secrets/google-play-service-account.json`), App Store Connect API key env vars for non-interactive iOS submit.
 

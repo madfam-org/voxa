@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { buildGridScanPath, clampSwitchInterval, classifySwitchKey, linearScanIndex } from './index.js';
+import { buildGridScanPath, clampSwitchInterval, classifySwitchKey, classifySwitchNativeKey, linearScanIndex } from './index.js';
 
 describe('switch scanning', () => {
   it('wraps scan index across grid size', () => {
@@ -34,5 +34,13 @@ describe('hardware switch input', () => {
     assert.equal(classifySwitchKey('Tab'), 'advance');
     assert.equal(classifySwitchKey('F13'), 'advance');
     assert.equal(classifySwitchKey('KeyA'), null);
+  });
+
+  it('maps native keyboard keys from BT switches on mobile', () => {
+    assert.equal(classifySwitchNativeKey(' '), 'select');
+    assert.equal(classifySwitchNativeKey('Enter'), 'select');
+    assert.equal(classifySwitchNativeKey('Tab'), 'advance');
+    assert.equal(classifySwitchNativeKey('ArrowRight'), 'advance');
+    assert.equal(classifySwitchNativeKey('a'), null);
   });
 });
