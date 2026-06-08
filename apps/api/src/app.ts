@@ -6,6 +6,7 @@ import { teamAuth } from './middleware/team-auth.js';
 import { aiRoutes } from './routes/ai.js';
 import { billingRoutes } from './routes/billing.js';
 import { boardRoutes } from './routes/boards.js';
+import { eventRoutes } from './routes/events.js';
 import { syncRoutes } from './routes/sync.js';
 import { checkStoreReady, getStoreDriver } from './store/index.js';
 import { presenceCount, registerClient, unregisterClient } from './ws/hub.js';
@@ -40,6 +41,7 @@ app.get('/health/ready', async (c) => {
 
 app.route('/v1/boards', boardRoutes);
 app.route('/v1/billing', billingRoutes);
+app.route('/v1/events', eventRoutes);
 app.route('/v1/sync', syncRoutes);
 app.route('/v1/ai', aiRoutes);
 

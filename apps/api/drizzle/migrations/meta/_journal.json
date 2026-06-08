@@ -15,6 +15,13 @@
       "when": 1749340800000,
       "tag": "0001_tenant_isolation",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1749427200000,
+      "tag": "0002_activation_events",
+      "breakpoints": true
     }
   ]
 }

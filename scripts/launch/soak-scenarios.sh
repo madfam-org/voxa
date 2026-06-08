@@ -100,6 +100,19 @@ if [[ "${WITH_AUTH}" == true ]]; then
       -d '{"profileId":"soak","recentUtterances":[],"partialText":"I want","locale":"en-US"}')"
     check "POST /v1/ai/predict/text with consent → 200/402" test "${ai_with_consent}" = "200" -o "${ai_with_consent}" = "402"
 
+    activation_code="$(curl -sS -o /dev/null -w '%{http_code}' -X POST "${API_BASE}/v1/events/activations" \
+      -H "Authorization: Bearer ${token}" \
+      -H 'Content-Type: application/json' \
+      -H 'X-Voxa-AI-Consent: true' \
+      -d '{"boardId":"demo-core","buttonId":"want","speechText":"want"}')"
+    check "POST /v1/events/activations with consent → 201" test "${activation_code}" = "201"
+
+    summary_code="$(curl -sS -o /dev/null -w '%{http_code}' \
+      "${API_BASE}/v1/events/activations/summary?boardId=demo-core&days=7" \
+      -H "Authorization: Bearer ${token}" \
+      -H 'X-Voxa-Role: editor')"
+    check "GET /v1/events/activations/summary → 200" test "${summary_code}" = "200"
+
     soak_board_id="soak-create-$(date +%s)"
     create_payload="$(cat <<EOF
 {

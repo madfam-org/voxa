@@ -43,3 +43,18 @@ export const syncEvents = pgTable(
   },
   (table) => [index('sync_events_board_version_idx').on(table.boardId, table.version)],
 );
+
+export const activationEvents = pgTable(
+  'activation_events',
+  {
+    id: text('id').primaryKey(),
+    boardId: text('board_id')
+      .notNull()
+      .references(() => boards.id, { onDelete: 'cascade' }),
+    buttonId: text('button_id').notNull(),
+    userId: text('user_id').notNull(),
+    speechText: text('speech_text'),
+    recordedAt: timestamp('recorded_at', { withTimezone: true, mode: 'string' }).notNull(),
+  },
+  (table) => [index('activation_events_board_recorded_idx').on(table.boardId, table.recordedAt)],
+);

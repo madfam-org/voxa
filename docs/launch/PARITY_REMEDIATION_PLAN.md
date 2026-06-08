@@ -404,10 +404,10 @@ pnpm test && pnpm typecheck
 | 1 | Complete 7-day soak; sign GA declaration | W0 | Ops |
 | 2 | Extend axe to `/app` + `/demo` | A5 | Engineering ✅ 2026-06-08 |
 | 3 | Editor PIN + lock enforcement UX | A3, B2 | Engineering ✅ 2026-06-08 |
-| 4 | Offline write queue hardening | A4 | Engineering |
+| 4 | Offline write queue hardening | A4 | Engineering ✅ 2026-06-08 |
 | 5 | Kickoff `@voxa/symbols` ARASAAC spike | C1 | Engineering |
 | 6 | EAS preview build on staging API | D1 | Mobile |
-| 7 | Usage event schema + API | E1 | Backend |
+| 7 | Usage event schema + API | E1 | Engineering ✅ 2026-06-08 |
 
 ---
 

@@ -11,12 +11,15 @@ import {
   type TeamRole,
 } from '@voxa/core';
 import { createVoxaClient } from '@voxa/sync';
-import {
-  BOARD_CACHE_KEY,
-  PENDING_SAVE_KEY,
-  SELECTED_BOARD_KEY,
-} from '@/lib/communicator-settings';
+import { BOARD_CACHE_KEY, SELECTED_BOARD_KEY } from '@/lib/communicator-settings';
 import { registerBackgroundSync } from '@/lib/offline-idb';
+import {
+  clearPendingBoardSave,
+  hasPendingBoardSave,
+  loadPendingBoardSave,
+  queuePendingBoardSave,
+  queuePendingBoardSaveSync,
+} from '@/lib/pending-board-save';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
 
@@ -27,10 +30,6 @@ export interface BoardSummary {
 
 function boardCacheKey(boardId: string): string {
   return `${BOARD_CACHE_KEY}:${boardId}`;
-}
-
-function pendingSaveKey(boardId: string): string {
-  return `${PENDING_SAVE_KEY}:${boardId}`;
 }
 
 function cacheBoard(boardId: string, board: Board): void {
@@ -48,26 +47,6 @@ function loadCachedBoard(boardId: string): Board | null {
   }
 }
 
-function queuePendingSave(boardId: string, board: Board): void {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem(pendingSaveKey(boardId), JSON.stringify(board));
-}
-
-function loadPendingSave(boardId: string): Board | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    const raw = localStorage.getItem(pendingSaveKey(boardId));
-    return raw ? (JSON.parse(raw) as Board) : null;
-  } catch {
-    return null;
-  }
-}
-
-function clearPendingSave(boardId: string): void {
-  if (typeof window === 'undefined') return;
-  localStorage.removeItem(pendingSaveKey(boardId));
-}
-
 function loadSelectedBoardId(): string {
   if (typeof window === 'undefined') return DEMO_BOARD_ID;
   return localStorage.getItem(SELECTED_BOARD_KEY) || DEMO_BOARD_ID;
@@ -81,8 +60,10 @@ export function useSyncedBoard(role: TeamRole) {
   const [error, setError] = useState<string | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
   const [pendingSave, setPendingSave] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
   const boardRef = useRef(board);
   boardRef.current = board;
+  const isEditor = role === 'editor' || role === 'admin';
 
   useEffect(() => {
     setBoardIdState(loadSelectedBoardId());
@@ -164,18 +145,28 @@ export function useSyncedBoard(role: TeamRole) {
     };
   }, [accessToken, client]);
 
+  const refreshPendingFlag = useCallback(async () => {
+    setPendingSave(await hasPendingBoardSave(boardId));
+  }, [boardId]);
+
   const flushPendingSave = useCallback(async () => {
-    const pending = loadPendingSave(boardId);
-    if (!pending) return;
+    const pending = await loadPendingBoardSave(boardId);
+    if (!pending) {
+      setPendingSave(false);
+      setSyncError(null);
+      return;
+    }
 
     try {
       const result = await client.saveBoard(pending, pending.version);
       setBoard(result.board);
-      clearPendingSave(boardId);
+      await clearPendingBoardSave(boardId);
       setPendingSave(false);
+      setSyncError(null);
       setError(null);
-    } catch {
+    } catch (err) {
       setPendingSave(true);
+      setSyncError((err as Error).message);
     }
   }, [boardId, client, setBoard]);
 
@@ -190,9 +181,9 @@ export function useSyncedBoard(role: TeamRole) {
       setBoard(cached ?? createDemoBoard());
       setSyncStatus('offline');
       setError(cached ? 'Offline — using cached board' : 'API unreachable — using local demo board');
-      setPendingSave(Boolean(loadPendingSave(boardId)));
+      await refreshPendingFlag();
     }
-  }, [boardId, client, flushPendingSave, setBoard]);
+  }, [boardId, client, flushPendingSave, refreshPendingFlag, setBoard]);
 
   useEffect(() => {
     let cancelled = false;
@@ -214,7 +205,7 @@ export function useSyncedBoard(role: TeamRole) {
         setError(
           cached ? 'Offline — using cached board' : 'API unreachable — using local demo board',
         );
-        setPendingSave(Boolean(loadPendingSave(boardId)));
+        await refreshPendingFlag();
         return;
       }
 
@@ -242,7 +233,7 @@ export function useSyncedBoard(role: TeamRole) {
       cancelled = true;
       disconnect?.();
     };
-  }, [boardId, client, flushPendingSave, setBoard]);
+  }, [boardId, client, flushPendingSave, refreshPendingFlag, setBoard]);
 
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return;
@@ -263,15 +254,28 @@ export function useSyncedBoard(role: TeamRole) {
     return () => window.removeEventListener('online', onOnline);
   }, [flushPendingSave]);
 
+  useEffect(() => {
+    if (!isEditor || !accessToken) return;
+    if (syncStatus === 'live' && !pendingSave) return;
+
+    const timer = window.setTimeout(() => {
+      queuePendingBoardSaveSync(boardId, boardRef.current);
+      setPendingSave(true);
+    }, 1500);
+
+    return () => window.clearTimeout(timer);
+  }, [accessToken, board, boardId, isEditor, pendingSave, syncStatus]);
+
   const saveBoard = useCallback(async () => {
     try {
       const result = await client.saveBoard(boardRef.current, boardRef.current.version);
       setBoard(result.board);
-      clearPendingSave(boardId);
+      await clearPendingBoardSave(boardId);
       setPendingSave(false);
+      setSyncError(null);
       return result;
     } catch {
-      queuePendingSave(boardId, boardRef.current);
+      await queuePendingBoardSave(boardId, boardRef.current);
       setPendingSave(true);
       void registerBackgroundSync();
       throw new Error('Save queued — will sync when back online');
@@ -324,11 +328,14 @@ export function useSyncedBoard(role: TeamRole) {
     error,
     warnings,
     pendingSave,
+    syncError,
     reload,
+    retryPendingSave: flushPendingSave,
     saveBoard,
     importObf,
     exportObf,
-    isEditor: role === 'editor' || role === 'admin',
+    isEditor,
     isAuthenticated: Boolean(accessToken),
+    accessToken,
   };
 }

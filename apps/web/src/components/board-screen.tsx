@@ -23,6 +23,7 @@ import {
   lockEditorSession,
   unlockEditor,
 } from '@/lib/editor-pin';
+import { logButtonActivation } from '@/lib/log-activation';
 import { PredictionStrip } from '@/components/prediction-strip';
 import { SettingsPanel } from '@/components/settings-panel';
 
@@ -64,11 +65,14 @@ export function BoardScreen(): React.ReactNode {
     error,
     warnings,
     pendingSave,
+    syncError,
+    retryPendingSave,
     saveBoard,
     importObf,
     exportObf,
     isEditor,
     isAuthenticated,
+    accessToken,
   } = useSyncedBoard(role);
 
   const sorted = [...board.grid.buttons].sort(
@@ -85,13 +89,18 @@ export function BoardScreen(): React.ReactNode {
       const text = buttonSpeech(btn);
       setUtterance((prev) => [...prev, text]);
       setRecentButtonIds((prev) => [...prev, btn.id as string].slice(-8));
+      void logButtonActivation(accessToken, {
+        boardId,
+        buttonId: btn.id as string,
+        speechText: text,
+      });
       if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
         const u = new SpeechSynthesisUtterance(text);
         u.lang = btn.locale;
         window.speechSynthesis.speak(u);
       }
     },
-    [isEditor, editingId],
+    [accessToken, boardId, isEditor, editingId],
   );
 
   const applyPrediction = useCallback((text: string) => {
@@ -350,10 +359,34 @@ export function BoardScreen(): React.ReactNode {
         )}
       </header>
 
-      {(error || warnings.length > 0) && (
-        <div style={{ background: '#171717', color: '#fcd34d', padding: '8px 16px', fontSize: '0.875rem' }}>
-          {error}
-          {warnings.length > 0 && ` OBF warnings: ${warnings.join('; ')}`}
+      {(error || warnings.length > 0 || pendingSave || syncError) && (
+        <div
+          style={{
+            background: pendingSave ? '#422006' : '#171717',
+            color: '#fcd34d',
+            padding: '8px 16px',
+            fontSize: '0.875rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            flexWrap: 'wrap',
+          }}
+        >
+          <span style={{ flex: 1, minWidth: 200 }}>
+            {pendingSave ? 'Changes queued — will sync when back online. ' : ''}
+            {error}
+            {syncError ? ` Sync error: ${syncError}` : ''}
+            {warnings.length > 0 ? ` OBF warnings: ${warnings.join('; ')}` : ''}
+          </span>
+          {(pendingSave || syncError) && isEditor ? (
+            <button
+              type="button"
+              onClick={() => void retryPendingSave()}
+              style={{ ...secondaryBtn, padding: '6px 12px', fontSize: '0.8125rem' }}
+            >
+              Retry sync
+            </button>
+          ) : null}
         </div>
       )}
 

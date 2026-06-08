@@ -37,7 +37,7 @@ Actionable **feature parity match** against the AAC platform benchmark. Each row
 | OBF import | OpenAAC / Cboard | ✅ | API + UI; auth soak validated 2026-06-08 |
 | SLP editor mode | OpenAAC 🟢 | 🟡 | EditorPanel + PIN lock (2026-06-08); full vocab tools P1 |
 | Cloud board persistence | OpenAAC 💡 | ✅ | PostgreSQL + sync client |
-| Offline cache + retry | OpenAAC 💡 | 🟡 | IndexedDB pending save |
+| Offline cache + retry | OpenAAC 💡 | 🟡 | IndexedDB pending queue + background sync + retry UI (2026-06-08) |
 | Legal / privacy / a11y pages | Commercial GA | ✅ | `/legal/*` |
 | Automated a11y CI | WCAG regression | ✅ | axe on `/`, `/demo`, legal, sign-in; `/app` when Janua creds in CI |
 | Staging soak + SLP sign-off | Clinical gate | ✅ | Automated soak in CI; SLP 2026-06-08 ([SLP_SIGNOFF.md](./SLP_SIGNOFF.md)) |
@@ -60,7 +60,7 @@ Actionable **feature parity match** against the AAC platform benchmark. Each row
 | Symbol library search (ARASAAC) | OpenAAC ⭐ | 🔴 | P1 — integrate OpenSymbols |
 | Word forms / inflection | OpenAAC / Proloquo grammar | 🔴 | P1 |
 | Whisper / build utterance without speak | SFY | 🟡 | Message bar; no whisper mode |
-| Usage history / activation log | TD Snap, Grid | 🔴 | Schema exists; UI + consent P1 |
+| Usage history / activation log | TD Snap, Grid | 🟡 | API `POST/GET /v1/events/activations*` + client log (2026-06-08); SLP UI P1 |
 | Real-time team co-edit | TD Snap, Grid | 🔴 | WebSocket + REDIS_URL phase |
 | Remote SLP edit without device handoff | Cloud AAC | 🟡 | Roles in API; UX P1 |
 | iOS + Android store apps | All Tier A | 🔴 | [MOBILE_GA.md](./MOBILE_GA.md) M4 |

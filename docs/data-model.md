@@ -65,12 +65,24 @@ DATABASE_URL='postgresql://…' pnpm --filter @voxa/api db:migrate
 
 The API container runs migrations automatically on startup when `DATABASE_URL` is set.
 
+### `activation_events`
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | `text` PK | Event UUID |
+| `board_id` | `text` FK | Board where button was activated |
+| `button_id` | `text` | Button identifier |
+| `user_id` | `text` | Janua user id |
+| `speech_text` | `text` | Spoken text (optional) |
+| `recorded_at` | `timestamptz` | Activation time |
+
+Requires `X-Voxa-AI-Consent: true` (same opt-in as AI predictions). Summary endpoint: `GET /v1/events/activations/summary?boardId=&days=7` (editor role).
+
 ## Future tables
 
 | Table | Purpose |
 |-------|---------|
 | `organizations` | Tenant boundary for teams |
 | `user_profiles` | Communicator settings (CVI theme, dwell, locales) |
-| `utterance_logs` | Consent-gated activation analytics for SLP reporting |
 
 See [architecture.md](./architecture.md) and [GA_CHECKLIST.md](./launch/GA_CHECKLIST.md).
