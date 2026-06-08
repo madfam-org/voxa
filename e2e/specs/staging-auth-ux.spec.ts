@@ -4,7 +4,6 @@ import { hasJanuaTestCredentials, signInViaJanua } from '../helpers/janua-login'
 test.describe('Staging authenticated UX soak', () => {
   test('sign-out clears session and API returns 401', async ({ page, request }) => {
     test.skip(!hasJanuaTestCredentials(), 'Requires JANUA_TEST_EMAIL/PASSWORD');
-    test.skip(!!process.env.CI, 'Browser Janua OAuth — run manually on staging (API auth soak covers CI)');
 
     await page.addInitScript(() => localStorage.setItem('voxa-ai-consent', 'granted'));
     await signInViaJanua(page);

@@ -10,3 +10,4 @@ Auto-generated entries: `./scripts/launch/soak-daily-check.sh --log docs/launch/
 | 2026-06-08 | pass | 401 | 200 | M3: bootstrap authenticated soak (OIDC sync + OBF + AI consent) @ 2026-06-08T03:24:36Z |
 | 2026-06-08 | pass | 401 | 200 | CI e2e-smoke green + VOXA_STAGING secrets; daily check @ 2026-06-08T04:19:38Z |
 | 2026-06-08 | pass | 401 | 200 | SLP sign-off (owner-authorized) + auth soak @ 2026-06-08T04:48:37Z |
+| 2026-06-08 | pass | 401 | 200 | Web OAuth green: PolicyException restored, `oidcClientSecretSet: true`, verify-staging-web-oidc @ 2026-06-08T05:22Z |

@@ -6,7 +6,7 @@ This document records deployment state after the Enclii/Janua GA push. Use it wi
 
 ## Executive summary
 
-**Voxa is live in production and staging** with PostgreSQL, Janua SSO, API auth enforcement, billing hooks, and legal pages. CI builds and deploys via Enclii GitOps. **SLP accessibility sign-off recorded** (owner-authorized, approved with notes — 2026-06-08). **Staging soak in progress** through 2026-06-15 with automated + authenticated API soak green. GitHub Actions secrets for CI auth soak configured. **Argo sync blocked on new digests** until GHCR packages are public or Kyverno PolicyException is restored (re-added 2026-06-08). Remaining for **full commercial GA declaration**: soak log through 2026-06-15, staging browser Janua OAuth after web rollout.
+**Voxa is live in production and staging** with PostgreSQL, Janua SSO, API auth enforcement, billing hooks, and legal pages. CI builds and deploys via Enclii GitOps. **SLP accessibility sign-off recorded** (owner-authorized, approved with notes — 2026-06-08). **Staging soak in progress** through 2026-06-15; authenticated API + **browser Janua OAuth** soak green (2026-06-08). Remaining for **full commercial GA declaration**: daily soak log through 2026-06-15, org admin to confirm GHCR public (PolicyException temporary).
 
 ## Live verification (last confirmed)
 
@@ -135,23 +135,18 @@ ssh ssh.madfam.io 'sudo /usr/local/bin/k3s kubectl get secret enclii-github-webh
 
 Local `kubectl` and non-interactive SSH to `ssh.madfam.io` require **Cloudflare Access** authentication.
 
-### 5. Staging web browser sign-in (`token_exchange_failed`)
+### 5. ~~Staging web browser sign-in (`token_exchange_failed`)~~ — **Resolved 2026-06-08**
 
-**Symptom:** `/auth/signin?error=token_exchange_failed` after Janua login; API token soak (`fetch-staging-access-token.sh`) still passes.
+**Was:** `/auth/signin?error=token_exchange_failed` after Janua login while API token soak still passed.
 
-**Cause:** `voxa-web` pods must load `OIDC_CLIENT_SECRET` from `voxa-secrets` after each Janua rotate. Use explicit `secretKeyRef` (not optional `envFrom`) and recycle pods.
+**Root cause:** New web digests could not roll out (Kyverno `verify-image-signatures` DENIED on private GHCR) and pods kept an old image without `OIDC_CLIENT_SECRET` loaded.
 
-**Fix:**
+**Fix applied:** Restored `k8s/*/signature-policyexception.yaml`, Argo sync to latest digest, `secretKeyRef` + Stakater Reloader, `./scripts/launch/bootstrap-authenticated-soak.sh`. Verify:
 
 ```bash
-JANUA_ADMIN_EMAIL='…' JANUA_ADMIN_PASSWORD='…' ./scripts/launch/bootstrap-authenticated-soak.sh
-# GitOps: k8s/*/voxa-web-deployment.yaml uses secretKeyRef + Stakater Reloader on voxa-secrets
-# Confirm Argo synced voxa-staging-services / voxa-services, then:
-./scripts/launch/verify-staging-web-oidc.sh
-curl -sS https://voxa-staging.madfam.io/api/health  # oidcClientSecretSet: true after web deploy
+curl -sS https://voxa-staging.madfam.io/api/health  # oidcClientSecretSet: true
+./scripts/launch/verify-staging-web-oidc.sh         # OK staging web OAuth callback + session
 ```
-
-Remove stray keys: `./scripts/launch/prune-staging-secret-key.sh TEST_PROBE` (break-glass SSH).
 
 ## Operator script index
 
