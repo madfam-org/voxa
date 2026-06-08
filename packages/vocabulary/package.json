@@ -14,7 +14,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "node --import tsx --test src/index.test.ts src/grid.test.ts src/inflections.test.ts",
+    "test": "node --import tsx --test src/index.test.ts src/grid.test.ts src/grid-moves.test.ts src/inflections.test.ts",
     "clean": "rm -rf dist"
   },
   "dependencies": {

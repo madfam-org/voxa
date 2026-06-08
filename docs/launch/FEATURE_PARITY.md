@@ -51,7 +51,7 @@ Actionable **feature parity match** against the AAC platform benchmark. Each row
 | Feature | Leaders | Voxa status | Target phase |
 |---------|---------|-------------|--------------|
 | Multi-board library (not single demo) | All Tier A | 🟡 | Picker + create/rename/duplicate/delete (2026-06-09) |
-| Motor-planning slot locks enforced in UI | LAMP, SFY | 🟡 | Model yes; editor UX P1 |
+| Motor-planning slot locks enforced in UI | LAMP, SFY | 🟡 | Lock indicator + drag-move with guards; admin override (2026-06-09) |
 | Fitzgerald POS on all buttons | Proloquo, Grid | 🟡 | Demo + editor; not full library |
 | Hide/show buttons (open/close) | SFY, Proloquo | 🟡 | Per-button `hidden` + **Babble** session mode (2026-06-08) |
 | Custom grid size (9–144+ cells) | Proloquo2Go | 🟡 | Editor **Grid** panel — 9–144 cells, locked-slot reflow (2026-06-09) |

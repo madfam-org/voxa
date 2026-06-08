@@ -63,3 +63,11 @@ export {
   suggestInflections,
   type InflectionKind,
 } from './inflections.js';
+
+export {
+  createButtonAtCell,
+  GridMoveError,
+  moveButtonToCell,
+  type MoveButtonOptions,
+  type MoveButtonResult,
+} from './grid-moves.js';

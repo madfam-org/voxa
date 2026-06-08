@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { DEMO_BOARD_ID, type BoardButton, type PartOfSpeechTag, type TeamRole } from '@voxa/core';
-import { fitzgeraldColor, resizeBoardGrid, type PartOfSpeech } from '@voxa/vocabulary';
+import { fitzgeraldColor, createButtonAtCell, moveButtonToCell, resizeBoardGrid, type PartOfSpeech } from '@voxa/vocabulary';
 import { AacButton, BoardGrid, CVI_THEMES, themeStyles } from '@voxa/ui';
 import {
   buttonBorderColor,
@@ -35,6 +35,7 @@ import { UsageReportPanel } from '@/components/usage-report-panel';
 import { GridSettingsPanel } from '@/components/grid-settings-panel';
 import { RecordedMediaPanel } from '@/components/recorded-media-panel';
 import { WordFormsPanel } from '@/components/word-forms-panel';
+import { DraggableButtonShell, EditorGridCell } from '@/components/editor-grid-cell';
 
 const headerBtn: React.CSSProperties = {
   background: '#2563eb',
@@ -369,6 +370,49 @@ export function BoardScreen(): React.ReactNode {
     });
   };
 
+  const handleGridDrop = useCallback(
+    (buttonId: string, row: number, column: number) => {
+      try {
+        const moving = board.grid.buttons.find((b) => (b.id as string) === buttonId);
+        const target = board.grid.buttons.find(
+          (b) => b.position.row === row && b.position.column === column,
+        );
+        const needsOverride = Boolean(
+          moving?.locked || (target && target.locked && (target.id as string) !== buttonId),
+        );
+        const forceLocked =
+          needsOverride &&
+          role === 'admin' &&
+          window.confirm('Override motor-plan lock and move this slot?');
+        if (needsOverride && !forceLocked) {
+          window.alert('That slot is locked. Unlock it in the button editor or use Admin override.');
+          return;
+        }
+        const result = moveButtonToCell(board.grid.buttons, buttonId, row, column, {
+          forceLocked: forceLocked || undefined,
+        });
+        setBoard({ ...board, grid: { ...board.grid, buttons: result.buttons } });
+      } catch (err) {
+        window.alert((err as Error).message);
+      }
+    },
+    [board, role, setBoard],
+  );
+
+  const handleAddButtonAt = useCallback(
+    (row: number, column: number) => {
+      const label = window.prompt('Button label');
+      if (!label?.trim()) return;
+      try {
+        const buttons = createButtonAtCell(board.grid.buttons, row, column, label.trim());
+        setBoard({ ...board, grid: { ...board.grid, buttons } });
+      } catch (err) {
+        window.alert((err as Error).message);
+      }
+    },
+    [board, setBoard],
+  );
+
   const theme = settings.cviTheme;
   const shellStyle = themeStyles(theme);
   const syncLabel =
@@ -389,6 +433,99 @@ export function BoardScreen(): React.ReactNode {
       activate(btn);
     }
   };
+
+  const buttonAt = (row: number, column: number): BoardButton | undefined =>
+    sorted.find((b) => b.position.row === row && b.position.column === column);
+
+  const isButtonVisible = (btn: BoardButton): boolean =>
+    isEditor || !btn.hidden || babbleActive;
+
+  const renderGridButton = (btn: BoardButton): React.ReactNode => {
+    const revealedHidden = babbleActive && !isEditor && btn.hidden;
+    return (
+      <AacButton
+        label={buttonLabel(btn)}
+        symbolUrl={buttonSymbolUrl(btn)}
+        borderColor={buttonBorderColor(btn)}
+        targetScale={settings.targetScale}
+        hideSymbol={settings.hideSymbols}
+        hideLabel={settings.hideLabels}
+        scanHighlighted={isHighlighted(btn)}
+        dwellProgress={dwellProgressFor(btn.id as string)}
+        onClick={() => handleButtonPress(btn)}
+        onPointerEnter={() => onEnter(btn.id as string)}
+        onPointerLeave={onLeave}
+        style={revealedHidden ? { opacity: 0.72, outline: '2px dashed #f59e0b' } : undefined}
+        aria-label={
+          isEditor && btn.locked
+            ? `${buttonLabel(btn)} (locked motor-plan slot)`
+            : revealedHidden
+              ? `${buttonLabel(btn)} (hidden, babble mode)`
+              : buttonLabel(btn)
+        }
+      >
+        {isEditor && btn.locked ? (
+          <span aria-hidden style={{ position: 'absolute', top: 4, right: 4, fontSize: '0.75rem', lineHeight: 1 }}>
+            🔒
+          </span>
+        ) : null}
+        {!isEditor && btn.kind === 'analytic' && (btn.speechForms?.length ?? 0) > 1 ? (
+          <span
+            aria-hidden
+            style={{
+              position: 'absolute',
+              bottom: 4,
+              right: 4,
+              fontSize: '0.625rem',
+              color: '#93c5fd',
+              fontWeight: 700,
+            }}
+          >
+            ↻
+          </span>
+        ) : null}
+      </AacButton>
+    );
+  };
+
+  const gridCells: React.ReactNode[] = [];
+  for (let row = 0; row < board.grid.rows; row += 1) {
+    for (let col = 0; col < board.grid.columns; col += 1) {
+      const btn = buttonAt(row, col);
+      const key = `cell-${row}-${col}`;
+      if (btn && isButtonVisible(btn)) {
+        const content = renderGridButton(btn);
+        gridCells.push(
+          isEditor ? (
+            <EditorGridCell key={key} row={row} column={col} occupied onDropButton={handleGridDrop}>
+              <DraggableButtonShell
+                buttonId={btn.id as string}
+                draggable={!btn.locked || role === 'admin'}
+              >
+                {content}
+              </DraggableButtonShell>
+            </EditorGridCell>
+          ) : (
+            <div key={key} style={{ width: '100%', height: '100%' }}>
+              {content}
+            </div>
+          ),
+        );
+      } else if (isEditor) {
+        gridCells.push(
+          <EditorGridCell
+            key={key}
+            row={row}
+            column={col}
+            onDropButton={handleGridDrop}
+            onAddButton={handleAddButtonAt}
+          />,
+        );
+      } else {
+        gridCells.push(<div key={key} aria-hidden style={{ width: '100%', height: '100%' }} />);
+      }
+    }
+  }
 
   return (
     <div style={{ ...shellStyle, display: 'flex', flexDirection: 'column', height: '100dvh' }}>
@@ -607,6 +744,19 @@ export function BoardScreen(): React.ReactNode {
         </div>
       )}
 
+      {isEditor ? (
+        <div
+          style={{
+            background: '#171717',
+            color: '#a3a3a3',
+            padding: '6px 16px',
+            fontSize: '0.8125rem',
+          }}
+        >
+          Drag unlocked buttons to move or swap. Drop on + cells to add vocabulary. Locked slots show 🔒.
+        </div>
+      ) : null}
+
       {!isEditor && (
         <PredictionStrip
           textPredictions={textPredictions}
@@ -624,63 +774,7 @@ export function BoardScreen(): React.ReactNode {
           theme={theme}
           targetScale={settings.targetScale}
         >
-          {visibleButtons.map((btn) => {
-            const revealedHidden = babbleActive && !isEditor && btn.hidden;
-            return (
-            <AacButton
-              key={btn.id as string}
-              label={buttonLabel(btn)}
-              symbolUrl={buttonSymbolUrl(btn)}
-              borderColor={buttonBorderColor(btn)}
-              targetScale={settings.targetScale}
-              hideSymbol={settings.hideSymbols}
-              hideLabel={settings.hideLabels}
-              scanHighlighted={isHighlighted(btn)}
-              dwellProgress={dwellProgressFor(btn.id as string)}
-              onClick={() => handleButtonPress(btn)}
-              onPointerEnter={() => onEnter(btn.id as string)}
-              onPointerLeave={onLeave}
-              style={revealedHidden ? { opacity: 0.72, outline: '2px dashed #f59e0b' } : undefined}
-              aria-label={
-                isEditor && btn.locked
-                  ? `${buttonLabel(btn)} (locked motor-plan slot)`
-                  : revealedHidden
-                    ? `${buttonLabel(btn)} (hidden, babble mode)`
-                    : buttonLabel(btn)
-              }
-            >
-              {isEditor && btn.locked ? (
-                <span
-                  aria-hidden
-                  style={{
-                    position: 'absolute',
-                    top: 4,
-                    right: 4,
-                    fontSize: '0.75rem',
-                    lineHeight: 1,
-                  }}
-                >
-                  🔒
-                </span>
-              ) : null}
-              {!isEditor && btn.kind === 'analytic' && (btn.speechForms?.length ?? 0) > 1 ? (
-                <span
-                  aria-hidden
-                  style={{
-                    position: 'absolute',
-                    bottom: 4,
-                    right: 4,
-                    fontSize: '0.625rem',
-                    color: '#93c5fd',
-                    fontWeight: 700,
-                  }}
-                >
-                  ↻
-                </span>
-              ) : null}
-            </AacButton>
-            );
-          })}
+          {gridCells}
         </BoardGrid>
 
         {settingsOpen && (

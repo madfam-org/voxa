@@ -110,7 +110,7 @@ Each epic links to [FEATURE_PARITY.md](./FEATURE_PARITY.md) rows and benchmark d
 | ID | Feature | Remediation | Implementation |
 |----|---------|-------------|----------------|
 | B1 | Multi-board library | Board list UX; rename/duplicate/delete; default board per profile | Picker + create/rename/duplicate/delete ✅ 2026-06-09 |
-| B2 | Motor-plan locks | Visual lock indicator; prevent move/delete of locked slots; SLP override | `@voxa/core`, editor drag-drop guards |
+| B2 | Motor-plan locks | Visual lock indicator; prevent move/delete of locked slots; SLP override | Drag-drop grid editor + `moveButtonToCell` guards ✅ 2026-06-09 |
 | B3 | Hide/show + babble | Toggle `hidden`; “show all” babble mode (communicator) | `hidden` in editor + **Babble** session toggle ✅ 2026-06-08 |
 | B4 | Custom grid 9–144+ | Editor rows/cols with validation; reflow rules | `resizeBoardGrid` + editor **Grid** panel ✅ 2026-06-09 |
 | B5 | Symbol/label modes | ✅ partial | Unify `hideLabels`/`hideSymbols` per board + profile | `communicator-settings.ts`, `AacButton` |
@@ -417,6 +417,7 @@ pnpm test && pnpm typecheck
 | 14 | Custom grid editor + reflow (B4) | B | Engineering ✅ 2026-06-09 |
 | 15 | Board rename/duplicate/delete (B1) | B | Engineering ✅ 2026-06-09 |
 | 16 | Word forms / inflection (B7) | B | Engineering ✅ 2026-06-09 |
+| 17 | Editor drag-move with motor-plan guards (B2) | B | Engineering ✅ 2026-06-09 |
 
 ---
 
