@@ -1,0 +1,420 @@
+# Voxa benchmark feature parity — full remediation & implementation plan
+
+**Purpose:** Close gaps vs Tier A and adjacent AAC platforms documented in [AAC_PLATFORM_BENCHMARK.md](./AAC_PLATFORM_BENCHMARK.md).  
+**Tracker:** Row-level status in [FEATURE_PARITY.md](./FEATURE_PARITY.md).  
+**Schedule:** Phases in [GA_ROADMAP.md](./GA_ROADMAP.md) (M3 → M6).  
+**Last updated:** 2026-06-08
+
+---
+
+## 1. Executive summary
+
+### 1.1 Question
+
+> Have we achieved full feature parity against benchmarked direct and adjacent AAC platforms?
+
+**No.** Voxa is at **~38% weighted capability coverage** vs the Tier A median (Proloquo2Go, TD Snap Core First, LAMP, Speak for Yourself, Grid 3). Full **benchmark parity** is defined as **≥ 75% weighted scorecard** and **≥ 80% of P1 rows at ✅ or 🟡** — target milestone **M6 (2026-09-30)**.
+
+Web commercial GA (**M3, 2026-06-15**) intentionally does **not** require full parity; it requires **P0 complete**, clinical sign-off, and soak.
+
+### 1.2 Strategic posture
+
+| Axis | Incumbent strength | Voxa wedge | Parity implication |
+|------|-------------------|------------|-------------------|
+| Symbol count (PCS, SymbolStix) | Deep licensed libraries | ARASAAC + OpenSymbols + AI gen | Match **search + quality**, not 75k day-one |
+| iOS-native access + hardware | Tobii, BT switches, keyguards | Web-first + mobile Phase 4 | **Mobile + hardware** are P1/P2 blockers for clinical default |
+| Proprietary formats | `.gridset`, `.spb`, `.touchChat` | OBF-native + AACProcessors adapters | **Import pipelines** unlock migration marketing |
+| Cloud teams | myTobiiDynavox, Grid cloud | Janua SSO + Postgres + Dhanam | **Real-time co-edit** needs Redis/WebSocket scale |
+| AI | Static / n-gram | Consent-gated LLM + PictoBERT roadmap | **Differentiation** once baseline access/vocab solid |
+
+### 1.3 Scorecard targets
+
+| Milestone | Date | Weighted parity | P0 | P1 (✅+🟡) | Primary focus |
+|-----------|------|-----------------|-----|------------|---------------|
+| **Now** | 2026-06-08 | ~38% | Mostly ✅/🟡 | ~35% | Controlled web launch |
+| **M3** Web GA | 2026-06-15 | ~52% | All ✅ | ~45% | Soak + declaration |
+| **M4** Mobile beta | 2026-07-06 | ~58% | — | ~50% | EAS preview builds |
+| **M5** Platform GA | 2026-07-20 | ~65% | — | ~65% | Store listings + offline |
+| **M6** Tier A baseline | 2026-09-30 | **≥ 75%** | All ✅ | **≥ 80%** | P1 complete + P2 starters |
+
+Recalculate after each epic using the method in [FEATURE_PARITY.md § Parity scorecard](./FEATURE_PARITY.md#parity-scorecard-approximate).
+
+---
+
+## 2. Remediation waves (implementation program)
+
+```mermaid
+gantt
+  title Parity remediation waves (2026)
+  dateFormat YYYY-MM-DD
+  section W0 Complete
+  Web GA soak + infra           :done, w0, 2026-06-08, 7d
+  section W1 Foundation
+  P0 hardening + editor MVP     :w1, 2026-06-15, 21d
+  section W2 P1 Core AAC
+  Vocab editor + symbols + GLP  :w2, 2026-07-06, 42d
+  section W3 P1 Platform
+  Mobile + offline + usage      :w3, 2026-07-20, 35d
+  section W4 P2 Access
+  Hardware switch + gaze        :w4, 2026-08-24, 28d
+  section W5 P2 Content + import
+  Adapters + page sets          :w5, 2026-09-01, 30d
+  section W6 P2/P3 Polish
+  TTS + AI GA + scorecard       :w6, 2026-09-15, 15d
+```
+
+| Wave | Dates | Goal | Exit criteria |
+|------|-------|------|---------------|
+| **W0** | Through 2026-06-15 | Web GA gate | [GA_DECLARATION.md](./GA_DECLARATION.md) signed; soak 7/7 |
+| **W1** | 2026-06-15 → 2026-07-05 | Close remaining P0 🟡 | Offline retry reliable; editor PIN; axe on `/app` |
+| **W2** | 2026-07-06 → 2026-08-16 | P1 vocabulary + symbols + GLP media | ARASAAC search; recorded speech; motor-plan UX |
+| **W3** | 2026-07-20 → 2026-08-23 | P1 platform + clinical workflow | Mobile preview; usage logs UI; remote editor UX |
+| **W4** | 2026-08-24 → 2026-09-20 | P2 access methods | BT/USB switch; Tobii adapter POC |
+| **W5** | 2026-09-01 → 2026-09-30 | P2 interoperability + content | Grid/TouchChat/Snap import; starter core sets |
+| **W6** | 2026-09-15 → 2026-09-30 | M6 sign-off | Scorecard ≥ 75%; SLP parity review |
+
+---
+
+## 3. Gap inventory → remediation map
+
+Each epic links to [FEATURE_PARITY.md](./FEATURE_PARITY.md) rows and benchmark dimensions ([AAC_PLATFORM_BENCHMARK.md §4–5](./AAC_PLATFORM_BENCHMARK.md)).
+
+### Epic A — P0 hardening (W1)
+
+**Problem:** Remaining 🟡 P0 items undermine “robust AAC” claims and SLP confidence.
+
+| ID | Feature | Current | Remediation | Implementation |
+|----|---------|---------|-------------|----------------|
+| A1 | Switch scanning | 🟡 web only | Auditory cue option; scan pause on speak; document hardware path | `@voxa/access`, `use-switch-scan`, `settings-panel.tsx` |
+| A2 | Eye dwell | 🟡 pointer sim | Configurable dwell; touch-release vs touch-start; snap-to-cell | `@voxa/access` `EyeTrackingConfig`, `AacButton` dwell UI |
+| A3 | SLP editor | 🟡 basic | Editor PIN lock; grid resize validation; slot lock enforcement in UI | `board-screen.tsx` `EditorPanel`, `@voxa/core` `locked` |
+| A4 | Offline cache | 🟡 IndexedDB pending | Queue failed writes; conflict resolution; “offline” banner | `@voxa/sync`, `use-synced-board.ts`, service worker (web) |
+| A5 | A11y CI scope | ✅ legal/home | Extend axe to `/app`, `/demo`, editor, settings | `e2e/specs/a11y.spec.ts` |
+| A6 | Soak / clinical | ✅ SLP 2026-06-08 | Extend SLP sign-off template for mobile when M4 ready | [SLP_SIGNOFF.md](./SLP_SIGNOFF.md) |
+
+**Acceptance (W1):**
+
+- [ ] User can complete board edit → speak → OBF export offline-then-online without data loss
+- [ ] Editor changes respect `locked` buttons (communicator cannot drag locked cells)
+- [ ] axe CI covers communicator + demo
+- [ ] Switch scan e2e on staging passes with auditory prompt toggle
+
+**Tests:** `e2e/specs/staging-ux.spec.ts`, new `offline-sync.spec.ts`, `@voxa/sync` unit tests.
+
+---
+
+### Epic B — Vocabulary & editor (W2) — P1
+
+**Benchmark gap:** Multi-board libraries, motor planning, hide/show, Fitzgerald coverage, custom grid — table stakes for Proloquo / SFY / LAMP comparisons.
+
+| ID | Feature | Remediation | Implementation |
+|----|---------|-------------|----------------|
+| B1 | Multi-board library | Board list UX; rename/duplicate/delete; default board per profile | `use-synced-board.ts`, API `GET/POST /v1/boards`, web board picker |
+| B2 | Motor-plan locks | Visual lock indicator; prevent move/delete of locked slots; SLP override | `@voxa/core`, editor drag-drop guards |
+| B3 | Hide/show + babble | Toggle `hidden`; “show all” babble mode (communicator) | `@voxa/core` `hidden`, `board-screen.tsx` |
+| B4 | Custom grid 9–144+ | Editor rows/cols with validation; reflow rules | `@voxa/core` `BoardGrid`, editor |
+| B5 | Symbol/label modes | ✅ partial | Unify `hideLabels`/`hideSymbols` per board + profile | `communicator-settings.ts`, `AacButton` |
+| B6 | Fitzgerald POS | ✅ colors | Apply POS colors on **all** buttons including imports | `@voxa/ui` borderColor from `partOfSpeech` |
+| B7 | Word forms / inflection | Morphology table for top 200 core verbs/nouns | New `@voxa/vocabulary` inflection module; optional button `forms[]` |
+| B8 | Whisper mode | Message bar “hold to preview” without speak | `board-screen.tsx` message bar |
+| B9 | Links to other boards | OBF `links` → navigate to linked board | `@voxa/obf`, button action type `navigate` |
+
+**Acceptance (W2):**
+
+- [ ] SLP creates 3 boards, switches between them, exports each as OBF
+- [ ] Locked core words stay fixed after fringe edits
+- [ ] Babble reveals hidden buttons for one session then resets
+
+**Tests:** API integration tests for boards CRUD; Playwright editor scenarios.
+
+---
+
+### Epic C — Symbols & media (W2) — P1
+
+**Benchmark gap:** Tier A ships large symbol sets + recorded speech; Voxa has demo symbols only.
+
+| ID | Feature | Remediation | Implementation |
+|----|---------|-------------|----------------|
+| C1 | ARASAAC / OpenSymbols | Symbol search API; attach `symbolUrl` to analytic buttons | New `packages/symbols` or API route `/v1/symbols/search`; cache CDN |
+| C2 | Custom photo upload | S3-compatible object store; signed upload URL | API `POST /v1/media`, `@voxa/core` `mediaId` on buttons |
+| C3 | Recorded speech | Record/upload audio per button; play instead of TTS when set | `@voxa/core` `audioUrl`; web `MediaRecorder`; mobile expo-av |
+| C4 | GLP video/audio | GLP buttons store `mediaUrl` + intonation notes | Extend `GlpButton`; editor upload UI |
+| C5 | `.obz` bundles | Import/export ZIP with images | `@voxa/obf` OBZ support |
+
+**Acceptance (W2):**
+
+- [ ] Editor search “eat” → pick ARASAAC symbol → saved on button
+- [ ] GLP button plays caregiver recording in communicator
+- [ ] OBZ round-trip preserves images
+
+**Dependencies:** Object storage (Enclii addon or S3); media size limits in [DATA_HANDLING.md](../legal/DATA_HANDLING.md).
+
+---
+
+### Epic D — Platform & distribution (W3) — P1
+
+**Benchmark gap:** All Tier A apps have native iOS; most lack web. Voxa must **not** lose mobile.
+
+| ID | Feature | Remediation | Implementation |
+|----|---------|-------------|----------------|
+| D1 | iOS + Android apps | EAS preview → production | [MOBILE_GA.md](./MOBILE_GA.md), `apps/mobile` |
+| D2 | Janua mobile OAuth | Universal links / app links | Janua client redirect URIs, `expo-auth-session` |
+| D3 | Offline on device | SQLite/AsyncStorage + sync queue | `apps/mobile` storage layer, `@voxa/sync` |
+| D4 | PWA install | Web manifest + install prompt on landing | `apps/web` |
+| D5 | Windows | Edge/Chrome PWA + optional Electron wrapper | Post-M5 optional |
+
+**Acceptance (M5):**
+
+- [ ] TestFlight + Play internal builds use prod API
+- [ ] Same account boards appear on web and mobile within 60s
+
+---
+
+### Epic E — Cloud, teams & clinical (W3) — P1
+
+**Benchmark gap:** TD Snap / Grid lead on usage analytics and remote edit.
+
+| ID | Feature | Remediation | Implementation |
+|----|---------|-------------|----------------|
+| E1 | Usage / activation log | Append-only events; consent gate | API `POST /v1/events`, Postgres `activations`; `@voxa/core` event schema |
+| E2 | SLP reporting UI | Aggregate charts (no PII by default) | Web `/app/reports` institutional tier |
+| E3 | Remote SLP edit | Role `editor` vs `communicator`; audit log | Existing API roles; UX for “edit without device” |
+| E4 | Real-time co-edit | Multi-user board sync | `REDIS_URL` + WS fan-out ([GA_ROADMAP Phase 5](./GA_ROADMAP.md)); `packages/sync` |
+| E5 | Share vocabulary sets | Export board pack to org library | Org-scoped board templates API |
+
+**Acceptance (W3):**
+
+- [ ] With consent, SLP sees weekly activation counts per board
+- [ ] Two editors see live cursor/lock (or last-write-wins v1)
+
+**Infra:** Provision Redis ([GA_STATUS](../launch/GA_STATUS.md) P2); scale API replicas.
+
+---
+
+### Epic F — Access hardware (W4) — P2
+
+**Benchmark gap:** TD Snap Scanning, Grid eye gaze — primary differentiators for complex access needs.
+
+| ID | Feature | Remediation | Implementation |
+|----|---------|-------------|----------------|
+| F1 | Bluetooth/USB switch | iOS `ExternalAccessory` / Android HID; web Gamepad API | `packages/access` `HardwareSwitchAdapter`; mobile native module |
+| F2 | Auditory scanning | Beep on scan step; voice prompt option | `@voxa/access` audio cues |
+| F3 | Group / region scan | Scan by row groups, regions | Extend `SwitchScanConfig` |
+| F4 | Tobii / IrisBond gaze | SDK integration (Windows/iOS first) | Adapter service; dwell from gaze coords |
+| F5 | Keyguard / touch guard | Screen regions masked | Configurable mask overlay |
+| F6 | Touch-release vs touch-start | Setting for motor profile | `@voxa/access` |
+
+**Acceptance (W4):**
+
+- [ ] Reference BT switch advances scan on iOS TestFlight build
+- [ ] Tobii POC: dwell select on Windows browser (lab device)
+
+**Clinical:** Document supported hardware matrix in [accessibility.md](../accessibility.md).
+
+---
+
+### Epic G — Interoperability & migration (W5) — P2
+
+**Benchmark gap:** Competitors lock users in; Voxa wins on OBF — must add **legacy import**.
+
+| ID | Feature | Remediation | Implementation |
+|----|---------|-------------|----------------|
+| G1 | `.gridset` import | AACProcessors pipeline → OBF → Voxa | `packages/import-adapters` CLI + API job |
+| G2 | TouchChat import | Same pipeline | [MIGRATION.md](./MIGRATION.md) |
+| G3 | Snap `.spb` import | Same pipeline | |
+| G4 | Cboard / OBF direct | ✅ | Maintain compatibility tests |
+| G5 | Proloquo manual path | ARASAAC rebuild guide | Docs + wizard “map symbols” |
+| G6 | LAMP / SFY motor map | Consultant-led mapping project | Professional services doc, not automated v1 |
+
+**Acceptance (W5):**
+
+- [ ] Sample Grid gridset imports with ≥ 90% button preservation
+- [ ] Import job status UI in web editor
+
+**Reference:** [willwade/AACProcessors](https://github.com/willwade/AACProcessors).
+
+---
+
+### Epic H — Content & linguistics (W5) — P2
+
+**Benchmark gap:** Crescendo, Core First, PODD page sets.
+
+| ID | Feature | Remediation | Implementation |
+|----|---------|-------------|----------------|
+| H1 | Core word page sets | Ship “Voxa Core 47” + “Core 100” OBF templates | `packages/core` starter boards, download in app |
+| H2 | PODD / Gateway | Partner content or licensed sets | Legal review; optional IAP |
+| H3 | Visual schedules | Timeline board type or linked schedule view | New board `kind: schedule` or integration |
+| H4 | Literacy / keyboard | Text keyboard page for literate users | Text buttons + prediction strip |
+| H5 | Diversity / skin tone | ARASAAC variant picker | Symbol metadata |
+
+---
+
+### Epic I — Speech & AI (W6) — P2/P3
+
+| ID | Feature | Remediation | Implementation |
+|----|---------|-------------|----------------|
+| I1 | Neural TTS | Cloud voices (Azure/Google/Eleven per vendor) | API `/v1/tts`, replace Web Speech where configured |
+| I2 | Bilingual mid-sentence | Language tag per word | [ai-roadmap.md](../ai-roadmap.md) |
+| I3 | PictoBERT strip | Production model + top-3 symbols | `@voxa/ai`, `prediction-strip.tsx` |
+| I4 | LLM prediction GA | Tune prompts; SLP blocklist | Existing AI routes + consent |
+| I5 | Symbol generation | Guardrailed image gen | `@voxa/ai` + moderation |
+| I6 | On-device AI v2 | Small model for offline predict | Post-M6 research |
+
+**Acceptance (W6):**
+
+- [ ] User toggles en-US / es-MX voices in one utterance
+- [ ] PictoBERT strip improves path length in lab study (internal metric)
+
+---
+
+## 4. Package & service ownership
+
+| Package / app | Parity epics | Notes |
+|---------------|--------------|-------|
+| `@voxa/core` | B, C, H | Board model, GLP, locks, hidden |
+| `@voxa/access` | A, F | Scan, dwell, hardware adapters |
+| `@voxa/ui` | A, B | Grid, buttons, themes |
+| `@voxa/obf` | B, C, G | OBF/OBZ, links |
+| `@voxa/sync` | A, D, E | Offline queue, WebSocket |
+| `@voxa/vocabulary` | B, H | Inflection, page sets |
+| `@voxa/symbols` (new) | C | ARASAAC client |
+| `@voxa/import-adapters` (new) | G | AACProcessors wrappers |
+| `@voxa/ai` | I | LLM, PictoBERT, gen |
+| `apps/web` | All | Primary delivery surface |
+| `apps/mobile` | D, F, C | Native access + media |
+| `apps/api` | C, E, G, I | Media, events, import jobs, TTS |
+| `e2e/` | All | Playwright parity regression |
+
+---
+
+## 5. Verification & scorecard discipline
+
+### 5.1 Per-epic gates
+
+Each epic PR must include:
+
+1. **FEATURE_PARITY.md** row updates (status + notes)
+2. **Automated tests** (unit and/or e2e) cited in PR template
+3. **Accessibility** — no new axe violations on touched routes
+4. **Migration doc** update if import/export behavior changes
+
+### 5.2 Milestone scorecard review
+
+| When | Action | Owner |
+|------|--------|-------|
+| Epic merge | Update affected rows in FEATURE_PARITY.md | Engineering |
+| Bi-weekly | Recalculate weighted scorecard | Product |
+| M6 (2026-09-30) | SLP parity review vs P1 checklist | Clinical |
+| Quarterly | Refresh AAC_PLATFORM_BENCHMARK.md pricing/features | Product |
+
+### 5.3 Parity verification commands
+
+```bash
+# Scorecard gate (fails until 7 soak days complete — separate from parity)
+./scripts/launch/verify-soak-window.sh --required 7 --start 2026-06-08
+
+# GHCR / deploy hygiene
+./scripts/deploy/make-ghcr-packages-public.sh --check
+
+# Full staging parity smoke (extend over time)
+./scripts/launch/soak-scenarios.sh --with-auth
+pnpm test:e2e:a11y
+pnpm test:e2e:staging
+
+# Unit + types
+pnpm test && pnpm typecheck
+```
+
+### 5.4 Planned e2e expansion (parity CI)
+
+| Spec | Covers | Epic |
+|------|--------|------|
+| `a11y.spec.ts` | `/`, `/demo`, `/app`, editor | A5 |
+| `editor-parity.spec.ts` (new) | Lock, hide, grid resize, OBF | B |
+| `symbols.spec.ts` (new) | ARASAAC attach | C |
+| `mobile-smoke.spec.ts` (new) | Detox / Maestro on EAS build | D |
+| `import-grid.spec.ts` (new) | Sample gridset | G |
+
+---
+
+## 6. Dependencies & infra
+
+| Dependency | Blocks | Mitigation | Target |
+|------------|--------|------------|--------|
+| Object storage for media | C2–C4 | Enclii S3 addon or R2 | W2 |
+| `REDIS_URL` | E4 real-time | Phase 5 GA_ROADMAP | W3 |
+| Expo / store accounts | D1 | MOBILE_GA checklist | M4 |
+| Tobii SDK license | F4 | Lab partnership | W4 |
+| ARASAAC API terms | C1 | Cache + attribution page | W2 |
+| AACProcessors maintenance | G1–G3 | Vendor fork if needed | W5 |
+
+---
+
+## 7. Risk register (parity program)
+
+| Risk | Impact | Mitigation |
+|------|--------|------------|
+| Scope creep to 100% PCS parity | Miss M6 | Target **75% weighted**, not clone |
+| Mobile delays block M5 | “Not real AAC” narrative | PWA + web GA; parallel mobile |
+| Import fidelity < 90% | Bad migrations | Human QA gridsets; preview diff UI |
+| AI safety incident | Trust loss | Consent, moderation, no auto-speak |
+| Hardware lab unavailable | F4 slips | Ship BT switch first; gaze beta |
+| SLP reviewer bandwidth | M6 slip | Owner-authorized process + async checklist |
+
+---
+
+## 8. Documentation matrix
+
+| Document | Role in parity program | Update trigger |
+|----------|------------------------|----------------|
+| **This doc** | Master remediation + implementation plan | Each wave start/end |
+| [FEATURE_PARITY.md](./FEATURE_PARITY.md) | Row-level status & scorecard | Every epic |
+| [AAC_PLATFORM_BENCHMARK.md](./AAC_PLATFORM_BENCHMARK.md) | Competitive research source | Quarterly |
+| [GA_ROADMAP.md](./GA_ROADMAP.md) | Milestones M3–M6 | Milestone shift |
+| [MIGRATION.md](./MIGRATION.md) | User-facing import guides | Epic G |
+| [MOBILE_GA.md](./MOBILE_GA.md) | Native delivery | Epic D |
+| [ai-roadmap.md](../ai-roadmap.md) | AI epics I3–I6 | Epic I |
+| [linguistic-framework.md](../linguistic-framework.md) | GLP / motor plan theory | Epic B, H |
+| [SLP_SIGNOFF.md](./SLP_SIGNOFF.md) | Clinical gates | M3, M6 |
+| [accessibility.md](../accessibility.md) | WCAG + hardware matrix | Epic A, F |
+
+---
+
+## 9. Definition of done — full benchmark parity (M6)
+
+**Full benchmark feature parity** is declared when **all** of the following hold:
+
+1. **Weighted scorecard ≥ 75%** vs Tier A median ([FEATURE_PARITY.md](./FEATURE_PARITY.md))
+2. **P0:** 100% ✅
+3. **P1:** ≥ 80% of rows ✅ or 🟡 (no 🔴 on mobile, recorded speech, symbol search, usage logs)
+4. **P2:** ≥ 50% of rows ✅ or 🟡 (import adapters + hardware switch minimum)
+5. **P3 differentiation:** LLM + OBF + WCAG CI remain ✅
+6. **Clinical:** SLP parity sign-off recorded (extend [SLP_SIGNOFF.md](./SLP_SIGNOFF.md))
+7. **CI:** Parity e2e suite green on staging for two consecutive weekly runs
+8. **Docs:** AAC_PLATFORM_BENCHMARK refreshed; marketing claims audited against matrix
+
+**Not required for M6:** Apple Watch, Google Assistant, PODD licensed content, 75k PCS library, head tracking.
+
+---
+
+## 10. Immediate next actions (post–web GA soak)
+
+| Priority | Action | Wave | Owner |
+|----------|--------|------|-------|
+| 1 | Complete 7-day soak; sign GA declaration | W0 | Ops |
+| 2 | Extend axe to `/app` + `/demo` | A5 | Engineering |
+| 3 | Editor PIN + lock enforcement UX | A3, B2 | Engineering |
+| 4 | Offline write queue hardening | A4 | Engineering |
+| 5 | Kickoff `@voxa/symbols` ARASAAC spike | C1 | Engineering |
+| 6 | EAS preview build on staging API | D1 | Mobile |
+| 7 | Usage event schema + API | E1 | Backend |
+
+---
+
+## Related
+
+- [FEATURE_PARITY.md](./FEATURE_PARITY.md) — status tracker  
+- [AAC_PLATFORM_BENCHMARK.md](./AAC_PLATFORM_BENCHMARK.md) — competitor research  
+- [GA_ROADMAP.md](./GA_ROADMAP.md) — release milestones  
+- [REMEDIATION_PLAN.md](./REMEDIATION_PLAN.md) — web GA remediation (W0–W1)  
+- [PRD.md](../../PRD.md) — product requirements  

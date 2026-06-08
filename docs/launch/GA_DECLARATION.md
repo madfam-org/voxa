@@ -51,4 +51,4 @@ We declare **Voxa web commercially generally available** at `voxa.madfam.io` for
 **Notes:**
 
 - Mobile store GA tracked separately: [MOBILE_GA.md](./MOBILE_GA.md)
-- Feature parity roadmap continues post-GA: [FEATURE_PARITY.md](./FEATURE_PARITY.md)
+- Feature parity roadmap continues post-GA: [FEATURE_PARITY.md](./FEATURE_PARITY.md) · [PARITY_REMEDIATION_PLAN.md](./PARITY_REMEDIATION_PLAN.md)

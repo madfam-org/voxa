@@ -48,12 +48,18 @@ Track progress toward general availability at `voxa.madfam.io`.
 
 ## Competitive parity (Phase 6)
 
-Track detailed rows in [FEATURE_PARITY.md](./FEATURE_PARITY.md). Research: [AAC_PLATFORM_BENCHMARK.md](./AAC_PLATFORM_BENCHMARK.md).
+**Master plan:** [PARITY_REMEDIATION_PLAN.md](./PARITY_REMEDIATION_PLAN.md) · Tracker: [FEATURE_PARITY.md](./FEATURE_PARITY.md) · Research: [AAC_PLATFORM_BENCHMARK.md](./AAC_PLATFORM_BENCHMARK.md)
 
 - [x] P0 parity rows complete (web GA gate) — OBF soak ✅; SLP sign-off ✅ 2026-06-08
-- [ ] Weighted scorecard ≥ 52% at M3 (web GA)
-- [ ] P1 robust AAC baseline ≥ 80% at M6
+- [ ] Weighted scorecard ≥ 52% at M3 (web GA) — **~38% now**
+- [ ] P1 robust AAC baseline ≥ 80% at M6 (2026-09-30)
+- [ ] Weighted scorecard ≥ 75% at M6
 - [x] Migration guide: OBF import path — [MIGRATION.md](./MIGRATION.md)
+- [ ] Epic B–C: ARASAAC + recorded speech + GLP media (W2)
+- [ ] Epic D: Mobile store beta (M4)
+- [ ] Epic E: Usage logs + co-edit (W3)
+- [ ] Epic F–G: Hardware access + legacy import (W4–W5)
+- [ ] M6 SLP parity sign-off
 
 ## Launch
 
@@ -66,7 +72,7 @@ Track detailed rows in [FEATURE_PARITY.md](./FEATURE_PARITY.md). Research: [AAC_
 - [x] API `1.0.0` live on prod + staging (2026-06-07)
 - [x] Status page linked from README ([status.madfam.io](https://status.madfam.io))
 
-**Roadmap:** [GA_ROADMAP.md](./GA_ROADMAP.md) · **Remediation:** [REMEDIATION_PLAN.md](./REMEDIATION_PLAN.md) · **Parity:** [FEATURE_PARITY.md](./FEATURE_PARITY.md)
+**Roadmap:** [GA_ROADMAP.md](./GA_ROADMAP.md) · **Remediation:** [REMEDIATION_PLAN.md](./REMEDIATION_PLAN.md) · **Parity:** [FEATURE_PARITY.md](./FEATURE_PARITY.md) · **Parity implementation:** [PARITY_REMEDIATION_PLAN.md](./PARITY_REMEDIATION_PLAN.md)
 
 ## Operator quick commands
 

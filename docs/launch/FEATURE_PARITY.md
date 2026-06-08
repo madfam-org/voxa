@@ -2,6 +2,8 @@
 
 Actionable **feature parity match** against the AAC platform benchmark. Each row maps to delivery phases in [GA_ROADMAP.md](./GA_ROADMAP.md). Research basis: [AAC_PLATFORM_BENCHMARK.md](./AAC_PLATFORM_BENCHMARK.md).
 
+**Implementation plan:** [PARITY_REMEDIATION_PLAN.md](./PARITY_REMEDIATION_PLAN.md) — epics, waves, acceptance criteria, M6 definition of done.
+
 **Legend:** ✅ done · 🟡 partial/MVP · 🔴 not started · ➖ out of scope
 
 **Last updated:** 2026-06-08
@@ -38,7 +40,7 @@ Actionable **feature parity match** against the AAC platform benchmark. Each row
 | Offline cache + retry | OpenAAC 💡 | 🟡 | IndexedDB pending save |
 | Legal / privacy / a11y pages | Commercial GA | ✅ | `/legal/*` |
 | Automated a11y CI | WCAG regression | ✅ | axe Playwright |
-| Staging soak + SLP sign-off | Clinical gate | 🟡 | Automated soak in CI; SLP pending |
+| Staging soak + SLP sign-off | Clinical gate | ✅ | Automated soak in CI; SLP 2026-06-08 ([SLP_SIGNOFF.md](./SLP_SIGNOFF.md)) |
 
 ---
 
@@ -176,6 +178,7 @@ Mapped from [OpenAAC considerations](https://www.openaac.org/considerations). �
 
 ## Related
 
+- [PARITY_REMEDIATION_PLAN.md](./PARITY_REMEDIATION_PLAN.md) — full remediation & implementation program (M6)
 - [AAC_PLATFORM_BENCHMARK.md](./AAC_PLATFORM_BENCHMARK.md) — full competitive research
 - [GA_ROADMAP.md](./GA_ROADMAP.md) — Phase 6 parity delivery
 - [SLP_SIGNOFF.md](./SLP_SIGNOFF.md) — clinical gate

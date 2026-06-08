@@ -35,7 +35,7 @@ The AAC software market is a **mature oligopoly** on iOS: Proloquo2Go (Assistive
 | **Clinical parity** | Fitzgerald, CVI themes | + PODD/Gateway page sets, usage reports |
 | **AI differentiation** | LLM MVP | PictoBERT, symbol gen, bilingual neural TTS |
 
-**Voxa is GA-ready for controlled web launch** but **not yet at feature parity** with top-tier symbol AAC apps (Proloquo2Go, TD Snap, SFY). Parity is a **multi-quarter product track**, not a single release gate — see [FEATURE_PARITY.md](./FEATURE_PARITY.md).
+**Voxa is GA-ready for controlled web launch** but **not yet at feature parity** with top-tier symbol AAC apps (Proloquo2Go, TD Snap, SFY). Parity is a **multi-quarter product track**, not a single release gate — see [FEATURE_PARITY.md](./FEATURE_PARITY.md) and [PARITY_REMEDIATION_PLAN.md](./PARITY_REMEDIATION_PLAN.md).
 
 ---
 
@@ -307,5 +307,6 @@ quadrantChart
 ## Related internal docs
 
 - [FEATURE_PARITY.md](./FEATURE_PARITY.md) — GA parity checklist vs this benchmark
+- [PARITY_REMEDIATION_PLAN.md](./PARITY_REMEDIATION_PLAN.md) — remediation waves, epics, M6 gates
 - [GA_ROADMAP.md](./GA_ROADMAP.md) — phased delivery including parity phase
 - [GA_CHECKLIST.md](./GA_CHECKLIST.md) — launch gates

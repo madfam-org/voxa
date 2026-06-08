@@ -97,6 +97,8 @@ Web GA does **not** block on mobile store listings; mobile is tracked as **Phase
 
 **Goal:** Close gaps vs Tier A AAC apps (Proloquo2Go, TD Snap, LAMP, SFY, Grid) documented in [AAC_PLATFORM_BENCHMARK.md](./AAC_PLATFORM_BENCHMARK.md). Track rows in [FEATURE_PARITY.md](./FEATURE_PARITY.md).
 
+**Master plan:** [PARITY_REMEDIATION_PLAN.md](./PARITY_REMEDIATION_PLAN.md) — waves W1–W6, epics A–I, M6 definition of done.
+
 **Not a single-release gate:** Web GA (M3) requires P0 parity + SLP sign-off (~52% weighted score). Platform GA (M5) targets **~75%+ weighted parity** plus differentiation.
 
 | Work stream | Priority | Target | Parity doc section |
@@ -148,6 +150,7 @@ git rm k8s/production/signature-policyexception.yaml k8s/staging/signature-polic
 - [GA_STATUS.md](./GA_STATUS.md) — deploy state and platform IDs
 - [AAC_PLATFORM_BENCHMARK.md](./AAC_PLATFORM_BENCHMARK.md) — competitive research
 - [FEATURE_PARITY.md](./FEATURE_PARITY.md) — parity checklist vs Tier A AAC
+- [PARITY_REMEDIATION_PLAN.md](./PARITY_REMEDIATION_PLAN.md) — full parity implementation program
 - [STAGING_SOAK.md](./STAGING_SOAK.md) — soak procedures and log
 - [SLP_SIGNOFF.md](./SLP_SIGNOFF.md) — clinical accessibility gate
 - [MOBILE_GA.md](./MOBILE_GA.md) — Expo / EAS store path
