@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import NetInfo from '@react-native-community/netinfo';
-import { createDemoBoard, DEMO_BOARD_ID, type Board } from '@voxa/core';
+import { createDemoBoard, DEMO_BOARD_ID, type Board, type SyncEvent } from '@voxa/core';
 import { createVoxaClient } from '@voxa/sync';
 import {
   cacheBoard,
@@ -173,7 +173,8 @@ export function useMobileSyncedBoard(options: UseMobileSyncedBoardOptions = {}) 
 
       disconnect = client.connectBoardSync(
         boardId,
-        async () => {
+        async (event: SyncEvent) => {
+          if (options.userId && event.actorUserId === options.userId) return;
           try {
             const fresh = await client.getBoard(boardId);
             setBoardState(fresh);

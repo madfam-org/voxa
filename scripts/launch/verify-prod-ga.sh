@@ -27,6 +27,10 @@ ready_body="$(curl -sf "${API_BASE}/health/ready" 2>/dev/null || true)"
 check "API /health/ready" test -n "${ready_body}"
 check "API store=postgres" grep -q '"store":"postgres"' <<<"${ready_body}"
 check "API authEnforced=true" grep -q '"authEnforced":true' <<<"${ready_body}"
+if grep -q '"syncHub"' <<<"${ready_body}"; then
+  sync_hub="$(python3 -c "import json,sys; print(json.load(sys.stdin).get('syncHub','unknown'))" <<<"${ready_body}")"
+  echo "INFO API syncHub=${sync_hub}"
+fi
 
 boards_code="$(curl -sS -o /dev/null -w '%{http_code}' "${API_BASE}/v1/boards" 2>/dev/null || echo 000)"
 check "API GET /v1/boards → 401" test "${boards_code}" = "401"

@@ -428,6 +428,7 @@ pnpm test && pnpm typecheck
 | 25 | PWA manifest + install prompt (D4) | D | Engineering ✅ 2026-06-09 |
 | 26 | Mobile EAS env wiring + icons + CI guard (D1) | D | Mobile ✅ 2026-06-09 |
 | 27 | Redis-backed WebSocket sync fan-out (E4) | E | Engineering ✅ 2026-06-09 |
+| 28 | WS auth + client self-event filter + declaration-day script (E4/W0) | E/W0 | Engineering ✅ 2026-06-09 |
 
 ---
 

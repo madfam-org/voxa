@@ -10,7 +10,9 @@ import { eventRoutes } from './routes/events.js';
 import { mediaRoutes } from './routes/media.js';
 import { symbolRoutes } from './routes/symbols.js';
 import { syncRoutes } from './routes/sync.js';
-import { checkStoreReady, getStoreDriver } from './store/index.js';
+import { canAccessBoard } from './lib/board-access.js';
+import { resolveWsTeam } from './lib/ws-auth.js';
+import { checkStoreReady, getStore, getStoreDriver } from './store/index.js';
 import { getSyncHubMode, presenceCount, registerClient, unregisterClient } from './ws/sync-hub.js';
 
 export const API_VERSION = '1.0.0';
@@ -55,24 +57,50 @@ app.get(
   upgradeWebSocket((c) => {
     const boardId = c.req.query('boardId') ?? 'demo-core';
     let clientRef: { send: (data: string) => void; boardId?: string } | null = null;
+    let authorized = false;
 
     return {
       onOpen(_event, ws) {
-        clientRef = {
-          boardId,
-          send: (data: string) => ws.send(data),
-        };
-        registerClient(clientRef);
-        ws.send(
-          JSON.stringify({
-            type: 'connected',
+        void (async () => {
+          const team = await resolveWsTeam(c);
+          if (!team) {
+            ws.close(4401, 'Unauthorized');
+            return;
+          }
+
+          const board = await getStore().getBoard(boardId);
+          if (
+            !board ||
+            !canAccessBoard(
+              boardId,
+              board.ownerUserId,
+              team.userId,
+              team.role,
+              board.orgId,
+              team.orgId,
+            )
+          ) {
+            ws.close(4403, 'Forbidden');
+            return;
+          }
+
+          authorized = true;
+          clientRef = {
             boardId,
-            presence: presenceCount(boardId),
-          }),
-        );
+            send: (data: string) => ws.send(data),
+          };
+          registerClient(clientRef);
+          ws.send(
+            JSON.stringify({
+              type: 'connected',
+              boardId,
+              presence: presenceCount(boardId),
+            }),
+          );
+        })();
       },
       onClose() {
-        if (clientRef) unregisterClient(clientRef);
+        if (authorized && clientRef) unregisterClient(clientRef);
       },
     };
   }),

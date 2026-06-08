@@ -1,4 +1,7 @@
 import type { Board, BoardUpdateResult, SyncEvent, TeamRole } from '@voxa/core';
+import { buildBoardSyncWsUrl } from './ws-url.js';
+
+export { buildBoardSyncWsUrl } from './ws-url.js';
 
 export interface VoxaClientOptions {
   baseUrl: string;
@@ -140,8 +143,9 @@ export class VoxaClient {
     onEvent: (event: SyncEvent) => void,
     onStatus?: (status: 'connected' | 'disconnected') => void,
   ): () => void {
-    const wsBase = this.options.baseUrl.replace(/^http/, 'ws');
-    this.ws = new WebSocket(`${wsBase}/v1/ws?boardId=${encodeURIComponent(boardId)}`);
+    this.ws = new WebSocket(
+      buildBoardSyncWsUrl(this.options.baseUrl, boardId, this.options.accessToken),
+    );
 
     this.ws.onopen = () => onStatus?.('connected');
     this.ws.onclose = () => onStatus?.('disconnected');

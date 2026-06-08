@@ -28,7 +28,10 @@ JANUA_ADMIN_EMAIL='…' JANUA_ADMIN_PASSWORD='…' \
 # Production gate
 ./scripts/launch/verify-prod-ga.sh
 
-# Soak window (7 consecutive days from 2026-06-08)
+# Full declaration-day bundle (staging + prod + soak window)
+./scripts/launch/verify-declaration-day.sh --required 7 --start 2026-06-08
+
+# Soak window only (7 consecutive days from 2026-06-08)
 ./scripts/launch/verify-soak-window.sh --required 7 --start 2026-06-08
 
 # CI

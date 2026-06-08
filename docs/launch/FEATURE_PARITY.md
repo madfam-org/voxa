@@ -63,7 +63,7 @@ Actionable **feature parity match** against the AAC platform benchmark. Each row
 | Word forms / inflection | OpenAAC / Proloquo grammar | 🟡 | `speechForms` + suggest/apply in editor; double-tap cycle (2026-06-09) |
 | Whisper / build utterance without speak | SFY | 🟡 | **Whisper mode** in settings (2026-06-08) |
 | Usage history / activation log | TD Snap, Grid | 🟡 | API + client log (2026-06-08); SLP **Usage** panel in `/app` for editors (2026-06-08) |
-| Real-time team co-edit | TD Snap, Grid | 🟡 | Redis pub/sub WS fan-out when `REDIS_URL` set; last-write-wins v1 (2026-06-09) |
+| Real-time team co-edit | TD Snap, Grid | 🟡 | Redis pub/sub + WS auth + peer refetch; apply `REDIS_URL` in prod (2026-06-09) |
 | Remote SLP edit without device handoff | Cloud AAC | 🟡 | `/app/edit` remote editor + audit log (2026-06-09) |
 | iOS + Android store apps | All Tier A | 🟡 | EAS env wiring + icons + CI guard (2026-06-09); `eas init` + TestFlight pending |
 | Cross-platform single account | Fragmented | 🟡 | Web + mobile share Janua token + board list (2026-06-09) |

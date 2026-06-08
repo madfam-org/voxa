@@ -216,6 +216,7 @@ export function useSyncedBoard(role: TeamRole) {
       disconnect = client.connectBoardSync(
         boardId,
         async (event: SyncEvent) => {
+          if (event.actorUserId === sessionUserId) return;
           if (event.type === 'board.updated' || event.type === 'board.created') {
             try {
               const fresh = await client.getBoard(boardId);
