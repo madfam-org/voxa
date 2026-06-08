@@ -63,7 +63,7 @@ Record daily results in [SOAK_LOG.md](./SOAK_LOG.md) (auto-appended with `--log`
 - [ ] No S1/S2 incidents on staging during soak window
 - [ ] Argo app `voxa-staging-services` stays Synced / Healthy
 - [ ] Daily soak log green for 7 consecutive days
-- [ ] SLP accessibility sign-off recorded ([SLP_SIGNOFF.md](./SLP_SIGNOFF.md))
+- [x] SLP accessibility sign-off recorded ([SLP_SIGNOFF.md](./SLP_SIGNOFF.md))
 - [ ] Prod promotion: merge `staging` → `main` only after soak + sign-off
 
 Track overall GA items in [GA_CHECKLIST.md](./GA_CHECKLIST.md) and [GA_ROADMAP.md](./GA_ROADMAP.md).

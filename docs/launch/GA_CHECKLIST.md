@@ -4,7 +4,7 @@ Track progress toward general availability at `voxa.madfam.io`.
 
 ## Platform (Enclii / ops)
 
-- [x] GHCR packages public; Kyverno `PolicyException` removed — [GHCR_ORG_ADMIN.md](./GHCR_ORG_ADMIN.md) (2026-06-08)
+- [x] GHCR packages public — Kyverno `PolicyException` **temporarily restored** until anonymous GHCR pull verified ([GHCR_ORG_ADMIN.md](./GHCR_ORG_ADMIN.md)) (2026-06-08)
 - [x] `ENCLII_CALLBACK_TOKEN` set on `madfam-org/voxa` (2026-06-07; synced across MADFAM deploy repos)
 - [x] GitHub webhook registered on `madfam-org/voxa` → `https://api.enclii.dev/v1/webhooks/github` (hook `637900323`)
 - [x] Enclii webhook signature verified (2026-06-08; scale + restart — see [GA_STATUS.md](./GA_STATUS.md))
@@ -36,6 +36,7 @@ Track progress toward general availability at `voxa.madfam.io`.
 - [x] Terms of service live (`/legal/terms`)
 - [x] Accessibility statement live (`/legal/accessibility`)
 - [x] Consent banner for AI telemetry
+- [x] Commercial landing + visitor demo at `/` and `/demo`; communicator at `/app` (2026-06-08)
 
 ## Quality
 
@@ -49,7 +50,7 @@ Track progress toward general availability at `voxa.madfam.io`.
 
 Track detailed rows in [FEATURE_PARITY.md](./FEATURE_PARITY.md). Research: [AAC_PLATFORM_BENCHMARK.md](./AAC_PLATFORM_BENCHMARK.md).
 
-- [ ] P0 parity rows complete (web GA gate) — OBF soak ✅; SLP sign-off pending
+- [x] P0 parity rows complete (web GA gate) — OBF soak ✅; SLP sign-off ✅ 2026-06-08
 - [ ] Weighted scorecard ≥ 52% at M3 (web GA)
 - [ ] P1 robust AAC baseline ≥ 80% at M6
 - [x] Migration guide: OBF import path — [MIGRATION.md](./MIGRATION.md)
@@ -59,6 +60,7 @@ Track detailed rows in [FEATURE_PARITY.md](./FEATURE_PARITY.md). Research: [AAC_
 - [x] `VOXA_STAGING_*` GitHub secrets for CI auth soak (`bootstrap-authenticated-soak.sh`, 2026-06-08)
 - [x] Weekday `e2e-smoke` CI (health + auth API soak + Playwright) — green 2026-06-08
 - [ ] Staging soak (1 week) — **in progress** 2026-06-08 → 2026-06-15 — [STAGING_SOAK.md](./STAGING_SOAK.md) · [SOAK_LOG.md](./SOAK_LOG.md)
+- [ ] **Commercial GA declaration** — sign [GA_DECLARATION.md](./GA_DECLARATION.md) after soak completes
 - [x] SLP accessibility sign-off — owner-authorized **2026-06-08** ([SLP_SIGNOFF.md](./SLP_SIGNOFF.md), approved with notes)
 - [x] Version `1.0.0` tag (`v1.0.0` on `313a4e6`)
 - [x] API `1.0.0` live on prod + staging (2026-06-07)

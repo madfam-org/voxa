@@ -10,9 +10,9 @@ Track checkbox progress in [GA_CHECKLIST.md](./GA_CHECKLIST.md). Live deploy sta
 |------|--------|
 | Production + staging | Live, `authEnforced: true`, Postgres |
 | Deploy automation | Enclii GitOps + GitHub webhook verified |
-| Product (web) | Boards, Janua SSO, billing, AI MVP, legal pages |
-| Controlled launch | **Active** — SLP sign-off 2026-06-08 |
-| Full commercial GA | **In progress** — soak through 2026-06-15 |
+| Product (web) | Boards, Janua SSO, billing, AI MVP, legal, **commercial landing + demo** |
+| Controlled launch | **Active** — prod commercial funnel live 2026-06-08 |
+| Full commercial GA | **Soak gate** — declare **2026-06-15** ([GA_DECLARATION.md](./GA_DECLARATION.md)) |
 
 ## Phases
 
@@ -58,7 +58,7 @@ gantt
 | Work item | Owner | Target | Notes |
 |-----------|-------|--------|-------|
 | GHCR packages public (`voxa-api`, `voxa-web`) | Org admin | ✅ 2026-06-08 | [GHCR_ORG_ADMIN.md](./GHCR_ORG_ADMIN.md) |
-| Remove `k8s/*/signature-policyexception.yaml` | Engineering | ✅ 2026-06-08 | Kyverno cosign verify works without bypass |
+| Remove `k8s/*/signature-policyexception.yaml` | Engineering | ⏳ After GHCR public verified | [GHCR_ORG_ADMIN.md](./GHCR_ORG_ADMIN.md) |
 | PgBouncer entries for `voxa` / `voxa_staging` | Platform | Non-blocking | Direct Postgres OK today |
 | Cluster CPU headroom | Platform | Ongoing | Prevents `switchyard-api` Pending rollouts |
 
@@ -120,7 +120,7 @@ Web GA does **not** block on mobile store listings; mobile is tracked as **Phase
 | **M0 — Controlled launch** | 2026-06-07 | Prod live, auth enforced, legal pages, deploy hooks |
 | **M1 — Webhook verified** | 2026-06-08 | GitHub → Enclii ping → 200 |
 | **M2 — Soak complete** | 2026-06-15 | 7-day log green, manual scenarios checked |
-| **M3 — Full web GA** | 2026-06-18 | SLP sign-off + GHCR public + PolicyExceptions removed |
+| **M3 — Full web GA** | 2026-06-15 | Soak complete + [GA_DECLARATION.md](./GA_DECLARATION.md) signed |
 | **M4 — Mobile beta** | 2026-07-06 | EAS builds in TestFlight / Play internal |
 | **M5 — Full platform GA** | 2026-07-20 | Web + mobile store listings live |
 | **M6 — Tier A parity baseline** | 2026-09-30 | P1 ≥ 80%; scorecard ≥ 75% ([FEATURE_PARITY.md](./FEATURE_PARITY.md)) |

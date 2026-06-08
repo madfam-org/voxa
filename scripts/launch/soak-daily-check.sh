@@ -52,6 +52,15 @@ check "API GET /v1/boards → 401" test "${boards_code}" = "401"
 web_code="$(curl -sS -o /dev/null -w '%{http_code}' "${WEB_BASE}/api/health" 2>/dev/null || echo 000)"
 check "Web /api/health → 200" test "${web_code}" = "200"
 
+health_body="$(curl -sf "${WEB_BASE}/api/health" 2>/dev/null || true)"
+check "Web oidcClientSecretSet" grep -q '"oidcClientSecretSet":true' <<<"${health_body}"
+
+landing_code="$(curl -sS -o /dev/null -w '%{http_code}' "${WEB_BASE}/" 2>/dev/null || echo 000)"
+check "GET / landing → 200" test "${landing_code}" = "200"
+
+demo_code="$(curl -sS -o /dev/null -w '%{http_code}' "${WEB_BASE}/demo" 2>/dev/null || echo 000)"
+check "GET /demo → 200" test "${demo_code}" = "200"
+
 echo "---"
 echo "Staging soak @ ${stamp}"
 echo "  API: ${API_BASE}"

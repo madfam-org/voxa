@@ -6,13 +6,14 @@ This document records deployment state after the Enclii/Janua GA push. Use it wi
 
 ## Executive summary
 
-**Voxa is live in production and staging** with PostgreSQL, Janua SSO, API auth enforcement, billing hooks, and legal pages. CI builds and deploys via Enclii GitOps. **SLP accessibility sign-off recorded** (owner-authorized, approved with notes — 2026-06-08). **Staging soak in progress** through 2026-06-15; authenticated API + **browser Janua OAuth** soak green (2026-06-08). Remaining for **full commercial GA declaration**: daily soak log through 2026-06-15, org admin to confirm GHCR public (PolicyException temporary).
+**Voxa is in controlled commercial launch** at production with PostgreSQL, Janua SSO, billing, legal pages, and a **public marketing landing + visitor demo** at `voxa.madfam.io`. SLP sign-off recorded (2026-06-08). **Full commercial GA declaration** pending **7-day staging soak** through **2026-06-15** ([GA_DECLARATION.md](./GA_DECLARATION.md)).
 
 ## Live verification (last confirmed)
 
 | Check | Production | Staging |
 |-------|------------|---------|
-| Web health | `GET /api/health` → 200 | 200 |
+| Web health | `GET /api/health` → 200, `oidcClientSecretSet: true` | same |
+| Landing + demo | `GET /` and `/demo` → 200 | same |
 | API ready | `store: postgres`, `authEnforced: true` | same |
 | Unauthenticated boards | `GET /v1/boards` → **401** | **401** |
 | Janua sign-in | `/auth/signin` → Continue with Janua | same |
@@ -80,7 +81,7 @@ Full operator pass: `ENCLII_TOKEN='…' ./scripts/deploy/complete-ga-operator.sh
 | ~~**P0**~~ | Enclii webhook signature verified | **Done** (2026-06-08) |
 | **Launch** | Staging soak (7 days) | **In progress** 2026-06-08 → 2026-06-15 — [STAGING_SOAK.md](./STAGING_SOAK.md), [SOAK_LOG.md](./SOAK_LOG.md), `scripts/launch/soak-daily-check.sh` |
 | **Launch** | SLP accessibility sign-off | **Done** (owner-authorized, approved with notes — 2026-06-08) — [SLP_SIGNOFF.md](./SLP_SIGNOFF.md) |
-| ~~**P1**~~ | GHCR packages public; PolicyExceptions removed | **Done** 2026-06-08 |
+| ~~**P1**~~ | GHCR packages public; PolicyExceptions removed | **Pending** — PolicyException restored until GHCR anonymous pull verified |
 | **P2** | PgBouncer entries for `voxa` / `voxa_staging` | Platform RBAC; direct Postgres OK |
 | **P2** | `REDIS_URL` | Post-GA multi-replica WebSocket scaling |
 | **Quality** | `@axe-core/playwright` in CI | **Done** — `e2e/specs/a11y.spec.ts`, CI `a11y` job |
@@ -162,6 +163,8 @@ curl -sS https://voxa-staging.madfam.io/api/health  # oidcClientSecretSet: true
 | `scripts/deploy/make-ghcr-packages-public.sh` | Org admin: public GHCR packages |
 | `scripts/launch/bootstrap-authenticated-soak.sh` | Rotate OIDC, sync secrets, GitHub `VOXA_STAGING_*`, auth soak |
 | `scripts/launch/verify-staging-web-oidc.sh` | Curl-based staging web OAuth callback check |
+| `scripts/launch/verify-prod-ga.sh` | Production commercial GA gate (API + landing + demo + legal) |
+| `scripts/launch/verify-prod-web-oidc.sh` | Production web OAuth callback check |
 | `scripts/launch/prune-staging-secret-key.sh` | Remove stray keys from `voxa-staging/voxa-secrets` (SSH) |
 | `scripts/launch/soak-daily-check.sh` | Daily staging soak health checks |
 
