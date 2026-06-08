@@ -8,7 +8,7 @@ This document records deployment state after the Enclii/Janua GA push. Use it wi
 
 **Voxa is in controlled commercial launch** at production with PostgreSQL, Janua SSO, billing, legal pages, and a **public marketing landing + visitor demo** at `voxa.madfam.io`. SLP sign-off recorded (2026-06-08). **Full commercial GA declaration** pending **7-day staging soak** through **2026-06-15** ([GA_DECLARATION.md](./GA_DECLARATION.md)).
 
-## Live verification (last confirmed 2026-06-08T06:57Z)
+## Live verification (last confirmed 2026-06-08T07:21Z — e2e-smoke 27122190640 post PolicyException removal)
 
 | Check | Production | Staging |
 |-------|------------|---------|
