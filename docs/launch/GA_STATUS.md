@@ -6,7 +6,7 @@ This document records deployment state after the Enclii/Janua GA push. Use it wi
 
 ## Executive summary
 
-**Voxa is live in production and staging** with PostgreSQL, Janua SSO, API auth enforcement, billing hooks, and legal pages. CI builds and deploys via Enclii GitOps. GitHub → Enclii webhook signature verification is **resolved** (2026-06-08). **Staging soak in progress** (2026-06-08 → 2026-06-15) with automated scenarios + **OBF auth round-trip passing** (2026-06-08). GHCR packages are **public** and Kyverno PolicyExceptions removed (2026-06-08). Remaining for **full web GA**: SLP sign-off, soak completion through 2026-06-15.
+**Voxa is live in production and staging** with PostgreSQL, Janua SSO, API auth enforcement, billing hooks, and legal pages. CI builds and deploys via Enclii GitOps. GitHub → Enclii webhook signature verification is **resolved** (2026-06-08). **Staging soak in progress** (2026-06-08 → 2026-06-15) with automated scenarios + **full authenticated soak passing** (OIDC, OBF, AI consent, billing gates — 2026-06-08). GitHub Actions secrets for CI auth soak are **configured** (`VOXA_STAGING_*`). GHCR packages are **public** and Kyverno PolicyExceptions removed (2026-06-08). Remaining for **full web GA**: SLP sign-off, soak completion through 2026-06-15.
 
 ## Live verification (last confirmed)
 

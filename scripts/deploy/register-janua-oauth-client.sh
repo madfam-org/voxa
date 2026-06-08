@@ -20,6 +20,7 @@ set -euo pipefail
 JANUA_API_URL="${JANUA_API_URL:-https://auth.madfam.io}"
 CLIENT_KEY="${VOXA_CLIENT_KEY:-voxa}"
 AUDIENCE="${VOXA_AUDIENCE:-voxa}"
+PRODUCTION_CLIENT_ID="${VOXA_PRODUCTION_CLIENT_ID:-jnc_4qRWyI-ul_GL28hrSxrX7AvIyotFMBuB}"
 ROTATE_SECRET=false
 
 while [[ $# -gt 0 ]]; do
@@ -60,10 +61,11 @@ if [[ -z "${token}" ]]; then
 fi
 
 find_existing_client() {
-  local list_resp client_id
-  list_resp="$(curl -sS "${JANUA_API_URL}/api/v1/oauth/clients/admin/all?search=${CLIENT_KEY}" \
-    -H "Authorization: Bearer ${token}")"
-  client_id="$(echo "${list_resp}" | python3 -c "
+  local list_resp client_uuid
+  for query in "${PRODUCTION_CLIENT_ID}" "Voxa" "${CLIENT_KEY}"; do
+    list_resp="$(curl -sS "${JANUA_API_URL}/api/v1/oauth/clients/admin/all?search=${query}" \
+      -H "Authorization: Bearer ${token}")"
+    client_uuid="$(echo "${list_resp}" | python3 -c "
 import json, sys
 d = json.load(sys.stdin)
 items = d.get('items') or d.get('clients') or d
@@ -73,16 +75,62 @@ matches = []
 for item in items:
     key = item.get('client_key') or ''
     name = item.get('name') or ''
+    public_id = item.get('client_id') or ''
+    if public_id == '${PRODUCTION_CLIENT_ID}':
+        print(item.get('id', ''))
+        sys.exit(0)
     if key == '${CLIENT_KEY}' or name == 'Voxa':
         matches.append(item)
 if not matches:
     sys.exit(1)
-# Prefer exact client_key match; fall back to first Voxa-named client
-matches.sort(key=lambda x: 0 if x.get('client_key') == '${CLIENT_KEY}' else 1)
+matches.sort(key=lambda x: (
+    0 if x.get('client_id') == '${PRODUCTION_CLIENT_ID}' else 1,
+    0 if x.get('client_key') == '${CLIENT_KEY}' else 1,
+))
 print(matches[0].get('id', ''))
-")"
-  echo "${client_id}"
+")" && [[ -n "${client_uuid}" ]] && echo "${client_uuid}" && return 0
+  done
+  return 1
 }
+
+rotate_client_secret() {
+  local client_uuid="$1"
+  local rotate_resp rotate_code rotate_body
+  rotate_resp="$(curl -sS -w '\nHTTP_CODE:%{http_code}' -X POST \
+    "${JANUA_API_URL}/api/v1/oauth/clients/${client_uuid}/rotate" \
+    -H "Authorization: Bearer ${token}" \
+    -H 'Content-Type: application/json' \
+    -d '{}')"
+  rotate_code="$(echo "${rotate_resp}" | sed -n 's/^HTTP_CODE://p' | tail -1)"
+  rotate_body="$(echo "${rotate_resp}" | sed '/^HTTP_CODE:/d')"
+  if [[ "${rotate_code}" == "200" || "${rotate_code}" == "201" ]]; then
+    echo "Rotated client secret for ${PRODUCTION_CLIENT_ID}:"
+    echo "${rotate_body}" | python3 -m json.tool
+    echo ""
+    echo "Update OIDC_CLIENT_SECRET in Enclii voxa-secrets and GitHub Actions secrets."
+    return 0
+  fi
+  echo "Rotate failed (${rotate_code}): ${rotate_body}" >&2
+  return 1
+}
+
+if [[ "${ROTATE_SECRET}" == true ]]; then
+  client_uuid="$(find_existing_client || true)"
+  if [[ -z "${client_uuid}" ]]; then
+    echo "Production OAuth client ${PRODUCTION_CLIENT_ID} not found; refusing to create while rotating." >&2
+    exit 1
+  fi
+  rotate_client_secret "${client_uuid}"
+  exit $?
+fi
+
+existing_uuid="$(find_existing_client || true)"
+if [[ -n "${existing_uuid}" ]]; then
+  echo "OAuth client already exists (${PRODUCTION_CLIENT_ID})."
+  echo "Existing client uuid: ${existing_uuid}"
+  echo "No changes made (pass --rotate-secret to roll OIDC_CLIENT_SECRET)."
+  exit 0
+fi
 
 payload="$(cat <<EOF
 {
@@ -127,34 +175,8 @@ if [[ "${code}" == "409" ]]; then
   if [[ -z "${client_id}" ]]; then
     client_id="$(find_existing_client || true)"
   fi
-  if [[ -z "${client_id}" ]]; then
-    echo "Could not resolve existing client id." >&2
-    echo "${body}" >&2
-    exit 1
-  fi
-
-  if [[ "${ROTATE_SECRET}" != true ]]; then
-    echo "Existing client id: ${client_id}"
-    echo "No changes made (pass --rotate-secret to roll OIDC_CLIENT_SECRET)."
-    exit 0
-  fi
-
-  rotate_resp="$(curl -sS -w '\nHTTP_CODE:%{http_code}' -X POST \
-    "${JANUA_API_URL}/api/v1/oauth/clients/${client_id}/rotate" \
-    -H "Authorization: Bearer ${token}" \
-    -H 'Content-Type: application/json' \
-    -d '{}')"
-  rotate_code="$(echo "${rotate_resp}" | sed -n 's/^HTTP_CODE://p' | tail -1)"
-  rotate_body="$(echo "${rotate_resp}" | sed '/^HTTP_CODE:/d')"
-  if [[ "${rotate_code}" == "200" || "${rotate_code}" == "201" ]]; then
-    echo "Rotated client secret for existing client:"
-    echo "${rotate_body}" | python3 -m json.tool
-    echo ""
-    echo "Update OIDC_CLIENT_SECRET in Enclii voxa-secrets and GitHub Actions secrets."
-  else
-    echo "Client exists; rotate failed (${rotate_code}): ${rotate_body}" >&2
-    exit 1
-  fi
+  echo "Existing client uuid: ${client_id:-unknown}"
+  echo "No changes made."
   exit 0
 fi
 

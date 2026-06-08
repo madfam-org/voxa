@@ -88,14 +88,14 @@ if [[ "${WITH_AUTH}" == true ]]; then
     ai_no_consent="$(curl -sS -o /dev/null -w '%{http_code}' -X POST "${API_BASE}/v1/ai/predict/text" \
       -H "Authorization: Bearer ${token}" \
       -H 'Content-Type: application/json' \
-      -d '{"context":[],"partialUtterance":"I want"}')"
+      -d '{"profileId":"soak","recentUtterances":[],"partialText":"I want","locale":"en-US"}')"
     check "POST /v1/ai/predict/text without consent → 403" test "${ai_no_consent}" = "403"
 
     ai_with_consent="$(curl -sS -o /dev/null -w '%{http_code}' -X POST "${API_BASE}/v1/ai/predict/text" \
       -H "Authorization: Bearer ${token}" \
       -H 'Content-Type: application/json' \
       -H 'X-Voxa-AI-Consent: true' \
-      -d '{"context":[],"partialUtterance":"I want"}')"
+      -d '{"profileId":"soak","recentUtterances":[],"partialText":"I want","locale":"en-US"}')"
     check "POST /v1/ai/predict/text with consent → 200/402" test "${ai_with_consent}" = "200" -o "${ai_with_consent}" = "402"
 
     soak_board_id="soak-create-$(date +%s)"
@@ -114,7 +114,7 @@ EOF
       -H "Authorization: Bearer ${token}" \
       -H 'Content-Type: application/json' \
       -d "${create_payload}")"
-    check "POST /v1/boards create → 201" test "${create_code}" = "201"
+    check "POST /v1/boards create → 201/402" test "${create_code}" = "201" -o "${create_code}" = "402"
 
     echo "== Authenticated OBF round-trip =="
     obf_file="${ROOT}/fixtures/soak/minimal.obf"

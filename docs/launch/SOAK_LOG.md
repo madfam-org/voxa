@@ -7,3 +7,4 @@ Auto-generated entries: `./scripts/launch/soak-daily-check.sh --log docs/launch/
 | 2026-06-08 | pass | 401 | 200 | Soak opened; daily check @ 2026-06-08T01:00:51Z |
 | 2026-06-08 | pass | 401 | 200 | soak-scenarios + OBF auth round-trip @ 2026-06-08T02:33:21Z |
 | 2026-06-08 | pass | 401 | 200 | W3: Janua duplicate cleanup + staging UX soak specs |
+| 2026-06-08 | pass | 401 | 200 | M3: bootstrap authenticated soak (OIDC sync + OBF + AI consent) @ 2026-06-08T03:24:36Z |

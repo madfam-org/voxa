@@ -95,6 +95,11 @@ if grep -q 'name="csrf_token"' <<<"${consent_html}"; then
     --data-urlencode "csrf_token=${consent_csrf}" \
     --data-urlencode 'action=allow')"
   callback_url="$(printf '%s' "${callback_headers}" | awk 'tolower($1)=="location:" {print $2}' | tr -d '\r' | tail -1)"
+elif [[ "${auth_path}" == *'/oauth/authorize'* ]]; then
+  # Already-authenticated users skip consent; Janua returns authorize URL and issues code on GET.
+  authorize_headers="$(curl -sS -c "${COOKIE_JAR}" -b "${COOKIE_JAR}" -D - -o /dev/null \
+    --max-redirs 0 "${auth_path}" || true)"
+  callback_url="$(printf '%s' "${authorize_headers}" | awk 'tolower($1)=="location:" {print $2}' | tr -d '\r' | tail -1)"
 else
   callback_url="$(printf '%s' "${auth_headers}" | awk 'tolower($1)=="location:" {print $2}' | tr -d '\r' | tail -1)"
 fi

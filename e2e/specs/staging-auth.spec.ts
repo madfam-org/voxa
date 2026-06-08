@@ -27,7 +27,12 @@ test.describe('Staging authenticated API soak', () => {
         Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
-      data: { context: [], partialUtterance: 'I want' },
+      data: {
+        profileId: 'soak',
+        recentUtterances: [],
+        partialText: 'I want',
+        locale: 'en-US',
+      },
     });
     expect(blocked.status()).toBe(403);
 
@@ -37,7 +42,12 @@ test.describe('Staging authenticated API soak', () => {
         'Content-Type': 'application/json',
         'X-Voxa-AI-Consent': 'true',
       },
-      data: { context: [], partialUtterance: 'I want' },
+      data: {
+        profileId: 'soak',
+        recentUtterances: [],
+        partialText: 'I want',
+        locale: 'en-US',
+      },
     });
     expect([200, 402]).toContain(allowed.status());
   });
