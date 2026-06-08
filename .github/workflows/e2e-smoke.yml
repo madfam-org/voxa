@@ -3,7 +3,8 @@ name: E2E smoke
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 14 * * 1-5'
+    # Daily through GA soak window (7 consecutive calendar days required)
+    - cron: '0 14 * * *'
 
 permissions:
   contents: write

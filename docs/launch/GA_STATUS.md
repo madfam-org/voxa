@@ -8,7 +8,7 @@ This document records deployment state after the Enclii/Janua GA push. Use it wi
 
 **Voxa is in controlled commercial launch** at production with PostgreSQL, Janua SSO, billing, legal pages, and a **public marketing landing + visitor demo** at `voxa.madfam.io`. SLP sign-off recorded (2026-06-08). **Full commercial GA declaration** pending **7-day staging soak** through **2026-06-15** ([GA_DECLARATION.md](./GA_DECLARATION.md)).
 
-## Live verification (last confirmed)
+## Live verification (last confirmed 2026-06-08T06:57Z)
 
 | Check | Production | Staging |
 |-------|------------|---------|
@@ -81,7 +81,7 @@ Full operator pass: `ENCLII_TOKEN='…' ./scripts/deploy/complete-ga-operator.sh
 | ~~**P0**~~ | Enclii webhook signature verified | **Done** (2026-06-08) |
 | **Launch** | Staging soak (7 days) | **In progress** 2026-06-08 → 2026-06-15 — [STAGING_SOAK.md](./STAGING_SOAK.md), [SOAK_LOG.md](./SOAK_LOG.md), `scripts/launch/soak-daily-check.sh` |
 | **Launch** | SLP accessibility sign-off | **Done** (owner-authorized, approved with notes — 2026-06-08) — [SLP_SIGNOFF.md](./SLP_SIGNOFF.md) |
-| ~~**P1**~~ | GHCR packages public; PolicyExceptions removed | **Pending** — PolicyException restored until GHCR anonymous pull verified |
+| ~~**P1**~~ | GHCR packages public; PolicyExceptions removed | **Pending** — GitHub API reports public; anonymous `ghcr.io` pull still **401** locally; PolicyException retained ([GHCR_ORG_ADMIN.md](./GHCR_ORG_ADMIN.md)) |
 | **P2** | PgBouncer entries for `voxa` / `voxa_staging` | Platform RBAC; direct Postgres OK |
 | **P2** | `REDIS_URL` | Post-GA multi-replica WebSocket scaling |
 | **Quality** | `@axe-core/playwright` in CI | **Done** — `e2e/specs/a11y.spec.ts`, CI `a11y` job |

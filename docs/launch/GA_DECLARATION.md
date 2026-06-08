@@ -28,6 +28,9 @@ JANUA_ADMIN_EMAIL='…' JANUA_ADMIN_PASSWORD='…' \
 # Production gate
 ./scripts/launch/verify-prod-ga.sh
 
+# Soak window (7 consecutive days from 2026-06-08)
+./scripts/launch/verify-soak-window.sh --required 7 --start 2026-06-08
+
 # CI
 gh workflow run e2e-smoke.yml --repo madfam-org/voxa
 ```
