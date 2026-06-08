@@ -143,9 +143,9 @@ Each epic links to [FEATURE_PARITY.md](./FEATURE_PARITY.md) rows and benchmark d
 
 **Acceptance (W2):**
 
-- [ ] Editor search “eat” → pick ARASAAC symbol → saved on button
-- [ ] GLP button plays caregiver recording in communicator
-- [ ] OBZ round-trip preserves images
+- [x] Editor search “eat” → pick ARASAAC symbol → saved on button (2026-06-09)
+- [x] GLP button plays caregiver recording in communicator (2026-06-09)
+- [x] OBZ round-trip preserves images (2026-06-09)
 
 **Dependencies:** Object storage (Enclii addon or S3); media size limits in [DATA_HANDLING.md](../legal/DATA_HANDLING.md).
 
@@ -436,6 +436,7 @@ pnpm test && pnpm typecheck
 | 33 | Offline save queue tests + locked-slot drag guard e2e (A4/A3) | A | Engineering ✅ 2026-06-09 |
 | 34 | Offline OBF export fallback + edit/speak/sync e2e (A4/W1) | A | Engineering ✅ 2026-06-09 |
 | 35 | Editor workflow e2e: 3-board OBF, locked core, babble reset (B/W2) | B | Engineering ✅ 2026-06-09 |
+| 36 | Media workflow e2e: ARASAAC, GLP audio, OBZ images (C/W2) | C | Engineering ✅ 2026-06-09 |
 
 ---
 

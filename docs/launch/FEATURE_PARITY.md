@@ -34,7 +34,7 @@ Actionable **feature parity match** against the AAC platform benchmark. Each row
 | Eye dwell (configurable) | OpenAAC ⭐ | 🟡 | Pointer sim; touch-release option; not Tobii SDK (2026-06-09) |
 | Message bar + speak utterance | OpenAAC 🟢 | ✅ | Web Speech API |
 | OBF export | OpenAAC / Cboard | ✅ | API + editor UI |
-| OBZ export (images embedded) | OpenAAC / Cboard | 🟡 | API + editor UI (2026-06-08) |
+| OBZ export (images embedded) | OpenAAC / Cboard | 🟡 | API + editor UI + OBZ round-trip e2e (2026-06-09) |
 | OBF import | OpenAAC / Cboard | ✅ | API + UI; auth soak validated 2026-06-08 |
 | Board-to-board navigation (OBF `load_board_id`) | OpenAAC / Cboard | 🟡 | Import/export + editor link + activate navigate (2026-06-08) |
 | SLP editor mode | OpenAAC 🟢 | 🟡 | EditorPanel + PIN lock (2026-06-08); full vocab tools P1 |
@@ -57,9 +57,9 @@ Actionable **feature parity match** against the AAC platform benchmark. Each row
 | Custom grid size (9–144+ cells) | Proloquo2Go | 🟡 | Editor **Grid** panel — 9–144 cells, locked-slot reflow (2026-06-09) |
 | Symbol-only / label-only modes | OpenAAC ✅ | 🟡 | Profile + per-board overrides in settings (2026-06-09) |
 | Upload custom symbol / photo | OpenAAC 🟢 | 🟡 | Editor photo upload via `/v1/media` (2026-06-09) |
-| Recorded speech on button | OpenAAC ✅ / GLP | 🟡 | `RecordedSpeech` on buttons; web record/upload + playback over TTS (2026-06-08) |
+| Recorded speech on button | OpenAAC ✅ / GLP | 🟡 | Record/upload + GLP playback e2e (2026-06-09) |
 | GLP buttons with audio/video | Voxa differentiator | 🟡 | GLP video upload in editor; plays in communicator (2026-06-08) |
-| Symbol library search (ARASAAC) | OpenAAC ⭐ | 🟡 | API + editor search (2026-06-08) |
+| Symbol library search (ARASAAC) | OpenAAC ⭐ | 🟡 | API + editor search + staging e2e attach (2026-06-09) |
 | Word forms / inflection | OpenAAC / Proloquo grammar | 🟡 | `speechForms` + suggest/apply in editor; double-tap cycle (2026-06-09) |
 | Whisper / build utterance without speak | SFY | 🟡 | **Whisper mode** in settings (2026-06-08) |
 | Usage history / activation log | TD Snap, Grid | 🟡 | API + client log (2026-06-08); SLP **Usage** panel in `/app` for editors (2026-06-08) |

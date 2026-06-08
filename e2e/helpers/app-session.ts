@@ -43,3 +43,22 @@ export async function exportObfText(page: Page): Promise<string> {
   if (!path) throw new Error('OBF download missing path');
   return readFile(path, 'utf8');
 }
+
+export async function openButtonEditor(page: Page, name: RegExp | string): Promise<void> {
+  await page.getByRole('button', { name }).click();
+  await expect(page.getByRole('heading', { name: 'Edit button' })).toBeVisible();
+}
+
+export async function saveBoardAndWait(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Save' }).click();
+  await expect(page.getByText(/Live v\d+/)).toBeVisible({ timeout: 20000 });
+}
+
+export async function exportObzPath(page: Page): Promise<string> {
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Export OBZ' }).click();
+  const file = await downloadPromise;
+  const path = await file.path();
+  if (!path) throw new Error('OBZ download missing path');
+  return path;
+}
