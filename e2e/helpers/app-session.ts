@@ -1,4 +1,5 @@
-import { type Page } from '@playwright/test';
+import { type Page, expect } from '@playwright/test';
+import { readFile } from 'node:fs/promises';
 import { signInViaJanua } from './janua-login';
 
 /** Seed local consent/editor state before navigation. */
@@ -24,4 +25,21 @@ export async function enterEditorMode(page: Page): Promise<void> {
 export async function enterCommunicatorMode(page: Page): Promise<void> {
   await page.getByLabel('Team role').selectOption('communicator');
   await page.getByRole('button', { name: 'Babble' }).waitFor();
+}
+
+export async function createBoardNamed(page: Page, name: string): Promise<void> {
+  page.once('dialog', async (dialog) => {
+    await dialog.accept(name);
+  });
+  await page.getByRole('button', { name: 'New board' }).click();
+  await expect(page.getByLabel('Board')).toHaveText(new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+}
+
+export async function exportObfText(page: Page): Promise<string> {
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Export OBF' }).click();
+  const file = await downloadPromise;
+  const path = await file.path();
+  if (!path) throw new Error('OBF download missing path');
+  return readFile(path, 'utf8');
 }

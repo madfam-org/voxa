@@ -40,6 +40,20 @@ describe('grid moves', () => {
     assert.deepEqual(result.buttons[0]?.position, { row: 1, column: 1 });
   });
 
+  it('keeps locked core slots fixed when fringe buttons move', () => {
+    const buttons = [
+      btn('want', 0, 1, true),
+      btn('eat', 1, 2, false),
+      btn('drink', 1, 3, false),
+    ];
+    const result = moveButtonToCell(buttons, 'eat', 1, 3);
+    const want = result.buttons.find((b) => (b.id as string) === 'want');
+    const eat = result.buttons.find((b) => (b.id as string) === 'eat');
+    assert.deepEqual(want?.position, { row: 0, column: 1 });
+    assert.equal(want?.locked, true);
+    assert.deepEqual(eat?.position, { row: 1, column: 3 });
+  });
+
   it('creates a button in an empty cell', () => {
     const next = createButtonAtCell([btn('a', 0, 0)], 0, 1, 'new');
     assert.equal(next.length, 2);

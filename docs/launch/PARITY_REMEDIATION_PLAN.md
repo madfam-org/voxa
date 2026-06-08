@@ -121,9 +121,9 @@ Each epic links to [FEATURE_PARITY.md](./FEATURE_PARITY.md) rows and benchmark d
 
 **Acceptance (W2):**
 
-- [ ] SLP creates 3 boards, switches between them, exports each as OBF
-- [ ] Locked core words stay fixed after fringe edits
-- [ ] Babble reveals hidden buttons for one session then resets
+- [x] SLP creates 3 boards, switches between them, exports each as OBF (2026-06-09)
+- [x] Locked core words stay fixed after fringe edits (2026-06-09)
+- [x] Babble reveals hidden buttons for one session then resets (2026-06-09)
 
 **Tests:** API integration tests for boards CRUD; Playwright editor scenarios.
 
@@ -435,6 +435,7 @@ pnpm test && pnpm typecheck
 | 32 | Axe on /app settings + editor; switch scan staging e2e (A5/A1) | A | Engineering ✅ 2026-06-09 |
 | 33 | Offline save queue tests + locked-slot drag guard e2e (A4/A3) | A | Engineering ✅ 2026-06-09 |
 | 34 | Offline OBF export fallback + edit/speak/sync e2e (A4/W1) | A | Engineering ✅ 2026-06-09 |
+| 35 | Editor workflow e2e: 3-board OBF, locked core, babble reset (B/W2) | B | Engineering ✅ 2026-06-09 |
 
 ---
 

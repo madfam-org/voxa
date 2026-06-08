@@ -53,7 +53,7 @@ Actionable **feature parity match** against the AAC platform benchmark. Each row
 | Multi-board library (not single demo) | All Tier A | 🟡 | Picker + create/rename/duplicate/delete (2026-06-09) |
 | Motor-planning slot locks enforced in UI | LAMP, SFY | 🟡 | Lock indicator + drag-move with guards; admin override (2026-06-09) |
 | Fitzgerald POS on all buttons | Proloquo, Grid | 🟡 | `resolvePartOfSpeech` on display + OBF import (2026-06-09) |
-| Hide/show buttons (open/close) | SFY, Proloquo | 🟡 | Per-button `hidden` + **Babble** session mode (2026-06-08) |
+| Hide/show buttons (open/close) | SFY, Proloquo | 🟡 | Per-button `hidden` + Babble session with board-switch reset (2026-06-09) |
 | Custom grid size (9–144+ cells) | Proloquo2Go | 🟡 | Editor **Grid** panel — 9–144 cells, locked-slot reflow (2026-06-09) |
 | Symbol-only / label-only modes | OpenAAC ✅ | 🟡 | Profile + per-board overrides in settings (2026-06-09) |
 | Upload custom symbol / photo | OpenAAC 🟢 | 🟡 | Editor photo upload via `/v1/media` (2026-06-09) |
