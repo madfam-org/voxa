@@ -1,0 +1,39 @@
+{
+  "cli": {
+    "version": ">= 13.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "channel": "development"
+    },
+    "preview": {
+      "distribution": "internal",
+      "channel": "preview",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://voxa-api-staging.madfam.io"
+      }
+    },
+    "production": {
+      "channel": "production",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://voxa-api.madfam.io"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "REPLACE_WITH_APPLE_ID",
+        "ascAppId": "REPLACE_WITH_ASC_APP_ID",
+        "appleTeamId": "REPLACE_WITH_TEAM_ID"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./secrets/google-play-service-account.json",
+        "track": "internal"
+      }
+    }
+  }
+}

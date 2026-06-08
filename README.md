@@ -60,6 +60,11 @@ pnpm dev:mobile   # Expo app (iOS / Android / simulator)
 
 On web, tap **I** → **want** to see AI prediction chips. Switch to **Editor (SLP)** for OBF editing, or **Settings** for CVI themes and switch scanning.
 
+### Status & monitoring
+
+- **Service status:** [status.madfam.io](https://status.madfam.io) (Voxa entries under AAC Platform)
+- **GA progress:** [docs/launch/GA_ROADMAP.md](./docs/launch/GA_ROADMAP.md) · [GA_CHECKLIST.md](./docs/launch/GA_CHECKLIST.md) · [GA_STATUS.md](./docs/launch/GA_STATUS.md)
+
 ### Deployed environments (Enclii / madfam.io)
 
 | Environment | Platform | App | API |
@@ -75,7 +80,12 @@ See [docs/deploy/ENCLII.md](./docs/deploy/ENCLII.md) for CI, onboarding, and ope
 - [Architecture](./docs/architecture.md) — system design and platform targets
 - [Data model](./docs/data-model.md) — PostgreSQL schema and migrations
 - [Janua authentication](./docs/auth/JANUA.md) — SSO for web and API
+- [GA roadmap](./docs/launch/GA_ROADMAP.md) — phased plan to full commercial GA
 - [GA checklist](./docs/launch/GA_CHECKLIST.md) — commercial launch criteria
+- [GA status](./docs/launch/GA_STATUS.md) — production deploy wrap-up and remaining platform items
+- [Staging soak](./docs/launch/STAGING_SOAK.md) — pre-GA validation checklist
+- [SLP sign-off](./docs/launch/SLP_SIGNOFF.md) — clinical accessibility gate
+- [Mobile GA](./docs/launch/MOBILE_GA.md) — Expo / EAS store path
 - [Enclii Deployment](./docs/deploy/ENCLII.md) — staging/production on madfam.io via Enclii
 - [Accessibility Standards](./docs/accessibility.md) — WCAG 2.2 compliance details
 - [Legal summaries](./docs/legal/) — privacy, terms, data handling (live pages at `/legal/*`)

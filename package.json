@@ -25,7 +25,9 @@
     "typecheck": "turbo typecheck",
     "clean": "turbo clean && rm -rf node_modules",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
-    "test:e2e": "pnpm --filter @voxa/e2e test"
+    "test:e2e": "pnpm --filter @voxa/e2e test",
+    "test:e2e:smoke": "pnpm --filter @voxa/e2e test:smoke",
+    "test:e2e:a11y": "pnpm --filter @voxa/e2e test:a11y"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

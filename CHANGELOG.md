@@ -4,6 +4,38 @@ All notable changes to Voxa are documented here.
 
 ## [Unreleased]
 
+### Added
+
+- Commercial GA roadmap: `docs/launch/GA_ROADMAP.md` (phases, milestones M0–M5)
+- SLP accessibility sign-off template: `docs/launch/SLP_SIGNOFF.md`
+- Mobile GA path: `docs/launch/MOBILE_GA.md`, `apps/mobile/eas.json` (preview + production profiles)
+- Staging soak log: `docs/launch/SOAK_LOG.md`; daily check script `scripts/launch/soak-daily-check.sh`
+- GHCR visibility script: `scripts/deploy/make-ghcr-packages-public.sh`
+- `@axe-core/playwright` e2e suite: `e2e/specs/a11y.spec.ts`, CI `a11y` job on PR/main
+- `e2e` workspace in `pnpm-workspace.yaml` (fixes `pnpm test:e2e`)
+
+### Changed
+
+- `BoardGrid` uses proper ARIA `grid` → `row` → `gridcell` structure (axe / WCAG)
+- Staging soak window opened (2026-06-08 → 2026-06-15); `e2e-smoke` runs soak + axe daily
+- GA checklist/status/README updated for roadmap and remaining launch gates
+
+### Known / ops follow-up
+
+- GHCR public visibility (org admin); then remove `k8s/*/signature-policyexception.yaml`
+- PgBouncer RBAC; SLP sign-off after soak; mobile EAS builds
+
+### Added (prior unreleased)
+
+- GA wrap-up doc: `docs/launch/GA_STATUS.md` (live state, platform IDs, remaining P0–P2 items)
+- Runbook: GitHub → Enclii webhook 401 after secret rotation (`docs/ops/RUNBOOK.md`)
+
+### Changed (prior unreleased)
+
+- GA checklist and Enclii deploy runbook updated for GitHub webhook + callback token setup
+- Platform webhook/callback secrets rotated; `ENCLII_CALLBACK_TOKEN` and Enclii webhook registered on `madfam-org/voxa` (hook `637900323`)
+- Enclii webhook signature verified (2026-06-08)
+
 ## [1.0.0] — 2026-06-06
 
 ### Added

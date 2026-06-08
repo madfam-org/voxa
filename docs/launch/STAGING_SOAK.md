@@ -1,0 +1,59 @@
+# Staging soak checklist
+
+Run on **staging** (`voxa-staging.madfam.io`) for at least **7 days** before declaring full commercial GA.
+
+**Soak window:** 2026-06-08 → **2026-06-15** (see [GA_ROADMAP.md](./GA_ROADMAP.md))
+
+## Environment
+
+| URL | Role |
+|-----|------|
+| https://voxa-staging.madfam.io | Web |
+| https://voxa-app-staging.madfam.io | Web (alt) |
+| https://voxa-api-staging.madfam.io | API |
+
+## Daily automated checks
+
+Run locally or via scheduled CI (`e2e-smoke` workflow, weekdays 14:00 UTC):
+
+```bash
+./scripts/launch/soak-daily-check.sh
+# optional: append result to soak log
+./scripts/launch/soak-daily-check.sh --log docs/launch/SOAK_LOG.md
+```
+
+Manual one-liners:
+
+```bash
+curl -sS https://voxa-api-staging.madfam.io/health/ready
+# expect: store=postgres, authEnforced=true
+
+curl -sS -o /dev/null -w '%{http_code}\n' https://voxa-api-staging.madfam.io/v1/boards
+# expect: 401 without Bearer token
+```
+
+GitHub Actions deploy workflows include post-deploy smoke steps on push to `staging`.
+
+## Soak log
+
+Record daily results in [SOAK_LOG.md](./SOAK_LOG.md) (auto-appended with `--log`).
+
+## Manual scenarios (once per soak week)
+
+- [ ] Janua sign-in → session → authenticated board list/create
+- [ ] Sign out and confirm protected routes return 401
+- [ ] Dhanam billing test mode: entitlement API returns expected tier/limit
+- [ ] AI consent banner: predictions only after consent; revoke consent blocks `/v1/ai/*`
+- [ ] Legal pages load (`/legal/privacy`, `/legal/terms`, `/legal/accessibility`)
+- [ ] OBF import/export smoke (Editor mode)
+- [ ] CVI theme + switch scanning modes (accessibility settings)
+
+## Exit criteria
+
+- [ ] No S1/S2 incidents on staging during soak window
+- [ ] Argo app `voxa-staging-services` stays Synced / Healthy
+- [ ] Daily soak log green for 7 consecutive days
+- [ ] SLP accessibility sign-off recorded ([SLP_SIGNOFF.md](./SLP_SIGNOFF.md))
+- [ ] Prod promotion: merge `staging` → `main` only after soak + sign-off
+
+Track overall GA items in [GA_CHECKLIST.md](./GA_CHECKLIST.md) and [GA_ROADMAP.md](./GA_ROADMAP.md).
