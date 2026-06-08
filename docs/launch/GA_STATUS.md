@@ -80,7 +80,7 @@ Full operator pass: `ENCLII_TOKEN='…' ./scripts/deploy/complete-ga-operator.sh
 | ~~**P0**~~ | Enclii webhook signature verified | **Done** (2026-06-08) |
 | **Launch** | Staging soak (7 days) | **In progress** 2026-06-08 → 2026-06-15 — [STAGING_SOAK.md](./STAGING_SOAK.md), [SOAK_LOG.md](./SOAK_LOG.md), `scripts/launch/soak-daily-check.sh` |
 | **Launch** | SLP accessibility sign-off | After soak — [SLP_SIGNOFF.md](./SLP_SIGNOFF.md) |
-| **P1** | GHCR packages public; remove `k8s/*/signature-policyexception.yaml` | Org admin — `scripts/deploy/make-ghcr-packages-public.sh` |
+| ~~**P1**~~ | GHCR packages public; PolicyExceptions removed | **Done** 2026-06-08 |
 | **P2** | PgBouncer entries for `voxa` / `voxa_staging` | Platform RBAC; direct Postgres OK |
 | **P2** | `REDIS_URL` | Post-GA multi-replica WebSocket scaling |
 | **Quality** | `@axe-core/playwright` in CI | **Done** — `e2e/specs/a11y.spec.ts`, CI `a11y` job |

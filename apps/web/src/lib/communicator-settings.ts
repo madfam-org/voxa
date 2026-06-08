@@ -10,6 +10,7 @@ export interface CommunicatorSettings {
   eyeDwellMs: number;
   auditoryScanHighlight: boolean;
   hideSymbols: boolean;
+  hideLabels: boolean;
 }
 
 export const DEFAULT_COMMUNICATOR_SETTINGS: CommunicatorSettings = {
@@ -21,6 +22,7 @@ export const DEFAULT_COMMUNICATOR_SETTINGS: CommunicatorSettings = {
   eyeDwellMs: 1000,
   auditoryScanHighlight: true,
   hideSymbols: false,
+  hideLabels: false,
 };
 
 const STORAGE_KEY = 'voxa-communicator-settings';
@@ -44,3 +46,4 @@ export function saveCommunicatorSettings(settings: CommunicatorSettings): void {
 
 export const BOARD_CACHE_KEY = 'voxa-board-cache';
 export const PENDING_SAVE_KEY = 'voxa-pending-board-save';
+export const SELECTED_BOARD_KEY = 'voxa-selected-board-id';

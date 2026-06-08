@@ -49,10 +49,10 @@ Track progress toward general availability at `voxa.madfam.io`.
 
 Track detailed rows in [FEATURE_PARITY.md](./FEATURE_PARITY.md). Research: [AAC_PLATFORM_BENCHMARK.md](./AAC_PLATFORM_BENCHMARK.md).
 
-- [ ] P0 parity rows complete (web GA gate)
+- [ ] P0 parity rows complete (web GA gate) — OBF soak ✅; SLP sign-off pending
 - [ ] Weighted scorecard ≥ 52% at M3 (web GA)
 - [ ] P1 robust AAC baseline ≥ 80% at M6
-- [ ] Migration guide: OBF + Grid/TouchChat import path documented for customers
+- [x] Migration guide: OBF import path — [MIGRATION.md](./MIGRATION.md)
 
 ## Launch
 
@@ -62,7 +62,7 @@ Track detailed rows in [FEATURE_PARITY.md](./FEATURE_PARITY.md). Research: [AAC_
 - [ ] SLP accessibility sign-off — [SLP_SIGNOFF.md](./SLP_SIGNOFF.md)
 - [x] Status page linked from README ([status.madfam.io](https://status.madfam.io))
 
-**Roadmap:** [GA_ROADMAP.md](./GA_ROADMAP.md) · **Parity:** [FEATURE_PARITY.md](./FEATURE_PARITY.md) · [AAC_PLATFORM_BENCHMARK.md](./AAC_PLATFORM_BENCHMARK.md)
+**Roadmap:** [GA_ROADMAP.md](./GA_ROADMAP.md) · **Remediation:** [REMEDIATION_PLAN.md](./REMEDIATION_PLAN.md) · **Parity:** [FEATURE_PARITY.md](./FEATURE_PARITY.md)
 
 ## Operator quick commands
 

@@ -54,6 +54,19 @@ export class VoxaClient {
     return body.boards;
   }
 
+  async createBoard(board: Board): Promise<BoardUpdateResult> {
+    const res = await fetch(this.url('/v1/boards'), {
+      method: 'POST',
+      headers: teamHeaders(this.options),
+      body: JSON.stringify(board),
+    });
+    if (!res.ok) {
+      const err = (await res.json().catch(() => ({}))) as { error?: string };
+      throw new Error(err.error ?? `Create failed: ${res.status}`);
+    }
+    return res.json() as Promise<BoardUpdateResult>;
+  }
+
   async saveBoard(board: Board, expectedVersion?: number): Promise<BoardUpdateResult> {
     const res = await fetch(this.url(`/v1/boards/${board.id as string}`), {
       method: 'PUT',

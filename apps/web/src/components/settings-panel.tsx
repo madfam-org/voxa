@@ -142,6 +142,17 @@ export function SettingsPanel({ settings, onChange, onClose }: SettingsPanelProp
           Reduce visual complexity
         </label>
       </Field>
+
+      <Field label="Symbol-only mode (hide labels)">
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <input
+            type="checkbox"
+            checked={settings.hideLabels}
+            onChange={(e) => onChange({ hideLabels: e.target.checked })}
+          />
+          Show symbols without text labels
+        </label>
+      </Field>
     </aside>
   );
 }

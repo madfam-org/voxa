@@ -9,6 +9,7 @@ export interface AacButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> 
   dwellProgress?: number;
   scanHighlighted?: boolean;
   hideSymbol?: boolean;
+  hideLabel?: boolean;
   children?: ReactNode;
 }
 
@@ -23,6 +24,7 @@ export function AacButton({
   dwellProgress,
   scanHighlighted = false,
   hideSymbol = false,
+  hideLabel = false,
   className,
   style,
   children,
@@ -67,7 +69,9 @@ export function AacButton({
       {symbolUrl && !hideSymbol ? (
         <img src={symbolUrl} alt="" aria-hidden style={{ maxWidth: '60%', maxHeight: '50%' }} />
       ) : null}
-      <span style={{ fontSize: 'clamp(0.75rem, 2vw, 1rem)', fontWeight: 600 }}>{label}</span>
+      {!hideLabel ? (
+        <span style={{ fontSize: 'clamp(0.75rem, 2vw, 1rem)', fontWeight: 600 }}>{label}</span>
+      ) : null}
       {children}
     </button>
   );

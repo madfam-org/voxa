@@ -1,5 +1,6 @@
 {
-  "format": "open-board-format-1.0",
+  "format": "open-board-format",
+  "formatVersion": "3.0",
   "id": "soak-minimal",
   "name": "Soak test board",
   "grid": {

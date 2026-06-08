@@ -60,22 +60,63 @@ home_code="$(curl -sS -o /dev/null -w '%{http_code}' "${WEB_BASE}/" 2>/dev/null 
 check "GET / (communicator or auth redirect)" test "${home_code}" = "200" -o "${home_code}" = "307" -o "${home_code}" = "302"
 
 echo "== API auth gates =="
-for path in /v1/ai/predict/text /v1/ai/predict/symbols /v1/billing/entitlement; do
+for path in /v1/billing/entitlement; do
   code="$(curl -sS -o /dev/null -w '%{http_code}' "${API_BASE}${path}" 2>/dev/null || echo 000)"
   check "GET ${path} unauthenticated → 401" test "${code}" = "401"
+done
+for path in /v1/ai/predict/text /v1/ai/predict/symbols; do
+  code="$(curl -sS -o /dev/null -w '%{http_code}' -X POST "${API_BASE}${path}" \
+    -H 'Content-Type: application/json' -d '{}' 2>/dev/null || echo 000)"
+  check "POST ${path} unauthenticated → 401" test "${code}" = "401"
 done
 
 if [[ "${WITH_AUTH}" == true ]]; then
   if [[ -z "${VOXA_TEST_ACCESS_TOKEN:-}" ]]; then
-    echo "SKIP auth OBF (--with-auth requires VOXA_TEST_ACCESS_TOKEN from Janua voxa session)" >&2
-    echo "  Sign in at ${WEB_BASE}/auth/signin → copy accessToken from /api/auth/session" >&2
+    echo "SKIP authenticated soak (--with-auth requires VOXA_TEST_ACCESS_TOKEN)" >&2
+    echo "  Use fetch-staging-access-token.sh or sign in → /api/auth/session" >&2
   else
     token="${VOXA_TEST_ACCESS_TOKEN}"
-    echo "== Authenticated API + OBF round-trip =="
+    echo "== Authenticated API =="
     boards_code="$(curl -sS -o /dev/null -w '%{http_code}' "${API_BASE}/v1/boards" \
       -H "Authorization: Bearer ${token}")"
     check "GET /v1/boards authenticated → 200" test "${boards_code}" = "200"
 
+    entitlement_body="$(curl -sS "${API_BASE}/v1/billing/entitlement" \
+      -H "Authorization: Bearer ${token}")"
+    check "GET /v1/billing/entitlement has tier" grep -q '"tier"' <<<"${entitlement_body}"
+
+    ai_no_consent="$(curl -sS -o /dev/null -w '%{http_code}' -X POST "${API_BASE}/v1/ai/predict/text" \
+      -H "Authorization: Bearer ${token}" \
+      -H 'Content-Type: application/json' \
+      -d '{"context":[],"partialUtterance":"I want"}')"
+    check "POST /v1/ai/predict/text without consent → 403" test "${ai_no_consent}" = "403"
+
+    ai_with_consent="$(curl -sS -o /dev/null -w '%{http_code}' -X POST "${API_BASE}/v1/ai/predict/text" \
+      -H "Authorization: Bearer ${token}" \
+      -H 'Content-Type: application/json' \
+      -H 'X-Voxa-AI-Consent: true' \
+      -d '{"context":[],"partialUtterance":"I want"}')"
+    check "POST /v1/ai/predict/text with consent → 200/402" test "${ai_with_consent}" = "200" -o "${ai_with_consent}" = "402"
+
+    soak_board_id="soak-create-$(date +%s)"
+    create_payload="$(cat <<EOF
+{
+  "id": "${soak_board_id}",
+  "name": "Soak create test",
+  "profileId": "soak-profile",
+  "version": 1,
+  "updatedAt": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+  "grid": { "rows": 2, "columns": 2, "buttons": [] }
+}
+EOF
+)"
+    create_code="$(curl -sS -o /dev/null -w '%{http_code}' -X POST "${API_BASE}/v1/boards" \
+      -H "Authorization: Bearer ${token}" \
+      -H 'Content-Type: application/json' \
+      -d "${create_payload}")"
+    check "POST /v1/boards create → 201" test "${create_code}" = "201"
+
+    echo "== Authenticated OBF round-trip =="
     obf_file="${ROOT}/fixtures/soak/minimal.obf"
     import_code="$(curl -sS -o /tmp/voxa-obf-import.json -w '%{http_code}' \
       -X POST "${API_BASE}/v1/boards/demo-core/import/obf" \
