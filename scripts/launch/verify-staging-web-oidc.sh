@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 # Verify staging voxa-web can complete Janua OAuth (OIDC_CLIENT_SECRET loaded in pods).
 #
-# Uses the same PKCE flow as fetch-staging-access-token.sh but asserts the callback
-# lands on the app (not /auth/signin?error=token_exchange_failed).
+# Simulates the browser callback using a Netscape cookie jar (HttpOnly PKCE/state cookies).
 #
 # Usage:
 #   OIDC_CLIENT_ID='jnc_…' OIDC_CLIENT_SECRET='jns_…' \
@@ -29,18 +28,19 @@ fi
 verifier="$(openssl rand -base64 32 | tr -d '=' | tr '/+' '_-' | cut -c1-43)"
 challenge="$(printf '%s' "${verifier}" | openssl dgst -sha256 -binary | openssl base64 | tr -d '=' | tr '/+' '_-')"
 state="$(openssl rand -hex 16)"
-
-# Seed Voxa OAuth state cookie (matches web sign-in flow).
 state_payload="$(python3 - <<PY
 import json
 print(json.dumps({"state": "${state}", "redirect_to": "/"}))
 PY
 )"
-# Persist transient OAuth cookies the way Next.js sets them (HttpOnly, Secure, SameSite=lax).
-curl -sS -c "${COOKIE_JAR}" -b "${COOKIE_JAR}" -o /dev/null \
-  "${WEB_BASE}/auth/signin" \
-  --cookie "voxa_oidc_state=${state_payload}" \
-  --cookie "voxa_pkce_verifier=${verifier}"
+expiry="$(( $(date +%s) + 1800 ))"
+
+# curl reads/writes HttpOnly cookies when the jar uses the #HttpOnly_ prefix.
+cat >"${COOKIE_JAR}" <<EOF
+# Netscape HTTP Cookie File
+#HttpOnly_.voxa-staging.madfam.io	TRUE	/	TRUE	${expiry}	voxa_pkce_verifier	${verifier}
+#HttpOnly_.voxa-staging.madfam.io	TRUE	/	TRUE	${expiry}	voxa_oidc_state	${state_payload}
+EOF
 
 auth_qs="$(python3 - <<PY
 import urllib.parse
