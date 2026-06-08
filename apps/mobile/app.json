@@ -2,7 +2,7 @@
   "expo": {
     "name": "Voxa",
     "slug": "voxa",
-    "version": "0.4.0",
+    "version": "0.5.0",
     "orientation": "landscape",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -12,19 +12,22 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "io.madfam.voxa"
+      "bundleIdentifier": "io.madfam.voxa",
+      "buildNumber": "1"
     },
     "android": {
       "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0a0a0a"
       },
-      "package": "io.madfam.voxa"
+      "package": "io.madfam.voxa",
+      "versionCode": 1
     },
     "plugins": ["expo-router", "expo-secure-store"],
     "extra": {
       "apiUrl": "http://localhost:4000",
       "oidcIssuer": "https://auth.madfam.io",
-      "oidcClientId": "",
+      "oidcClientId": "voxa",
       "eas": {
         "projectId": "REPLACE_WITH_EAS_PROJECT_ID"
       }

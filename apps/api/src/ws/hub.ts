@@ -1,6 +1,6 @@
 import type { SyncEvent } from '@voxa/core';
 
-type WsClient = { send: (data: string) => void; boardId?: string };
+export type WsClient = { send: (data: string) => void; boardId?: string };
 
 const clients = new Set<WsClient>();
 

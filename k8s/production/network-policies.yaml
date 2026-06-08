@@ -19,3 +19,5 @@ spec:
           protocol: TCP
         - port: 6432
           protocol: TCP
+        - port: 6379
+          protocol: TCP

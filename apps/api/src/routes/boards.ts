@@ -4,7 +4,7 @@ import { canAccessBoard, canEditBoard } from '../lib/board-access.js';
 import { maxBoardCount, resolveEntitlement } from '../lib/dhanam.js';
 import { requireEditor } from '../middleware/team-auth.js';
 import { getStore } from '../store/index.js';
-import { broadcastBoardEvent } from '../ws/hub.js';
+import { broadcastBoardEvent } from '../ws/sync-hub.js';
 
 export const boardRoutes = new Hono();
 

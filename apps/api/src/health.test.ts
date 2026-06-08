@@ -28,8 +28,9 @@ describe('GET /health', () => {
   it('returns ready status for file-backed store', async () => {
     const res = await app.request('/health/ready');
     assert.equal(res.status, 200);
-    const body = (await res.json()) as { status: string; store: string };
+    const body = (await res.json()) as { status: string; store: string; syncHub?: string };
     assert.equal(body.status, 'ready');
     assert.equal(body.store, 'file');
+    assert.equal(body.syncHub, 'local');
   });
 });

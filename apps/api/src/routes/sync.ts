@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import type { SyncEvent } from '@voxa/core';
 import { createBoardId } from '@voxa/core';
 import { getStore } from '../store/index.js';
-import { broadcastBoardEvent } from '../ws/hub.js';
+import { broadcastBoardEvent } from '../ws/sync-hub.js';
 
 export const syncRoutes = new Hono();
 

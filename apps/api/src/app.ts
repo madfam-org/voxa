@@ -11,7 +11,7 @@ import { mediaRoutes } from './routes/media.js';
 import { symbolRoutes } from './routes/symbols.js';
 import { syncRoutes } from './routes/sync.js';
 import { checkStoreReady, getStoreDriver } from './store/index.js';
-import { presenceCount, registerClient, unregisterClient } from './ws/hub.js';
+import { getSyncHubMode, presenceCount, registerClient, unregisterClient } from './ws/sync-hub.js';
 
 export const API_VERSION = '1.0.0';
 
@@ -35,6 +35,7 @@ app.get('/health/ready', async (c) => {
     status: 'ready',
     service: 'voxa-api',
     store: getStoreDriver(),
+    syncHub: getSyncHubMode(),
     authEnforced:
       process.env.VOXA_JANUA_AUTH_REQUIRED === 'true' ||
       process.env.JANUA_AUTH_REQUIRED === 'true',

@@ -12,14 +12,19 @@
     "preview": {
       "distribution": "internal",
       "channel": "preview",
+      "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://voxa-api-staging.madfam.io"
+        "EXPO_PUBLIC_API_URL": "https://voxa-api-staging.madfam.io",
+        "EXPO_PUBLIC_OIDC_ISSUER": "https://auth.madfam.io",
+        "EXPO_PUBLIC_OIDC_CLIENT_ID": "voxa"
       }
     },
     "production": {
       "channel": "production",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://voxa-api.madfam.io"
+        "EXPO_PUBLIC_API_URL": "https://voxa-api.madfam.io",
+        "EXPO_PUBLIC_OIDC_ISSUER": "https://auth.madfam.io",
+        "EXPO_PUBLIC_OIDC_CLIENT_ID": "voxa"
       }
     }
   },

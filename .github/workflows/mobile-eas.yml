@@ -11,6 +11,10 @@ on:
       - 'packages/vocabulary/**'
       - '.github/workflows/mobile-eas.yml'
 
+concurrency:
+  group: mobile-eas-preview
+  cancel-in-progress: true
+
 jobs:
   preview:
     runs-on: ubuntu-latest
@@ -29,12 +33,23 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - name: Typecheck mobile app
+        run: pnpm --filter @voxa/mobile typecheck
+
+      - name: Skip when EXPO_TOKEN is not configured
+        if: secrets.EXPO_TOKEN == ''
+        run: |
+          echo 'EXPO_TOKEN GitHub secret is not set; skipping EAS preview build.'
+          echo 'Configure EXPO_TOKEN and re-run workflow_dispatch to build TestFlight/Play internal binaries.'
+
       - uses: expo/expo-github-action@v8
+        if: secrets.EXPO_TOKEN != ''
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
       - name: EAS preview build (staging API)
+        if: secrets.EXPO_TOKEN != ''
         working-directory: apps/mobile
         run: eas build --profile preview --platform all --non-interactive
         env:

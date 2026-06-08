@@ -157,7 +157,7 @@ Each epic links to [FEATURE_PARITY.md](./FEATURE_PARITY.md) rows and benchmark d
 
 | ID | Feature | Remediation | Implementation |
 |----|---------|-------------|----------------|
-| D1 | iOS + Android apps | EAS preview → production | [MOBILE_GA.md](./MOBILE_GA.md), `mobile-eas.yml` CI ✅ 2026-06-08 |
+| D1 | iOS + Android apps | EAS preview → production | [MOBILE_GA.md](./MOBILE_GA.md), `app.config.js` env + icons + CI guard ✅ 2026-06-09 |
 | D2 | Janua mobile OAuth | Universal links / app links | `expo-auth-session` + SecureStore ✅ 2026-06-09 |
 | D3 | Offline on device | SQLite/AsyncStorage + sync queue | AsyncStorage cache, NetInfo flush, retry UI ✅ 2026-06-09 |
 | D4 | PWA install | Web manifest + install prompt on landing | `manifest.webmanifest` + install banner ✅ 2026-06-09 |
@@ -179,7 +179,7 @@ Each epic links to [FEATURE_PARITY.md](./FEATURE_PARITY.md) rows and benchmark d
 | E1 | Usage / activation log | Append-only events; consent gate | API `POST /v1/events`, Postgres `activations`; `@voxa/core` event schema |
 | E2 | SLP reporting UI | Aggregate charts (no PII by default) | Web **Usage** panel in `/app` for editors (2026-06-08); `/app/reports` institutional tier later |
 | E3 | Remote SLP edit | Role `editor` vs `communicator`; audit log | `/app/edit`, org-scoped access, audit API + panel ✅ 2026-06-09 |
-| E4 | Real-time co-edit | Multi-user board sync | `REDIS_URL` + WS fan-out ([GA_ROADMAP Phase 5](./GA_ROADMAP.md)); `packages/sync` |
+| E4 | Real-time co-edit | Multi-user board sync | Redis pub/sub fan-out when `REDIS_URL` set ✅ 2026-06-09; WS auth P2 |
 | E5 | Share vocabulary sets | Export board pack to org library | Org-scoped board templates API |
 
 **Acceptance (W3):**
@@ -426,6 +426,8 @@ pnpm test && pnpm typecheck
 | 23 | Remote SLP editor + audit log (E3) | E | Engineering ✅ 2026-06-09 |
 | 24 | Mobile Janua OAuth + offline sync (D2/D3) | D | Mobile ✅ 2026-06-09 |
 | 25 | PWA manifest + install prompt (D4) | D | Engineering ✅ 2026-06-09 |
+| 26 | Mobile EAS env wiring + icons + CI guard (D1) | D | Mobile ✅ 2026-06-09 |
+| 27 | Redis-backed WebSocket sync fan-out (E4) | E | Engineering ✅ 2026-06-09 |
 
 ---
 

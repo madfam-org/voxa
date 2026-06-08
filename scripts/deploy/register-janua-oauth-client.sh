@@ -128,6 +128,7 @@ existing_uuid="$(find_existing_client || true)"
 if [[ -n "${existing_uuid}" ]]; then
   echo "OAuth client already exists (${PRODUCTION_CLIENT_ID})."
   echo "Existing client uuid: ${existing_uuid}"
+  echo "If mobile sign-in fails, add voxa://auth/callback to redirect_uris in Janua admin."
   echo "No changes made (pass --rotate-secret to roll OIDC_CLIENT_SECRET)."
   exit 0
 fi
@@ -136,14 +137,15 @@ payload="$(cat <<EOF
 {
   "client_key": "${CLIENT_KEY}",
   "name": "Voxa",
-  "description": "Voxa AAC platform (web)",
+  "description": "Voxa AAC platform (web + mobile)",
   "audience": "${AUDIENCE}",
   "redirect_uris": [
     "https://voxa.madfam.io/auth/callback",
     "https://voxa-app.madfam.io/auth/callback",
     "https://voxa-staging.madfam.io/auth/callback",
     "https://voxa-app-staging.madfam.io/auth/callback",
-    "http://localhost:3000/auth/callback"
+    "http://localhost:3000/auth/callback",
+    "voxa://auth/callback"
   ],
   "allowed_scopes": ["openid", "profile", "email", "offline_access"],
   "grant_types": ["authorization_code", "refresh_token"],
