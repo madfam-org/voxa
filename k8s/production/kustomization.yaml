@@ -17,7 +17,7 @@ labels:
     enclii.dev/managed-by: switchyard
 
 images:
-- digest: sha256:a4e0992efb447771cf759033298dd277e2b8ff3ef261b48d621a2cbbddd11d5c
+- digest: sha256:fe81dd14f38e56cdd3b830b8106884de07283462134e3ec794ec312bed8db8bf
   name: voxa-api
   newName: ghcr.io/madfam-org/voxa/voxa-api
 - digest: sha256:2ffbebfbb01ce9319d289ad1afda3615b241511cc69ed9e961f7e55b43ca237a
