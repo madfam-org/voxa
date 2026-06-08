@@ -91,6 +91,33 @@ export function useSwitchScan({
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [enabled, select, advance]);
 
+  useEffect(() => {
+    if (!enabled || typeof navigator.getGamepads !== 'function') return;
+
+    const pressed = new Map<number, boolean>();
+    let frame = 0;
+
+    const poll = () => {
+      const pads = navigator.getGamepads();
+      for (const pad of pads) {
+        if (!pad) continue;
+        for (const buttonIndex of [0, 1]) {
+          const down = pad.buttons[buttonIndex]?.pressed ?? false;
+          const wasDown = pressed.get(buttonIndex) ?? false;
+          if (down && !wasDown) {
+            if (buttonIndex === 0) select();
+            else advance();
+          }
+          pressed.set(buttonIndex, down);
+        }
+      }
+      frame = window.requestAnimationFrame(poll);
+    };
+
+    frame = window.requestAnimationFrame(poll);
+    return () => window.cancelAnimationFrame(frame);
+  }, [enabled, select, advance]);
+
   const isHighlighted = useCallback(
     (button: BoardButton) =>
       enabled &&

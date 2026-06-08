@@ -64,6 +64,14 @@ export function useObzFileInput(
   }, '.obz,application/zip');
 }
 
+export function useGridsetFileInput(
+  onImport: (archive: ArrayBuffer) => Promise<void>,
+): { open: () => void; input: React.ReactNode } {
+  return useBoardFileInput(async (file) => {
+    await onImport(await file.arrayBuffer());
+  }, '.gridset,application/octet-stream,application/zip');
+}
+
 export function downloadTextFile(filename: string, content: string, mime = 'application/json') {
   const blob = new Blob([content], { type: mime });
   downloadBlobFile(filename, blob);

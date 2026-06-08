@@ -41,11 +41,26 @@ Export **OBF 3.x JSON** from the source app, then import via Voxa Editor. Voxa m
 
 **Not yet supported:** hierarchical `parent_id` folder trees inside a single board view.
 
+### Grid 3 (`.gridset`)
+
+1. Editor → **Import Grid** and select a `.gridset` archive exported from Grid 3.
+2. Voxa imports the primary grid (first alphabetically) with button positions preserved.
+
+**API import:**
+
+```bash
+curl -X POST "https://voxa-api.madfam.io/v1/boards/{boardId}/import/gridset" \
+  -H "Authorization: Bearer ${VOXA_ACCESS_TOKEN}" \
+  -H "Content-Type: application/octet-stream" \
+  --data-binary @my-board.gridset
+```
+
+Multi-grid gridsets import one page today; link targets map to `navigateToBoardId` when present.
+
 ## Coming soon (P2)
 
 | Source | Format | Target |
 |--------|--------|--------|
-| Grid 3 | `.gridset` | AACProcessors pipeline |
 | TouchChat / TD Snap | Proprietary export | AACProcessors pipeline |
 | Proloquo2Go | Backup export | Partner migration service |
 

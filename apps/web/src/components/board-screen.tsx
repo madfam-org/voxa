@@ -14,10 +14,12 @@ import {
   posOptions,
   useObfFileInput,
   useObzFileInput,
+  useGridsetFileInput,
 } from '@/lib/board-utils';
 import { effectiveDisplaySettings } from '@/lib/communicator-settings';
 import { useCommunicatorSettings } from '@/hooks/use-communicator-settings';
 import { useEyeDwellByButton } from '@/hooks/use-eye-dwell';
+import { useGazeBridgeDwell } from '@/hooks/use-gaze-bridge-dwell';
 import { usePredictions } from '@/hooks/use-predictions';
 import { useSwitchScan } from '@/hooks/use-switch-scan';
 import { useSyncedBoard, type BoardSummary } from '@/hooks/use-synced-board';
@@ -101,6 +103,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
     importObf,
     exportObf,
     importObz,
+    importGridset,
     exportObz,
     isEditor,
     isAuthenticated,
@@ -202,14 +205,26 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
     getLabel: buttonLabel,
   });
 
-  const { onEnter, onLeave, dwellProgressFor } = useEyeDwellByButton(
-    eyeDwellEnabled,
+  const { onEnter, onLeave, dwellProgressFor: pointerDwellProgress } = useEyeDwellByButton(
+    eyeDwellEnabled && settings.gazeSource === 'pointer',
     settings.eyeDwellMs,
     (buttonId) => {
       const btn = visibleButtons.find((b) => (b.id as string) === buttonId);
       if (btn) activate(btn);
     },
   );
+
+  const { dwellProgressFor: bridgeDwellProgress } = useGazeBridgeDwell({
+    enabled: eyeDwellEnabled && settings.gazeSource === 'tobii-bridge',
+    dwellMs: settings.eyeDwellMs,
+    onActivate: (buttonId) => {
+      const btn = visibleButtons.find((b) => (b.id as string) === buttonId);
+      if (btn) activate(btn);
+    },
+  });
+
+  const dwellProgressFor =
+    settings.gazeSource === 'tobii-bridge' ? bridgeDwellProgress : pointerDwellProgress;
 
   const speakAll = useCallback(() => {
     const text = utterance.join(' ');
@@ -245,8 +260,23 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
     [importObz],
   );
 
+  const handleImportGridset = useCallback(
+    async (archive: ArrayBuffer) => {
+      setBusy(true);
+      try {
+        await importGridset(archive);
+      } catch (err) {
+        alert((err as Error).message);
+      } finally {
+        setBusy(false);
+      }
+    },
+    [importGridset],
+  );
+
   const { open: openObfImport, input: obfInput } = useObfFileInput(handleImport);
   const { open: openObzImport, input: obzInput } = useObzFileInput(handleImportObz);
+  const { open: openGridsetImport, input: gridsetInput } = useGridsetFileInput(handleImportGridset);
 
   const handleExportObz = useCallback(async () => {
     setBusy(true);
@@ -512,6 +542,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
     return (
       <AacButton
         label={buttonLabel(btn)}
+        data-voxa-button-id={btn.id as string}
         symbolUrl={buttonSymbolUrl(btn)}
         borderColor={buttonBorderColor(btn)}
         targetScale={settings.targetScale}
@@ -599,6 +630,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
     <div style={{ ...shellStyle, display: 'flex', flexDirection: 'column', height: '100dvh' }}>
       {obfInput}
       {obzInput}
+      {gridsetInput}
       <div ref={liveRef} aria-live="polite" aria-atomic="true" style={visuallyHidden} />
 
       {remoteEditor ? (
@@ -806,6 +838,9 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
             </button>
             <button type="button" onClick={openObzImport} disabled={busy} style={secondaryBtn}>
               Import OBZ
+            </button>
+            <button type="button" onClick={openGridsetImport} disabled={busy} style={secondaryBtn}>
+              Import Grid
             </button>
             <button type="button" onClick={handleExport} disabled={busy} style={secondaryBtn}>
               Export OBF

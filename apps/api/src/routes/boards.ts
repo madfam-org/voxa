@@ -197,6 +197,34 @@ boardRoutes.post('/:boardId/import/obz', async (c) => {
   }
 });
 
+boardRoutes.post('/:boardId/import/gridset', async (c) => {
+  if (!requireEditor(c)) {
+    return c.json({ error: 'Editor role required' }, 403);
+  }
+
+  const boardId = c.req.param('boardId');
+  const archive = new Uint8Array(await c.req.arrayBuffer());
+  const { userId, role, orgId } = c.get('team');
+
+  const current = await getStore().getBoard(boardId);
+  if (!current) return c.json({ error: 'Board not found' }, 404);
+  if (!canEditBoard(boardId, current.ownerUserId, userId, role, current.orgId, orgId)) {
+    return c.json({ error: 'Forbidden' }, 403);
+  }
+
+  try {
+    const result = await getStore().importGridsetBoard(boardId, archive, userId);
+    broadcastBoardEvent(result.event);
+    return c.json(result);
+  } catch (err) {
+    const error = err as Error & { status?: number; details?: unknown };
+    if (error.status === 422 && error.details) {
+      return c.json({ error: error.message, details: error.details }, 422);
+    }
+    return c.json({ error: error.message, details: error.details }, 400);
+  }
+});
+
 boardRoutes.get('/:boardId/export/obz', async (c) => {
   const boardId = c.req.param('boardId');
   const { userId, role, orgId } = c.get('team');

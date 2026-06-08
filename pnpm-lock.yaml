@@ -38,6 +38,9 @@ importers:
       '@voxa/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@voxa/import-adapters':
+        specifier: workspace:*
+        version: link:../../packages/import-adapters
       '@voxa/obf':
         specifier: workspace:*
         version: link:../../packages/obf
@@ -231,6 +234,28 @@ importers:
 
   packages/core:
     devDependencies:
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
+  packages/import-adapters:
+    dependencies:
+      '@voxa/core':
+        specifier: workspace:*
+        version: link:../core
+      '@voxa/obf':
+        specifier: workspace:*
+        version: link:../obf
+      '@voxa/vocabulary':
+        specifier: workspace:*
+        version: link:../vocabulary
+      fflate:
+        specifier: ^0.8.2
+        version: 0.8.3
+    devDependencies:
+      tsx:
+        specifier: ^4.19.2
+        version: 4.22.4
       typescript:
         specifier: ^5.7.2
         version: 5.9.3

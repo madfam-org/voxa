@@ -99,6 +99,12 @@ export function snapHitBox(
 }
 
 export {
+  dispatchGazePoint,
+  resolveGazeButtonId,
+  VOXA_GAZE_EVENT,
+  type GazePoint,
+} from './gaze-adapter.js';
+export {
   classifySwitchKey,
   classifySwitchNativeKey,
   SWITCH_ADVANCE_KEY_CODES,

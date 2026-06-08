@@ -1,0 +1,30 @@
+{
+  "name": "@voxa/import-adapters",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Legacy AAC format import adapters (Grid 3 gridset, future TouchChat/Snap)",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --import tsx --test src/gridset.test.ts",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@voxa/core": "workspace:*",
+    "@voxa/obf": "workspace:*",
+    "@voxa/vocabulary": "workspace:*",
+    "fflate": "^0.8.2"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

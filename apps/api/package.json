@@ -16,6 +16,7 @@
     "@hono/node-ws": "^1.1.1",
     "@voxa/ai": "workspace:*",
     "@voxa/core": "workspace:*",
+    "@voxa/import-adapters": "workspace:*",
     "@voxa/obf": "workspace:*",
     "@voxa/symbols": "workspace:*",
     "@voxa/vocabulary": "workspace:*",

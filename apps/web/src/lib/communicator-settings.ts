@@ -9,6 +9,7 @@ export interface CommunicatorSettings {
   switchIntervalMs: number;
   switchOrder: ScanOrder;
   eyeDwellMs: number;
+  gazeSource: 'pointer' | 'tobii-bridge';
   auditoryScanHighlight: boolean;
   auditoryScanVoice: boolean;
   pauseScanWhileSpeaking: boolean;
@@ -25,6 +26,7 @@ export const DEFAULT_COMMUNICATOR_SETTINGS: CommunicatorSettings = {
   switchIntervalMs: 1200,
   switchOrder: 'row-major',
   eyeDwellMs: 1000,
+  gazeSource: 'pointer',
   auditoryScanHighlight: true,
   auditoryScanVoice: false,
   pauseScanWhileSpeaking: true,

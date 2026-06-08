@@ -11,6 +11,7 @@ COPY apps/api/package.json ./apps/api/
 COPY packages/access/package.json ./packages/access/
 COPY packages/ai/package.json ./packages/ai/
 COPY packages/core/package.json ./packages/core/
+COPY packages/import-adapters/package.json ./packages/import-adapters/
 COPY packages/obf/package.json ./packages/obf/
 COPY packages/sync/package.json ./packages/sync/
 COPY packages/vocabulary/package.json ./packages/vocabulary/

@@ -352,6 +352,16 @@ export function useSyncedBoard(role: TeamRole) {
     [boardId, client, setBoard],
   );
 
+  const importGridset = useCallback(
+    async (archive: ArrayBuffer) => {
+      const result = await client.importGridset(boardId, archive);
+      setBoard(result.board);
+      setWarnings(result.warnings);
+      return result;
+    },
+    [boardId, client, setBoard],
+  );
+
   const exportObz = useCallback(async () => {
     return client.exportObz(boardId);
   }, [boardId, client]);
@@ -447,6 +457,7 @@ export function useSyncedBoard(role: TeamRole) {
     importObf,
     exportObf,
     importObz,
+    importGridset,
     exportObz,
     isEditor,
     isAuthenticated: Boolean(accessToken),

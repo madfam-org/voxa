@@ -442,6 +442,9 @@ pnpm test && pnpm typecheck
 | 39 | Soak status + prod Redis verify + mobile scan tune (W0/E4/D) | W0/E4/D | Ops/Engineering ✅ 2026-06-09 |
 | 40 | Fix soak-status pass-day detection (W0) | W0 | Engineering ✅ 2026-06-09 |
 | 41 | TestFlight bootstrap + submit CI + mobile BT switch keys (D1/F1) | D/F | Mobile ✅ 2026-06-09 |
+| 42 | Tobii gaze bridge + Gamepad switch scan (F4/F1 web) | F | Engineering ✅ 2026-06-09 |
+| 43 | Grid 3 gridset import adapter + API/editor (G1) | G | Engineering ✅ 2026-06-09 |
+| 44 | Redis rollout verify scripts staging + prod (E4) | E | Ops ✅ 2026-06-09 |
 
 ---
 

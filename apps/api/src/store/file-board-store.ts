@@ -15,6 +15,7 @@ import {
   applyDeleteBoard,
   applyImportObfBoard,
   applyImportObzBoard,
+  applyImportGridsetBoard,
   applyUpdateBoard,
   exportBoardObf,
   exportBoardObz,
@@ -87,6 +88,13 @@ export function createFileBoardStore(initialState?: StoreState): BoardStore {
 
     async importObzBoard(boardId, archive, actorUserId): Promise<ImportObfResult> {
       const result = applyImportObzBoard(state.boards, boardId, archive, actorUserId);
+      state.events.push(result.event);
+      persist();
+      return result;
+    },
+
+    async importGridsetBoard(boardId, archive, actorUserId): Promise<ImportObfResult> {
+      const result = applyImportGridsetBoard(state.boards, boardId, archive, actorUserId);
       state.events.push(result.event);
       persist();
       return result;

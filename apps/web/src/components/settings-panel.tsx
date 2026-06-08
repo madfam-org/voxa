@@ -179,7 +179,25 @@ export function SettingsPanel({
               style={{ width: '100%' }}
             />
           </Field>
-          <p style={hintStyle}>Hold pointer over a button to activate (simulates eye dwell).</p>
+          <Field label="Gaze source">
+            <select
+              value={settings.gazeSource}
+              onChange={(e) =>
+                onChange({
+                  gazeSource: e.target.value as CommunicatorSettings['gazeSource'],
+                })
+              }
+              style={fieldStyle}
+            >
+              <option value="pointer">Pointer hover (simulation)</option>
+              <option value="tobii-bridge">Tobii bridge (voxa:gaze events)</option>
+            </select>
+          </Field>
+          <p style={hintStyle}>
+            {settings.gazeSource === 'tobii-bridge'
+              ? 'Lab inject: window.__voxaInjectGaze(x, y) or dispatch voxa:gaze CustomEvent.'
+              : 'Hold pointer over a button to activate (simulates eye dwell).'}
+          </p>
         </>
       )}
 

@@ -33,7 +33,8 @@ Users can disable decorative imagery, reduce grid chrome, and enlarge symbol-onl
 - Auditory scan highlight optional (screen reader live region)
 - Optional spoken scan voice for each focused cell
 - Scan pauses automatically while TTS or recorded speech plays (configurable)
-- **Hardware USB/BT switches (web):** select via Space/Enter; advance scan via ArrowRight, Tab, ArrowDown, or F13/F14 (`classifySwitchKey` in `@voxa/access`)
+- **Eye dwell (web):** pointer hover simulation, or **Tobii bridge** via `voxa:gaze` / `window.__voxaInjectGaze(x,y)` in settings
+- **Hardware USB/BT switches (web):** keyboard keys + Gamepad API buttons 0/1 during switch scan
 - **Hardware USB/BT switches (mobile):** BT switches that emulate a keyboard drive scan via hidden focus capture (`MobileSwitchKeyCapture`, `classifySwitchNativeKey`); on-screen Next/Select/Tune always available
 
 ### Eye Tracking
