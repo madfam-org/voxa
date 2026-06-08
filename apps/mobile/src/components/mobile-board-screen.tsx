@@ -6,10 +6,10 @@ import {
   Text,
   View,
 } from 'react-native';
-import * as Speech from 'expo-speech';
 import type { BoardButton } from '@voxa/core';
 import { fitzgeraldColor, type PartOfSpeech } from '@voxa/vocabulary';
 import { buttonLabel, buttonSpeech } from '@/lib/board-utils';
+import { speakButton, speakText } from '@/lib/play-button-speech';
 import { useMobileSyncedBoard } from '@/hooks/use-mobile-synced-board';
 
 /** 1 cm minimum touch target @ 96 dpi, scaled 1.2× */
@@ -17,17 +17,24 @@ const TARGET = Math.round(38 * 1.2);
 
 export function MobileBoardScreen() {
   const [utterance, setUtterance] = useState<string[]>([]);
-  const { board, syncStatus, error, pendingSave } = useMobileSyncedBoard();
+  const { board, syncStatus, error, pendingSave, setBoardId } = useMobileSyncedBoard();
 
   const sorted = [...board.grid.buttons].sort(
     (a, b) => a.position.row - b.position.row || a.position.column - b.position.column,
   );
 
-  const activate = useCallback((btn: BoardButton) => {
-    const text = buttonSpeech(btn);
-    setUtterance((prev) => [...prev, text]);
-    Speech.speak(text, { language: btn.locale });
-  }, []);
+  const activate = useCallback(
+    (btn: BoardButton) => {
+      if (btn.navigateToBoardId) {
+        void setBoardId(btn.navigateToBoardId as string);
+        return;
+      }
+      const text = buttonSpeech(btn);
+      setUtterance((prev) => [...prev, text]);
+      void speakButton(btn);
+    },
+    [setBoardId],
+  );
 
   const syncLabel =
     syncStatus === 'live'
@@ -52,7 +59,7 @@ export function MobileBoardScreen() {
           style={styles.headerBtn}
           onPress={() => {
             const text = utterance.join(' ');
-            if (text) Speech.speak(text);
+            if (text) speakText(text);
           }}
         >
           <Text style={styles.headerBtnText}>Speak</Text>

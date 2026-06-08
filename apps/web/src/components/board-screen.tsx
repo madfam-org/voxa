@@ -17,7 +17,7 @@ import { useCommunicatorSettings } from '@/hooks/use-communicator-settings';
 import { useEyeDwellByButton } from '@/hooks/use-eye-dwell';
 import { usePredictions } from '@/hooks/use-predictions';
 import { useSwitchScan } from '@/hooks/use-switch-scan';
-import { useSyncedBoard } from '@/hooks/use-synced-board';
+import { useSyncedBoard, type BoardSummary } from '@/hooks/use-synced-board';
 import {
   editorPinIsConfigured,
   isEditorUnlocked,
@@ -25,10 +25,12 @@ import {
   unlockEditor,
 } from '@/lib/editor-pin';
 import { logButtonActivation } from '@/lib/log-activation';
+import { speakButton, speakText } from '@/lib/play-button-speech';
 import { PredictionStrip } from '@/components/prediction-strip';
 import { SymbolSearchPanel } from '@/components/symbol-search-panel';
 import { SettingsPanel } from '@/components/settings-panel';
 import { UsageReportPanel } from '@/components/usage-report-panel';
+import { RecordedMediaPanel } from '@/components/recorded-media-panel';
 
 const headerBtn: React.CSSProperties = {
   background: '#2563eb',
@@ -77,6 +79,7 @@ export function BoardScreen(): React.ReactNode {
     isEditor,
     isAuthenticated,
     accessToken,
+    sessionUserId,
   } = useSyncedBoard(role);
 
   const sorted = [...board.grid.buttons].sort(
@@ -90,6 +93,12 @@ export function BoardScreen(): React.ReactNode {
   const activate = useCallback(
     (btn: BoardButton) => {
       if (isEditor && editingId) return;
+
+      if (btn.navigateToBoardId) {
+        setBoardId(btn.navigateToBoardId as string);
+        return;
+      }
+
       const text = buttonSpeech(btn);
       setUtterance((prev) => [...prev, text]);
       setRecentButtonIds((prev) => [...prev, btn.id as string].slice(-8));
@@ -98,21 +107,15 @@ export function BoardScreen(): React.ReactNode {
         buttonId: btn.id as string,
         speechText: text,
       });
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        const u = new SpeechSynthesisUtterance(text);
-        u.lang = btn.locale;
-        window.speechSynthesis.speak(u);
-      }
+      void speakButton(btn, { accessToken });
     },
-    [accessToken, boardId, isEditor, editingId],
+    [accessToken, boardId, isEditor, editingId, setBoardId],
   );
 
   const applyPrediction = useCallback((text: string) => {
     const words = text.split(/\s+/).filter(Boolean);
     setUtterance(words);
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.speak(new SpeechSynthesisUtterance(text));
-    }
+    speakText(text);
   }, []);
 
   const switchScanEnabled = settings.accessMode === 'switch' && !isEditor;
@@ -141,8 +144,8 @@ export function BoardScreen(): React.ReactNode {
 
   const speakAll = useCallback(() => {
     const text = utterance.join(' ');
-    if (!text || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-    window.speechSynthesis.speak(new SpeechSynthesisUtterance(text));
+    if (!text) return;
+    speakText(text);
   }, [utterance]);
 
   const handleImport = useCallback(
@@ -490,7 +493,10 @@ export function BoardScreen(): React.ReactNode {
         {isEditor && editingId && (
           <EditorPanel
             button={sorted.find((b) => (b.id as string) === editingId)!}
+            boardId={boardId}
+            boardCatalog={boardCatalog}
             accessToken={accessToken}
+            recordedBy={sessionUserId}
             onClose={() => setEditingId(null)}
             onChange={(patch) => updateButton(editingId, patch)}
           />
@@ -524,12 +530,18 @@ export function BoardScreen(): React.ReactNode {
 
 function EditorPanel({
   button,
+  boardId,
+  boardCatalog,
   accessToken,
+  recordedBy,
   onClose,
   onChange,
 }: {
   button: BoardButton;
+  boardId: string;
+  boardCatalog: BoardSummary[];
   accessToken?: string;
+  recordedBy: string;
   onClose: () => void;
   onChange: (patch: Partial<BoardButton>) => void;
 }) {
@@ -556,6 +568,43 @@ function EditorPanel({
         onSelect={(imageUrl) => onChange({ symbolUrl: imageUrl })}
         onClear={() => onChange({ symbolUrl: undefined })}
       />
+
+      <RecordedMediaPanel
+        boardId={boardId}
+        accessToken={accessToken}
+        recordedBy={recordedBy}
+        button={button}
+        disabled={fieldsLocked}
+        onAudioChange={(audio) => onChange({ audio })}
+        onVideoChange={(video) => {
+          if (button.kind === 'glp') onChange({ video });
+        }}
+      />
+
+      <label style={labelStyle}>
+        Link to board (OBF navigation)
+        <select
+          style={fieldStyle}
+          value={(button.navigateToBoardId as string | undefined) ?? ''}
+          disabled={fieldsLocked}
+          onChange={(e) =>
+            onChange({
+              navigateToBoardId: e.target.value
+                ? (e.target.value as BoardButton['navigateToBoardId'])
+                : undefined,
+            })
+          }
+        >
+          <option value="">None — speak only</option>
+          {boardCatalog
+            .filter((item) => item.id !== boardId)
+            .map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.name}
+              </option>
+            ))}
+        </select>
+      </label>
 
       {fieldsLocked ? (
         <p style={{ fontSize: '0.8125rem', color: '#fcd34d', margin: '0 0 12px' }}>

@@ -22,7 +22,10 @@
     },
     "plugins": ["expo-router"],
     "extra": {
-      "apiUrl": "http://localhost:4000"
+      "apiUrl": "http://localhost:4000",
+      "eas": {
+        "projectId": "REPLACE_WITH_EAS_PROJECT_ID"
+      }
     }
   }
 }

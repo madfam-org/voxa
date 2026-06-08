@@ -1,0 +1,41 @@
+name: Mobile EAS Preview
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/mobile/**'
+      - 'packages/core/**'
+      - 'packages/sync/**'
+      - 'packages/vocabulary/**'
+      - '.github/workflows/mobile-eas.yml'
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    if: github.repository == 'madfam-org/voxa'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: EAS preview build (staging API)
+        working-directory: apps/mobile
+        run: eas build --profile preview --platform all --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}

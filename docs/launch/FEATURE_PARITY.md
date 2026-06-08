@@ -35,6 +35,7 @@ Actionable **feature parity match** against the AAC platform benchmark. Each row
 | Message bar + speak utterance | OpenAAC 🟢 | ✅ | Web Speech API |
 | OBF export | OpenAAC / Cboard | ✅ | API + editor UI |
 | OBF import | OpenAAC / Cboard | ✅ | API + UI; auth soak validated 2026-06-08 |
+| Board-to-board navigation (OBF `load_board_id`) | OpenAAC / Cboard | 🟡 | Import/export + editor link + activate navigate (2026-06-08) |
 | SLP editor mode | OpenAAC 🟢 | 🟡 | EditorPanel + PIN lock (2026-06-08); full vocab tools P1 |
 | Cloud board persistence | OpenAAC 💡 | ✅ | PostgreSQL + sync client |
 | Offline cache + retry | OpenAAC 💡 | 🟡 | IndexedDB pending queue + background sync + retry UI (2026-06-08) |
@@ -55,15 +56,15 @@ Actionable **feature parity match** against the AAC platform benchmark. Each row
 | Custom grid size (9–144+ cells) | Proloquo2Go | 🟡 | Configurable rows/cols in editor |
 | Symbol-only / label-only modes | OpenAAC ✅ | 🟡 | `hideLabels` + `hideSymbols` settings |
 | Upload custom symbol / photo | OpenAAC 🟢 | 🟡 | Editor partial |
-| Recorded speech on button | OpenAAC ✅ / GLP | 🔴 | Type in `@voxa/core`; UI P1 |
-| GLP buttons with audio/video | Voxa differentiator | 🟡 | Type + demo; media upload P1 |
+| Recorded speech on button | OpenAAC ✅ / GLP | 🟡 | `RecordedSpeech` on buttons; web record/upload + playback over TTS (2026-06-08) |
+| GLP buttons with audio/video | Voxa differentiator | 🟡 | GLP video upload in editor; plays in communicator (2026-06-08) |
 | Symbol library search (ARASAAC) | OpenAAC ⭐ | 🟡 | API + editor search (2026-06-08) |
 | Word forms / inflection | OpenAAC / Proloquo grammar | 🔴 | P1 |
 | Whisper / build utterance without speak | SFY | 🟡 | Message bar; no whisper mode |
 | Usage history / activation log | TD Snap, Grid | 🟡 | API + client log (2026-06-08); SLP **Usage** panel in `/app` for editors (2026-06-08) |
 | Real-time team co-edit | TD Snap, Grid | 🔴 | WebSocket + REDIS_URL phase |
 | Remote SLP edit without device handoff | Cloud AAC | 🟡 | Roles in API; UX P1 |
-| iOS + Android store apps | All Tier A | 🔴 | [MOBILE_GA.md](./MOBILE_GA.md) M4 |
+| iOS + Android store apps | All Tier A | 🟡 | EAS preview CI + recorded-speech playback in mobile scaffold (2026-06-08); store submit M4 |
 | Hardware switch (Bluetooth/USB) | Grid, TD Snap | 🔴 | P1 mobile + web |
 | Keyguard / touch guard support | Clinical | 🔴 | P2 |
 

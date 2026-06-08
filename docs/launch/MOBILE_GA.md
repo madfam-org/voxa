@@ -9,7 +9,7 @@ Expo / EAS track for Voxa native communicator apps. **Web GA does not block on m
 | Expo app (`apps/mobile`) | Scaffold — board UI, local storage, sync hook |
 | EAS profiles | `eas.json` — development, preview (staging API), production |
 | Store listings | Not started |
-| CI build workflow | Manual EAS CLI (workflow TBD) |
+| CI build workflow | `.github/workflows/mobile-eas.yml` — preview on push / manual (requires `EXPO_TOKEN`) |
 
 ## Prerequisites
 
@@ -46,14 +46,23 @@ Replace placeholder values in `eas.json` (`appleId`, `ascAppId`, `appleTeamId`) 
 - [ ] SLP sign-off on mobile communicator flows ([SLP_SIGNOFF.md](./SLP_SIGNOFF.md) — extend for native)
 - [ ] `production` submit via `eas submit`
 
-## CI (planned)
+## CI (preview builds)
 
-Add `.github/workflows/mobile-eas.yml` when Expo tokens are in GitHub Actions secrets:
+`.github/workflows/mobile-eas.yml` runs on `workflow_dispatch` and on pushes to `main` that touch `apps/mobile` or shared packages. Requires GitHub secret:
 
 - `EXPO_TOKEN`
-- Optional: `GOOGLE_SERVICE_ACCOUNT_KEY`, App Store Connect API key
 
-Until then, builds are operator-triggered from a trusted machine.
+Optional submit secrets (production): `GOOGLE_SERVICE_ACCOUNT_KEY`, App Store Connect API key.
+
+Until `EXPO_TOKEN` is configured, trigger preview builds manually:
+
+```bash
+cd apps/mobile
+npx eas-cli login
+npx eas-cli build --profile preview --platform all
+```
+
+## CI (planned — store submit)
 
 ## Related
 

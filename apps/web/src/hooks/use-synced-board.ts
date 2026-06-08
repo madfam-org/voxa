@@ -337,5 +337,6 @@ export function useSyncedBoard(role: TeamRole) {
     isEditor,
     isAuthenticated: Boolean(accessToken),
     accessToken,
+    sessionUserId,
   };
 }

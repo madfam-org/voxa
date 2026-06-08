@@ -58,3 +58,19 @@ export const activationEvents = pgTable(
   },
   (table) => [index('activation_events_board_recorded_idx').on(table.boardId, table.recordedAt)],
 );
+
+export const mediaAssets = pgTable(
+  'media_assets',
+  {
+    id: text('id').primaryKey(),
+    boardId: text('board_id')
+      .notNull()
+      .references(() => boards.id, { onDelete: 'cascade' }),
+    ownerUserId: text('owner_user_id').notNull(),
+    mimeType: text('mime_type').notNull(),
+    sizeBytes: integer('size_bytes').notNull(),
+    data: text('data').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).notNull(),
+  },
+  (table) => [index('media_assets_board_idx').on(table.boardId)],
+);

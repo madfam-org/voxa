@@ -10,7 +10,12 @@ import {
 } from '@/lib/storage';
 import { API_URL } from '@/lib/board-utils';
 
+function boardCacheKey(boardId: string): string {
+  return `voxa:board:${boardId}`;
+}
+
 export function useMobileSyncedBoard() {
+  const [boardId, setBoardIdState] = useState<string>(DEMO_BOARD_ID);
   const [board, setBoardState] = useState<Board>(() => createDemoBoard());
   const [syncStatus, setSyncStatus] = useState<'offline' | 'connecting' | 'live'>('connecting');
   const [error, setError] = useState<string | null>(null);
@@ -23,26 +28,48 @@ export function useMobileSyncedBoard() {
     [],
   );
 
-  const setBoard = useCallback((next: Board | ((prev: Board) => Board)) => {
-    setBoardState((prev) => {
-      const resolved = typeof next === 'function' ? next(prev) : next;
-      void cacheBoard(resolved);
-      return resolved;
-    });
-  }, []);
+  const setBoard = useCallback(
+    (next: Board | ((prev: Board) => Board)) => {
+      setBoardState((prev) => {
+        const resolved = typeof next === 'function' ? next(prev) : next;
+        void cacheBoard(resolved, boardId);
+        return resolved;
+      });
+    },
+    [boardId],
+  );
+
+  const setBoardId = useCallback(
+    async (nextId: string) => {
+      setBoardIdState(nextId);
+      setSyncStatus('connecting');
+      try {
+        const loaded = await client.getBoard(nextId);
+        setBoardState(loaded);
+        await cacheBoard(loaded, nextId);
+        setError(null);
+      } catch {
+        const cached = await loadCachedBoard(nextId);
+        setBoardState(cached ?? createDemoBoard());
+        setSyncStatus('offline');
+        setError(cached ? 'Offline — cached board' : 'Could not load linked board');
+      }
+    },
+    [client],
+  );
 
   const flushPendingSave = useCallback(async () => {
-    const pending = await loadPendingSave();
+    const pending = await loadPendingSave(boardId);
     if (!pending) return;
     try {
       const result = await client.saveBoard(pending, pending.version);
       setBoard(result.board);
-      await clearPendingSave();
+      await clearPendingSave(boardId);
       setPendingSave(false);
     } catch {
       setPendingSave(true);
     }
-  }, [client, setBoard]);
+  }, [boardId, client, setBoard]);
 
   useEffect(() => {
     let cancelled = false;
@@ -51,27 +78,29 @@ export function useMobileSyncedBoard() {
     (async () => {
       setSyncStatus('connecting');
       try {
-        const loaded = await client.getBoard(DEMO_BOARD_ID);
+        const loaded = await client.getBoard(boardId);
         if (cancelled) return;
-        setBoard(loaded);
+        setBoardState(loaded);
+        await cacheBoard(loaded, boardId);
         setError(null);
         await flushPendingSave();
       } catch {
         if (cancelled) return;
-        const cached = await loadCachedBoard();
-        setBoard(cached ?? createDemoBoard());
+        const cached = await loadCachedBoard(boardId);
+        setBoardState(cached ?? createDemoBoard());
         setSyncStatus('offline');
         setError(cached ? 'Offline — cached board' : 'Offline — demo board');
-        setPendingSave(Boolean(await loadPendingSave()));
+        setPendingSave(Boolean(await loadPendingSave(boardId)));
         return;
       }
 
       disconnect = client.connectBoardSync(
-        DEMO_BOARD_ID,
+        boardId,
         async () => {
           try {
-            const fresh = await client.getBoard(DEMO_BOARD_ID);
-            setBoard(fresh);
+            const fresh = await client.getBoard(boardId);
+            setBoardState(fresh);
+            await cacheBoard(fresh, boardId);
           } catch {
             /* keep cache */
           }
@@ -87,7 +116,7 @@ export function useMobileSyncedBoard() {
       cancelled = true;
       disconnect?.();
     };
-  }, [client, flushPendingSave, setBoard]);
+  }, [boardId, client, flushPendingSave]);
 
-  return { board, syncStatus, error, pendingSave, setBoard };
+  return { board, boardId, syncStatus, error, pendingSave, setBoard, setBoardId };
 }

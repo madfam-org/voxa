@@ -44,7 +44,7 @@ Track progress toward general availability at `voxa.madfam.io`.
 - [x] Store operation unit tests
 - [x] Playwright e2e smoke specs (`e2e/specs/smoke.spec.ts`)
 - [x] `@axe-core/playwright` in CI (`e2e/specs/a11y.spec.ts`, `.github/workflows/ci.yml`)
-- [ ] Mobile EAS pipeline + store listings — [MOBILE_GA.md](./MOBILE_GA.md)
+- [ ] Mobile EAS pipeline + store listings — [MOBILE_GA.md](./MOBILE_GA.md) — preview CI ✅
 
 ## Competitive parity (Phase 6)
 
@@ -55,7 +55,7 @@ Track progress toward general availability at `voxa.madfam.io`.
 - [ ] P1 robust AAC baseline ≥ 80% at M6 (2026-09-30)
 - [ ] Weighted scorecard ≥ 75% at M6
 - [x] Migration guide: OBF import path — [MIGRATION.md](./MIGRATION.md)
-- [ ] Epic B–C: ARASAAC + recorded speech + GLP media (W2) — ARASAAC search ✅
+- [ ] Epic B–C: ARASAAC + recorded speech + GLP media (W2) — ARASAAC ✅; recorded speech + GLP media ✅
 - [ ] Epic D: Mobile store beta (M4)
 - [ ] Epic E: Usage logs + co-edit (W3)
 - [ ] Epic F–G: Hardware access + legacy import (W4–W5)

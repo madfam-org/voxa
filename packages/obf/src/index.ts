@@ -56,7 +56,7 @@ export function obfToVoxaButtons(obf: ObfBoard): BoardButton[] {
     const column = index % columns;
     const label = btn.label ?? btn.vocalization ?? '…';
 
-    return {
+    const base = {
       kind: 'analytic' as const,
       id: btn.id as BoardButton['id'],
       label,
@@ -66,6 +66,15 @@ export function obfToVoxaButtons(obf: ObfBoard): BoardButton[] {
       position: { row, column },
       locked: false,
     };
+
+    if (btn.load_board_id) {
+      return {
+        ...base,
+        navigateToBoardId: btn.load_board_id as BoardButton['navigateToBoardId'],
+      };
+    }
+
+    return base;
   });
 }
 
@@ -86,6 +95,7 @@ export function voxaBoardToObf(board: Board): ObfBoard {
       label: btn.kind === 'analytic' ? btn.label : btn.phrase,
       vocalization: btn.kind === 'analytic' ? btn.speechText : btn.phrase,
       image_id: btn.symbolUrl,
+      ...(btn.navigateToBoardId ? { load_board_id: btn.navigateToBoardId as string } : {}),
     })),
   };
 }

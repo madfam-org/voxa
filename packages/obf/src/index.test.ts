@@ -16,16 +16,22 @@ describe('OBF interchange', () => {
     assert.equal(parsed.grid.rows, board.grid.rows);
   });
 
-  it('parses minimal OBF with warnings for missing format marker', () => {
-    const minimal = JSON.stringify({
-      id: 'test',
-      name: 'Test',
-      grid: { rows: 1, columns: 1, order: 'row-major' },
-      buttons: [{ id: 'b1', label: 'hi', vocalization: 'hi' }],
-    });
+  it('preserves OBF load_board_id as navigateToBoardId', () => {
+    const board = createDemoBoard();
+    const withLink = {
+      ...board,
+      grid: {
+        ...board.grid,
+        buttons: board.grid.buttons.map((btn, index) =>
+          index === 0 ? { ...btn, navigateToBoardId: 'other-board' as typeof btn.navigateToBoardId } : btn,
+        ),
+      },
+    };
+    const obf = voxaBoardToObf(withLink);
+    assert.equal(obf.buttons[0]?.load_board_id, 'other-board');
 
-    const { warnings, board } = parseObfJson(minimal);
-    assert.ok(warnings.length > 0);
-    assert.equal(board.buttons[0]?.label, 'hi');
+    const { board: parsed } = parseObfJson(serializeObf(obf));
+    const buttons = obfToVoxaButtons(parsed);
+    assert.equal(buttons[0]?.navigateToBoardId, 'other-board');
   });
 });

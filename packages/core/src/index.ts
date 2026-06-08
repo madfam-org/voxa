@@ -53,6 +53,7 @@ export interface AnalyticButton {
   label: string;
   symbolUrl?: string;
   speechText: string;
+  audio?: RecordedSpeech;
   locale: LocaleCode;
 }
 
@@ -74,6 +75,8 @@ export type BoardButton = (AnalyticButton | GlpButton) & {
   partOfSpeech?: PartOfSpeechTag;
   /** Hidden from communicator view until revealed by editor (OpenAAC hide/show). */
   hidden?: boolean;
+  /** OBF `load_board_id` — navigate to another board on activation. */
+  navigateToBoardId?: BoardId;
 };
 
 export interface BoardGrid {
@@ -149,6 +152,15 @@ export function createButtonId(id: string): ButtonId {
 
 export function createProfileId(id: string): ProfileId {
   return id as ProfileId;
+}
+
+export function buttonRecordedSpeech(btn: BoardButton): RecordedSpeech | undefined {
+  if (btn.kind === 'glp') return btn.audio;
+  return btn.audio;
+}
+
+export function buttonMediaVideo(btn: BoardButton): MediaAsset | undefined {
+  return btn.kind === 'glp' ? btn.video : undefined;
 }
 
 export { createDemoBoard, DEMO_BOARD_ID } from './demo-board.js';

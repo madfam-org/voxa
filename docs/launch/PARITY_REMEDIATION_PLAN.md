@@ -117,7 +117,7 @@ Each epic links to [FEATURE_PARITY.md](./FEATURE_PARITY.md) rows and benchmark d
 | B6 | Fitzgerald POS | ✅ colors | Apply POS colors on **all** buttons including imports | `@voxa/ui` borderColor from `partOfSpeech` |
 | B7 | Word forms / inflection | Morphology table for top 200 core verbs/nouns | New `@voxa/vocabulary` inflection module; optional button `forms[]` |
 | B8 | Whisper mode | Message bar “hold to preview” without speak | `board-screen.tsx` message bar |
-| B9 | Links to other boards | OBF `links` → navigate to linked board | `@voxa/obf`, button action type `navigate` |
+| B9 | Links to other boards | OBF `links` → navigate to linked board | OBF `load_board_id` ↔ `navigateToBoardId`; editor + activate ✅ 2026-06-08 |
 
 **Acceptance (W2):**
 
@@ -137,8 +137,8 @@ Each epic links to [FEATURE_PARITY.md](./FEATURE_PARITY.md) rows and benchmark d
 |----|---------|-------------|----------------|
 | C1 | ARASAAC / OpenSymbols | Symbol search API; attach `symbolUrl` to analytic buttons | New `packages/symbols` or API route `/v1/symbols/search`; cache CDN |
 | C2 | Custom photo upload | S3-compatible object store; signed upload URL | API `POST /v1/media`, `@voxa/core` `mediaId` on buttons |
-| C3 | Recorded speech | Record/upload audio per button; play instead of TTS when set | `@voxa/core` `audioUrl`; web `MediaRecorder`; mobile expo-av |
-| C4 | GLP video/audio | GLP buttons store `mediaUrl` + intonation notes | Extend `GlpButton`; editor upload UI |
+| C3 | Recorded speech | Record/upload audio per button; play instead of TTS when set | `@voxa/core` `RecordedSpeech`; API `POST/GET /v1/media`; web `MediaRecorder` ✅ 2026-06-08 |
+| C4 | GLP video/audio | GLP buttons store `mediaUrl` + intonation notes | GLP video upload + playback ✅ 2026-06-08 |
 | C5 | `.obz` bundles | Import/export ZIP with images | `@voxa/obf` OBZ support |
 
 **Acceptance (W2):**
@@ -157,7 +157,7 @@ Each epic links to [FEATURE_PARITY.md](./FEATURE_PARITY.md) rows and benchmark d
 
 | ID | Feature | Remediation | Implementation |
 |----|---------|-------------|----------------|
-| D1 | iOS + Android apps | EAS preview → production | [MOBILE_GA.md](./MOBILE_GA.md), `apps/mobile` |
+| D1 | iOS + Android apps | EAS preview → production | [MOBILE_GA.md](./MOBILE_GA.md), `mobile-eas.yml` CI ✅ 2026-06-08 |
 | D2 | Janua mobile OAuth | Universal links / app links | Janua client redirect URIs, `expo-auth-session` |
 | D3 | Offline on device | SQLite/AsyncStorage + sync queue | `apps/mobile` storage layer, `@voxa/sync` |
 | D4 | PWA install | Web manifest + install prompt on landing | `apps/web` |
@@ -406,9 +406,12 @@ pnpm test && pnpm typecheck
 | 3 | Editor PIN + lock enforcement UX | A3, B2 | Engineering ✅ 2026-06-08 |
 | 4 | Offline write queue hardening | A4 | Engineering ✅ 2026-06-08 |
 | 5 | Kickoff `@voxa/symbols` ARASAAC spike | C1 | Engineering ✅ 2026-06-08 |
-| 6 | EAS preview build on staging API | D1 | Mobile |
+| 6 | EAS preview build on staging API | D1 | Mobile ✅ 2026-06-08 |
 | 7 | Usage event schema + API | E1 | Engineering ✅ 2026-06-08 |
 | 8 | SLP usage summary UI in `/app` | E2 | Engineering ✅ 2026-06-08 |
+| 9 | Recorded speech + GLP media (C3/C4) | C | Engineering ✅ 2026-06-08 |
+| 10 | OBF board navigation (B9) | B | Engineering ✅ 2026-06-08 |
+| 11 | EAS preview CI workflow (D1) | D | Mobile ✅ 2026-06-08 |
 
 ---
 

@@ -78,6 +78,22 @@ The API container runs migrations automatically on startup when `DATABASE_URL` i
 
 Requires `X-Voxa-AI-Consent: true` (same opt-in as AI predictions). Summary endpoint: `GET /v1/events/activations/summary?boardId=&days=7` (editor role).
 
+### `media_assets`
+
+Button recordings and GLP video clips (base64 in Postgres for MVP).
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | `text` PK | Media UUID |
+| `board_id` | `text` FK | Owning board |
+| `owner_user_id` | `text` | Uploader (editor) |
+| `mime_type` | `text` | e.g. `audio/webm`, `video/mp4` |
+| `size_bytes` | `integer` | Payload size |
+| `data` | `text` | Base64-encoded bytes |
+| `created_at` | `timestamptz` | Upload time |
+
+Upload: `POST /v1/media` (multipart `boardId` + `file`, editor role). Serve: `GET /v1/media/:id` (board access). Button JSON stores the returned URL in `RecordedSpeech.url` or `GlpButton.video.url`.
+
 ## Future tables
 
 | Table | Purpose |
