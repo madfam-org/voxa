@@ -7,8 +7,9 @@ import {
   type PartOfSpeechTag,
 } from './index.js';
 import { createLiteracyKeyboardBoard } from './literacy-keyboard.js';
+import { createVisualScheduleBoard } from './visual-schedule.js';
 
-export type StarterTemplateId = 'core-47' | 'core-100' | 'literacy-keyboard';
+export type StarterTemplateId = 'core-47' | 'core-100' | 'literacy-keyboard' | 'visual-schedule';
 
 export interface StarterTemplateMeta {
   id: StarterTemplateId;
@@ -155,6 +156,7 @@ export function listStarterTemplates(): StarterTemplateMeta[] {
   });
 
   const literacy = createLiteracyKeyboardBoard();
+  const schedule = createVisualScheduleBoard();
   return [
     ...coreTemplates,
     {
@@ -164,6 +166,14 @@ export function listStarterTemplates(): StarterTemplateMeta[] {
       rows: literacy.grid.rows,
       columns: literacy.grid.columns,
       wordCount: literacy.grid.buttons.length,
+    },
+    {
+      id: 'visual-schedule',
+      name: 'Daily Routine Schedule',
+      description: 'Vertical visual schedule with step completion for daily routines',
+      rows: schedule.grid.rows,
+      columns: schedule.grid.columns,
+      wordCount: schedule.grid.buttons.length,
     },
   ];
 }
@@ -194,6 +204,9 @@ export function createStarterBoard(
 ): Board {
   if (templateId === 'literacy-keyboard') {
     return createLiteracyKeyboardBoard(options);
+  }
+  if (templateId === 'visual-schedule') {
+    return createVisualScheduleBoard(options);
   }
 
   const layout = TEMPLATE_LAYOUT[templateId];

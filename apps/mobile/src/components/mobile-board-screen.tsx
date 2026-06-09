@@ -13,6 +13,9 @@ import {
   formatKeyboardUtterance,
   isKeyboardSpeakButton,
   isLiteracyKeyboardBoard,
+  isVisualScheduleBoard,
+  listScheduleSteps,
+  scheduleProgress,
 } from '@voxa/core';
 import { fitzgeraldColor, resolvePartOfSpeech } from '@voxa/vocabulary';
 import type { ScanOrder, SwitchGroupStrategy } from '@voxa/access';
@@ -33,6 +36,7 @@ const TARGET = Math.round(38 * 1.2);
 
 export function MobileBoardScreen() {
   const [utterance, setUtterance] = useState<string[]>([]);
+  const [completedStepIds, setCompletedStepIds] = useState<Set<string>>(() => new Set());
   const [settings, setSettings] = useState<MobileCommunicatorSettings>({
     accessMode: 'touch',
     switchIntervalMs: 1200,
@@ -66,6 +70,15 @@ export function MobileBoardScreen() {
   );
 
   const literacyMode = isLiteracyKeyboardBoard(board);
+  const scheduleMode = isVisualScheduleBoard(board);
+  const scheduleSteps = scheduleMode ? listScheduleSteps(board) : [];
+  const scheduleState = scheduleMode
+    ? scheduleProgress(completedStepIds, scheduleSteps)
+    : { completed: 0, total: 0, currentStepId: null };
+
+  useEffect(() => {
+    setCompletedStepIds(new Set());
+  }, [board.id]);
 
   const activate = useCallback(
     (btn: BoardButton) => {
@@ -85,11 +98,17 @@ export function MobileBoardScreen() {
         return;
       }
 
+      if (scheduleMode) {
+        setCompletedStepIds((prev) => new Set(prev).add(btn.id as string));
+        void speakButton(btn, { accessToken });
+        return;
+      }
+
       const text = buttonSpeech(btn);
       setUtterance((prev) => [...prev, text]);
       void speakButton(btn, { accessToken });
     },
-    [accessToken, literacyMode, setBoardId, utterance],
+    [accessToken, literacyMode, scheduleMode, setBoardId, utterance],
   );
 
   const { isHighlighted, isGroupHighlighted, advance, select, activeLabel } = useMobileSwitchScan({
@@ -224,11 +243,15 @@ export function MobileBoardScreen() {
           )
         ) : null}
         <Text style={styles.utterance}>
-          {literacyMode
-            ? formatKeyboardUtterance(utterance) || 'Type on the keyboard…'
-            : utterance.length
-              ? utterance.join(' ')
-              : 'Tap to communicate…'}
+          {scheduleMode
+            ? scheduleState.completed >= scheduleState.total && scheduleState.total > 0
+              ? 'Routine complete — tap Clear to start over'
+              : `Step ${Math.min(scheduleState.completed + 1, scheduleState.total)} of ${scheduleState.total}`
+            : literacyMode
+              ? formatKeyboardUtterance(utterance) || 'Type on the keyboard…'
+              : utterance.length
+                ? utterance.join(' ')
+                : 'Tap to communicate…'}
         </Text>
         <Pressable
           style={styles.headerBtn}
@@ -239,7 +262,10 @@ export function MobileBoardScreen() {
         >
           <Text style={styles.headerBtnText}>Speak</Text>
         </Pressable>
-        <Pressable style={styles.headerBtn} onPress={() => setUtterance([])}>
+        <Pressable style={styles.headerBtn} onPress={() => {
+          setUtterance([]);
+          setCompletedStepIds(new Set());
+        }}>
           <Text style={styles.headerBtnText}>Clear</Text>
         </Pressable>
       </View>
@@ -282,16 +308,25 @@ export function MobileBoardScreen() {
         </View>
       ) : null}
 
-      <ScrollView contentContainerStyle={styles.grid}>
+      <ScrollView contentContainerStyle={scheduleMode ? styles.scheduleList : styles.grid}>
         {sorted.map((btn) => {
           const borderColor = fitzgeraldColor(resolvePartOfSpeech(btn));
           const highlighted = isHighlighted(btn);
           const groupHighlighted = isGroupHighlighted(btn);
+          const stepCompleted = scheduleMode && completedStepIds.has(btn.id as string);
+          const stepCurrent =
+            scheduleMode && !stepCompleted && (btn.id as string) === scheduleState.currentStepId;
           return (
             <Pressable
               key={btn.id as string}
               accessibilityRole="button"
-              accessibilityLabel={buttonLabel(btn)}
+              accessibilityLabel={
+                stepCompleted
+                  ? `${buttonLabel(btn)} (completed)`
+                  : stepCurrent
+                    ? `${buttonLabel(btn)} (current step)`
+                    : buttonLabel(btn)
+              }
               accessibilityState={{ selected: highlighted || groupHighlighted }}
               onPress={() => {
                 if (switchScanEnabled) {
@@ -302,11 +337,34 @@ export function MobileBoardScreen() {
                 activate(btn);
               }}
               style={[
-                styles.cell,
-                { borderColor: highlighted ? '#facc15' : groupHighlighted ? '#ca8a04' : borderColor },
-                highlighted ? styles.cellHighlighted : groupHighlighted ? styles.cellGroupHighlighted : null,
+                scheduleMode ? styles.scheduleStep : styles.cell,
+                {
+                  borderColor: highlighted
+                    ? '#facc15'
+                    : groupHighlighted
+                      ? '#ca8a04'
+                      : stepCompleted
+                        ? '#22c55e'
+                        : stepCurrent
+                          ? '#facc15'
+                          : borderColor,
+                },
+                highlighted
+                  ? styles.cellHighlighted
+                  : groupHighlighted
+                    ? styles.cellGroupHighlighted
+                    : stepCompleted
+                      ? styles.scheduleStepCompleted
+                      : stepCurrent
+                        ? styles.scheduleStepCurrent
+                        : null,
               ]}
             >
+              {scheduleMode ? (
+                <Text style={styles.scheduleStepIndex}>
+                  {stepCompleted ? '✓' : btn.position.row + 1}
+                </Text>
+              ) : null}
               <Text style={styles.cellLabel}>{buttonLabel(btn)}</Text>
             </Pressable>
           );
@@ -411,6 +469,40 @@ const styles = StyleSheet.create({
     padding: 12,
     gap: 8,
     justifyContent: 'center',
+  },
+  scheduleList: {
+    padding: 12,
+    gap: 10,
+  },
+  scheduleStep: {
+    width: '100%',
+    minHeight: TARGET * 1.4,
+    borderWidth: 3,
+    borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    backgroundColor: '#111',
+  },
+  scheduleStepCompleted: {
+    opacity: 0.78,
+    backgroundColor: '#052e16',
+  },
+  scheduleStepCurrent: {
+    backgroundColor: '#422006',
+  },
+  scheduleStepIndex: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 2,
+    borderColor: '#525252',
+    color: '#f5f5f5',
+    textAlign: 'center',
+    lineHeight: 24,
+    fontWeight: '700',
   },
   cell: {
     width: TARGET * 2.2,

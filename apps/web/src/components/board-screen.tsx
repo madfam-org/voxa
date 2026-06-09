@@ -8,6 +8,9 @@ import {
   formatKeyboardUtterance,
   isKeyboardSpeakButton,
   isLiteracyKeyboardBoard,
+  isVisualScheduleBoard,
+  listScheduleSteps,
+  scheduleProgress,
 } from '@voxa/core';
 import { fitzgeraldColor, createButtonAtCell, moveButtonToCell, resizeBoardGrid, type PartOfSpeech } from '@voxa/vocabulary';
 import { AacButton, BoardGrid, CVI_THEMES, themeStyles } from '@voxa/ui';
@@ -50,6 +53,7 @@ import { WordFormsPanel } from '@/components/word-forms-panel';
 import { BoardAuditPanel } from '@/components/board-audit-panel';
 import { SyncStatusBanner } from '@/components/sync-status-banner';
 import { DraggableButtonShell, EditorGridCell } from '@/components/editor-grid-cell';
+import { VisualScheduleView } from '@/components/visual-schedule-view';
 
 const headerBtn: React.CSSProperties = {
   background: '#2563eb',
@@ -86,6 +90,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
   const [babbleActive, setBabbleActive] = useState(false);
   const [speechActive, setSpeechActive] = useState(false);
   const [newBoardTemplate, setNewBoardTemplate] = useState<'' | StarterTemplateId>('core-47');
+  const [completedStepIds, setCompletedStepIds] = useState<Set<string>>(() => new Set());
   const pendingTouchRef = useRef<string | null>(null);
 
   const [recentButtonIds, setRecentButtonIds] = useState<string[]>([]);
@@ -138,6 +143,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
 
   useEffect(() => {
     setBabbleActive(false);
+    setCompletedStepIds(new Set());
   }, [boardId]);
 
   const sorted = [...board.grid.buttons].sort(
@@ -149,6 +155,11 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
   );
 
   const literacyMode = isLiteracyKeyboardBoard(board);
+  const scheduleMode = isVisualScheduleBoard(board);
+  const scheduleSteps = scheduleMode ? listScheduleSteps(board) : [];
+  const scheduleState = scheduleMode
+    ? scheduleProgress(completedStepIds, scheduleSteps)
+    : { completed: 0, total: 0, currentStepId: null };
   const literacyDisplay = literacyMode
     ? { hideSymbols: true, hideLabels: displaySettings.hideLabels }
     : displaySettings;
@@ -194,6 +205,20 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
         return;
       }
 
+      if (scheduleMode && !isEditor) {
+        const text = resolveActivationSpeech(btn);
+        setCompletedStepIds((prev) => new Set(prev).add(btn.id as string));
+        void logButtonActivation(accessToken, {
+          boardId,
+          buttonId: btn.id as string,
+          speechText: text,
+        });
+        if (!settings.whisperMode) {
+          void speakButton(btn, { accessToken, speechText: text });
+        }
+        return;
+      }
+
       const text = resolveActivationSpeech(btn);
       setUtterance((prev) => [...prev, text]);
       setRecentButtonIds((prev) => [...prev, btn.id as string].slice(-8));
@@ -212,6 +237,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
       isEditor,
       editingId,
       literacyMode,
+      scheduleMode,
       utterance,
       resolveActivationSpeech,
       setBoardId,
@@ -786,6 +812,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
                 <option value="core-47">Core 47</option>
                 <option value="core-100">Core 100</option>
                 <option value="literacy-keyboard">Literacy Keyboard</option>
+                <option value="visual-schedule">Visual Schedule</option>
               </select>
             </label>
             <button type="button" onClick={handleCreateBoard} disabled={busy} style={secondaryBtn}>
@@ -899,17 +926,28 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
         )}
 
         <div style={utteranceBarStyle}>
-          {literacyMode
-            ? formatKeyboardUtterance(utterance) || 'Type on the keyboard…'
-            : utterance.length
-              ? utterance.join(' ')
-              : 'Tap buttons to build a message…'}
+          {scheduleMode && !isEditor
+            ? scheduleState.completed >= scheduleState.total && scheduleState.total > 0
+              ? 'Routine complete — tap Clear to start over'
+              : `Step ${Math.min(scheduleState.completed + 1, scheduleState.total)} of ${scheduleState.total}`
+            : literacyMode
+              ? formatKeyboardUtterance(utterance) || 'Type on the keyboard…'
+              : utterance.length
+                ? utterance.join(' ')
+                : 'Tap buttons to build a message…'}
         </div>
 
         <button type="button" onClick={speakAll} style={headerBtn}>
           Speak
         </button>
-        <button type="button" onClick={() => setUtterance([])} style={headerBtn}>
+        <button
+          type="button"
+          onClick={() => {
+            setUtterance([]);
+            setCompletedStepIds(new Set());
+          }}
+          style={headerBtn}
+        >
           Clear
         </button>
 
@@ -993,7 +1031,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
         </div>
       ) : null}
 
-      {!isEditor && (
+      {!isEditor && !scheduleMode && (
         <PredictionStrip
           textPredictions={textPredictions}
           symbolPredictions={symbolPredictions}
@@ -1004,14 +1042,76 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
       )}
 
       <main style={{ flex: 1, minHeight: 0, display: 'flex' }}>
-        <BoardGrid
-          rows={board.grid.rows}
-          columns={board.grid.columns}
-          theme={theme}
-          targetScale={settings.targetScale}
-        >
-          {gridCells}
-        </BoardGrid>
+        {scheduleMode ? (
+          <VisualScheduleView
+            steps={scheduleSteps.filter((btn) => isButtonVisible(btn))}
+            completedIds={completedStepIds}
+            currentStepId={scheduleState.currentStepId}
+            targetScale={settings.targetScale}
+            hideSymbol={displaySettings.hideSymbols}
+            hideLabel={displaySettings.hideLabels}
+            isHighlighted={isHighlighted}
+            isGroupHighlighted={isGroupHighlighted}
+            dwellProgressFor={dwellProgressFor}
+            renderStepButton={(btn, state) => {
+              const revealedHidden = babbleActive && !isEditor && btn.hidden;
+              return (
+                <AacButton
+                  label={buttonLabel(btn)}
+                  data-voxa-button-id={btn.id as string}
+                  symbolUrl={buttonSymbolUrl(btn)}
+                  borderColor={buttonBorderColor(btn)}
+                  targetScale={settings.targetScale}
+                  hideSymbol={displaySettings.hideSymbols}
+                  hideLabel={displaySettings.hideLabels}
+                  scanHighlighted={isHighlighted(btn)}
+                  scanGroupHighlighted={isGroupHighlighted(btn)}
+                  dwellProgress={dwellProgressFor(btn.id as string)}
+                  onClick={() => handleButtonPress(btn)}
+                  {...touchReleaseHandlers(btn)}
+                  onPointerEnter={() => onEnter(btn.id as string)}
+                  onPointerLeave={onLeave}
+                  style={
+                    revealedHidden
+                      ? { opacity: 0.72, outline: '2px dashed #f59e0b' }
+                      : state.completed
+                        ? { opacity: 0.72, outline: '2px solid #22c55e' }
+                        : state.current
+                          ? { outline: '2px solid #facc15' }
+                          : undefined
+                  }
+                  aria-label={
+                    isEditor && btn.locked
+                      ? `${buttonLabel(btn)} (locked motor-plan slot)`
+                      : state.completed
+                        ? `${buttonLabel(btn)} (completed)`
+                        : state.current
+                          ? `${buttonLabel(btn)} (current step)`
+                          : buttonLabel(btn)
+                  }
+                >
+                  {isEditor && btn.locked ? (
+                    <span
+                      aria-hidden
+                      style={{ position: 'absolute', top: 4, right: 4, fontSize: '0.75rem', lineHeight: 1 }}
+                    >
+                      🔒
+                    </span>
+                  ) : null}
+                </AacButton>
+              );
+            }}
+          />
+        ) : (
+          <BoardGrid
+            rows={board.grid.rows}
+            columns={board.grid.columns}
+            theme={theme}
+            targetScale={settings.targetScale}
+          >
+            {gridCells}
+          </BoardGrid>
+        )}
 
         {settingsOpen && (
           <SettingsPanel

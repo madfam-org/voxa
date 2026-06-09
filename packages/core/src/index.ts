@@ -121,7 +121,7 @@ export interface Board {
   grid: BoardGrid;
   version: number;
   /** Literacy keyboard uses character-level typing into the message bar. */
-  layout?: 'grid' | 'literacy-keyboard';
+  layout?: 'grid' | 'literacy-keyboard' | 'visual-schedule';
   updatedAt: string;
   ownerUserId?: string;
   orgId?: string;
@@ -221,4 +221,10 @@ export {
   type KeyboardRole,
 } from './keyboard-input.js';
 export { createLiteracyKeyboardBoard } from './literacy-keyboard.js';
+export {
+  createVisualScheduleBoard,
+  isVisualScheduleBoard,
+  listScheduleSteps,
+  scheduleProgress,
+} from './visual-schedule.js';
 export { mapTeamRoleFromClaims } from './team-role.js';

@@ -85,7 +85,7 @@ Actionable **feature parity match** against the AAC platform benchmark. Each row
 | `.gridset` import | Grid 3 | 🟡 | MVP zip parser + editor Import Grid (2026-06-09) |
 | Snap `.spb` import | TD Snap | 🟡 | SQLite adapter + editor Import Snap (2026-06-09) |
 | TouchChat `.ce` import | TouchChat / LAMP | 🟡 | SQLite zip adapter + editor Import TouchChat (2026-06-09) |
-| Visual schedules / timers | TD Snap tools | 🔴 | P2 |
+| Visual schedules / timers | TD Snap tools | 🟡 | Daily routine template + timeline UI web/mobile (2026-06-09) |
 | Diversity / skin tone on symbols | Proloquo, TD Snap | 🔴 | P2 |
 | High-quality neural TTS voices | Proloquo, Acapela | 🟡 | Browser TTS today |
 | Bilingual mid-sentence TTS | Proloquo | 🔴 | [ai-roadmap.md](../ai-roadmap.md) P2 |

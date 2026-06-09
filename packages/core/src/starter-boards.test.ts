@@ -5,9 +5,10 @@ import { createStarterBoard, listStarterTemplates } from './starter-boards.js';
 describe('starter board templates', () => {
   it('lists core-47 and core-100 templates', () => {
     const templates = listStarterTemplates();
-    assert.equal(templates.length, 3);
+    assert.equal(templates.length, 4);
     assert.equal(templates[0]?.id, 'core-47');
     assert.equal(templates[2]?.id, 'literacy-keyboard');
+    assert.equal(templates[3]?.id, 'visual-schedule');
   });
 
   it('builds a 6x8 core-47 board with locked motor-plan slots', () => {
@@ -35,5 +36,17 @@ describe('starter board templates', () => {
     assert.equal(board.name, 'Typing page');
     assert.equal(board.grid.rows, 4);
     assert.ok(board.grid.buttons.some((button) => button.kind === 'analytic' && button.label === 'Space'));
+  });
+
+  it('builds a visual schedule template', () => {
+    const board = createStarterBoard('visual-schedule', { name: 'School day' });
+    assert.equal(board.layout, 'visual-schedule');
+    assert.equal(board.name, 'School day');
+    assert.equal(board.grid.columns, 1);
+    assert.ok(
+      board.grid.buttons.some(
+        (button) => button.kind === 'analytic' && button.label === 'Brush teeth',
+      ),
+    );
   });
 });
