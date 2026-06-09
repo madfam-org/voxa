@@ -80,6 +80,14 @@ export function useSnapFileInput(
   }, '.spb,.sps,application/octet-stream');
 }
 
+export function useTouchChatFileInput(
+  onImport: (archive: ArrayBuffer) => Promise<void>,
+): { open: () => void; input: React.ReactNode } {
+  return useBoardFileInput(async (file) => {
+    await onImport(await file.arrayBuffer());
+  }, '.ce,.touchChat,application/octet-stream,application/zip');
+}
+
 export function downloadTextFile(filename: string, content: string, mime = 'application/json') {
   const blob = new Blob([content], { type: mime });
   downloadBlobFile(filename, blob);

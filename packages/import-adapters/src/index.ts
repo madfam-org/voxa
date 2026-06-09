@@ -69,3 +69,12 @@ export {
   type SnapCell,
   type SnapPage,
 } from './snap.js';
+
+export {
+  buildSampleTouchChatArchive,
+  parseTouchChatArchive,
+  touchChatArchiveToBoardUpdate,
+  touchChatCellsToBoardButtons,
+  type TouchChatCell,
+  type TouchChatPage,
+} from './touchchat.js';

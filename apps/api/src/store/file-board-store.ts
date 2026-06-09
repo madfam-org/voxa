@@ -17,6 +17,7 @@ import {
   applyImportObzBoard,
   applyImportGridsetBoard,
   applyImportSnapBoard,
+  applyImportTouchChatBoard,
   applyUpdateBoard,
   exportBoardObf,
   exportBoardObz,
@@ -103,6 +104,13 @@ export function createFileBoardStore(initialState?: StoreState): BoardStore {
 
     async importSnapBoard(boardId, archive, actorUserId): Promise<ImportObfResult> {
       const result = await applyImportSnapBoard(state.boards, boardId, archive, actorUserId);
+      state.events.push(result.event);
+      persist();
+      return result;
+    },
+
+    async importTouchChatBoard(boardId, archive, actorUserId): Promise<ImportObfResult> {
+      const result = await applyImportTouchChatBoard(state.boards, boardId, archive, actorUserId);
       state.events.push(result.event);
       persist();
       return result;

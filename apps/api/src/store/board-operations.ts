@@ -6,7 +6,7 @@ import {
   type SyncEvent,
 } from '@voxa/core';
 import { findMotorPlanningViolations } from '@voxa/vocabulary';
-import { gridsetArchiveToBoardUpdate, snapArchiveToBoardUpdate } from '@voxa/import-adapters';
+import { gridsetArchiveToBoardUpdate, snapArchiveToBoardUpdate, touchChatArchiveToBoardUpdate } from '@voxa/import-adapters';
 import { obfToVoxaButtons, obzToVoxaButtons, parseObfJson, unpackObz, voxaBoardToObf, voxaBoardToObz } from '@voxa/obf';
 import type { ImportObfResult } from './types.js';
 
@@ -213,6 +213,38 @@ export async function applyImportSnapBoard(
     forceMotorPlanning: true,
   });
   result.event.payload = { action: 'import.snap' };
+
+  return { ...result, warnings };
+}
+
+export async function applyImportTouchChatBoard(
+  boards: Record<string, Board>,
+  boardId: string,
+  archive: Uint8Array,
+  actorUserId: string,
+): Promise<ImportObfResult> {
+  const current = boards[boardId];
+  if (!current) {
+    throw new Error(`Board not found: ${boardId}`);
+  }
+
+  const { page, buttons, warnings } = await touchChatArchiveToBoardUpdate(archive, boardId);
+
+  const next: Board = {
+    ...current,
+    name: page.name || current.name,
+    grid: {
+      rows: page.rows,
+      columns: page.columns,
+      buttons,
+    },
+  };
+
+  const result = applyUpdateBoard(boards, boardId, next, actorUserId, {
+    expectedVersion: current.version,
+    forceMotorPlanning: true,
+  });
+  result.event.payload = { action: 'import.touchchat' };
 
   return { ...result, warnings };
 }

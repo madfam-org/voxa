@@ -152,6 +152,20 @@ export class VoxaClient {
     return res.json() as Promise<ObfImportResult>;
   }
 
+  async importTouchChat(boardId: string, archive: ArrayBuffer): Promise<ObfImportResult> {
+    const headers = { ...teamHeaders(this.options), 'Content-Type': 'application/octet-stream' };
+    const res = await fetch(this.url(`/v1/boards/${boardId}/import/touchchat`), {
+      method: 'POST',
+      headers,
+      body: archive,
+    });
+    if (!res.ok) {
+      const err = (await res.json().catch(() => ({}))) as { error?: string };
+      throw new Error(err.error ?? `Import failed: ${res.status}`);
+    }
+    return res.json() as Promise<ObfImportResult>;
+  }
+
   async listStarterTemplates(): Promise<Array<{ id: string; name: string; description: string }>> {
     const res = await fetch(this.url('/v1/boards/templates/list'), {
       headers: teamHeaders(this.options),

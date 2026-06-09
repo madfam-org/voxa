@@ -73,6 +73,22 @@ curl -X POST "https://voxa-api.madfam.io/v1/boards/{boardId}/import/snap" \
 
 Symbols and multi-page navigation are not migrated in this MVP adapter.
 
+### TouchChat (`.ce` / `.touchChat`)
+
+1. Editor → **Import TouchChat** and select a vocabulary file exported from TouchChat or Chat Editor (`.ce` zip archive).
+2. The Home page imports with button labels, messages, and grid positions when available.
+
+**API import:**
+
+```bash
+curl -X POST "https://voxa-api.madfam.io/v1/boards/{boardId}/import/touchchat" \
+  -H "Authorization: Bearer ${VOXA_ACCESS_TOKEN}" \
+  -H "Content-Type: application/octet-stream" \
+  --data-binary @my-vocab.ce
+```
+
+Custom images (`Images.c4s`) and multi-page navigation are not migrated in this MVP adapter.
+
 ### Starter templates
 
 Create boards from **Core 47** (6×8, motor-plan locked core) or **Core 100** (10×10) via the editor template picker, or:
@@ -90,7 +106,6 @@ List templates: `GET /v1/boards/templates/list`
 
 | Source | Format | Target |
 |--------|--------|--------|
-| TouchChat / TD Snap | Proprietary export | AACProcessors pipeline |
 | Proloquo2Go | Backup export | Partner migration service |
 
 Track progress in [FEATURE_PARITY.md](./FEATURE_PARITY.md).

@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { createBoardId, createDemoBoard, DEMO_BOARD_ID } from '@voxa/core';
-import { buildSampleGridsetArchive, buildSampleSnapArchive } from '@voxa/import-adapters';
-import { applyCreateBoard, applyImportGridsetBoard, applyImportSnapBoard, applyUpdateBoard } from './board-operations.js';
+import { buildSampleGridsetArchive, buildSampleSnapArchive, buildSampleTouchChatArchive } from '@voxa/import-adapters';
+import { applyCreateBoard, applyImportGridsetBoard, applyImportSnapBoard, applyImportTouchChatBoard, applyUpdateBoard } from './board-operations.js';
 
 describe('board operations', () => {
   it('creates a board and increments version on update', () => {
@@ -89,5 +89,15 @@ describe('board operations', () => {
     const result = await applyImportSnapBoard(boards, DEMO_BOARD_ID, archive, 'editor-1');
     assert.equal(result.board.grid.buttons.length, 3);
     assert.equal(result.event.payload?.action, 'import.snap');
+  });
+
+  it('imports a TouchChat .ce archive into a board', async () => {
+    const boards: Record<string, ReturnType<typeof createDemoBoard>> = {};
+    applyCreateBoard(boards, createDemoBoard(), 'editor-1');
+    const archive = await buildSampleTouchChatArchive();
+    const result = await applyImportTouchChatBoard(boards, DEMO_BOARD_ID, archive, 'editor-1');
+    assert.equal(result.board.name, 'Core');
+    assert.equal(result.board.grid.buttons.length, 3);
+    assert.equal(result.event.payload?.action, 'import.touchchat');
   });
 });

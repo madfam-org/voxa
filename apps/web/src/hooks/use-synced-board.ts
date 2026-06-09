@@ -373,6 +373,16 @@ export function useSyncedBoard(role: TeamRole) {
     [boardId, client, setBoard],
   );
 
+  const importTouchChat = useCallback(
+    async (archive: ArrayBuffer) => {
+      const result = await client.importTouchChat(boardId, archive);
+      setBoard(result.board);
+      setWarnings(result.warnings);
+      return result;
+    },
+    [boardId, client, setBoard],
+  );
+
   const exportObz = useCallback(async () => {
     return client.exportObz(boardId);
   }, [boardId, client]);
@@ -470,6 +480,7 @@ export function useSyncedBoard(role: TeamRole) {
     importObz,
     importGridset,
     importSnap,
+    importTouchChat,
     exportObz,
     isEditor,
     isAuthenticated: Boolean(accessToken),

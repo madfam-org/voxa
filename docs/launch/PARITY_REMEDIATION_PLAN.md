@@ -447,6 +447,7 @@ pnpm test && pnpm typecheck
 | 44 | Redis rollout verify scripts staging + prod (E4) | E | Ops ✅ 2026-06-09 |
 | 45 | Core 47/100 starter templates + new-board template picker (H1) | H | Engineering ✅ 2026-06-09 |
 | 46 | TD Snap `.spb` import adapter + API/editor (G3) | G | Engineering ✅ 2026-06-09 |
+| 47 | TouchChat `.ce` import adapter + API/editor (G2) | G | Engineering ✅ 2026-06-09 |
 
 ---
 

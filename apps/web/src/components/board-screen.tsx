@@ -17,6 +17,7 @@ import {
   useObzFileInput,
   useGridsetFileInput,
   useSnapFileInput,
+  useTouchChatFileInput,
 } from '@/lib/board-utils';
 import { effectiveDisplaySettings } from '@/lib/communicator-settings';
 import { useCommunicatorSettings } from '@/hooks/use-communicator-settings';
@@ -108,6 +109,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
     importObz,
     importGridset,
     importSnap,
+    importTouchChat,
     exportObz,
     isEditor,
     isAuthenticated,
@@ -292,10 +294,25 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
     [importSnap],
   );
 
+  const handleImportTouchChat = useCallback(
+    async (archive: ArrayBuffer) => {
+      setBusy(true);
+      try {
+        await importTouchChat(archive);
+      } catch (err) {
+        alert((err as Error).message);
+      } finally {
+        setBusy(false);
+      }
+    },
+    [importTouchChat],
+  );
+
   const { open: openObfImport, input: obfInput } = useObfFileInput(handleImport);
   const { open: openObzImport, input: obzInput } = useObzFileInput(handleImportObz);
   const { open: openGridsetImport, input: gridsetInput } = useGridsetFileInput(handleImportGridset);
   const { open: openSnapImport, input: snapInput } = useSnapFileInput(handleImportSnap);
+  const { open: openTouchChatImport, input: touchChatInput } = useTouchChatFileInput(handleImportTouchChat);
 
   const handleExportObz = useCallback(async () => {
     setBusy(true);
@@ -651,6 +668,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
       {obzInput}
       {gridsetInput}
       {snapInput}
+      {touchChatInput}
       <div ref={liveRef} aria-live="polite" aria-atomic="true" style={visuallyHidden} />
 
       {remoteEditor ? (
@@ -876,6 +894,9 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
             </button>
             <button type="button" onClick={openSnapImport} disabled={busy} style={secondaryBtn}>
               Import Snap
+            </button>
+            <button type="button" onClick={openTouchChatImport} disabled={busy} style={secondaryBtn}>
+              Import TouchChat
             </button>
             <button type="button" onClick={handleExport} disabled={busy} style={secondaryBtn}>
               Export OBF

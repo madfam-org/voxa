@@ -84,6 +84,7 @@ Actionable **feature parity match** against the AAC platform benchmark. Each row
 | PODD / Gateway page set option | TD Snap IAP | 🔴 | P2 or partner content |
 | `.gridset` import | Grid 3 | 🟡 | MVP zip parser + editor Import Grid (2026-06-09) |
 | Snap `.spb` import | TD Snap | 🟡 | SQLite adapter + editor Import Snap (2026-06-09) |
+| TouchChat `.ce` import | TouchChat / LAMP | 🟡 | SQLite zip adapter + editor Import TouchChat (2026-06-09) |
 | Visual schedules / timers | TD Snap tools | 🔴 | P2 |
 | Diversity / skin tone on symbols | Proloquo, TD Snap | 🔴 | P2 |
 | High-quality neural TTS voices | Proloquo, Acapela | 🟡 | Browser TTS today |
@@ -162,7 +163,7 @@ Mapped from [OpenAAC considerations](https://www.openaac.org/considerations). �
 | CoughDrop / OBF | Direct `.obf` / `.obz` import | Low |
 | Cboard | OBF export → Voxa import | Low |
 | Grid 3 | `.gridset` → AACProcessors → OBF → Voxa | Medium |
-| TouchChat | `.touchChat` → AACProcessors → OBF | Medium |
+| TouchChat | `.ce` → `@voxa/import-adapters` → OBF | Medium |
 | Snap Core First | `.spb` → AACProcessors → OBF | Medium |
 | Proloquo2Go | No native export; manual rebuild + ARASAAC | High |
 | LAMP / SFY | Proprietary; motor plan mapping project | High |
