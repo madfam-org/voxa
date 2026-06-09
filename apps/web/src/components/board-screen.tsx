@@ -12,6 +12,7 @@ import {
   listScheduleSteps,
   scheduleProgress,
 } from '@voxa/core';
+import { touchGuardActive } from '@voxa/access';
 import { fitzgeraldColor, createButtonAtCell, moveButtonToCell, resizeBoardGrid, type PartOfSpeech } from '@voxa/vocabulary';
 import { AacButton, BoardGrid, CVI_THEMES, themeStyles } from '@voxa/ui';
 import {
@@ -54,6 +55,7 @@ import { BoardAuditPanel } from '@/components/board-audit-panel';
 import { SyncStatusBanner } from '@/components/sync-status-banner';
 import { DraggableButtonShell, EditorGridCell } from '@/components/editor-grid-cell';
 import { VisualScheduleView } from '@/components/visual-schedule-view';
+import { TouchGuardListOverlay, TouchGuardOverlay } from '@/components/touch-guard-overlay';
 
 const headerBtn: React.CSSProperties = {
   background: '#2563eb',
@@ -160,6 +162,10 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
   const scheduleState = scheduleMode
     ? scheduleProgress(completedStepIds, scheduleSteps)
     : { completed: 0, total: 0, currentStepId: null };
+  const touchGuardOn =
+    !isEditor &&
+    settings.accessMode === 'touch' &&
+    touchGuardActive({ enabled: settings.touchGuardEnabled, mask: settings.touchGuardMask });
   const literacyDisplay = literacyMode
     ? { hideSymbols: true, hideLabels: displaySettings.hideLabels }
     : displaySettings;
@@ -1042,76 +1048,95 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
       )}
 
       <main style={{ flex: 1, minHeight: 0, display: 'flex' }}>
-        {scheduleMode ? (
-          <VisualScheduleView
-            steps={scheduleSteps.filter((btn) => isButtonVisible(btn))}
-            completedIds={completedStepIds}
-            currentStepId={scheduleState.currentStepId}
-            targetScale={settings.targetScale}
-            hideSymbol={displaySettings.hideSymbols}
-            hideLabel={displaySettings.hideLabels}
-            isHighlighted={isHighlighted}
-            isGroupHighlighted={isGroupHighlighted}
-            dwellProgressFor={dwellProgressFor}
-            renderStepButton={(btn, state) => {
-              const revealedHidden = babbleActive && !isEditor && btn.hidden;
-              return (
-                <AacButton
-                  label={buttonLabel(btn)}
-                  data-voxa-button-id={btn.id as string}
-                  symbolUrl={buttonSymbolUrl(btn)}
-                  borderColor={buttonBorderColor(btn)}
-                  targetScale={settings.targetScale}
-                  hideSymbol={displaySettings.hideSymbols}
-                  hideLabel={displaySettings.hideLabels}
-                  scanHighlighted={isHighlighted(btn)}
-                  scanGroupHighlighted={isGroupHighlighted(btn)}
-                  dwellProgress={dwellProgressFor(btn.id as string)}
-                  onClick={() => handleButtonPress(btn)}
-                  {...touchReleaseHandlers(btn)}
-                  onPointerEnter={() => onEnter(btn.id as string)}
-                  onPointerLeave={onLeave}
-                  style={
-                    revealedHidden
-                      ? { opacity: 0.72, outline: '2px dashed #f59e0b' }
-                      : state.completed
-                        ? { opacity: 0.72, outline: '2px solid #22c55e' }
-                        : state.current
-                          ? { outline: '2px solid #facc15' }
-                          : undefined
-                  }
-                  aria-label={
-                    isEditor && btn.locked
-                      ? `${buttonLabel(btn)} (locked motor-plan slot)`
-                      : state.completed
-                        ? `${buttonLabel(btn)} (completed)`
-                        : state.current
-                          ? `${buttonLabel(btn)} (current step)`
-                          : buttonLabel(btn)
-                  }
-                >
-                  {isEditor && btn.locked ? (
-                    <span
-                      aria-hidden
-                      style={{ position: 'absolute', top: 4, right: 4, fontSize: '0.75rem', lineHeight: 1 }}
+        <div style={{ position: 'relative', flex: 1, minHeight: 0, display: 'flex' }}>
+          {scheduleMode ? (
+            <>
+              <VisualScheduleView
+                steps={scheduleSteps.filter((btn) => isButtonVisible(btn))}
+                completedIds={completedStepIds}
+                currentStepId={scheduleState.currentStepId}
+                targetScale={settings.targetScale}
+                hideSymbol={displaySettings.hideSymbols}
+                hideLabel={displaySettings.hideLabels}
+                isHighlighted={isHighlighted}
+                isGroupHighlighted={isGroupHighlighted}
+                dwellProgressFor={dwellProgressFor}
+                renderStepButton={(btn, state) => {
+                  const revealedHidden = babbleActive && !isEditor && btn.hidden;
+                  return (
+                    <AacButton
+                      label={buttonLabel(btn)}
+                      data-voxa-button-id={btn.id as string}
+                      symbolUrl={buttonSymbolUrl(btn)}
+                      borderColor={buttonBorderColor(btn)}
+                      targetScale={settings.targetScale}
+                      hideSymbol={displaySettings.hideSymbols}
+                      hideLabel={displaySettings.hideLabels}
+                      scanHighlighted={isHighlighted(btn)}
+                      scanGroupHighlighted={isGroupHighlighted(btn)}
+                      dwellProgress={dwellProgressFor(btn.id as string)}
+                      onClick={() => handleButtonPress(btn)}
+                      {...touchReleaseHandlers(btn)}
+                      onPointerEnter={() => onEnter(btn.id as string)}
+                      onPointerLeave={onLeave}
+                      style={
+                        revealedHidden
+                          ? { opacity: 0.72, outline: '2px dashed #f59e0b' }
+                          : state.completed
+                            ? { opacity: 0.72, outline: '2px solid #22c55e' }
+                            : state.current
+                              ? { outline: '2px solid #facc15' }
+                              : undefined
+                      }
+                      aria-label={
+                        isEditor && btn.locked
+                          ? `${buttonLabel(btn)} (locked motor-plan slot)`
+                          : state.completed
+                            ? `${buttonLabel(btn)} (completed)`
+                            : state.current
+                              ? `${buttonLabel(btn)} (current step)`
+                              : buttonLabel(btn)
+                      }
                     >
-                      🔒
-                    </span>
-                  ) : null}
-                </AacButton>
-              );
-            }}
-          />
-        ) : (
-          <BoardGrid
-            rows={board.grid.rows}
-            columns={board.grid.columns}
-            theme={theme}
-            targetScale={settings.targetScale}
-          >
-            {gridCells}
-          </BoardGrid>
-        )}
+                      {isEditor && btn.locked ? (
+                        <span
+                          aria-hidden
+                          style={{ position: 'absolute', top: 4, right: 4, fontSize: '0.75rem', lineHeight: 1 }}
+                        >
+                          🔒
+                        </span>
+                      ) : null}
+                    </AacButton>
+                  );
+                }}
+              />
+              {touchGuardOn ? (
+                <TouchGuardListOverlay
+                  stepCount={scheduleSteps.filter((btn) => isButtonVisible(btn)).length}
+                  mask={settings.touchGuardMask}
+                />
+              ) : null}
+            </>
+          ) : (
+            <>
+              <BoardGrid
+                rows={board.grid.rows}
+                columns={board.grid.columns}
+                theme={theme}
+                targetScale={settings.targetScale}
+              >
+                {gridCells}
+              </BoardGrid>
+              {touchGuardOn ? (
+                <TouchGuardOverlay
+                  rows={board.grid.rows}
+                  columns={board.grid.columns}
+                  mask={settings.touchGuardMask}
+                />
+              ) : null}
+            </>
+          )}
+        </div>
 
         {settingsOpen && (
           <SettingsPanel

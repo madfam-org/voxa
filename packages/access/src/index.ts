@@ -137,3 +137,12 @@ export {
   SWITCH_SELECT_NATIVE_KEYS,
   type SwitchKeyAction,
 } from './switch-input.js';
+export {
+  DEFAULT_TOUCH_GUARD,
+  isTouchGuardBlocker,
+  isTouchGuardHole,
+  touchGuardActive,
+  touchGuardGridSize,
+  type TouchGuardMask,
+  type TouchGuardSettings,
+} from './touch-guard.js';

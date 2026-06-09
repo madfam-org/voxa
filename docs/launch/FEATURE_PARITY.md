@@ -69,7 +69,7 @@ Actionable **feature parity match** against the AAC platform benchmark. Each row
 | Cross-platform single account | Fragmented | 🟡 | Web + mobile share Janua token + board list (2026-06-09) |
 | PWA install (home screen) | Cboard, web AAC | 🟡 | `manifest.webmanifest` + install banner on landing (2026-06-09) |
 | Hardware switch (Bluetooth/USB) | Grid, TD Snap | 🟡 | Web USB key map via `@voxa/access`; native BT adapter P2 |
-| Keyguard / touch guard support | Clinical | 🔴 | P2 |
+| Keyguard / touch guard support | Clinical | 🟡 | Configurable mask overlay web/mobile (2026-06-09) |
 
 ---
 

@@ -7,6 +7,7 @@ import {
   SWITCH_INTERVAL_MAX_MS,
   type ScanOrder,
   type SwitchGroupStrategy,
+  type TouchGuardMask,
 } from '@voxa/access';
 import { CVI_THEMES, type CviTheme } from '@voxa/ui';
 import type { BoardDisplayPreferences } from '@voxa/core';
@@ -180,18 +181,48 @@ export function SettingsPanel({
       )}
 
       {settings.accessMode === 'touch' && (
-        <Field label="Touch activation">
-          <select
-            value={settings.touchActivation}
-            onChange={(e) =>
-              onChange({ touchActivation: e.target.value as CommunicatorSettings['touchActivation'] })
-            }
-            style={fieldStyle}
-          >
-            <option value="press">Press (touch-start)</option>
-            <option value="release">Release (touch-up)</option>
-          </select>
-        </Field>
+        <>
+          <Field label="Touch activation">
+            <select
+              value={settings.touchActivation}
+              onChange={(e) =>
+                onChange({ touchActivation: e.target.value as CommunicatorSettings['touchActivation'] })
+              }
+              style={fieldStyle}
+            >
+              <option value="press">Press (touch-start)</option>
+              <option value="release">Release (touch-up)</option>
+            </select>
+          </Field>
+          <Field label="Touch guard (keyguard)">
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <input
+                type="checkbox"
+                checked={settings.touchGuardEnabled}
+                onChange={(e) => onChange({ touchGuardEnabled: e.target.checked })}
+              />
+              Mask regions between targets
+            </label>
+          </Field>
+          {settings.touchGuardEnabled ? (
+            <Field label="Touch guard mask">
+              <select
+                value={settings.touchGuardMask}
+                onChange={(e) =>
+                  onChange({ touchGuardMask: e.target.value as TouchGuardMask })
+                }
+                style={fieldStyle}
+              >
+                <option value="both">Gutters + perimeter</option>
+                <option value="gutter">Between cells only</option>
+                <option value="perimeter">Board edge only</option>
+              </select>
+              <p style={hintStyle}>
+                Semi-transparent overlays block accidental touches outside button holes.
+              </p>
+            </Field>
+          ) : null}
+        </>
       )}
 
       {settings.accessMode === 'eye-tracking' && (

@@ -19,6 +19,7 @@ import {
 } from '@voxa/core';
 import { fitzgeraldColor, resolvePartOfSpeech } from '@voxa/vocabulary';
 import type { ScanOrder, SwitchGroupStrategy } from '@voxa/access';
+import { touchGuardActive } from '@voxa/access';
 import { buttonLabel, buttonSpeech } from '@/lib/board-utils';
 import { speakButton, speakText } from '@/lib/play-button-speech';
 import { useMobileAuth } from '@/hooks/use-mobile-auth';
@@ -45,6 +46,8 @@ export function MobileBoardScreen() {
     auditoryScanHighlight: true,
     auditoryScanVoice: false,
     auditoryScanBeep: true,
+    touchGuardEnabled: false,
+    touchGuardMask: 'both',
   });
   const { accessToken, userId, isAuthenticated, configured, signIn, signOut, loading: authLoading } =
     useMobileAuth();
@@ -75,6 +78,9 @@ export function MobileBoardScreen() {
   const scheduleState = scheduleMode
     ? scheduleProgress(completedStepIds, scheduleSteps)
     : { completed: 0, total: 0, currentStepId: null };
+  const touchGuardOn =
+    settings.accessMode === 'touch' &&
+    touchGuardActive({ enabled: settings.touchGuardEnabled, mask: settings.touchGuardMask });
 
   useEffect(() => {
     setCompletedStepIds(new Set());
@@ -192,6 +198,98 @@ export function MobileBoardScreen() {
     settings.switchOrder,
   ]);
 
+  const configureTouchGuard = useCallback(() => {
+    Alert.alert(
+      'Touch guard',
+      settings.touchGuardEnabled
+        ? `Mask: ${settings.touchGuardMask}`
+        : 'Block accidental touches between targets',
+      [
+        {
+          text: settings.touchGuardEnabled ? 'Disable guard' : 'Enable guard',
+          onPress: () => patchSettings({ touchGuardEnabled: !settings.touchGuardEnabled }),
+        },
+        {
+          text: 'Mask: gutters + edge',
+          onPress: () => patchSettings({ touchGuardEnabled: true, touchGuardMask: 'both' }),
+        },
+        {
+          text: 'Mask: between cells',
+          onPress: () => patchSettings({ touchGuardEnabled: true, touchGuardMask: 'gutter' }),
+        },
+        {
+          text: 'Mask: board edge',
+          onPress: () => patchSettings({ touchGuardEnabled: true, touchGuardMask: 'perimeter' }),
+        },
+        { text: 'Cancel', style: 'cancel' },
+      ],
+    );
+  }, [patchSettings, settings.touchGuardEnabled, settings.touchGuardMask]);
+
+  const renderBoardButton = (btn: BoardButton) => {
+    const borderColor = fitzgeraldColor(resolvePartOfSpeech(btn));
+    const highlighted = isHighlighted(btn);
+    const groupHighlighted = isGroupHighlighted(btn);
+    const stepCompleted = scheduleMode && completedStepIds.has(btn.id as string);
+    const stepCurrent =
+      scheduleMode && !stepCompleted && (btn.id as string) === scheduleState.currentStepId;
+
+    return (
+      <Pressable
+        key={btn.id as string}
+        accessibilityRole="button"
+        accessibilityLabel={
+          stepCompleted
+            ? `${buttonLabel(btn)} (completed)`
+            : stepCurrent
+              ? `${buttonLabel(btn)} (current step)`
+              : buttonLabel(btn)
+        }
+        accessibilityState={{ selected: highlighted || groupHighlighted }}
+        onPress={() => {
+          if (switchScanEnabled) {
+            if (highlighted) activate(btn);
+            else if (groupHighlighted) select();
+            return;
+          }
+          activate(btn);
+        }}
+        style={[
+          scheduleMode ? styles.scheduleStep : styles.cell,
+          {
+            borderColor: highlighted
+              ? '#facc15'
+              : groupHighlighted
+                ? '#ca8a04'
+                : stepCompleted
+                  ? '#22c55e'
+                  : stepCurrent
+                    ? '#facc15'
+                    : borderColor,
+          },
+          highlighted
+            ? styles.cellHighlighted
+            : groupHighlighted
+              ? styles.cellGroupHighlighted
+              : stepCompleted
+                ? styles.scheduleStepCompleted
+                : stepCurrent
+                  ? styles.scheduleStepCurrent
+                  : null,
+        ]}
+      >
+        {scheduleMode ? (
+          <Text style={styles.scheduleStepIndex}>{stepCompleted ? '✓' : btn.position.row + 1}</Text>
+        ) : null}
+        <Text style={styles.cellLabel}>{buttonLabel(btn)}</Text>
+      </Pressable>
+    );
+  };
+
+  const gridRows = Array.from({ length: board.grid.rows }, (_, row) =>
+    sorted.filter((btn) => btn.position.row === row),
+  );
+
   const pickBoard = useCallback(() => {
     if (boardCatalog.length <= 1) return;
     Alert.alert(
@@ -231,6 +329,13 @@ export function MobileBoardScreen() {
             {switchScanEnabled ? 'Switch on' : 'Switch off'}
           </Text>
         </Pressable>
+        {!switchScanEnabled ? (
+          <Pressable style={styles.headerBtnSecondary} onPress={configureTouchGuard}>
+            <Text style={styles.headerBtnText}>
+              {touchGuardOn ? 'Guard on' : 'Guard off'}
+            </Text>
+          </Pressable>
+        ) : null}
         {!authLoading && configured ? (
           isAuthenticated ? (
             <Pressable style={styles.headerBtnSecondary} onPress={() => void signOut()}>
@@ -309,66 +414,44 @@ export function MobileBoardScreen() {
       ) : null}
 
       <ScrollView contentContainerStyle={scheduleMode ? styles.scheduleList : styles.grid}>
-        {sorted.map((btn) => {
-          const borderColor = fitzgeraldColor(resolvePartOfSpeech(btn));
-          const highlighted = isHighlighted(btn);
-          const groupHighlighted = isGroupHighlighted(btn);
-          const stepCompleted = scheduleMode && completedStepIds.has(btn.id as string);
-          const stepCurrent =
-            scheduleMode && !stepCompleted && (btn.id as string) === scheduleState.currentStepId;
-          return (
-            <Pressable
-              key={btn.id as string}
-              accessibilityRole="button"
-              accessibilityLabel={
-                stepCompleted
-                  ? `${buttonLabel(btn)} (completed)`
-                  : stepCurrent
-                    ? `${buttonLabel(btn)} (current step)`
-                    : buttonLabel(btn)
-              }
-              accessibilityState={{ selected: highlighted || groupHighlighted }}
-              onPress={() => {
-                if (switchScanEnabled) {
-                  if (highlighted) activate(btn);
-                  else if (groupHighlighted) select();
-                  return;
-                }
-                activate(btn);
-              }}
-              style={[
-                scheduleMode ? styles.scheduleStep : styles.cell,
-                {
-                  borderColor: highlighted
-                    ? '#facc15'
-                    : groupHighlighted
-                      ? '#ca8a04'
-                      : stepCompleted
-                        ? '#22c55e'
-                        : stepCurrent
-                          ? '#facc15'
-                          : borderColor,
-                },
-                highlighted
-                  ? styles.cellHighlighted
-                  : groupHighlighted
-                    ? styles.cellGroupHighlighted
-                    : stepCompleted
-                      ? styles.scheduleStepCompleted
-                      : stepCurrent
-                        ? styles.scheduleStepCurrent
-                        : null,
-              ]}
-            >
-              {scheduleMode ? (
-                <Text style={styles.scheduleStepIndex}>
-                  {stepCompleted ? '✓' : btn.position.row + 1}
-                </Text>
+        {scheduleMode ? (
+          sorted.map((btn, index) => (
+            <View key={btn.id as string}>
+              {touchGuardOn && index > 0 && settings.touchGuardMask !== 'perimeter' ? (
+                <View style={styles.touchGuardStrip} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
               ) : null}
-              <Text style={styles.cellLabel}>{buttonLabel(btn)}</Text>
-            </Pressable>
-          );
-        })}
+              {renderBoardButton(btn)}
+            </View>
+          ))
+        ) : touchGuardOn ? (
+          <View style={styles.guardedBoard}>
+            {settings.touchGuardMask !== 'gutter' ? (
+              <View style={styles.touchGuardStrip} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+            ) : null}
+            {gridRows.map((rowButtons, rowIndex) => (
+              <View key={`row-${rowIndex}`}>
+                {rowIndex > 0 && settings.touchGuardMask !== 'perimeter' ? (
+                  <View style={styles.touchGuardStrip} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+                ) : null}
+                <View style={styles.gridRow}>
+                  {rowButtons.map((btn, columnIndex) => (
+                    <View key={btn.id as string} style={styles.gridCellWrap}>
+                      {columnIndex > 0 && settings.touchGuardMask !== 'perimeter' ? (
+                        <View style={styles.touchGuardColumnStrip} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+                      ) : null}
+                      {renderBoardButton(btn)}
+                    </View>
+                  ))}
+                </View>
+              </View>
+            ))}
+            {settings.touchGuardMask !== 'gutter' ? (
+              <View style={styles.touchGuardStrip} accessibilityElementsHidden importantForAccessibility="no-hide-descendants" />
+            ) : null}
+          </View>
+        ) : (
+          sorted.map((btn) => renderBoardButton(btn))
+        )}
       </ScrollView>
     </View>
   );
@@ -503,6 +586,29 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 24,
     fontWeight: '700',
+  },
+  touchGuardStrip: {
+    height: 10,
+    backgroundColor: 'rgba(15, 23, 42, 0.38)',
+  },
+  guardedBoard: {
+    width: '100%',
+    paddingHorizontal: 4,
+  },
+  gridRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    justifyContent: 'center',
+  },
+  gridCellWrap: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+  },
+  touchGuardColumnStrip: {
+    width: 10,
+    alignSelf: 'stretch',
+    backgroundColor: 'rgba(15, 23, 42, 0.38)',
   },
   cell: {
     width: TARGET * 2.2,

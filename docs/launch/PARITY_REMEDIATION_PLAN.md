@@ -201,7 +201,7 @@ Each epic links to [FEATURE_PARITY.md](./FEATURE_PARITY.md) rows and benchmark d
 | F2 | Auditory scanning | Beep on scan step; voice prompt option | `@voxa/access` audio cues |
 | F3 | Group / region scan | Scan by row groups, regions | Extend `SwitchScanConfig` |
 | F4 | Tobii / IrisBond gaze | SDK integration (Windows/iOS first) | Adapter service; dwell from gaze coords |
-| F5 | Keyguard / touch guard | Screen regions masked | Configurable mask overlay |
+| F5 | Keyguard / touch guard | Screen regions masked | `@voxa/access` touch guard + overlay in web/mobile (2026-06-09) |
 | F6 | Touch-release vs touch-start | Setting for motor profile | `@voxa/access` |
 
 **Acceptance (W4):**
