@@ -2,7 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { BoardButton, BoardDisplayPreferences, PartOfSpeechTag, StarterTemplateId, TeamRole } from '@voxa/core';
-import { DEMO_BOARD_ID } from '@voxa/core';
+import {
+  applyKeyboardActivation,
+  DEMO_BOARD_ID,
+  formatKeyboardUtterance,
+  isKeyboardSpeakButton,
+  isLiteracyKeyboardBoard,
+} from '@voxa/core';
 import { fitzgeraldColor, createButtonAtCell, moveButtonToCell, resizeBoardGrid, type PartOfSpeech } from '@voxa/vocabulary';
 import { AacButton, BoardGrid, CVI_THEMES, themeStyles } from '@voxa/ui';
 import {
@@ -142,6 +148,11 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
     (btn) => isEditor || !btn.hidden || (!isEditor && babbleActive),
   );
 
+  const literacyMode = isLiteracyKeyboardBoard(board);
+  const literacyDisplay = literacyMode
+    ? { hideSymbols: true, hideLabels: displaySettings.hideLabels }
+    : displaySettings;
+
   const { textPredictions, symbolPredictions } = usePredictions(board, utterance, recentButtonIds);
 
   const resolveActivationSpeech = useCallback((btn: BoardButton): string => {
@@ -172,6 +183,17 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
         return;
       }
 
+      if (literacyMode && btn.kind === 'analytic' && btn.keyboardRole) {
+        if (isKeyboardSpeakButton(btn)) {
+          const text = formatKeyboardUtterance(utterance);
+          if (text && !settings.whisperMode) speakText(text);
+          return;
+        }
+        const result = applyKeyboardActivation(utterance, btn);
+        setUtterance(result.utterance);
+        return;
+      }
+
       const text = resolveActivationSpeech(btn);
       setUtterance((prev) => [...prev, text]);
       setRecentButtonIds((prev) => [...prev, btn.id as string].slice(-8));
@@ -184,14 +206,27 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
         void speakButton(btn, { accessToken, speechText: text });
       }
     },
-    [accessToken, boardId, isEditor, editingId, resolveActivationSpeech, setBoardId, settings.whisperMode],
+    [
+      accessToken,
+      boardId,
+      isEditor,
+      editingId,
+      literacyMode,
+      utterance,
+      resolveActivationSpeech,
+      setBoardId,
+      settings.whisperMode,
+    ],
   );
 
-  const applyPrediction = useCallback((text: string) => {
-    const words = text.split(/\s+/).filter(Boolean);
-    setUtterance(words);
-    speakText(text);
-  }, []);
+  const applyPrediction = useCallback(
+    (text: string) => {
+      const words = text.trim() ? text.trim().split(/\s+/).filter(Boolean) : [];
+      setUtterance(words);
+      if (!settings.whisperMode) speakText(text);
+    },
+    [settings.whisperMode],
+  );
 
   const switchScanEnabled = settings.accessMode === 'switch' && !isEditor;
   const eyeDwellEnabled = settings.accessMode === 'eye-tracking' && !isEditor;
@@ -234,10 +269,10 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
     settings.gazeSource === 'tobii-bridge' ? bridgeDwellProgress : pointerDwellProgress;
 
   const speakAll = useCallback(() => {
-    const text = utterance.join(' ');
+    const text = literacyMode ? formatKeyboardUtterance(utterance) : utterance.join(' ');
     if (!text) return;
     speakText(text);
-  }, [utterance]);
+  }, [literacyMode, utterance]);
 
   const handleImport = useCallback(
     async (raw: string) => {
@@ -583,8 +618,8 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
         symbolUrl={buttonSymbolUrl(btn)}
         borderColor={buttonBorderColor(btn)}
         targetScale={settings.targetScale}
-        hideSymbol={displaySettings.hideSymbols}
-        hideLabel={displaySettings.hideLabels}
+        hideSymbol={literacyDisplay.hideSymbols}
+        hideLabel={literacyDisplay.hideLabels}
         scanHighlighted={isHighlighted(btn)}
         scanGroupHighlighted={isGroupHighlighted(btn)}
         dwellProgress={dwellProgressFor(btn.id as string)}
@@ -749,6 +784,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
                 <option value="">Blank 4×4</option>
                 <option value="core-47">Core 47</option>
                 <option value="core-100">Core 100</option>
+                <option value="literacy-keyboard">Literacy Keyboard</option>
               </select>
             </label>
             <button type="button" onClick={handleCreateBoard} disabled={busy} style={secondaryBtn}>
@@ -862,7 +898,11 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
         )}
 
         <div style={utteranceBarStyle}>
-          {utterance.length ? utterance.join(' ') : 'Tap buttons to build a message…'}
+          {literacyMode
+            ? formatKeyboardUtterance(utterance) || 'Type on the keyboard…'
+            : utterance.length
+              ? utterance.join(' ')
+              : 'Tap buttons to build a message…'}
         </div>
 
         <button type="button" onClick={speakAll} style={headerBtn}>

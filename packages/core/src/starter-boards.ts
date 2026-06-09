@@ -6,8 +6,9 @@ import {
   type BoardButton,
   type PartOfSpeechTag,
 } from './index.js';
+import { createLiteracyKeyboardBoard } from './literacy-keyboard.js';
 
-export type StarterTemplateId = 'core-47' | 'core-100';
+export type StarterTemplateId = 'core-47' | 'core-100' | 'literacy-keyboard';
 
 export interface StarterTemplateMeta {
   id: StarterTemplateId;
@@ -132,13 +133,13 @@ const CORE_100_EXTRA: StarterWord[] = [
   { id: 'and', label: 'and', speech: 'and', pos: 'conjunction' },
 ];
 
-const TEMPLATE_LAYOUT: Record<StarterTemplateId, { rows: number; columns: number; words: StarterWord[] }> = {
+const TEMPLATE_LAYOUT: Record<Extract<StarterTemplateId, 'core-47' | 'core-100'>, { rows: number; columns: number; words: StarterWord[] }> = {
   'core-47': { rows: 6, columns: 8, words: CORE_47_WORDS },
   'core-100': { rows: 10, columns: 10, words: [...CORE_47_WORDS, ...CORE_100_EXTRA] },
 };
 
 export function listStarterTemplates(): StarterTemplateMeta[] {
-  return (Object.keys(TEMPLATE_LAYOUT) as StarterTemplateId[]).map((id) => {
+  const coreTemplates = (Object.keys(TEMPLATE_LAYOUT) as Array<'core-47' | 'core-100'>).map((id) => {
     const layout = TEMPLATE_LAYOUT[id];
     return {
       id,
@@ -152,6 +153,19 @@ export function listStarterTemplates(): StarterTemplateMeta[] {
       wordCount: layout.words.length,
     };
   });
+
+  const literacy = createLiteracyKeyboardBoard();
+  return [
+    ...coreTemplates,
+    {
+      id: 'literacy-keyboard',
+      name: 'Literacy Keyboard',
+      description: 'QWERTY text keyboard for literate users with AI word suggestions',
+      rows: literacy.grid.rows,
+      columns: literacy.grid.columns,
+      wordCount: literacy.grid.buttons.length,
+    },
+  ];
 }
 
 function wordToButton(word: StarterWord, row: number, column: number): BoardButton {
@@ -178,6 +192,10 @@ export function createStarterBoard(
   templateId: StarterTemplateId,
   options?: { boardId?: string; name?: string; profileId?: string },
 ): Board {
+  if (templateId === 'literacy-keyboard') {
+    return createLiteracyKeyboardBoard(options);
+  }
+
   const layout = TEMPLATE_LAYOUT[templateId];
   return {
     id: createBoardId(options?.boardId ?? `starter-${templateId}`),

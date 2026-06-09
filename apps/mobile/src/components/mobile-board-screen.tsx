@@ -8,6 +8,12 @@ import {
   View,
 } from 'react-native';
 import type { BoardButton } from '@voxa/core';
+import {
+  applyKeyboardActivation,
+  formatKeyboardUtterance,
+  isKeyboardSpeakButton,
+  isLiteracyKeyboardBoard,
+} from '@voxa/core';
 import { fitzgeraldColor, resolvePartOfSpeech } from '@voxa/vocabulary';
 import type { ScanOrder, SwitchGroupStrategy } from '@voxa/access';
 import { buttonLabel, buttonSpeech } from '@/lib/board-utils';
@@ -58,17 +64,31 @@ export function MobileBoardScreen() {
     (a, b) => a.position.row - b.position.row || a.position.column - b.position.column,
   );
 
+  const literacyMode = isLiteracyKeyboardBoard(board);
+
   const activate = useCallback(
     (btn: BoardButton) => {
       if (btn.navigateToBoardId) {
         void setBoardId(btn.navigateToBoardId as string);
         return;
       }
+
+      if (literacyMode && btn.kind === 'analytic' && btn.keyboardRole) {
+        if (isKeyboardSpeakButton(btn)) {
+          const text = formatKeyboardUtterance(utterance);
+          if (text) void speakText(text);
+          return;
+        }
+        const result = applyKeyboardActivation(utterance, btn);
+        setUtterance(result.utterance);
+        return;
+      }
+
       const text = buttonSpeech(btn);
       setUtterance((prev) => [...prev, text]);
       void speakButton(btn, { accessToken });
     },
-    [accessToken, setBoardId],
+    [accessToken, literacyMode, setBoardId, utterance],
   );
 
   const { isHighlighted, isGroupHighlighted, advance, select, activeLabel } = useMobileSwitchScan({
@@ -187,12 +207,16 @@ export function MobileBoardScreen() {
           )
         ) : null}
         <Text style={styles.utterance}>
-          {utterance.length ? utterance.join(' ') : 'Tap to communicate…'}
+          {literacyMode
+            ? formatKeyboardUtterance(utterance) || 'Type on the keyboard…'
+            : utterance.length
+              ? utterance.join(' ')
+              : 'Tap to communicate…'}
         </Text>
         <Pressable
           style={styles.headerBtn}
           onPress={() => {
-            const text = utterance.join(' ');
+            const text = literacyMode ? formatKeyboardUtterance(utterance) : utterance.join(' ');
             if (text) speakText(text);
           }}
         >

@@ -85,8 +85,10 @@ export type BoardButton = (AnalyticButton | GlpButton) & {
   partOfSpeech?: PartOfSpeechTag;
   /** Hidden from communicator view until revealed by editor (OpenAAC hide/show). */
   hidden?: boolean;
-  /** OBF `load_board_id` — navigate to another board on activation. */
+  /** Navigate to another board on activation. */
   navigateToBoardId?: BoardId;
+  /** Single-character literacy keyboard key behavior. */
+  keyboardRole?: import('./keyboard-input.js').KeyboardRole;
 };
 
 export interface BoardGrid {
@@ -118,6 +120,8 @@ export interface Board {
   profileId: ProfileId;
   grid: BoardGrid;
   version: number;
+  /** Literacy keyboard uses character-level typing into the message bar. */
+  layout?: 'grid' | 'literacy-keyboard';
   updatedAt: string;
   ownerUserId?: string;
   orgId?: string;
@@ -206,4 +210,15 @@ export {
   type StarterTemplateId,
   type StarterTemplateMeta,
 } from './starter-boards.js';
+export {
+  applyKeyboardActivation,
+  formatKeyboardUtterance,
+  insertKeyboardChar,
+  insertKeyboardSpace,
+  isKeyboardSpeakButton,
+  isLiteracyKeyboardBoard,
+  keyboardBackspace,
+  type KeyboardRole,
+} from './keyboard-input.js';
+export { createLiteracyKeyboardBoard } from './literacy-keyboard.js';
 export { mapTeamRoleFromClaims } from './team-role.js';

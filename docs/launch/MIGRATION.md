@@ -100,7 +100,11 @@ curl -X POST "https://voxa-api.madfam.io/v1/boards" \
   -d '{"id":"board-my-core","name":"Therapy core","templateId":"core-100","profileId":"default","version":1,"grid":{"rows":4,"columns":4,"buttons":[]}}'
 ```
 
-List templates: `GET /v1/boards/templates/list`
+List templates: `GET /v1/boards/templates/list` (includes **Literacy Keyboard** QWERTY page)
+
+### Literacy keyboard
+
+Create a **Literacy Keyboard** board from the editor template picker for literate users who type messages character-by-character. The message bar supports AI word suggestions from the prediction strip when consent is enabled.
 
 ## Coming soon (P2)
 

@@ -89,7 +89,7 @@ Actionable **feature parity match** against the AAC platform benchmark. Each row
 | Diversity / skin tone on symbols | Proloquo, TD Snap | 🔴 | P2 |
 | High-quality neural TTS voices | Proloquo, Acapela | 🟡 | Browser TTS today |
 | Bilingual mid-sentence TTS | Proloquo | 🔴 | [ai-roadmap.md](../ai-roadmap.md) P2 |
-| Literacy / keyboard page set | TD Snap Text | 🔴 | P2 |
+| Literacy / keyboard page set | TD Snap Text | 🟡 | QWERTY template + char typing + prediction strip (2026-06-09) |
 | Apple Watch / secondary display | Proloquo2Go | ➖ | Low priority |
 | Google Assistant integration | TD Snap | ➖ | Optional / post-GA |
 
