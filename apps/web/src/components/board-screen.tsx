@@ -197,7 +197,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
   const eyeDwellEnabled = settings.accessMode === 'eye-tracking' && !isEditor;
   const scanPaused = settings.pauseScanWhileSpeaking && speechActive;
 
-  const { isHighlighted, liveRef } = useSwitchScan({
+  const { isHighlighted, isGroupHighlighted, liveRef } = useSwitchScan({
     enabled: switchScanEnabled,
     paused: scanPaused,
     rows: board.grid.rows,
@@ -205,6 +205,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
     buttons: visibleButtons,
     intervalMs: settings.switchIntervalMs,
     order: settings.switchOrder,
+    groupStrategy: settings.switchGroupStrategy,
     auditoryHighlight: settings.auditoryScanHighlight,
     auditoryVoice: settings.auditoryScanVoice,
     onSelect: activate,
@@ -585,6 +586,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
         hideSymbol={displaySettings.hideSymbols}
         hideLabel={displaySettings.hideLabels}
         scanHighlighted={isHighlighted(btn)}
+        scanGroupHighlighted={isGroupHighlighted(btn)}
         dwellProgress={dwellProgressFor(btn.id as string)}
         onClick={() => handleButtonPress(btn)}
         {...touchReleaseHandlers(btn)}

@@ -29,6 +29,7 @@ Users can disable decorative imagery, reduce grid chrome, and enlarge symbol-onl
 ### Switch Scanning
 
 - Configurable scan order: row-major, column-major, linear, custom groups
+- Two-level **group scan**: row groups or quadrant regions, then cells within the selected group
 - Adjustable scan interval (300 ms – 5 s)
 - Auditory scan highlight optional (screen reader live region)
 - Optional spoken scan voice for each focused cell

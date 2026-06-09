@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import type { BoardButton } from '@voxa/core';
 import { fitzgeraldColor, resolvePartOfSpeech } from '@voxa/vocabulary';
-import type { ScanOrder } from '@voxa/access';
+import type { ScanOrder, SwitchGroupStrategy } from '@voxa/access';
 import { buttonLabel, buttonSpeech } from '@/lib/board-utils';
 import { speakButton, speakText } from '@/lib/play-button-speech';
 import { useMobileAuth } from '@/hooks/use-mobile-auth';
@@ -31,6 +31,7 @@ export function MobileBoardScreen() {
     accessMode: 'touch',
     switchIntervalMs: 1200,
     switchOrder: 'row-major',
+    switchGroupStrategy: 'none',
     auditoryScanHighlight: true,
     auditoryScanVoice: false,
   });
@@ -70,13 +71,14 @@ export function MobileBoardScreen() {
     [accessToken, setBoardId],
   );
 
-  const { isHighlighted, advance, select, activeLabel } = useMobileSwitchScan({
+  const { isHighlighted, isGroupHighlighted, advance, select, activeLabel } = useMobileSwitchScan({
     enabled: switchScanEnabled,
     rows: board.grid.rows,
     columns: board.grid.columns,
     buttons: sorted,
     intervalMs: settings.switchIntervalMs,
     order: settings.switchOrder,
+    groupStrategy: settings.switchGroupStrategy,
     auditoryHighlight: settings.auditoryScanHighlight,
     auditoryVoice: settings.auditoryScanVoice,
     onSelect: activate,
@@ -96,9 +98,15 @@ export function MobileBoardScreen() {
   }, [settings]);
 
   const configureSwitchScan = useCallback(() => {
+    const groupLabel =
+      settings.switchGroupStrategy === 'rows'
+        ? 'Row groups'
+        : settings.switchGroupStrategy === 'regions'
+          ? 'Region groups'
+          : 'Single-level';
     Alert.alert(
       'Switch scan speed',
-      `${settings.switchIntervalMs} ms · ${settings.switchOrder.replace('-', ' ')}`,
+      `${settings.switchIntervalMs} ms · ${settings.switchOrder.replace('-', ' ')} · ${groupLabel}`,
       [
         { text: 'Faster (600 ms)', onPress: () => patchSettings({ switchIntervalMs: 600 }) },
         { text: 'Default (1200 ms)', onPress: () => patchSettings({ switchIntervalMs: 1200 }) },
@@ -111,10 +119,22 @@ export function MobileBoardScreen() {
           text: 'Column-major order',
           onPress: () => patchSettings({ switchOrder: 'column-major' as ScanOrder }),
         },
+        {
+          text: 'Group: single-level',
+          onPress: () => patchSettings({ switchGroupStrategy: 'none' as SwitchGroupStrategy }),
+        },
+        {
+          text: 'Group: rows',
+          onPress: () => patchSettings({ switchGroupStrategy: 'rows' as SwitchGroupStrategy }),
+        },
+        {
+          text: 'Group: regions',
+          onPress: () => patchSettings({ switchGroupStrategy: 'regions' as SwitchGroupStrategy }),
+        },
         { text: 'Cancel', style: 'cancel' },
       ],
     );
-  }, [patchSettings, settings.switchIntervalMs, settings.switchOrder]);
+  }, [patchSettings, settings.switchGroupStrategy, settings.switchIntervalMs, settings.switchOrder]);
 
   const pickBoard = useCallback(() => {
     if (boardCatalog.length <= 1) return;
@@ -225,23 +245,25 @@ export function MobileBoardScreen() {
         {sorted.map((btn) => {
           const borderColor = fitzgeraldColor(resolvePartOfSpeech(btn));
           const highlighted = isHighlighted(btn);
+          const groupHighlighted = isGroupHighlighted(btn);
           return (
             <Pressable
               key={btn.id as string}
               accessibilityRole="button"
               accessibilityLabel={buttonLabel(btn)}
-              accessibilityState={{ selected: highlighted }}
+              accessibilityState={{ selected: highlighted || groupHighlighted }}
               onPress={() => {
                 if (switchScanEnabled) {
                   if (highlighted) activate(btn);
+                  else if (groupHighlighted) select();
                   return;
                 }
                 activate(btn);
               }}
               style={[
                 styles.cell,
-                { borderColor: highlighted ? '#60a5fa' : borderColor },
-                highlighted ? styles.cellHighlighted : null,
+                { borderColor: highlighted ? '#facc15' : groupHighlighted ? '#ca8a04' : borderColor },
+                highlighted ? styles.cellHighlighted : groupHighlighted ? styles.cellGroupHighlighted : null,
               ]}
             >
               <Text style={styles.cellLabel}>{buttonLabel(btn)}</Text>
@@ -360,7 +382,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#111',
   },
   cellHighlighted: {
-    backgroundColor: '#1e3a8a',
+    backgroundColor: '#422006',
+  },
+  cellGroupHighlighted: {
+    backgroundColor: '#1c1917',
   },
   cellLabel: { color: '#f5f5f5', fontWeight: '600', textAlign: 'center' },
 });

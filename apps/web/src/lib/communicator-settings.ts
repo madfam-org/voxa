@@ -1,4 +1,4 @@
-import type { AccessProfile, ScanOrder } from '@voxa/access';
+import type { AccessProfile, ScanOrder, SwitchGroupStrategy } from '@voxa/access';
 import type { BoardDisplayPreferences } from '@voxa/core';
 import type { CviTheme } from '@voxa/ui';
 
@@ -8,6 +8,7 @@ export interface CommunicatorSettings {
   targetScale: number;
   switchIntervalMs: number;
   switchOrder: ScanOrder;
+  switchGroupStrategy: SwitchGroupStrategy;
   eyeDwellMs: number;
   gazeSource: 'pointer' | 'tobii-bridge';
   auditoryScanHighlight: boolean;
@@ -25,6 +26,7 @@ export const DEFAULT_COMMUNICATOR_SETTINGS: CommunicatorSettings = {
   targetScale: 1.2,
   switchIntervalMs: 1200,
   switchOrder: 'row-major',
+  switchGroupStrategy: 'none',
   eyeDwellMs: 1000,
   gazeSource: 'pointer',
   auditoryScanHighlight: true,

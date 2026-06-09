@@ -1,4 +1,8 @@
+import type { SwitchGroupStrategy } from './group-scan.js';
+
 export type ScanOrder = 'row-major' | 'column-major' | 'linear';
+
+export type { SwitchGroupStrategy };
 
 export const SWITCH_INTERVAL_MIN_MS = 300;
 export const SWITCH_INTERVAL_MAX_MS = 5000;
@@ -10,6 +14,8 @@ export interface SwitchScanConfig {
   intervalMs: number;
   rows: number;
   columns: number;
+  groupStrategy?: SwitchGroupStrategy;
+  /** Custom group cell indices (row-major linear positions). */
   groups?: number[][];
   auditoryHighlight?: boolean;
 }
@@ -98,6 +104,16 @@ export function snapHitBox(
   return dx * dx + dy * dy <= radiusPx * radiusPx;
 }
 
+export {
+  buildCustomScanGroups,
+  buildGroupCellPath,
+  buildRegionScanGroups,
+  buildRowScanGroups,
+  cellKey,
+  groupScanLabel,
+  indexToCell,
+  resolveScanGroups,
+} from './group-scan.js';
 export {
   dispatchGazePoint,
   resolveGazeButtonId,

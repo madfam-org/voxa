@@ -448,6 +448,7 @@ pnpm test && pnpm typecheck
 | 45 | Core 47/100 starter templates + new-board template picker (H1) | H | Engineering ✅ 2026-06-09 |
 | 46 | TD Snap `.spb` import adapter + API/editor (G3) | G | Engineering ✅ 2026-06-09 |
 | 47 | TouchChat `.ce` import adapter + API/editor (G2) | G | Engineering ✅ 2026-06-09 |
+| 48 | Group / region switch scanning rows + quadrants (F3) | F | Engineering ✅ 2026-06-09 |
 
 ---
 

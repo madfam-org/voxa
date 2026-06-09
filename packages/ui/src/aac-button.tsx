@@ -8,6 +8,7 @@ export interface AacButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> 
   targetScale?: number;
   dwellProgress?: number;
   scanHighlighted?: boolean;
+  scanGroupHighlighted?: boolean;
   hideSymbol?: boolean;
   hideLabel?: boolean;
   children?: ReactNode;
@@ -23,6 +24,7 @@ export function AacButton({
   targetScale = 1,
   dwellProgress,
   scanHighlighted = false,
+  scanGroupHighlighted = false,
   hideSymbol = false,
   hideLabel = false,
   className,
@@ -41,7 +43,11 @@ export function AacButton({
     minHeight: size,
     width: '100%',
     height: '100%',
-    border: scanHighlighted ? `4px solid #facc15` : `3px solid ${borderColor}`,
+    border: scanHighlighted
+      ? `4px solid #facc15`
+      : scanGroupHighlighted
+        ? `3px solid rgba(250, 204, 21, 0.75)`
+        : `3px solid ${borderColor}`,
     borderRadius: 8,
     display: 'flex',
     flexDirection: 'column',
@@ -51,7 +57,11 @@ export function AacButton({
     padding: 8,
     cursor: 'pointer',
     position: 'relative',
-    boxShadow: scanHighlighted ? '0 0 0 3px rgba(250,204,21,0.35)' : undefined,
+    boxShadow: scanHighlighted
+      ? '0 0 0 3px rgba(250,204,21,0.35)'
+      : scanGroupHighlighted
+        ? '0 0 0 2px rgba(250,204,21,0.2)'
+        : undefined,
     outline: scanHighlighted ? '2px solid #ffffff' : undefined,
     outlineOffset: scanHighlighted ? 2 : undefined,
     background: dwellFill,

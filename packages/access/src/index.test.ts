@@ -1,6 +1,17 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { buildGridScanPath, clampSwitchInterval, classifySwitchKey, classifySwitchNativeKey, linearScanIndex } from './index.js';
+import {
+  buildGridScanPath,
+  buildGroupCellPath,
+  buildRegionScanGroups,
+  buildRowScanGroups,
+  clampSwitchInterval,
+  classifySwitchKey,
+  classifySwitchNativeKey,
+  groupScanLabel,
+  linearScanIndex,
+  resolveScanGroups,
+} from './index.js';
 
 describe('switch scanning', () => {
   it('wraps scan index across grid size', () => {
@@ -23,6 +34,33 @@ describe('switch scanning', () => {
     assert.equal(clampSwitchInterval(100), 300);
     assert.equal(clampSwitchInterval(2000), 2000);
     assert.equal(clampSwitchInterval(9000), 5000);
+  });
+
+  it('builds row and region scan groups', () => {
+    const rows = buildRowScanGroups(3, 4);
+    assert.equal(rows.length, 3);
+    assert.equal(rows[0]?.length, 4);
+    assert.equal(rows[1]?.[0]?.row, 1);
+
+    const regions = buildRegionScanGroups(4, 4);
+    assert.equal(regions.length, 4);
+    assert.equal(regions[0]?.length, 4);
+  });
+
+  it('scans cells inside a group using grid order', () => {
+    const group = buildRowScanGroups(2, 3)[0]!;
+    const path = buildGroupCellPath(group, 2, 3, 'row-major');
+    assert.deepEqual(path, [
+      { row: 0, column: 0 },
+      { row: 0, column: 1 },
+      { row: 0, column: 2 },
+    ]);
+  });
+
+  it('labels row groups for auditory scan', () => {
+    const groups = resolveScanGroups(2, 2, 'rows');
+    assert.ok(groups);
+    assert.equal(groupScanLabel(1, 'rows', groups[1]!), 'Row 2');
   });
 });
 

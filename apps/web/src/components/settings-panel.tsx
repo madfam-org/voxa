@@ -3,9 +3,10 @@
 import {
   EYE_DWELL_MAX_MS,
   EYE_DWELL_MIN_MS,
-  SWITCH_INTERVAL_MAX_MS,
   SWITCH_INTERVAL_MIN_MS,
+  SWITCH_INTERVAL_MAX_MS,
   type ScanOrder,
+  type SwitchGroupStrategy,
 } from '@voxa/access';
 import { CVI_THEMES, type CviTheme } from '@voxa/ui';
 import type { BoardDisplayPreferences } from '@voxa/core';
@@ -117,6 +118,24 @@ export function SettingsPanel({
               <option value="linear">Linear</option>
             </select>
           </Field>
+          <Field label="Group scan">
+            <select
+              value={settings.switchGroupStrategy}
+              onChange={(e) =>
+                onChange({ switchGroupStrategy: e.target.value as SwitchGroupStrategy })
+              }
+              style={fieldStyle}
+            >
+              <option value="none">Single-level (whole grid)</option>
+              <option value="rows">Row groups</option>
+              <option value="regions">Region groups (quadrants)</option>
+            </select>
+          </Field>
+          <p style={hintStyle}>
+            {settings.switchGroupStrategy === 'none'
+              ? 'Press Space or Enter to select. Arrow Right advances manually.'
+              : 'Select a group, then select a cell inside it. Space/Enter selects; Arrow Right advances.'}
+          </p>
           <Field label="Auditory scan highlight">
             <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <input
@@ -147,7 +166,6 @@ export function SettingsPanel({
               Hold scan step during TTS or recordings
             </label>
           </Field>
-          <p style={hintStyle}>Press Space or Enter to select. Arrow Right advances manually.</p>
         </>
       )}
 
