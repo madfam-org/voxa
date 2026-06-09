@@ -146,6 +146,16 @@ export function SettingsPanel({
               Announce focused button (screen reader)
             </label>
           </Field>
+          <Field label="Auditory scan beep">
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <input
+                type="checkbox"
+                checked={settings.auditoryScanBeep}
+                onChange={(e) => onChange({ auditoryScanBeep: e.target.checked })}
+              />
+              Play a short tone on each scan step
+            </label>
+          </Field>
           <Field label="Auditory scan voice">
             <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <input

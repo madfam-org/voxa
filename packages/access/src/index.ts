@@ -17,6 +17,7 @@ export interface SwitchScanConfig {
   groupStrategy?: SwitchGroupStrategy;
   /** Custom group cell indices (row-major linear positions). */
   groups?: number[][];
+  auditoryBeep?: boolean;
   auditoryHighlight?: boolean;
 }
 
@@ -104,6 +105,13 @@ export function snapHitBox(
   return dx * dx + dy * dy <= radiusPx * radiusPx;
 }
 
+export {
+  encodeScanBeepWav,
+  playScanBeepInBrowser,
+  SCAN_GROUP_BEEP,
+  SCAN_STEP_BEEP,
+  type ScanBeepSpec,
+} from './scan-audio.js';
 export {
   buildCustomScanGroups,
   buildGroupCellPath,

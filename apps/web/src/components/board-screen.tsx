@@ -243,6 +243,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
     groupStrategy: settings.switchGroupStrategy,
     auditoryHighlight: settings.auditoryScanHighlight,
     auditoryVoice: settings.auditoryScanVoice,
+    auditoryBeep: settings.auditoryScanBeep,
     onSelect: activate,
     getLabel: buttonLabel,
   });

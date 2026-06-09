@@ -450,6 +450,7 @@ pnpm test && pnpm typecheck
 | 47 | TouchChat `.ce` import adapter + API/editor (G2) | G | Engineering ✅ 2026-06-09 |
 | 48 | Group / region switch scanning rows + quadrants (F3) | F | Engineering ✅ 2026-06-09 |
 | 49 | Literacy QWERTY keyboard template + typed message bar (H4) | H | Engineering ✅ 2026-06-09 |
+| 50 | Auditory scan-step beep + settings on web/mobile (F2) | F | Engineering ✅ 2026-06-09 |
 
 ---
 

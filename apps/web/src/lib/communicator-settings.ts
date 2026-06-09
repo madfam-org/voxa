@@ -13,6 +13,7 @@ export interface CommunicatorSettings {
   gazeSource: 'pointer' | 'tobii-bridge';
   auditoryScanHighlight: boolean;
   auditoryScanVoice: boolean;
+  auditoryScanBeep: boolean;
   pauseScanWhileSpeaking: boolean;
   touchActivation: 'press' | 'release';
   whisperMode: boolean;
@@ -31,6 +32,7 @@ export const DEFAULT_COMMUNICATOR_SETTINGS: CommunicatorSettings = {
   gazeSource: 'pointer',
   auditoryScanHighlight: true,
   auditoryScanVoice: false,
+  auditoryScanBeep: true,
   pauseScanWhileSpeaking: true,
   touchActivation: 'press',
   whisperMode: false,

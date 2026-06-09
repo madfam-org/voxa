@@ -33,6 +33,7 @@ Users can disable decorative imagery, reduce grid chrome, and enlarge symbol-onl
 - Adjustable scan interval (300 ms – 5 s)
 - Auditory scan highlight optional (screen reader live region)
 - Optional spoken scan voice for each focused cell
+- **Scan-step beep** (880 Hz tone; 660 Hz for group scan) with optional spoken label
 - Scan pauses automatically while TTS or recorded speech plays (configurable)
 - **Eye dwell (web):** pointer hover simulation, or **Tobii bridge** via `voxa:gaze` / `window.__voxaInjectGaze(x,y)` in settings
 - **Hardware USB/BT switches (web):** keyboard keys + Gamepad API buttons 0/1 during switch scan

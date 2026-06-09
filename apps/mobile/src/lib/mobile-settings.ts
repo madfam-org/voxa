@@ -10,6 +10,7 @@ export interface MobileCommunicatorSettings {
   switchGroupStrategy: SwitchGroupStrategy;
   auditoryScanHighlight: boolean;
   auditoryScanVoice: boolean;
+  auditoryScanBeep: boolean;
 }
 
 const DEFAULTS: MobileCommunicatorSettings = {
@@ -19,6 +20,7 @@ const DEFAULTS: MobileCommunicatorSettings = {
   switchGroupStrategy: 'none',
   auditoryScanHighlight: true,
   auditoryScanVoice: false,
+  auditoryScanBeep: true,
 };
 
 export function parseMobileSettings(raw: string | null): MobileCommunicatorSettings {

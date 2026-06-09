@@ -78,7 +78,7 @@ Actionable **feature parity match** against the AAC platform benchmark. Each row
 | Feature | Leaders | Voxa status | Target |
 |---------|---------|-------------|--------|
 | Eye gaze (Tobii/IrisBond SDK) | TD Snap, Grid | 🟡 | Tobii bridge POC via `voxa:gaze` + pointer sim (2026-06-09) |
-| Auditory scanning prompts | TD Snap Scanning | 🔴 | P2 |
+| Auditory scanning prompts | TD Snap Scanning | 🟡 | Scan-step beep + optional spoken labels (2026-06-09) |
 | Group / region scanning | Grid | 🟡 | Row + quadrant group scan in web/mobile switch mode (2026-06-09) |
 | Core word page sets (Crescendo-class) | Proloquo2Go | 🟡 | Core 47 + Core 100 templates in editor (2026-06-09) |
 | PODD / Gateway page set option | TD Snap IAP | 🔴 | P2 or partner content |

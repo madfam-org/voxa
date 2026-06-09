@@ -52,6 +52,7 @@ test.describe('Staging UX soak', () => {
           eyeDwellMs: 1000,
           auditoryScanHighlight: true,
           auditoryScanVoice: false,
+          auditoryScanBeep: true,
           pauseScanWhileSpeaking: true,
           touchActivation: 'press',
           whisperMode: false,
@@ -79,6 +80,9 @@ test.describe('Staging UX soak', () => {
     await prepareAuthenticatedApp(page);
     await openAccessibilitySettings(page);
     await page.getByLabel('Access method').selectOption('switch');
+    const beepToggle = page.getByRole('checkbox', { name: 'Play a short tone on each scan step' });
+    await expect(beepToggle).toBeVisible();
+    await expect(beepToggle).toBeChecked();
     const voiceToggle = page.getByRole('checkbox', { name: 'Speak scanned label aloud' });
     await expect(voiceToggle).toBeVisible();
     await voiceToggle.check();

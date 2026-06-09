@@ -40,6 +40,7 @@ export function MobileBoardScreen() {
     switchGroupStrategy: 'none',
     auditoryScanHighlight: true,
     auditoryScanVoice: false,
+    auditoryScanBeep: true,
   });
   const { accessToken, userId, isAuthenticated, configured, signIn, signOut, loading: authLoading } =
     useMobileAuth();
@@ -101,6 +102,7 @@ export function MobileBoardScreen() {
     groupStrategy: settings.switchGroupStrategy,
     auditoryHighlight: settings.auditoryScanHighlight,
     auditoryVoice: settings.auditoryScanVoice,
+    auditoryBeep: settings.auditoryScanBeep,
     onSelect: activate,
   });
 
@@ -151,10 +153,25 @@ export function MobileBoardScreen() {
           text: 'Group: regions',
           onPress: () => patchSettings({ switchGroupStrategy: 'regions' as SwitchGroupStrategy }),
         },
+        {
+          text: settings.auditoryScanBeep ? 'Beep: on' : 'Beep: off',
+          onPress: () => patchSettings({ auditoryScanBeep: !settings.auditoryScanBeep }),
+        },
+        {
+          text: settings.auditoryScanVoice ? 'Voice: on' : 'Voice: off',
+          onPress: () => patchSettings({ auditoryScanVoice: !settings.auditoryScanVoice }),
+        },
         { text: 'Cancel', style: 'cancel' },
       ],
     );
-  }, [patchSettings, settings.switchGroupStrategy, settings.switchIntervalMs, settings.switchOrder]);
+  }, [
+    patchSettings,
+    settings.auditoryScanBeep,
+    settings.auditoryScanVoice,
+    settings.switchGroupStrategy,
+    settings.switchIntervalMs,
+    settings.switchOrder,
+  ]);
 
   const pickBoard = useCallback(() => {
     if (boardCatalog.length <= 1) return;

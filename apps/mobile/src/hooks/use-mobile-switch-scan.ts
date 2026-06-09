@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AccessibilityInfo } from 'react-native';
 import type { BoardButton } from '@voxa/core';
 import {
@@ -10,10 +10,13 @@ import {
   clampSwitchInterval,
   groupScanLabel,
   resolveScanGroups,
+  SCAN_GROUP_BEEP,
+  SCAN_STEP_BEEP,
   type ScanOrder,
   type SwitchGroupStrategy,
 } from '@voxa/access';
 import { buttonLabel } from '@/lib/board-utils';
+import { playMobileScanBeep } from '@/lib/scan-beep';
 import { speakText } from '@/lib/play-button-speech';
 
 interface UseMobileSwitchScanOptions {
@@ -26,6 +29,7 @@ interface UseMobileSwitchScanOptions {
   groupStrategy: SwitchGroupStrategy;
   auditoryHighlight: boolean;
   auditoryVoice: boolean;
+  auditoryBeep: boolean;
   onSelect: (button: BoardButton) => void;
 }
 
@@ -43,6 +47,7 @@ export function useMobileSwitchScan({
   groupStrategy,
   auditoryHighlight,
   auditoryVoice,
+  auditoryBeep,
   onSelect,
 }: UseMobileSwitchScanOptions) {
   const groups = useMemo(
@@ -55,13 +60,18 @@ export function useMobileSwitchScan({
   const [phase, setPhase] = useState<'groups' | 'cells'>('groups');
   const [groupStep, setGroupStep] = useState(0);
   const [cellStep, setCellStep] = useState(0);
+  const beepReadyRef = useRef(false);
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled) {
+      beepReadyRef.current = false;
+      return;
+    }
     setPhase('groups');
     setStep(0);
     setGroupStep(0);
     setCellStep(0);
+    beepReadyRef.current = false;
   }, [enabled, rows, columns, order, groupStrategy]);
 
   const activeGroupIndex = groups ? groupStep % groups.length : 0;
@@ -123,6 +133,15 @@ export function useMobileSwitchScan({
     }
     if (activeButton) speakText(buttonLabel(activeButton), activeButton.locale);
   }, [enabled, auditoryVoice, activeLabel, activeButton, phase, groups, step, groupStep, cellStep]);
+
+  useEffect(() => {
+    if (!enabled || !auditoryBeep) return;
+    if (!beepReadyRef.current) {
+      beepReadyRef.current = true;
+      return;
+    }
+    void playMobileScanBeep(groups && phase === 'groups' ? SCAN_GROUP_BEEP : SCAN_STEP_BEEP);
+  }, [enabled, auditoryBeep, step, groupStep, cellStep, phase, groups]);
 
   const advance = useCallback(() => {
     if (groups) {

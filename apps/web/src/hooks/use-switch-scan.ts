@@ -9,7 +9,10 @@ import {
   clampSwitchInterval,
   classifySwitchKey,
   groupScanLabel,
+  playScanBeepInBrowser,
   resolveScanGroups,
+  SCAN_GROUP_BEEP,
+  SCAN_STEP_BEEP,
   type ScanOrder,
   type SwitchGroupStrategy,
 } from '@voxa/access';
@@ -26,6 +29,7 @@ interface UseSwitchScanOptions {
   groupStrategy: SwitchGroupStrategy;
   auditoryHighlight: boolean;
   auditoryVoice?: boolean;
+  auditoryBeep?: boolean;
   onSelect: (button: BoardButton) => void;
   getLabel: (button: BoardButton) => string;
 }
@@ -45,6 +49,7 @@ export function useSwitchScan({
   groupStrategy,
   auditoryHighlight,
   auditoryVoice = false,
+  auditoryBeep = true,
   onSelect,
   getLabel,
 }: UseSwitchScanOptions) {
@@ -59,13 +64,18 @@ export function useSwitchScan({
   const [groupStep, setGroupStep] = useState(0);
   const [cellStep, setCellStep] = useState(0);
   const liveRef = useRef<HTMLDivElement>(null);
+  const beepReadyRef = useRef(false);
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled) {
+      beepReadyRef.current = false;
+      return;
+    }
     setPhase('groups');
     setStep(0);
     setGroupStep(0);
     setCellStep(0);
+    beepReadyRef.current = false;
   }, [enabled, rows, columns, order, groupStrategy]);
 
   const activeGroupIndex = groups ? groupStep % groups.length : 0;
@@ -157,6 +167,15 @@ export function useSwitchScan({
       announceScanLabel(getLabel(activeButton), activeButton.locale);
     }
   }, [enabled, auditoryVoice, scanAnnouncement, activeButton, phase, groups, getLabel, step, groupStep, cellStep]);
+
+  useEffect(() => {
+    if (!enabled || paused || !auditoryBeep) return;
+    if (!beepReadyRef.current) {
+      beepReadyRef.current = true;
+      return;
+    }
+    playScanBeepInBrowser(groups && phase === 'groups' ? SCAN_GROUP_BEEP : SCAN_STEP_BEEP);
+  }, [enabled, paused, auditoryBeep, step, groupStep, cellStep, phase, groups]);
 
   useEffect(() => {
     if (!enabled) return;
