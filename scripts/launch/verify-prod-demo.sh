@@ -56,5 +56,5 @@ for i in $(seq 1 "${ATTEMPTS}"); do
 done
 
 echo "FAIL production demo never rolled out with ARASAAC bundle" >&2
-echo "Hint: sync Argo app voxa-services or run ENCLII_TOKEN=… ./scripts/deploy/restart-voxa-web.sh prod" >&2
+echo "Hint: ENCLII_TOKEN=… ./scripts/deploy/sync-voxa-services.sh && ./scripts/deploy/restart-voxa-web.sh prod" >&2
 exit 1

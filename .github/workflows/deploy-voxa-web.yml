@@ -148,6 +148,22 @@ jobs:
               }
             }" || true
 
+      - name: Sync Argo and restart voxa-web
+        if: success()
+        env:
+          JANUA_ADMIN_EMAIL: ${{ secrets.MADFAM_ADMIN_EMAIL }}
+          JANUA_ADMIN_PASSWORD: ${{ secrets.MADFAM_ADMIN_PASSWORD }}
+        run: |
+          if [ -z "${JANUA_ADMIN_EMAIL}" ] || [ -z "${JANUA_ADMIN_PASSWORD}" ]; then
+            echo "MADFAM_ADMIN_* secrets not configured — skipping Argo sync + web restart"
+            exit 0
+          fi
+          chmod +x scripts/deploy/enclii-token-from-janua.sh scripts/deploy/sync-voxa-services.sh scripts/deploy/restart-voxa-web.sh
+          eval "$(JANUA_ADMIN_EMAIL="${JANUA_ADMIN_EMAIL}" JANUA_ADMIN_PASSWORD="${JANUA_ADMIN_PASSWORD}" ./scripts/deploy/enclii-token-from-janua.sh)"
+          ./scripts/deploy/sync-voxa-services.sh voxa-services
+          sleep 45
+          ENCLII_TOKEN="${ENCLII_TOKEN}" ./scripts/deploy/restart-voxa-web.sh prod
+
       - name: Smoke test production web
         if: success()
         run: |
@@ -155,13 +171,12 @@ jobs:
           ./scripts/launch/verify-prod-ga.sh || true
           ./scripts/launch/verify-prod-demo.sh
 
-      - name: Restart voxa-web pods (optional)
+      - name: Restart voxa-web pods (optional legacy token)
         if: success()
         env:
           ENCLII_TOKEN: ${{ secrets.ENCLII_TOKEN }}
         run: |
           if [ -z "${ENCLII_TOKEN}" ]; then
-            echo "ENCLII_TOKEN not configured — skipping Enclii restart (Argo sync must roll pods)"
             exit 0
           fi
           chmod +x scripts/deploy/restart-voxa-web.sh
