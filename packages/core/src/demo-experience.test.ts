@@ -21,6 +21,8 @@ describe('demo experience boards', () => {
     assert.equal(board.grid.rows, 6);
     const want = board.grid.buttons.find((button) => button.kind === 'analytic' && button.id === 'want');
     assert.ok(want && 'symbolUrl' in want && want.symbolUrl?.includes('5441'));
+    const help = board.grid.buttons.find((button) => button.kind === 'analytic' && button.id === 'help');
+    assert.ok(help && 'symbolUrl' in help && help.symbolUrl?.includes('4570'));
     const withSymbols = board.grid.buttons.filter(
       (button) => button.kind === 'analytic' && 'symbolUrl' in button && button.symbolUrl,
     );
