@@ -2,7 +2,7 @@
 
 **Product:** Voxa AAC platform  
 **Production URL:** https://voxa.madfam.io  
-**Target declaration date:** 2026-06-15 (after 7-day staging soak)
+**Target declaration date:** 2026-06-19 (after 7-day staging soak from 2026-06-12)
 
 ## Status
 
@@ -13,7 +13,7 @@
 | Legal / privacy / accessibility | ✅ |
 | SLP accessibility sign-off | ✅ 2026-06-08 ([SLP_SIGNOFF.md](./SLP_SIGNOFF.md)) |
 | Commercial landing + visitor demo | ✅ 2026-06-08 |
-| Staging soak (7 consecutive green days) | **In progress** → 2026-06-15 ([SOAK_LOG.md](./SOAK_LOG.md)) |
+| Staging soak (7 consecutive green days) | **In progress** → 2026-06-19 ([SOAK_LOG.md](./SOAK_LOG.md); window restarted 2026-06-12 after prod i18n incident) |
 | GHCR public (Kyverno PolicyException removed) | ✅ 2026-06-08 — anonymous pull verified ([GHCR_ORG_ADMIN.md](./GHCR_ORG_ADMIN.md)) |
 
 ## Pre-declaration verification (run on declaration day)
@@ -29,10 +29,10 @@ JANUA_ADMIN_EMAIL='…' JANUA_ADMIN_PASSWORD='…' \
 ./scripts/launch/verify-prod-ga.sh
 
 # Full declaration-day bundle (staging + prod + soak window)
-./scripts/launch/verify-declaration-day.sh --required 7 --start 2026-06-08
+./scripts/launch/verify-declaration-day.sh --required 7 --start 2026-06-12
 
-# Soak window only (7 consecutive days from 2026-06-08)
-./scripts/launch/verify-soak-window.sh --required 7 --start 2026-06-08
+# Soak window only (7 consecutive days from 2026-06-12)
+./scripts/launch/verify-soak-window.sh --required 7 --start 2026-06-12
 
 # CI
 gh workflow run e2e-smoke.yml --repo madfam-org/voxa

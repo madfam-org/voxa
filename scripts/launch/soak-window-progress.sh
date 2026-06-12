@@ -9,7 +9,7 @@ set -euo pipefail
 
 LOG_FILE="${VOXA_SOAK_LOG:-docs/launch/SOAK_LOG.md}"
 REQUIRED=7
-START_DATE="2026-06-08"
+START_DATE="2026-06-12"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in

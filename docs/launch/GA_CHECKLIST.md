@@ -65,7 +65,7 @@ Track progress toward general availability at `voxa.madfam.io`.
 
 - [x] `VOXA_STAGING_*` GitHub secrets for CI auth soak (`bootstrap-authenticated-soak.sh`, 2026-06-08)
 - [x] Weekday `e2e-smoke` CI (health + auth API soak + Playwright) — green 2026-06-08
-- [ ] Staging soak (1 week) — **in progress** 2026-06-08 → 2026-06-15 — [STAGING_SOAK.md](./STAGING_SOAK.md) · [SOAK_LOG.md](./SOAK_LOG.md)
+- [ ] Staging soak (1 week) — **in progress** 2026-06-12 → 2026-06-19 — [STAGING_SOAK.md](./STAGING_SOAK.md) · [SOAK_LOG.md](./SOAK_LOG.md)
 - [ ] **Commercial GA declaration** — sign [GA_DECLARATION.md](./GA_DECLARATION.md) after soak completes
 - [x] SLP accessibility sign-off — owner-authorized **2026-06-08** ([SLP_SIGNOFF.md](./SLP_SIGNOFF.md), approved with notes)
 - [x] Version `1.0.0` tag (`v1.0.0` on `313a4e6`)

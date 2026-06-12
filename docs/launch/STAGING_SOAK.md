@@ -2,7 +2,7 @@
 
 Run on **staging** (`voxa-staging.madfam.io`) for at least **7 days** before declaring full commercial GA.
 
-**Soak window:** 2026-06-08 → **2026-06-15** (see [GA_ROADMAP.md](./GA_ROADMAP.md))
+**Soak window:** 2026-06-12 → **2026-06-19** (restarted after prod i18n rollout + missed daily logs 2026-06-09–11; see [GA_ROADMAP.md](./GA_ROADMAP.md))
 
 ## Environment
 

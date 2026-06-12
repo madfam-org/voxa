@@ -1,4 +1,3 @@
-import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 
 export interface LegalSection {
@@ -10,8 +9,11 @@ export interface LegalSection {
 interface LegalPageProps {
   title: string;
   intro: string;
-  lastUpdated: string;
+  lastUpdatedLabel: string;
   sections: LegalSection[];
+  backLabel: string;
+  contentsLabel: string;
+  questionsLabel: string;
 }
 
 const pageStyle: React.CSSProperties = {
@@ -32,26 +34,25 @@ const linkStyle: React.CSSProperties = {
   textDecoration: 'none',
 };
 
-export async function LegalPage({
+export function LegalPage({
   title,
   intro,
-  lastUpdated,
+  lastUpdatedLabel,
   sections,
-}: LegalPageProps): Promise<React.ReactNode> {
-  const t = await getTranslations('legal.shared');
-
+  backLabel,
+  contentsLabel,
+  questionsLabel,
+}: LegalPageProps): React.ReactNode {
   return (
     <main style={pageStyle}>
       <article style={containerStyle}>
         <p style={{ marginBottom: 24 }}>
           <Link href="/" style={linkStyle}>
-            {t('back')}
+            {backLabel}
           </Link>
         </p>
         <h1 style={{ fontSize: '2rem', marginBottom: 8 }}>{title}</h1>
-        <p style={{ color: '#a3a3a3', marginBottom: 24 }}>
-          {t('lastUpdatedLabel', { date: lastUpdated })}
-        </p>
+        <p style={{ color: '#a3a3a3', marginBottom: 24 }}>{lastUpdatedLabel}</p>
         <p style={{ marginBottom: 32 }}>{intro}</p>
 
         <nav
@@ -64,7 +65,7 @@ export async function LegalPage({
             background: '#171717',
           }}
         >
-          <strong>{t('contents')}</strong>
+          <strong>{contentsLabel}</strong>
           <ol style={{ marginTop: 12, paddingLeft: 20 }}>
             {sections.map((section, index) => (
               <li key={section.title} style={{ marginBottom: 6 }}>
@@ -93,7 +94,7 @@ export async function LegalPage({
 
         <hr style={{ borderColor: '#404040', margin: '32px 0' }} />
         <p style={{ color: '#a3a3a3', fontSize: '0.875rem' }}>
-          {t('questions')}{' '}
+          {questionsLabel}{' '}
           <a href="mailto:legal@madfam.io" style={linkStyle}>
             legal@madfam.io
           </a>

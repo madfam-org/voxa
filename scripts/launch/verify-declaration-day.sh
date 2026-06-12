@@ -16,7 +16,7 @@ cd "${ROOT}"
 
 LOG_FILE="${VOXA_SOAK_LOG:-docs/launch/SOAK_LOG.md}"
 REQUIRED=7
-START_DATE="2026-06-08"
+START_DATE="2026-06-12"
 WITH_AUTH_SOAK=false
 
 while [[ $# -gt 0 ]]; do

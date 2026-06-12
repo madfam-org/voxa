@@ -3,7 +3,7 @@
 #
 # Usage:
 #   ./scripts/launch/verify-soak-window.sh
-#   ./scripts/launch/verify-soak-window.sh --required 7 --start 2026-06-08
+#   ./scripts/launch/verify-soak-window.sh --required 7 --start 2026-06-12
 #
 # Exit 0 when the log contains `required` consecutive pass days starting at `start`.
 
@@ -11,7 +11,7 @@ set -euo pipefail
 
 LOG_FILE="${VOXA_SOAK_LOG:-docs/launch/SOAK_LOG.md}"
 REQUIRED=7
-START_DATE="2026-06-08"
+START_DATE="2026-06-12"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in

@@ -10,8 +10,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 LOG_FILE="${VOXA_SOAK_LOG:-docs/launch/SOAK_LOG.md}"
 REQUIRED=7
-START_DATE="2026-06-08"
-DECLARE_DATE="2026-06-15"
+START_DATE="2026-06-12"
+DECLARE_DATE="2026-06-19"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in

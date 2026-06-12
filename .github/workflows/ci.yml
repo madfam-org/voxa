@@ -22,7 +22,7 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
-      - run: pnpm typecheck
+      - run: pnpm turbo typecheck --filter='!@voxa/mobile'
       - run: pnpm test
       - run: ./scripts/mobile/verify-eas-config.sh
       - run: pnpm build

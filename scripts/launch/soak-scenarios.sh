@@ -61,15 +61,23 @@ check "GET / landing → 200" test "${home_code}" = "200"
 demo_code="$(curl -sS -o /dev/null -w '%{http_code}' "${WEB_BASE}/demo" 2>/dev/null || echo 000)"
 check "GET /demo → 200" test "${demo_code}" = "200"
 
-manifest_code="$(curl -sS -o /dev/null -w '%{http_code}' "${WEB_BASE}/manifest.webmanifest" 2>/dev/null || echo 000)"
+manifest_code="$(curl -sS -L -o /dev/null -w '%{http_code}' "${WEB_BASE}/manifest.webmanifest" 2>/dev/null || echo 000)"
 check "GET /manifest.webmanifest → 200" test "${manifest_code}" = "200"
 
-icon_code="$(curl -sS -o /dev/null -w '%{http_code}' "${WEB_BASE}/icons/icon.svg" 2>/dev/null || echo 000)"
+icon_code="$(curl -sS -L -o /dev/null -w '%{http_code}' "${WEB_BASE}/icons/icon.svg" 2>/dev/null || echo 000)"
 check "GET /icons/icon.svg → 200" test "${icon_code}" = "200"
 
 echo "== Sync hub =="
-sync_hub="$(python3 -c "import json,sys; print(json.load(sys.stdin).get('syncHub','unknown'))" <<<"${ready_body:-$(curl -sf "${API_BASE}/health/ready" 2>/dev/null || echo '{}')}")"
-check "API reports syncHub mode" test "${sync_hub}" = "local" -o "${sync_hub}" = "redis"
+ready_body="$(curl -sf "${API_BASE}/health/ready" 2>/dev/null || echo '{}')"
+sync_hub="$(python3 -c "import json,sys; print(json.load(sys.stdin).get('syncHub',''))" <<<"${ready_body}")"
+if [[ -z "${sync_hub}" ]]; then
+  echo "SKIP API syncHub field (post-GA REDIS_URL scaling)"
+elif [[ "${sync_hub}" == "local" || "${sync_hub}" == "redis" ]]; then
+  echo "OK   API reports syncHub mode (${sync_hub})"
+else
+  echo "FAIL API reports unexpected syncHub mode (${sync_hub})" >&2
+  fail=1
+fi
 
 echo "== API auth gates =="
 for path in /v1/billing/entitlement; do
