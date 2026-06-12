@@ -19,7 +19,7 @@ spec:
   template:
     metadata:
       annotations:
-        kubectl.kubernetes.io/restartedAt: "2026-06-08T05:49:00Z"
+        kubectl.kubernetes.io/restartedAt: "2026-06-12T19:30:00Z"
         reloader.stakater.com/match: "true"
         secret.reloader.stakater.com/reload: "voxa-secrets"
       labels:

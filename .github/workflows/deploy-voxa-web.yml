@@ -82,8 +82,10 @@ jobs:
             kustomize edit set image voxa-web=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${DIGEST}
             cd ../..
             python3 <<'PY'
+          import datetime
           import os, re, pathlib, sys
           digest = os.environ["DIGEST"]
+          restarted = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
           path = pathlib.Path("k8s/production/voxa-web-deployment.yaml")
           text = path.read_text()
           text, count = re.subn(
@@ -94,6 +96,15 @@ jobs:
           )
           if not count:
               print("Could not update voxa-web deployment image", file=sys.stderr)
+              sys.exit(1)
+          text, restart_count = re.subn(
+              r'kubectl\.kubernetes\.io/restartedAt: "[^"]+"',
+              f'kubectl.kubernetes.io/restartedAt: "{restarted}"',
+              text,
+              count=1,
+          )
+          if not restart_count:
+              print("Could not bump voxa-web restartedAt annotation", file=sys.stderr)
               sys.exit(1)
           path.write_text(text)
           PY
@@ -140,13 +151,18 @@ jobs:
       - name: Smoke test production web
         if: success()
         run: |
-          for i in 1 2 3 4 5 6; do
-            code="$(curl -sS -o /dev/null -w '%{http_code}' https://voxa.madfam.io/api/health || true)"
-            legal="$(curl -sS -o /dev/null -w '%{http_code}' https://voxa.madfam.io/legal/privacy || true)"
-            if [ "$code" = "200" ] && [ "$legal" = "200" ]; then
-              exit 0
-            fi
-            sleep 20
-          done
-          echo "Smoke test failed: voxa.madfam.io" >&2
-          exit 1
+          chmod +x scripts/launch/verify-prod-ga.sh scripts/launch/verify-prod-demo.sh
+          ./scripts/launch/verify-prod-ga.sh || true
+          ./scripts/launch/verify-prod-demo.sh
+
+      - name: Restart voxa-web pods (optional)
+        if: success()
+        env:
+          ENCLII_TOKEN: ${{ secrets.ENCLII_TOKEN }}
+        run: |
+          if [ -z "${ENCLII_TOKEN}" ]; then
+            echo "ENCLII_TOKEN not configured — skipping Enclii restart (Argo sync must roll pods)"
+            exit 0
+          fi
+          chmod +x scripts/deploy/restart-voxa-web.sh
+          ./scripts/deploy/restart-voxa-web.sh prod
