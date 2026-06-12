@@ -26,9 +26,30 @@ function isPublicPath(pathname: string): boolean {
   );
 }
 
+function bypassIntlMiddleware(pathname: string): boolean {
+  return (
+    pathname.startsWith('/api/') ||
+    pathname === '/auth/callback' ||
+    pathname.startsWith('/auth/callback/') ||
+    pathname === '/auth/signout' ||
+    pathname.startsWith('/auth/signout/')
+  );
+}
+
 export function middleware(request: NextRequest) {
-  const intlResponse = intlMiddleware(request);
   const pathname = stripLocalePrefix(request.nextUrl.pathname);
+
+  if (bypassIntlMiddleware(pathname)) {
+    if (!isOidcConfigured() || isPublicPath(pathname)) {
+      return NextResponse.next();
+    }
+    if (!request.cookies.get('voxa_session')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    return NextResponse.next();
+  }
+
+  const intlResponse = intlMiddleware(request);
 
   if (!isOidcConfigured() || isPublicPath(pathname)) {
     return intlResponse;
@@ -53,5 +74,7 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|sw.js|manifest.json|manifest.webmanifest|icons/).*)'],
+  matcher: [
+    '/((?!api|_next/static|_next/image|favicon.ico|sw.js|manifest.json|manifest.webmanifest|icons/).*)',
+  ],
 };
