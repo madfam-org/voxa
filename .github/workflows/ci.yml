@@ -51,12 +51,13 @@ jobs:
       - run: pnpm exec playwright install chromium --with-deps
         working-directory: e2e
       - name: Start web for axe scans
-        run: node apps/web/.next/standalone/apps/web/server.js &
+        working-directory: apps/web/.next/standalone
+        run: node apps/web/server.js &
         env:
           PORT: 3000
           HOSTNAME: 127.0.0.1
       - name: Wait for web
-        run: npx --yes wait-on http://127.0.0.1:3000 --timeout 120000
+        run: npx --yes wait-on http://127.0.0.1:3000/api/health --timeout 120000
       - run: pnpm test:e2e:a11y
         env:
           PLAYWRIGHT_BASE_URL: http://127.0.0.1:3000
