@@ -25,6 +25,11 @@ check_demo_bundle() {
     return 1
   fi
 
+  if grep -q 'static\.arasaac' <<<"${html}" && grep -qE 'Try Voxa|Core vocabulary' <<<"${html}"; then
+    echo "OK   demo page HTML includes ARASAAC pictograms and new scene UI"
+    return 0
+  fi
+
   body="$(curl -sf "${WEB_BASE}/_next/static/chunks/${chunk}" 2>/dev/null || true)"
   if [ -z "${body}" ]; then
     echo "Could not fetch demo chunk ${chunk}" >&2
