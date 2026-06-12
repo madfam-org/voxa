@@ -207,10 +207,20 @@ export function DemoBoardScreen(): React.ReactNode {
           )}
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <button type="button" onClick={() => openGate('institution')} style={chipBtnGold}>
+          <button
+            type="button"
+            onClick={() => openGate('institution')}
+            style={classicScene ? classicChipBtnGold : chipBtnGold}
+          >
             {t('institutionalPlans')}
           </button>
-          <Link href="/auth/signin?redirect_to=%2Fapp" style={{ ...chipBtn, textDecoration: 'none' }}>
+          <Link
+            href="/auth/signin?redirect_to=%2Fapp"
+            style={{
+              ...(classicScene ? classicChipBtn : chipBtn),
+              textDecoration: 'none',
+            }}
+          >
             {t('openFullApp')}
           </Link>
         </div>
@@ -234,7 +244,7 @@ export function DemoBoardScreen(): React.ReactNode {
             onClick={() => setScene(id)}
             style={{
               ...sceneTabBtn,
-              color: classicScene ? '#111827' : '#f5f5f5',
+              color: scene === id ? '#ffffff' : classicScene ? '#111827' : '#f5f5f5',
               background: scene === id ? '#2563eb' : classicScene ? '#f3f4f6' : '#262626',
               borderColor: scene === id ? '#3b82f6' : classicScene ? '#d1d5db' : '#404040',
             }}
@@ -395,7 +405,7 @@ export function DemoBoardScreen(): React.ReactNode {
       </div>
 
       <section style={ctaSectionStyle}>
-        <h2 style={{ margin: '0 0 8px', fontSize: '1.25rem' }}>{t('readyTitle')}</h2>
+        <h2 style={{ margin: '0 0 8px', fontSize: '1.25rem', color: '#fafafa' }}>{t('readyTitle')}</h2>
         <p style={{ margin: '0 0 16px', color: '#a3a3a3', maxWidth: 640, marginInline: 'auto' }}>
           {t('readyBody')}
         </p>
@@ -514,6 +524,24 @@ const ctaSectionStyle: React.CSSProperties = {
   background: '#171717',
   borderTop: '1px solid #262626',
   textAlign: 'center',
+  color: '#fafafa',
+};
+
+const classicChipBtn: React.CSSProperties = {
+  background: '#ffffff',
+  border: '1px solid #6b7280',
+  borderRadius: 999,
+  padding: '6px 14px',
+  color: '#374151',
+  fontSize: '0.8125rem',
+  cursor: 'pointer',
+};
+
+const classicChipBtnGold: React.CSSProperties = {
+  ...classicChipBtn,
+  borderColor: '#b45309',
+  color: '#78350f',
+  background: '#fef3c7',
 };
 
 const actionBtn: React.CSSProperties = {

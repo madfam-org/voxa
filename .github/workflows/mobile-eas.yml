@@ -2,16 +2,6 @@ name: Mobile EAS Preview
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - 'apps/mobile/**'
-      - 'packages/core/**'
-      - 'packages/sync/**'
-      - 'packages/vocabulary/**'
-      - 'packages/access/**'
-      - 'scripts/mobile/**'
-      - '.github/workflows/mobile-eas.yml'
 
 concurrency:
   group: mobile-eas-preview

@@ -85,6 +85,7 @@ export function SiteFooter(): React.ReactNode {
       style={{
         padding: '32px 24px 48px',
         borderTop: '1px solid #262626',
+        background: '#0a0a0a',
         color: '#a3a3a3',
         fontSize: '0.875rem',
         display: 'flex',
@@ -93,6 +94,8 @@ export function SiteFooter(): React.ReactNode {
         justifyContent: 'space-between',
         maxWidth: 1100,
         margin: '0 auto',
+        width: '100%',
+        boxSizing: 'border-box',
       }}
     >
       <p style={{ margin: 0, maxWidth: 420, lineHeight: 1.6 }}>{t('footerTagline')}</p>
