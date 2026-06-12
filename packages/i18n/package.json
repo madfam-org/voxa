@@ -1,0 +1,18 @@
+{
+  "name": "@voxa/i18n",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./messages/es": "./messages/es.json",
+    "./messages/en": "./messages/en.json",
+    "./messages/fr": "./messages/fr.json"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}

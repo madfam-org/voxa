@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import type { BoardButton, BoardDisplayPreferences, PartOfSpeechTag, StarterTemplateId, TeamRole } from '@voxa/core';
 import {
   applyKeyboardActivation,
@@ -81,6 +82,8 @@ export interface BoardScreenProps {
 }
 
 export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.ReactNode {
+  const tc = useTranslations('common');
+  const tcx = useTranslations('communicator');
   const remoteEditor = mode === 'remote-editor';
   const [role, setRole] = useState<TeamRole>(remoteEditor ? 'editor' : 'communicator');
   const [utterance, setUtterance] = useState<string[]>([]);
@@ -172,7 +175,12 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
     ? { hideSymbols: true, hideLabels: displaySettings.hideLabels }
     : displaySettings;
 
-  const { textPredictions, symbolPredictions } = usePredictions(board, utterance, recentButtonIds);
+  const { textPredictions, symbolPredictions } = usePredictions(
+    board,
+    utterance,
+    recentButtonIds,
+    settings.contentLocale,
+  );
 
   const resolveActivationSpeech = useCallback((btn: BoardButton): string => {
     if (btn.kind !== 'analytic' || !btn.speechForms?.length) {
@@ -888,7 +896,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
           }}
           style={secondaryBtn}
         >
-          Settings
+          {tc('settings')}
         </button>
 
         {isEditor && isAuthenticated ? (
@@ -936,7 +944,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
         <div style={utteranceBarStyle}>
           {scheduleMode && !isEditor
             ? scheduleState.completed >= scheduleState.total && scheduleState.total > 0
-              ? 'Routine complete — tap Clear to start over'
+              ? tcx('routineComplete')
               : `Step ${Math.min(scheduleState.completed + 1, scheduleState.total)} of ${scheduleState.total}`
             : literacyMode
               ? formatKeyboardUtterance(utterance) || 'Type on the keyboard…'
@@ -946,7 +954,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
         </div>
 
         <button type="button" onClick={speakAll} style={headerBtn}>
-          Speak
+          {tc('speak')}
         </button>
         <button
           type="button"
@@ -956,7 +964,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
           }}
           style={headerBtn}
         >
-          Clear
+          {tc('clear')}
         </button>
 
         {isEditor && (
@@ -994,7 +1002,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
               Export OBZ
             </button>
             <button type="button" onClick={handleSave} disabled={busy} style={secondaryBtn}>
-              Save
+              {tc('save')}
             </button>
           </>
         )}
@@ -1186,6 +1194,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
             accessToken={accessToken}
             recordedBy={sessionUserId}
             defaultSymbolSkinTone={settings.defaultSymbolSkinTone}
+            contentLocale={settings.contentLocale}
             onClose={() => setEditingId(null)}
             onChange={(patch) => updateButton(editingId, patch)}
           />
@@ -1224,6 +1233,7 @@ function EditorPanel({
   accessToken,
   recordedBy,
   defaultSymbolSkinTone,
+  contentLocale,
   onClose,
   onChange,
 }: {
@@ -1233,6 +1243,7 @@ function EditorPanel({
   accessToken?: string;
   recordedBy: string;
   defaultSymbolSkinTone: CommunicatorSettings['defaultSymbolSkinTone'];
+  contentLocale: CommunicatorSettings['contentLocale'];
   onClose: () => void;
   onChange: (patch: Partial<BoardButton>) => void;
 }) {
@@ -1256,6 +1267,7 @@ function EditorPanel({
       <SymbolSearchPanel
         boardId={boardId}
         accessToken={accessToken}
+        contentLocale={contentLocale}
         currentUrl={buttonSymbolUrl(button, { skinTone: defaultSymbolSkinTone })}
         defaultSkinTone={defaultSymbolSkinTone}
         disabled={fieldsLocked}

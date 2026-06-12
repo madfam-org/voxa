@@ -1,6 +1,7 @@
 'use client';
 
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
+import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 
 const CONSENT_KEY = 'voxa-ai-consent';
@@ -11,6 +12,7 @@ export function getAiConsent(): boolean {
 }
 
 export function ConsentBanner(): React.ReactNode {
+  const t = useTranslations('consent');
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -33,7 +35,7 @@ export function ConsentBanner(): React.ReactNode {
   return (
     <div
       role="dialog"
-      aria-label="Privacy choices"
+      aria-label={t('ariaLabel')}
       style={{
         position: 'fixed',
         bottom: 16,
@@ -51,19 +53,18 @@ export function ConsentBanner(): React.ReactNode {
       }}
     >
       <p style={{ margin: '0 0 12px', fontSize: '0.875rem', lineHeight: 1.5 }}>
-        Voxa can use recent utterances to improve AI predictions. This is optional and stays on
-        MADFAM infrastructure. See our{' '}
+        {t('body')}{' '}
         <Link href="/legal/privacy" style={{ color: '#93c5fd' }}>
-          Privacy Policy
+          {t('privacyLink')}
         </Link>
         .
       </p>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <button type="button" onClick={accept} style={primaryBtn}>
-          Allow predictions
+          {t('allow')}
         </button>
         <button type="button" onClick={decline} style={secondaryBtn}>
-          Essential only
+          {t('essential')}
         </button>
       </div>
     </div>

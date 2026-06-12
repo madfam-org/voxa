@@ -1,4 +1,5 @@
 import { createBoardId, createButtonId, createProfileId, type Board, type BoardButton } from './index.js';
+import { localizeDemoBoard, type DemoUiLocale } from './demo-locale.js';
 import { createLiteracyKeyboardBoard } from './literacy-keyboard.js';
 import { createStarterBoard } from './starter-boards.js';
 import { createVisualScheduleBoard } from './visual-schedule.js';
@@ -161,17 +162,23 @@ export function createDemoAccessBoard(): Board {
   };
 }
 
-export function boardForDemoScene(scene: DemoSceneId): Board {
+export function boardForDemoScene(scene: DemoSceneId, locale: DemoUiLocale = 'es'): Board {
+  let board: Board;
   switch (scene) {
     case 'communicate':
-      return createDemoCoreBoard();
+      board = createDemoCoreBoard();
+      break;
     case 'literacy':
-      return createDemoLiteracyBoard();
+      board = createDemoLiteracyBoard();
+      break;
     case 'schedule':
-      return createDemoScheduleBoard();
+      board = createDemoScheduleBoard();
+      break;
     case 'access':
-      return createDemoAccessBoard();
+      board = createDemoAccessBoard();
+      break;
     default:
-      return createDemoCoreBoard();
+      board = createDemoCoreBoard();
   }
+  return localizeDemoBoard(board, locale);
 }

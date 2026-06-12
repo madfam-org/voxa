@@ -1,0 +1,301 @@
+{
+  "metadata": {
+    "title": "Voxa — Plataforma de comunicación aumentativa",
+    "description": "Comunicación aumentativa y alternativa (CAA) moderna para familias e instituciones. Demo en vivo, temas CVI, predicciones con IA y sincronización en la nube."
+  },
+  "common": {
+    "brand": "Voxa",
+    "speak": "Hablar",
+    "clear": "Borrar",
+    "close": "Cerrar",
+    "save": "Guardar",
+    "settings": "Ajustes",
+    "loading": "Cargando…",
+    "trySaying": "Prueba decir"
+  },
+  "language": {
+    "label": "Idioma de la interfaz",
+    "contentLabel": "Idioma del vocabulario",
+    "es": "Español",
+    "en": "Inglés",
+    "fr": "Francés",
+    "hint": "El español es el idioma predeterminado. El vocabulario de los tableros y la voz usan el idioma de contenido seleccionado."
+  },
+  "nav": {
+    "whyAac": "Por qué CAA",
+    "liveDemo": "Demo en vivo",
+    "pricing": "Precios",
+    "signIn": "Iniciar sesión",
+    "openCommunicator": "Abrir comunicador",
+    "privacy": "Privacidad",
+    "terms": "Términos",
+    "accessibility": "Accesibilidad",
+    "footerTagline": "Voxa es comunicación aumentativa y alternativa (CAA) para familias, terapeutas y aulas — planificación motora, diseño accesible para CVI y sincronización en la nube cuando estés listo."
+  },
+  "consent": {
+    "ariaLabel": "Opciones de privacidad",
+    "body": "Voxa puede usar frases recientes para mejorar predicciones con IA. Es opcional y permanece en la infraestructura MADFAM. Consulta nuestra",
+    "privacyLink": "Política de privacidad",
+    "allow": "Permitir predicciones",
+    "essential": "Solo esencial"
+  },
+  "auth": {
+    "title": "Inicia sesión en Voxa",
+    "subtitle": "Usa tu cuenta MADFAM (Janua) para sincronizar tableros y colaborar con tu equipo.",
+    "continueJanua": "Continuar con Janua",
+    "oidcNotConfigured": "OIDC no está configurado. Define NEXT_PUBLIC_OIDC_ISSUER y NEXT_PUBLIC_OIDC_CLIENT_ID para inicio de sesión en producción.",
+    "errors": {
+      "missing_code_or_state": "No se pudo completar el inicio de sesión. Inténtalo de nuevo.",
+      "token_exchange_failed": "Falló el intercambio de token con Janua. Inténtalo de nuevo.",
+      "state_mismatch": "La sesión de inicio expiró. Inténtalo de nuevo.",
+      "id_token_verification_failed": "No se pudo verificar el token de identidad de Janua.",
+      "missing_tokens": "Janua no devolvió los tokens necesarios.",
+      "missing_required_claims": "La cuenta Janua no incluye correo o id de usuario.",
+      "invalid_token_expiry": "Janua devolvió una caducidad de sesión inválida.",
+      "generic": "Error de autenticación: {code}"
+    }
+  },
+  "landing": {
+    "heroEyebrow": "Comunicación aumentativa y alternativa",
+    "heroTitle": "Toda persona merece una voz que acompañe su vida.",
+    "heroBody": "Las apps de CAA convierten toques, interruptores o mirada en lenguaje hablado — en casa, en terapia y en clase. Voxa es un tablero moderno con planificación motora, temas accesibles para CVI, predicciones con IA, escaneo por interruptor, agendas visuales y sincronización segura — diseñado para que las familias empiecen gratis y las instituciones escalen con confianza.",
+    "tryDemo": "Probar demo en vivo",
+    "signInFree": "Entrar gratis (padres)",
+    "whyChangingTitle": "Por qué la CAA cambia vidas",
+    "whyChangingList1": "Reduce la frustración cuando el habla no basta",
+    "whyChangingList2": "Apoya el desarrollo del lenguaje, no solo peticiones",
+    "whyChangingList3": "Fomenta la autonomía en comidas, juego, visitas médicas y amistades",
+    "whyChangingList4": "Ofrece a cuidadores y clínicos una herramienta compartida y basada en evidencia",
+    "whyChangingNote": "La investigación muestra que el acceso temprano y robusto a la CAA mejora los resultados comunicativos — no retrasa el habla.",
+    "humanRightTitle": "Comunicar es un derecho humano",
+    "humanRightBody": "La CAA digital sustituye tableros de papel con voz, vocabulario que crece con la persona y métodos de acceso acordes a su capacidad física. Voxa se centra en lo que familias y profesionales piden: planes motores estables, diseños visualmente accesibles y herramientas que funcionan sin red.",
+    "demoCtaTitle": "Demo interactiva en cuatro escenas",
+    "demoCtaBody": "Explora vocabulario núcleo con pictogramas, teclado de alfabetización, agendas visuales y modos de acceso (escaneo e interruptor y guarda táctil) — sin registro.",
+    "openDemo": "Abrir demo interactiva →",
+    "pricingTitle": "Precios claros y honestos",
+    "pricingSubtitle": "Siempre gratis para padres individuales. Los planes institucionales financian alojamiento seguro y analítica para equipos.",
+    "parentsLabel": "PADRES Y CUIDADORES",
+    "free": "Gratis",
+    "parentsBody": "Gratis para siempre para familias que apoyan a un comunicador en casa.",
+    "parentsLi1": "Sincronización y copia en la nube",
+    "parentsLi2": "Importar/exportar OBF",
+    "parentsLi3": "Temas CVI y métodos de acceso",
+    "parentsLi4": "Predicciones IA iniciales",
+    "createAccount": "Crear cuenta gratis",
+    "familyLabel": "FAMILIA EXTENDIDA",
+    "family": "Familia",
+    "familyBody": "Más tableros y edición compartida para hermanos, abuelos y copadres.",
+    "familyLi1": "Varios tableros y perfiles",
+    "familyLi2": "Equipo de cuidado pequeño (editores)",
+    "familyLi3": "Sincronización prioritaria",
+    "signInUpgrade": "Entrar para mejorar plan",
+    "instLabel": "ESCUELAS, CLÍNICAS Y DISTRITOS",
+    "institutional": "Institucional",
+    "instBody": "Planes de pago para organizaciones que necesitan cumplimiento, roles e información agregada de uso por comunicador — sin exponer mensajes privados.",
+    "instLi1": "Tableros ilimitados y roles de equipo",
+    "instLi2": "IA completa y flujos GLP",
+    "instLi3": "Paneles de uso por usuario final",
+    "instLi4": "Onboarding dedicado y SLA",
+    "contactSales": "Contactar ventas",
+    "footerCtaTitle": "Empieza donde estés. Crece cuando lo necesites.",
+    "footerCtaBody": "Prueba la demo como visitante, crea una cuenta gratuita en minutos o háblanos para desplegar Voxa en tu organización.",
+    "tryDemoShort": "Probar demo",
+    "openMyCommunicator": "Abrir mi comunicador",
+    "features": {
+      "motor": {
+        "title": "Planificación motora primero",
+        "body": "Las palabras núcleo permanecen en ubicaciones fijas para desarrollar memoria muscular — el mismo principio de los dispositivos CAA dedicados."
+      },
+      "cvi": {
+        "title": "CVI y modos de acceso",
+        "body": "Temas de alto contraste, escaneo por interruptor y permanencia ocular adaptan el mismo tablero a CVI y distintos accesos físicos."
+      },
+      "ai": {
+        "title": "IA con consentimiento",
+        "body": "Predicciones opcionales aceleran mensajes; las familias controlan el consentimiento de IA y las políticas institucionales pueden aplicarse de forma centralizada."
+      },
+      "obf": {
+        "title": "Open Board Format",
+        "body": "Importa y exporta OBF para colaborar con logopedas y migrar desde otras apps sin dependencia."
+      },
+      "offline": {
+        "title": "Listo sin conexión",
+        "body": "Los tableros se guardan en caché local para comunicar con Wi‑Fi inestable o en viajes."
+      },
+      "janua": {
+        "title": "Identidad Janua",
+        "body": "Un solo inicio MADFAM en Voxa y herramientas asociadas — menos contraseñas para cuidadores y personal."
+      }
+    }
+  },
+  "demo": {
+    "visitorLabel": "Demo para visitantes",
+    "openFullApp": "Abrir app completa",
+    "institutionalPlans": "Planes institucionales",
+    "sceneDescription": "{description}",
+    "switchOn": "Escaneo: activado",
+    "switchOff": "Escaneo: desactivado",
+    "guardOn": "Guarda táctil: activada",
+    "guardOff": "Guarda táctil: desactivada",
+    "switchHint": "Flecha derecha avanza · Espacio selecciona",
+    "readyTitle": "¿Listo para la plataforma completa?",
+    "readyBody": "Inicia sesión para sincronización en la nube, editor para logopedas, búsqueda ARASAAC con rasgos de diversidad, voz grabada, predicciones IA e importación/exportación OBF.",
+    "startFree": "Empezar gratis — padres",
+    "schoolsClinics": "Escuelas y clínicas",
+    "classicBannerTitle": "Prueba Voxa como una app CAA clásica",
+    "classicBannerSubtitle": "Cuadrícula clara, botones con pictogramas y barra de frases — el mismo Núcleo 47 con plan motor al estilo Proloquo.",
+    "platformBannerTitle": "Demo interactiva de la plataforma",
+    "scenesAriaLabel": "Escenas de la demo",
+    "scheduleStep": "Paso {current} de {total}",
+    "typeOnKeyboard": "Escribe en el teclado…",
+    "tapSymbols": "Toca pictogramas para formar un mensaje…",
+    "tapButtons": "Toca botones para formar un mensaje…",
+    "scenes": {
+      "communicate": {
+        "name": "Vocabulario núcleo",
+        "description": "Cuadrícula CAA clásica — pictogramas ARASAAC, colores Fitzgerald, barra de frases"
+      },
+      "literacy": {
+        "name": "Teclado de alfabetización",
+        "description": "Escritura QWERTY para usuarios alfabetizados con sugerencias IA en la app completa"
+      },
+      "schedule": {
+        "name": "Agenda visual",
+        "description": "Rutina diaria con pasos completables y etiquetas habladas"
+      },
+      "access": {
+        "name": "Modos de acceso",
+        "description": "Prueba escaneo por interruptor y guarda táctil en una cuadrícula compacta"
+      }
+    },
+    "gates": {
+      "firstMessage": {
+        "title": "Acabas de hablar con Voxa",
+        "body": "La CAA da voz a personas no hablantes o con habla mínima para necesidades cotidianas, relaciones y aprendizaje. Crea una cuenta gratuita para guardar tableros, sincronizar dispositivos y personalizar vocabulario."
+      },
+      "templates": {
+        "title": "Cuatro plantillas iniciales en la app completa",
+        "body": "Núcleo 47, Núcleo 100, teclado de alfabetización y agendas visuales son plantillas editables — más importación OBF/Gridset/Snap/TouchChat en el editor clínico."
+      },
+      "access": {
+        "title": "Modos clínicos de acceso integrados",
+        "body": "Escaneo con señales auditivas, guarda táctil, simulación de permanencia ocular y activación al soltar — configurables por comunicador en Ajustes."
+      },
+      "institution": {
+        "title": "Información de uso por comunicador",
+        "body": "Los planes institucionales añaden roles, tableros ilimitados, IA completa e informes agregados — engagement por alumno o paciente protegiendo la privacidad."
+      }
+    },
+    "suggestions": {
+      "communicate": [
+        "Quiero más",
+        "Quiero ir a casa",
+        "Necesito ayuda"
+      ],
+      "literacy": [
+        "hola",
+        "gracias",
+        "hasta luego"
+      ],
+      "schedule": [
+        "Despertar",
+        "Cepillar dientes",
+        "Terminé"
+      ],
+      "access": [
+        "sí",
+        "más",
+        "ayúdame"
+      ]
+    }
+  },
+  "communicator": {
+    "routineComplete": "Rutina completa — pulsa Borrar para empezar de nuevo",
+    "editor": "Editor",
+    "admin": "Admin",
+    "usageReport": "Informe de uso",
+    "gridSettings": "Cuadrícula",
+    "auditLog": "Auditoría",
+    "newBoard": "Nuevo tablero",
+    "importObf": "Importar OBF",
+    "exportObf": "Exportar OBF"
+  },
+  "cviThemes": {
+    "default": "Predeterminado",
+    "cvi-dark": "CVI oscuro",
+    "cvi-high-contrast": "CVI alto contraste",
+    "classic-light": "Clásico claro (estilo Proloquo)"
+  },
+  "settings": {
+    "title": "Accesibilidad",
+    "visualTheme": "Tema visual (CVI)",
+    "touchScale": "Escala de objetivo táctil ({scale}×)",
+    "accessMethod": "Método de acceso",
+    "accessTouch": "Táctil",
+    "accessSwitch": "Escaneo por interruptor",
+    "accessEye": "Seguimiento ocular (permanencia)",
+    "scanSpeed": "Velocidad de escaneo ({ms} ms)",
+    "scanOrder": "Orden de escaneo",
+    "scanRow": "Fila por fila",
+    "scanColumn": "Columna por columna",
+    "scanLinear": "Lineal",
+    "groupScan": "Escaneo por grupos",
+    "groupNone": "Un nivel (cuadrícula completa)",
+    "groupRows": "Grupos por filas",
+    "groupRegions": "Grupos por regiones (cuadrantes)",
+    "scanHintNone": "Hardware: Espacio/Intro selecciona; Tab/Flecha derecha avanza. Interruptores Bluetooth y adaptadores USB que emulan teclado funcionan automáticamente. Mando: botón 0 selecciona; botón 1 avanza.",
+    "scanHintGroup": "Selecciona un grupo, luego una celda. Las teclas y el mando funcionan igual que en escaneo de un nivel.",
+    "auditoryHighlight": "Resaltado auditivo de escaneo",
+    "auditoryHighlightHint": "Anunciar botón enfocado (lector de pantalla)",
+    "auditoryBeep": "Pitido auditivo de escaneo",
+    "auditoryBeepHint": "Reproducir tono breve en cada paso",
+    "auditoryVoice": "Voz auditiva de escaneo",
+    "auditoryVoiceHint": "Decir en voz alta la etiqueta escaneada",
+    "pauseWhileSpeaking": "Pausar escaneo al hablar",
+    "pauseWhileSpeakingHint": "Detener el paso durante TTS o grabaciones",
+    "touchActivation": "Activación táctil",
+    "touchPress": "Presionar (inicio del toque)",
+    "touchRelease": "Soltar (fin del toque)",
+    "touchGuard": "Guarda táctil (keyguard)",
+    "touchGuardHint": "Enmascarar regiones entre objetivos",
+    "touchGuardMask": "Máscara de guarda táctil",
+    "maskBoth": "Canal + perímetro",
+    "maskGutter": "Solo entre celdas",
+    "maskPerimeter": "Solo borde del tablero",
+    "touchGuardHelp": "Superposiciones semitransparentes bloquean toques accidentales fuera de los huecos.",
+    "dwellTime": "Tiempo de permanencia ({ms} ms)",
+    "gazeSource": "Fuente de mirada",
+    "gazePointer": "Hover del puntero (simulación)",
+    "gazeTobii": "Puente Tobii (eventos voxa:gaze)",
+    "gazeHintTobii": "Lab: window.__voxaInjectGaze(x, y) o dispatch voxa:gaze CustomEvent.",
+    "gazeHintPointer": "Mantén el puntero sobre un botón para activar (simula permanencia ocular).",
+    "symbolDiversity": "Diversidad de pictogramas (tono de piel predeterminado)",
+    "skinWhite": "Claro",
+    "skinAsian": "Este asiático",
+    "skinMulatto": "Medio",
+    "skinAztec": "Bronceado",
+    "skinBlack": "Oscuro",
+    "symbolDiversityHint": "Predeterminado para nuevos símbolos de persona en el editor. Los botones pueden tener valores propios.",
+    "whisperMode": "Modo susurro (construir sin hablar)",
+    "whisperHint": "Añadir palabras a la barra sin TTS",
+    "hideSymbols": "Ocultar pictogramas (modo CVI solo texto)",
+    "hideSymbolsHint": "Reducir complejidad visual",
+    "hideLabels": "Modo solo pictogramas (ocultar etiquetas)",
+    "hideLabelsHint": "Mostrar pictogramas sin texto",
+    "boardDisplay": "Visualización del tablero",
+    "boardDisplayHint": "Se guarda con este vocabulario. Anula los ajustes del dispositivo cuando está marcado.",
+    "boardHideSymbols": "Ocultar pictogramas en este tablero",
+    "boardHideSymbolsHint": "Modo solo texto para este tablero",
+    "boardHideLabels": "Ocultar etiquetas en este tablero",
+    "boardHideLabelsHint": "Modo solo pictogramas para este tablero",
+    "editorPin": "PIN del editor",
+    "editorPinConfigured": "Se requiere PIN para entrar en Editor o Admin en este dispositivo.",
+    "editorPinUnset": "Define un PIN para que solo clínicos editen vocabulario.",
+    "setPin": "Definir PIN",
+    "changePin": "Cambiar PIN",
+    "removePin": "Quitar PIN",
+    "pinPrompt": "Nuevo PIN del editor (4–8 dígitos)",
+    "pinSaved": "PIN del editor guardado.",
+    "pinRemoveConfirm": "¿Quitar PIN del editor? El modo editor se abrirá sin solicitud."
+  }
+}

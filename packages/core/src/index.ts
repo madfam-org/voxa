@@ -217,6 +217,7 @@ export {
   type DemoSceneId,
   type DemoSceneMeta,
 } from './demo-experience.js';
+export type { DemoUiLocale } from './demo-locale.js';
 export type {
   ArasaacHairColor,
   ArasaacSkinTone,

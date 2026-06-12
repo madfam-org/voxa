@@ -23,6 +23,7 @@ export interface SymbolSelection {
 interface SymbolSearchPanelProps {
   boardId: string;
   accessToken?: string;
+  contentLocale?: string;
   currentUrl?: string;
   defaultSkinTone?: ArasaacSkinTone;
   disabled?: boolean;
@@ -33,6 +34,7 @@ interface SymbolSearchPanelProps {
 export function SymbolSearchPanel({
   boardId,
   accessToken,
+  contentLocale = 'es-MX',
   currentUrl,
   defaultSkinTone = 'white',
   disabled,
@@ -70,7 +72,7 @@ export function SymbolSearchPanel({
       const headers: Record<string, string> = { 'X-Voxa-Role': 'editor' };
       if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
       const res = await fetch(
-        `${API_URL.replace(/\/$/, '')}/v1/symbols/search?q=${encodeURIComponent(query.trim())}&locale=en`,
+        `${API_URL.replace(/\/$/, '')}/v1/symbols/search?q=${encodeURIComponent(query.trim())}&locale=${encodeURIComponent(contentLocale.split('-')[0] ?? 'es')}`,
         { headers },
       );
       if (!res.ok) {
@@ -86,7 +88,7 @@ export function SymbolSearchPanel({
     } finally {
       setBusy(false);
     }
-  }, [accessToken, query]);
+  }, [accessToken, contentLocale, query]);
 
   const uploadPhoto = useCallback(
     async (file: File) => {

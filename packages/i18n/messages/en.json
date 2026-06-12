@@ -1,0 +1,301 @@
+{
+  "metadata": {
+    "title": "Voxa — AAC Communication Platform",
+    "description": "Modern augmentative and alternative communication (AAC) for families and institutions. Live demo, CVI themes, AI predictions, and cloud sync."
+  },
+  "common": {
+    "brand": "Voxa",
+    "speak": "Speak",
+    "clear": "Clear",
+    "close": "Close",
+    "save": "Save",
+    "settings": "Settings",
+    "loading": "Loading…",
+    "trySaying": "Try saying"
+  },
+  "language": {
+    "label": "Interface language",
+    "contentLabel": "Vocabulary language",
+    "es": "Spanish",
+    "en": "English",
+    "fr": "French",
+    "hint": "Spanish is the default interface language. Board vocabulary and speech use the selected content language."
+  },
+  "nav": {
+    "whyAac": "Why AAC",
+    "liveDemo": "Live demo",
+    "pricing": "Pricing",
+    "signIn": "Sign in",
+    "openCommunicator": "Open communicator",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "accessibility": "Accessibility",
+    "footerTagline": "Voxa is augmentative and alternative communication (AAC) built for real families, therapists, and classrooms — motor planning, CVI-friendly design, and cloud sync when you are ready."
+  },
+  "consent": {
+    "ariaLabel": "Privacy choices",
+    "body": "Voxa can use recent utterances to improve AI predictions. This is optional and stays on MADFAM infrastructure. See our",
+    "privacyLink": "Privacy Policy",
+    "allow": "Allow predictions",
+    "essential": "Essential only"
+  },
+  "auth": {
+    "title": "Sign in to Voxa",
+    "subtitle": "Use your MADFAM account (Janua) to sync boards and collaborate with your team.",
+    "continueJanua": "Continue with Janua",
+    "oidcNotConfigured": "OIDC is not configured. Set NEXT_PUBLIC_OIDC_ISSUER and NEXT_PUBLIC_OIDC_CLIENT_ID for production sign-in.",
+    "errors": {
+      "missing_code_or_state": "Sign-in could not be completed. Try again.",
+      "token_exchange_failed": "Janua token exchange failed. Try again.",
+      "state_mismatch": "Sign-in session expired. Try again.",
+      "id_token_verification_failed": "Could not verify Janua identity token.",
+      "missing_tokens": "Janua did not return required tokens.",
+      "missing_required_claims": "Janua account is missing email or user id.",
+      "invalid_token_expiry": "Janua returned an invalid session expiry.",
+      "generic": "Authentication error: {code}"
+    }
+  },
+  "landing": {
+    "heroEyebrow": "Augmentative & alternative communication",
+    "heroTitle": "Every person deserves a voice that keeps up with their life.",
+    "heroBody": "AAC apps turn taps, switches, or gaze into spoken language — at home, in therapy, and in class. Voxa is a modern communication board with motor planning, CVI-friendly themes, AI-assisted predictions, switch scanning, visual schedules, and secure cloud sync — designed so families start free and institutions scale with confidence.",
+    "tryDemo": "Try the live demo",
+    "signInFree": "Sign in free (parents)",
+    "whyChangingTitle": "Why AAC is life-changing",
+    "whyChangingList1": "Reduces frustration when speech alone is not enough",
+    "whyChangingList2": "Supports language development, not just request-and-response",
+    "whyChangingList3": "Builds independence for meals, play, medical visits, and friendships",
+    "whyChangingList4": "Gives caregivers and clinicians a shared, evidence-aligned tool",
+    "whyChangingNote": "Research consistently shows early, robust AAC access improves communication outcomes — not delays speech.",
+    "humanRightTitle": "Communication is a human right",
+    "humanRightBody": "Digital AAC replaces paper boards with speech output, vocabulary that grows with the user, and access methods matched to physical ability. Voxa focuses on what practitioners and families ask for most: stable motor plans, visually accessible layouts, and tools that work offline when the network does not.",
+    "demoCtaTitle": "Four-scene interactive demo",
+    "demoCtaBody": "Explore core vocabulary with symbols, literacy keyboard, visual schedules, and access modes (switch scan + touch guard) — no signup required.",
+    "openDemo": "Open interactive demo →",
+    "pricingTitle": "Simple, honest pricing",
+    "pricingSubtitle": "Always free for individual parents. Institutional plans fund secure hosting and analytics for teams.",
+    "parentsLabel": "PARENTS & CAREGIVERS",
+    "free": "Free",
+    "parentsBody": "Forever free for individual families supporting one communicator at home.",
+    "parentsLi1": "Cloud sync & backup",
+    "parentsLi2": "OBF import/export",
+    "parentsLi3": "CVI themes & access methods",
+    "parentsLi4": "Starter AI predictions",
+    "createAccount": "Create free account",
+    "familyLabel": "EXTENDED FAMILY",
+    "family": "Family",
+    "familyBody": "More boards and shared editing for siblings, grandparents, and co-parents.",
+    "familyLi1": "Multiple boards & profiles",
+    "familyLi2": "Small care team (editors)",
+    "familyLi3": "Priority sync",
+    "signInUpgrade": "Sign in to upgrade",
+    "instLabel": "SCHOOLS, CLINICS & DISTRICTS",
+    "institutional": "Institutional",
+    "instBody": "Paid plans for organizations that need compliance, roles, and aggregate usage insight by communicator — without exposing private message content.",
+    "instLi1": "Unlimited boards & team roles",
+    "instLi2": "Full AI & GLP workflows",
+    "instLi3": "Usage dashboards by final user",
+    "instLi4": "Dedicated onboarding & SLA",
+    "contactSales": "Contact sales",
+    "footerCtaTitle": "Start where you are. Grow when you need to.",
+    "footerCtaBody": "Try the demo as a visitor, create a free parent account in minutes, or talk with us about rolling Voxa out across your organization.",
+    "tryDemoShort": "Try demo",
+    "openMyCommunicator": "Open my communicator",
+    "features": {
+      "motor": {
+        "title": "Motor planning first",
+        "body": "Core words stay in fixed locations so users build muscle memory — the same principle behind leading dedicated AAC devices."
+      },
+      "cvi": {
+        "title": "CVI & access modes",
+        "body": "High-contrast themes, switch scanning, and eye-dwell support mean the same board adapts to cortical visual impairment and different physical access."
+      },
+      "ai": {
+        "title": "AI that respects consent",
+        "body": "Optional predictions speed multi-word messages; families control AI consent, and institutional policies can be enforced centrally."
+      },
+      "obf": {
+        "title": "Open Board Format",
+        "body": "Import and export OBF to collaborate with SLPs and migrate from other apps without lock-in."
+      },
+      "offline": {
+        "title": "Offline-ready",
+        "body": "Boards cache locally so communication continues on unreliable school Wi‑Fi or during travel."
+      },
+      "janua": {
+        "title": "Janua identity",
+        "body": "One MADFAM sign-in across Voxa and partner tools — fewer passwords for caregivers and staff."
+      }
+    }
+  },
+  "demo": {
+    "visitorLabel": "Visitor demo",
+    "openFullApp": "Open full app",
+    "institutionalPlans": "Institutional plans",
+    "sceneDescription": "{description}",
+    "switchOn": "Switch scan: on",
+    "switchOff": "Switch scan: off",
+    "guardOn": "Touch guard: on",
+    "guardOff": "Touch guard: off",
+    "switchHint": "Press Arrow Right to advance · Space to select",
+    "readyTitle": "Ready for the full platform?",
+    "readyBody": "Sign in for cloud sync, SLP editor, ARASAAC symbol search with diversity traits, recorded speech, AI predictions, and OBF import/export.",
+    "startFree": "Start free — parents",
+    "schoolsClinics": "Schools & clinics",
+    "classicBannerTitle": "Try Voxa like a classic AAC app",
+    "classicBannerSubtitle": "Light grid, symbol-first buttons, and a sentence bar — the same motor-plan Core 47 as Proloquo-style layouts.",
+    "platformBannerTitle": "Interactive platform demo",
+    "scenesAriaLabel": "Demo scenes",
+    "scheduleStep": "Step {current} of {total}",
+    "typeOnKeyboard": "Type on the keyboard…",
+    "tapSymbols": "Tap symbols to build a message…",
+    "tapButtons": "Tap buttons to build a message…",
+    "scenes": {
+      "communicate": {
+        "name": "Core vocabulary",
+        "description": "Classic AAC grid — ARASAAC symbols, Fitzgerald colors, sentence bar"
+      },
+      "literacy": {
+        "name": "Literacy keyboard",
+        "description": "QWERTY typing for literate AAC users with AI word suggestions in the full app"
+      },
+      "schedule": {
+        "name": "Visual schedule",
+        "description": "Daily routine timeline with step completion and spoken labels"
+      },
+      "access": {
+        "name": "Access modes",
+        "description": "Try switch scanning and touch guard overlays on a compact grid"
+      }
+    },
+    "gates": {
+      "firstMessage": {
+        "title": "You just spoke with Voxa",
+        "body": "AAC gives non-speaking and minimally speaking people a voice for everyday needs, relationships, and learning. Create a free parent account to save boards, sync across devices, and personalize vocabulary."
+      },
+      "templates": {
+        "title": "Four starter templates in the full app",
+        "body": "Core 47, Core 100, literacy keyboard, and visual schedules ship as editable templates — plus OBF/Gridset/Snap/TouchChat import in the SLP editor."
+      },
+      "access": {
+        "title": "Clinical access modes built in",
+        "body": "Switch scanning with auditory cues, touch guard overlays, eye-dwell simulation, and touch-release activation — configurable per communicator in Settings."
+      },
+      "institution": {
+        "title": "Usage insight for every communicator",
+        "body": "Institutional plans add team roles, unlimited boards, full AI, and high-level usage reports — see engagement by student or patient while protecting individual privacy."
+      }
+    },
+    "suggestions": {
+      "communicate": [
+        "I want more",
+        "I want go home",
+        "I need help"
+      ],
+      "literacy": [
+        "hello",
+        "thank you",
+        "see you later"
+      ],
+      "schedule": [
+        "Wake up",
+        "Brush teeth",
+        "All done"
+      ],
+      "access": [
+        "yes",
+        "more",
+        "help me"
+      ]
+    }
+  },
+  "communicator": {
+    "routineComplete": "Routine complete — tap Clear to start over",
+    "editor": "Editor",
+    "admin": "Admin",
+    "usageReport": "Usage report",
+    "gridSettings": "Grid",
+    "auditLog": "Audit",
+    "newBoard": "New board",
+    "importObf": "Import OBF",
+    "exportObf": "Export OBF"
+  },
+  "cviThemes": {
+    "default": "Default",
+    "cvi-dark": "CVI dark",
+    "cvi-high-contrast": "CVI high contrast",
+    "classic-light": "Classic light (Proloquo-style)"
+  },
+  "settings": {
+    "title": "Accessibility",
+    "visualTheme": "Visual theme (CVI)",
+    "touchScale": "Touch target scale ({scale}×)",
+    "accessMethod": "Access method",
+    "accessTouch": "Touch",
+    "accessSwitch": "Switch scanning",
+    "accessEye": "Eye tracking (dwell)",
+    "scanSpeed": "Scan speed ({ms} ms)",
+    "scanOrder": "Scan order",
+    "scanRow": "Row by row",
+    "scanColumn": "Column by column",
+    "scanLinear": "Linear",
+    "groupScan": "Group scan",
+    "groupNone": "Single-level (whole grid)",
+    "groupRows": "Row groups",
+    "groupRegions": "Region groups (quadrants)",
+    "scanHintNone": "Hardware: Space/Enter selects; Tab/Arrow Right advances. Bluetooth switches and USB adapters that emulate a keyboard work automatically. Gamepad button 0 selects; button 1 advances.",
+    "scanHintGroup": "Select a group, then a cell. Hardware keys and gamepad buttons work the same as single-level scan.",
+    "auditoryHighlight": "Auditory scan highlight",
+    "auditoryHighlightHint": "Announce focused button (screen reader)",
+    "auditoryBeep": "Auditory scan beep",
+    "auditoryBeepHint": "Play a short tone on each scan step",
+    "auditoryVoice": "Auditory scan voice",
+    "auditoryVoiceHint": "Speak scanned label aloud",
+    "pauseWhileSpeaking": "Pause scan while speaking",
+    "pauseWhileSpeakingHint": "Hold scan step during TTS or recordings",
+    "touchActivation": "Touch activation",
+    "touchPress": "Press (touch-start)",
+    "touchRelease": "Release (touch-up)",
+    "touchGuard": "Touch guard (keyguard)",
+    "touchGuardHint": "Mask regions between targets",
+    "touchGuardMask": "Touch guard mask",
+    "maskBoth": "Gutters + perimeter",
+    "maskGutter": "Between cells only",
+    "maskPerimeter": "Board edge only",
+    "touchGuardHelp": "Semi-transparent overlays block accidental touches outside button holes.",
+    "dwellTime": "Dwell time ({ms} ms)",
+    "gazeSource": "Gaze source",
+    "gazePointer": "Pointer hover (simulation)",
+    "gazeTobii": "Tobii bridge (voxa:gaze events)",
+    "gazeHintTobii": "Lab inject: window.__voxaInjectGaze(x, y) or dispatch voxa:gaze CustomEvent.",
+    "gazeHintPointer": "Hold pointer over a button to activate (simulates eye dwell).",
+    "symbolDiversity": "Symbol diversity (default skin tone)",
+    "skinWhite": "Light",
+    "skinAsian": "East Asian",
+    "skinMulatto": "Medium",
+    "skinAztec": "Tan",
+    "skinBlack": "Deep",
+    "symbolDiversityHint": "Default for new person symbols in the editor. Per-button overrides remain available.",
+    "whisperMode": "Whisper mode (build without speaking)",
+    "whisperHint": "Add words to the message bar without TTS",
+    "hideSymbols": "Hide symbols (text-only CVI mode)",
+    "hideSymbolsHint": "Reduce visual complexity",
+    "hideLabels": "Symbol-only mode (hide labels)",
+    "hideLabelsHint": "Show symbols without text labels",
+    "boardDisplay": "Board display",
+    "boardDisplayHint": "Saved with this vocabulary board. Overrides the device settings above when checked.",
+    "boardHideSymbols": "Hide symbols on this board",
+    "boardHideSymbolsHint": "Text-only mode for this board",
+    "boardHideLabels": "Hide labels on this board",
+    "boardHideLabelsHint": "Symbol-only mode for this board",
+    "editorPin": "Editor PIN",
+    "editorPinConfigured": "A PIN is required to enter Editor or Admin role on this device.",
+    "editorPinUnset": "Set a PIN so only clinicians can edit vocabulary.",
+    "setPin": "Set PIN",
+    "changePin": "Change PIN",
+    "removePin": "Remove PIN",
+    "pinPrompt": "New editor PIN (4–8 digits)",
+    "pinSaved": "Editor PIN saved.",
+    "pinRemoveConfirm": "Remove editor PIN? Editor mode will open without a prompt."
+  }
+}

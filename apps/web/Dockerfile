@@ -11,6 +11,7 @@ COPY apps/web/package.json ./apps/web/
 COPY packages/access/package.json ./packages/access/
 COPY packages/ai/package.json ./packages/ai/
 COPY packages/core/package.json ./packages/core/
+COPY packages/i18n/package.json ./packages/i18n/
 COPY packages/obf/package.json ./packages/obf/
 COPY packages/symbols/package.json ./packages/symbols/
 COPY packages/sync/package.json ./packages/sync/

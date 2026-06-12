@@ -1,8 +1,12 @@
 import type { AccessProfile, ScanOrder, SwitchGroupStrategy, TouchActivationMode, TouchGuardMask } from '@voxa/access';
 import type { ArasaacSkinTone, BoardDisplayPreferences } from '@voxa/core';
+import type { ContentLocale, UiLocale } from '@voxa/i18n';
+import { CONTENT_LOCALE_BY_UI, DEFAULT_UI_LOCALE } from '@voxa/i18n';
 import type { CviTheme } from '@voxa/ui';
 
 export interface CommunicatorSettings {
+  uiLocale: UiLocale;
+  contentLocale: ContentLocale;
   accessMode: AccessProfile['mode'];
   cviTheme: CviTheme;
   targetScale: number;
@@ -25,6 +29,8 @@ export interface CommunicatorSettings {
 }
 
 export const DEFAULT_COMMUNICATOR_SETTINGS: CommunicatorSettings = {
+  uiLocale: DEFAULT_UI_LOCALE,
+  contentLocale: CONTENT_LOCALE_BY_UI[DEFAULT_UI_LOCALE],
   accessMode: 'touch',
   cviTheme: 'cvi-dark',
   targetScale: 1.2,

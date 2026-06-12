@@ -1,11 +1,12 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import Link from 'next/link';
+import { useLocale, useTranslations } from 'next-intl';
+import { Link } from '@/i18n/navigation';
+import type { UiLocale } from '@voxa/i18n';
 import {
   applyKeyboardActivation,
   boardForDemoScene,
-  DEMO_SCENE_META,
   formatKeyboardUtterance,
   isLiteracyKeyboardBoard,
   isVisualScheduleBoard,
@@ -23,12 +24,9 @@ import { TouchGuardOverlay } from '@/components/touch-guard-overlay';
 import { VisualScheduleView } from '@/components/visual-schedule-view';
 import { useSwitchScan } from '@/hooks/use-switch-scan';
 
-const SCENE_SUGGESTIONS: Record<DemoSceneId, string[]> = {
-  communicate: ['I want more', 'I want go home', 'I need help'],
-  literacy: ['hello', 'thank you', 'see you later'],
-  schedule: ['Wake up', 'Brush teeth', 'All done'],
-  access: ['yes', 'more', 'help me'],
-};
+const DEMO_SCENE_IDS: DemoSceneId[] = ['communicate', 'literacy', 'schedule', 'access'];
+
+type GateKey = 'firstMessage' | 'templates' | 'access' | 'institution';
 
 interface GateConfig {
   variant: ConversionGateVariant;
@@ -37,40 +35,21 @@ interface GateConfig {
   id: string;
 }
 
-const GATES: Record<string, GateConfig> = {
-  firstMessage: {
-    id: 'firstMessage',
-    variant: 'parent',
-    title: 'You just spoke with Voxa',
-    body:
-      'AAC gives non-speaking and minimally speaking people a voice for everyday needs, relationships, and learning. Create a free parent account to save boards, sync across devices, and personalize vocabulary.',
-  },
-  templates: {
-    id: 'templates',
-    variant: 'feature',
-    title: 'Four starter templates in the full app',
-    body:
-      'Core 47, Core 100, literacy keyboard, and visual schedules ship as editable templates — plus OBF/Gridset/Snap/TouchChat import in the SLP editor.',
-  },
-  access: {
-    id: 'access',
-    variant: 'feature',
-    title: 'Clinical access modes built in',
-    body:
-      'Switch scanning with auditory cues, touch guard overlays, eye-dwell simulation, and touch-release activation — configurable per communicator in Settings.',
-  },
-  institution: {
-    id: 'institution',
-    variant: 'institution',
-    title: 'Usage insight for every communicator',
-    body:
-      'Institutional plans add team roles, unlimited boards, full AI, and high-level usage reports — see engagement by student or patient while protecting individual privacy.',
-  },
+const GATE_VARIANTS: Record<GateKey, ConversionGateVariant> = {
+  firstMessage: 'parent',
+  templates: 'feature',
+  access: 'feature',
+  institution: 'institution',
 };
 
 export function DemoBoardScreen(): React.ReactNode {
+  const locale = useLocale() as UiLocale;
+  const t = useTranslations('demo');
+  const tc = useTranslations('common');
+  const tcx = useTranslations('communicator');
+
   const [scene, setScene] = useState<DemoSceneId>('communicate');
-  const board = useMemo(() => boardForDemoScene(scene), [scene]);
+  const board = useMemo(() => boardForDemoScene(scene, locale), [scene, locale]);
   const [utterance, setUtterance] = useState<string[]>([]);
   const [completedStepIds, setCompletedStepIds] = useState<Set<string>>(() => new Set());
   const [tapCount, setTapCount] = useState(0);
@@ -87,6 +66,11 @@ export function DemoBoardScreen(): React.ReactNode {
     ? scheduleProgress(completedStepIds, scheduleSteps)
     : { completed: 0, total: 0, currentStepId: null };
 
+  const sceneSuggestions = useMemo(
+    () => t.raw(`suggestions.${scene}`) as string[],
+    [scene, t],
+  );
+
   useEffect(() => {
     setUtterance([]);
     setCompletedStepIds(new Set());
@@ -98,16 +82,18 @@ export function DemoBoardScreen(): React.ReactNode {
     (a, b) => a.position.row - b.position.row || a.position.column - b.position.column,
   );
 
-  const sceneMeta = DEMO_SCENE_META.find((item) => item.id === scene)!;
-
   const openGate = useCallback(
-    (key: keyof typeof GATES) => {
-      const gate = GATES[key];
-      if (!gate || shownGates.has(gate.id)) return;
-      setShownGates((prev) => new Set(prev).add(gate.id));
-      setActiveGate(gate);
+    (key: GateKey) => {
+      if (shownGates.has(key)) return;
+      setShownGates((prev) => new Set(prev).add(key));
+      setActiveGate({
+        id: key,
+        variant: GATE_VARIANTS[key],
+        title: t(`gates.${key}.title`),
+        body: t(`gates.${key}.body`),
+      });
     },
-    [shownGates],
+    [shownGates, t],
   );
 
   const activate = useCallback(
@@ -181,15 +167,18 @@ export function DemoBoardScreen(): React.ReactNode {
 
   const utteranceText = scheduleMode
     ? scheduleState.completed >= scheduleState.total && scheduleState.total > 0
-      ? 'Routine complete — tap Clear to start over'
-      : `Step ${Math.min(scheduleState.completed + 1, scheduleState.total)} of ${scheduleState.total}`
+      ? tcx('routineComplete')
+      : t('scheduleStep', {
+          current: Math.min(scheduleState.completed + 1, scheduleState.total),
+          total: scheduleState.total,
+        })
     : literacyMode
-      ? formatKeyboardUtterance(utterance) || 'Type on the keyboard…'
+      ? formatKeyboardUtterance(utterance) || t('typeOnKeyboard')
       : utterance.length
         ? utterance.join(' ')
         : classicScene
-          ? 'Tap symbols to build a message…'
-          : 'Tap buttons to build a message…';
+          ? t('tapSymbols')
+          : t('tapButtons');
 
   return (
     <div
@@ -206,23 +195,23 @@ export function DemoBoardScreen(): React.ReactNode {
 
       <div style={classicScene ? classicBannerStyle : bannerStyle}>
         <div>
-          <strong>{classicScene ? 'Try Voxa like a classic AAC app' : 'Interactive platform demo'}</strong>
+          <strong>{classicScene ? t('classicBannerTitle') : t('platformBannerTitle')}</strong>
           {classicScene ? (
             <span style={{ display: 'block', marginTop: 4, color: '#4b5563', fontSize: '0.8125rem' }}>
-              Light grid, symbol-first buttons, and a sentence bar — the same motor-plan Core 47 as Proloquo-style layouts.
+              {t('classicBannerSubtitle')}
             </span>
           ) : (
             <span style={{ display: 'block', marginTop: 4, color: '#93c5fd', fontSize: '0.8125rem' }}>
-              {sceneMeta.description}
+              {t(`scenes.${scene}.description`)}
             </span>
           )}
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button type="button" onClick={() => openGate('institution')} style={chipBtnGold}>
-            Institutional plans
+            {t('institutionalPlans')}
           </button>
           <Link href="/auth/signin?redirect_to=%2Fapp" style={{ ...chipBtn, textDecoration: 'none' }}>
-            Open full app
+            {t('openFullApp')}
           </Link>
         </div>
       </div>
@@ -234,23 +223,23 @@ export function DemoBoardScreen(): React.ReactNode {
           borderBottom: classicScene ? '1px solid #e5e7eb' : '1px solid #262626',
         }}
         role="tablist"
-        aria-label="Demo scenes"
+        aria-label={t('scenesAriaLabel')}
       >
-        {DEMO_SCENE_META.map((item) => (
+        {DEMO_SCENE_IDS.map((id) => (
           <button
-            key={item.id}
+            key={id}
             type="button"
             role="tab"
-            aria-selected={scene === item.id}
-            onClick={() => setScene(item.id)}
+            aria-selected={scene === id}
+            onClick={() => setScene(id)}
             style={{
               ...sceneTabBtn,
               color: classicScene ? '#111827' : '#f5f5f5',
-              background: scene === item.id ? '#2563eb' : classicScene ? '#f3f4f6' : '#262626',
-              borderColor: scene === item.id ? '#3b82f6' : classicScene ? '#d1d5db' : '#404040',
+              background: scene === id ? '#2563eb' : classicScene ? '#f3f4f6' : '#262626',
+              borderColor: scene === id ? '#3b82f6' : classicScene ? '#d1d5db' : '#404040',
             }}
           >
-            {item.name}
+            {t(`scenes.${id}.name`)}
           </button>
         ))}
       </div>
@@ -265,15 +254,13 @@ export function DemoBoardScreen(): React.ReactNode {
               if (!switchScanOn) openGate('access');
             }}
           >
-            {switchScanOn ? 'Switch scan: on' : 'Switch scan: off'}
+            {switchScanOn ? t('switchOn') : t('switchOff')}
           </button>
           <button type="button" style={chipBtn} onClick={() => setTouchGuardOn((value) => !value)}>
-            {touchGuardOn ? 'Touch guard: on' : 'Touch guard: off'}
+            {touchGuardOn ? t('guardOn') : t('guardOff')}
           </button>
           {switchScanOn ? (
-            <span style={{ fontSize: '0.8125rem', color: '#bfdbfe' }}>
-              Press Arrow Right to advance · Space to select
-            </span>
+            <span style={{ fontSize: '0.8125rem', color: '#bfdbfe' }}>{t('switchHint')}</span>
           ) : null}
         </div>
       ) : null}
@@ -305,7 +292,7 @@ export function DemoBoardScreen(): React.ReactNode {
               onClick={speakAll}
               style={classicScene ? classicActionBtn : actionBtn}
             >
-              Speak
+              {tc('speak')}
             </button>
           ) : null}
           <button
@@ -316,14 +303,14 @@ export function DemoBoardScreen(): React.ReactNode {
             }}
             style={classicScene ? classicSecondaryBtn : actionBtn}
           >
-            Clear
+            {tc('clear')}
           </button>
         </div>
 
         {!classicScene ? (
           <div style={suggestionBarStyle}>
-            <span style={{ fontSize: '0.75rem', color: '#a8a29e', marginRight: 4 }}>Try saying</span>
-            {SCENE_SUGGESTIONS[scene].map((text) => (
+            <span style={{ fontSize: '0.75rem', color: '#a8a29e', marginRight: 4 }}>{tc('trySaying')}</span>
+            {sceneSuggestions.map((text) => (
               <button
                 key={text}
                 type="button"
@@ -408,17 +395,16 @@ export function DemoBoardScreen(): React.ReactNode {
       </div>
 
       <section style={ctaSectionStyle}>
-        <h2 style={{ margin: '0 0 8px', fontSize: '1.25rem' }}>Ready for the full platform?</h2>
+        <h2 style={{ margin: '0 0 8px', fontSize: '1.25rem' }}>{t('readyTitle')}</h2>
         <p style={{ margin: '0 0 16px', color: '#a3a3a3', maxWidth: 640, marginInline: 'auto' }}>
-          Sign in for cloud sync, SLP editor, ARASAAC symbol search with diversity traits, recorded speech,
-          AI predictions, and OBF import/export.
+          {t('readyBody')}
         </p>
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
           <Link href="/auth/signin?redirect_to=%2Fapp" style={primaryCta}>
-            Start free — parents
+            {t('startFree')}
           </Link>
           <Link href="/#institutions" style={secondaryCta}>
-            Schools &amp; clinics
+            {t('schoolsClinics')}
           </Link>
         </div>
       </section>

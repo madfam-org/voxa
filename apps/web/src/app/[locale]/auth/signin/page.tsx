@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers';
+import { getTranslations } from 'next-intl/server';
 import { redirect } from 'next/navigation';
 import {
   createOidcStateEnvelope,
@@ -10,16 +11,6 @@ import {
   oidcTransientCookieAttrs,
 } from '@/lib/auth';
 
-const SIGNIN_ERRORS: Record<string, string> = {
-  missing_code_or_state: 'Sign-in could not be completed. Try again.',
-  token_exchange_failed: 'Janua token exchange failed. Try again.',
-  state_mismatch: 'Sign-in session expired. Try again.',
-  id_token_verification_failed: 'Could not verify Janua identity token.',
-  missing_tokens: 'Janua did not return required tokens.',
-  missing_required_claims: 'Janua account is missing email or user id.',
-  invalid_token_expiry: 'Janua returned an invalid session expiry.',
-};
-
 function firstParam(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
 }
@@ -29,6 +20,7 @@ export default async function SignInPage({
 }: {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }): Promise<React.ReactNode> {
+  const t = await getTranslations('auth');
   const params = (await searchParams) ?? {};
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
   const redirectTo = normalizeAuthRedirectPath(firstParam(params?.redirect_to) || '/app');
@@ -40,9 +32,23 @@ export default async function SignInPage({
   }
 
   const rawError = firstParam(params?.error);
-  const errorMessage = rawError
-    ? SIGNIN_ERRORS[rawError] || `Authentication error: ${rawError}`
-    : null;
+  let errorMessage: string | null = null;
+  if (rawError) {
+    const known = [
+      'missing_code_or_state',
+      'token_exchange_failed',
+      'state_mismatch',
+      'id_token_verification_failed',
+      'missing_tokens',
+      'missing_required_claims',
+      'invalid_token_expiry',
+    ] as const;
+    if ((known as readonly string[]).includes(rawError)) {
+      errorMessage = t(`errors.${rawError as (typeof known)[number]}`);
+    } else {
+      errorMessage = t('errors.generic', { code: rawError });
+    }
+  }
 
   async function startSignIn(formData: FormData) {
     'use server';
@@ -88,10 +94,8 @@ export default async function SignInPage({
           background: '#171717',
         }}
       >
-        <h1 style={{ marginTop: 0 }}>Sign in to Voxa</h1>
-        <p style={{ color: '#a3a3a3' }}>
-          Use your MADFAM account (Janua) to sync boards and collaborate with your team.
-        </p>
+        <h1 style={{ marginTop: 0 }}>{t('title')}</h1>
+        <p style={{ color: '#a3a3a3' }}>{t('subtitle')}</p>
         {errorMessage ? (
           <p role="alert" style={{ color: '#f87171' }}>
             {errorMessage}
@@ -114,13 +118,12 @@ export default async function SignInPage({
                 cursor: 'pointer',
               }}
             >
-              Continue with Janua
+              {t('continueJanua')}
             </button>
           </form>
         ) : (
           <p role="status" style={{ color: '#fbbf24' }}>
-            OIDC is not configured. Set NEXT_PUBLIC_OIDC_ISSUER and NEXT_PUBLIC_OIDC_CLIENT_ID for
-            production sign-in.
+            {t('oidcNotConfigured')}
           </p>
         )}
       </section>

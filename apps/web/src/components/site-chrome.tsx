@@ -1,7 +1,9 @@
 'use client';
 
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { PwaInstallBanner } from '@/components/pwa-install-banner';
+import { LanguageSwitcher } from '@/components/language-switcher';
+import { useTranslations } from 'next-intl';
 
 const navLink: React.CSSProperties = {
   color: '#d4d4d4',
@@ -11,6 +13,9 @@ const navLink: React.CSSProperties = {
 };
 
 export function SiteNav({ active }: { active?: 'home' | 'demo' | 'app' }): React.ReactNode {
+  const t = useTranslations('nav');
+  const tc = useTranslations('common');
+
   return (
     <header
       style={{
@@ -28,18 +33,19 @@ export function SiteNav({ active }: { active?: 'home' | 'demo' | 'app' }): React
       }}
     >
       <Link href="/" style={{ color: '#fafafa', fontWeight: 800, fontSize: '1.25rem', textDecoration: 'none' }}>
-        Voxa
+        {tc('brand')}
       </Link>
       <nav style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
         <Link href="/#why-aac" style={{ ...navLink, opacity: active === 'home' ? 1 : 0.85 }}>
-          Why AAC
+          {t('whyAac')}
         </Link>
         <Link href="/demo" style={{ ...navLink, color: active === 'demo' ? '#93c5fd' : navLink.color }}>
-          Live demo
+          {t('liveDemo')}
         </Link>
         <Link href="/#pricing" style={navLink}>
-          Pricing
+          {t('pricing')}
         </Link>
+        <LanguageSwitcher compact />
         <PwaInstallBanner compact />
         <Link
           href="/auth/signin?redirect_to=%2Fapp"
@@ -50,7 +56,7 @@ export function SiteNav({ active }: { active?: 'home' | 'demo' | 'app' }): React
             border: '1px solid #404040',
           }}
         >
-          Sign in
+          {t('signIn')}
         </Link>
         <Link
           href="/app"
@@ -64,7 +70,7 @@ export function SiteNav({ active }: { active?: 'home' | 'demo' | 'app' }): React
             fontSize: '0.9375rem',
           }}
         >
-          Open communicator
+          {t('openCommunicator')}
         </Link>
       </nav>
     </header>
@@ -72,6 +78,8 @@ export function SiteNav({ active }: { active?: 'home' | 'demo' | 'app' }): React
 }
 
 export function SiteFooter(): React.ReactNode {
+  const t = useTranslations('nav');
+
   return (
     <footer
       style={{
@@ -87,19 +95,16 @@ export function SiteFooter(): React.ReactNode {
         margin: '0 auto',
       }}
     >
-      <p style={{ margin: 0, maxWidth: 420, lineHeight: 1.6 }}>
-        Voxa is augmentative and alternative communication (AAC) built for real families, therapists, and
-        classrooms — motor planning, CVI-friendly design, and cloud sync when you are ready.
-      </p>
+      <p style={{ margin: 0, maxWidth: 420, lineHeight: 1.6 }}>{t('footerTagline')}</p>
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
         <Link href="/legal/privacy" style={{ color: '#93c5fd' }}>
-          Privacy
+          {t('privacy')}
         </Link>
         <Link href="/legal/terms" style={{ color: '#93c5fd' }}>
-          Terms
+          {t('terms')}
         </Link>
         <Link href="/legal/accessibility" style={{ color: '#93c5fd' }}>
-          Accessibility
+          {t('accessibility')}
         </Link>
       </div>
     </footer>

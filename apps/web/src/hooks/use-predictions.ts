@@ -11,6 +11,7 @@ async function fetchPredictions(
   board: Board,
   partialText: string,
   recentButtonIds: string[],
+  contentLocale: string,
   accessToken?: string,
 ): Promise<{ text: TextPrediction[]; symbols: SymbolPrediction[] }> {
   const headers: Record<string, string> = {
@@ -32,7 +33,7 @@ async function fetchPredictions(
         profileId: board.profileId,
         recentUtterances: [],
         partialText,
-        locale: 'en-US',
+        locale: contentLocale,
         maxSuggestions: 3,
       }),
     }),
@@ -76,6 +77,7 @@ export function usePredictions(
   board: Board,
   utterance: string[],
   recentButtonIds: string[],
+  contentLocale = 'es-MX',
 ) {
   const [textPredictions, setTextPredictions] = useState<TextPrediction[]>([]);
   const [symbolPredictions, setSymbolPredictions] = useState<SymbolPrediction[]>([]);
@@ -107,6 +109,7 @@ export function usePredictions(
         board,
         partialText,
         recentButtonIds,
+        contentLocale,
         accessToken,
       );
 
@@ -119,7 +122,7 @@ export function usePredictions(
     return () => {
       cancelled = true;
     };
-  }, [board.profileId, board.grid.buttons, partialText, recentButtonIds]);
+  }, [board.profileId, board.grid.buttons, partialText, recentButtonIds, contentLocale]);
 
   return { textPredictions, symbolPredictions };
 }
