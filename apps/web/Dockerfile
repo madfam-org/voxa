@@ -12,6 +12,7 @@ COPY packages/access/package.json ./packages/access/
 COPY packages/ai/package.json ./packages/ai/
 COPY packages/core/package.json ./packages/core/
 COPY packages/obf/package.json ./packages/obf/
+COPY packages/symbols/package.json ./packages/symbols/
 COPY packages/sync/package.json ./packages/sync/
 COPY packages/ui/package.json ./packages/ui/
 COPY packages/vocabulary/package.json ./packages/vocabulary/
