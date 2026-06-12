@@ -20,7 +20,11 @@ describe('demo experience boards', () => {
     const board = createDemoCoreBoard();
     assert.equal(board.grid.rows, 6);
     const want = board.grid.buttons.find((button) => button.kind === 'analytic' && button.id === 'want');
-    assert.ok(want && 'symbolUrl' in want && want.symbolUrl?.includes('7034'));
+    assert.ok(want && 'symbolUrl' in want && want.symbolUrl?.includes('5441'));
+    const withSymbols = board.grid.buttons.filter(
+      (button) => button.kind === 'analytic' && 'symbolUrl' in button && button.symbolUrl,
+    );
+    assert.equal(withSymbols.length, 47);
   });
 
   it('builds compact access preview grid', () => {

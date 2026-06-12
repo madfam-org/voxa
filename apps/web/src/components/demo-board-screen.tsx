@@ -170,7 +170,9 @@ export function DemoBoardScreen(): React.ReactNode {
     window.speechSynthesis.speak(new SpeechSynthesisUtterance(text));
   };
 
-  const theme = CVI_THEMES['cvi-dark'];
+  const themeKey = scene === 'communicate' ? 'classic-light' : 'cvi-dark';
+  const theme = CVI_THEMES[themeKey];
+  const classicScene = scene === 'communicate';
   const guardActive =
     touchGuardOn &&
     scene === 'access' &&
@@ -185,19 +187,35 @@ export function DemoBoardScreen(): React.ReactNode {
       ? formatKeyboardUtterance(utterance) || 'Type on the keyboard…'
       : utterance.length
         ? utterance.join(' ')
-        : 'Tap buttons to build a message…';
+        : classicScene
+          ? 'Tap symbols to build a message…'
+          : 'Tap buttons to build a message…';
 
   return (
-    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: '#0a0a0a', color: '#fafafa' }}>
+    <div
+      style={{
+        minHeight: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        background: classicScene ? '#f9fafb' : '#0a0a0a',
+        color: classicScene ? '#111827' : '#fafafa',
+      }}
+    >
       <SiteNav active="demo" />
       <div ref={liveRef} aria-live="polite" aria-atomic="true" style={visuallyHidden} />
 
-      <div style={bannerStyle}>
+      <div style={classicScene ? classicBannerStyle : bannerStyle}>
         <div>
-          <strong>Interactive platform demo</strong> — four scenes, no account required.
-          <span style={{ display: 'block', marginTop: 4, color: '#93c5fd', fontSize: '0.8125rem' }}>
-            {sceneMeta.description}
-          </span>
+          <strong>{classicScene ? 'Try Voxa like a classic AAC app' : 'Interactive platform demo'}</strong>
+          {classicScene ? (
+            <span style={{ display: 'block', marginTop: 4, color: '#4b5563', fontSize: '0.8125rem' }}>
+              Light grid, symbol-first buttons, and a sentence bar — the same motor-plan Core 47 as Proloquo-style layouts.
+            </span>
+          ) : (
+            <span style={{ display: 'block', marginTop: 4, color: '#93c5fd', fontSize: '0.8125rem' }}>
+              {sceneMeta.description}
+            </span>
+          )}
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button type="button" onClick={() => openGate('institution')} style={chipBtnGold}>
@@ -209,7 +227,15 @@ export function DemoBoardScreen(): React.ReactNode {
         </div>
       </div>
 
-      <div style={sceneTabsStyle} role="tablist" aria-label="Demo scenes">
+      <div
+        style={{
+          ...sceneTabsStyle,
+          background: classicScene ? '#ffffff' : '#0f0f0f',
+          borderBottom: classicScene ? '1px solid #e5e7eb' : '1px solid #262626',
+        }}
+        role="tablist"
+        aria-label="Demo scenes"
+      >
         {DEMO_SCENE_META.map((item) => (
           <button
             key={item.id}
@@ -219,8 +245,9 @@ export function DemoBoardScreen(): React.ReactNode {
             onClick={() => setScene(item.id)}
             style={{
               ...sceneTabBtn,
-              background: scene === item.id ? '#2563eb' : '#262626',
-              borderColor: scene === item.id ? '#3b82f6' : '#404040',
+              color: classicScene ? '#111827' : '#f5f5f5',
+              background: scene === item.id ? '#2563eb' : classicScene ? '#f3f4f6' : '#262626',
+              borderColor: scene === item.id ? '#3b82f6' : classicScene ? '#d1d5db' : '#404040',
             }}
           >
             {item.name}
@@ -252,13 +279,32 @@ export function DemoBoardScreen(): React.ReactNode {
       ) : null}
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-        <div style={{ ...toolbarStyle, background: theme.background, borderBottom: `1px solid ${theme.buttonBorder}` }}>
-          <strong>{board.name}</strong>
-          <div style={utteranceBarStyle} aria-live="polite">
+        <div
+          style={{
+            ...toolbarStyle,
+            background: classicScene ? '#ffffff' : theme.background,
+            borderBottom: `1px solid ${classicScene ? '#d1d5db' : theme.buttonBorder}`,
+          }}
+        >
+          {!classicScene ? <strong>{board.name}</strong> : null}
+          <div
+            style={{
+              ...utteranceBarStyle,
+              background: classicScene ? '#ffffff' : '#171717',
+              border: classicScene ? '2px solid #111827' : undefined,
+              color: classicScene ? '#111827' : undefined,
+              fontWeight: classicScene ? 600 : undefined,
+            }}
+            aria-live="polite"
+          >
             {utteranceText}
           </div>
           {!scheduleMode ? (
-            <button type="button" onClick={speakAll} style={actionBtn}>
+            <button
+              type="button"
+              onClick={speakAll}
+              style={classicScene ? classicActionBtn : actionBtn}
+            >
               Speak
             </button>
           ) : null}
@@ -268,25 +314,27 @@ export function DemoBoardScreen(): React.ReactNode {
               setUtterance([]);
               setCompletedStepIds(new Set());
             }}
-            style={actionBtn}
+            style={classicScene ? classicSecondaryBtn : actionBtn}
           >
             Clear
           </button>
         </div>
 
-        <div style={suggestionBarStyle}>
-          <span style={{ fontSize: '0.75rem', color: '#a8a29e', marginRight: 4 }}>Try saying</span>
-          {SCENE_SUGGESTIONS[scene].map((text) => (
-            <button
-              key={text}
-              type="button"
-              onClick={() => openGate('templates')}
-              style={{ ...chipBtn, background: '#292524', cursor: 'pointer' }}
-            >
-              {text}
-            </button>
-          ))}
-        </div>
+        {!classicScene ? (
+          <div style={suggestionBarStyle}>
+            <span style={{ fontSize: '0.75rem', color: '#a8a29e', marginRight: 4 }}>Try saying</span>
+            {SCENE_SUGGESTIONS[scene].map((text) => (
+              <button
+                key={text}
+                type="button"
+                onClick={() => openGate('templates')}
+                style={{ ...chipBtn, background: '#292524', cursor: 'pointer' }}
+              >
+                {text}
+              </button>
+            ))}
+          </div>
+        ) : null}
 
         <main style={{ flex: 1, minHeight: 280, display: 'flex' }}>
           <div style={{ position: 'relative', flex: 1, minHeight: 0, display: 'flex' }}>
@@ -320,14 +368,21 @@ export function DemoBoardScreen(): React.ReactNode {
               />
             ) : (
               <>
-                <BoardGrid rows={board.grid.rows} columns={board.grid.columns} theme="cvi-dark" targetScale={1.1}>
+                <BoardGrid
+                  rows={board.grid.rows}
+                  columns={board.grid.columns}
+                  theme={themeKey}
+                  targetScale={classicScene ? 1.15 : 1.1}
+                  gapMm={classicScene ? 2 : 4}
+                >
                   {sorted.map((btn) => (
                     <AacButton
                       key={btn.id as string}
                       label={buttonLabel(btn)}
                       symbolUrl={buttonSymbolUrl(btn)}
                       borderColor={buttonBorderColor(btn)}
-                      targetScale={1.1}
+                      presentation={classicScene ? 'symbol-forward' : 'default'}
+                      targetScale={classicScene ? 1.15 : 1.1}
                       scanHighlighted={isHighlighted(btn)}
                       scanGroupHighlighted={isGroupHighlighted(btn)}
                       onClick={() => handleButtonPress(btn)}
@@ -405,6 +460,12 @@ const bannerStyle: React.CSSProperties = {
   justifyContent: 'space-between',
 };
 
+const classicBannerStyle: React.CSSProperties = {
+  ...bannerStyle,
+  background: '#ffffff',
+  borderBottom: '1px solid #e5e7eb',
+};
+
 const sceneTabsStyle: React.CSSProperties = {
   display: 'flex',
   flexWrap: 'wrap',
@@ -478,6 +539,20 @@ const actionBtn: React.CSSProperties = {
   fontWeight: 600,
   cursor: 'pointer',
   minHeight: 44,
+};
+
+const classicActionBtn: React.CSSProperties = {
+  ...actionBtn,
+  borderRadius: 6,
+  minHeight: 40,
+  padding: '8px 14px',
+};
+
+const classicSecondaryBtn: React.CSSProperties = {
+  ...classicActionBtn,
+  background: '#ffffff',
+  color: '#111827',
+  border: '2px solid #111827',
 };
 
 const chipBtn: React.CSSProperties = {

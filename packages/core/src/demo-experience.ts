@@ -15,7 +15,7 @@ export const DEMO_SCENE_META: DemoSceneMeta[] = [
   {
     id: 'communicate',
     name: 'Core vocabulary',
-    description: 'Motor-plan core words with ARASAAC symbols and Fitzgerald colors',
+    description: 'Classic AAC grid — ARASAAC symbols, Fitzgerald colors, sentence bar',
   },
   {
     id: 'literacy',
@@ -34,18 +34,62 @@ export const DEMO_SCENE_META: DemoSceneMeta[] = [
   },
 ];
 
-const CORE_SYMBOLS: Record<string, string> = {
-  i: 'https://static.arasaac.org/pictograms/2280/2280_300.png',
-  you: 'https://static.arasaac.org/pictograms/2281/2281_300.png',
-  want: 'https://static.arasaac.org/pictograms/7034/7034_300.png',
-  more: 'https://static.arasaac.org/pictograms/6845/6845_300.png',
-  help: 'https://static.arasaac.org/pictograms/6405/6405_300.png',
-  home: 'https://static.arasaac.org/pictograms/6882/6882_300.png',
-  yes: 'https://static.arasaac.org/pictograms/6818/6818_300.png',
-  no: 'https://static.arasaac.org/pictograms/6819/6819_300.png',
+/** ARASAAC pictogram IDs for Core 47 demo words (curated for clarity). */
+const CORE_SYMBOL_IDS: Record<string, number> = {
+  i: 2280,
+  you: 2281,
+  want: 5441,
+  more: 6845,
+  go: 8142,
+  stop: 7196,
+  help: 6405,
+  eat: 6456,
+  drink: 6061,
+  yes: 6818,
+  no: 6819,
+  please: 8195,
+  like: 37826,
+  dont: 34021,
+  different: 4628,
+  again: 37163,
+  'all-done': 39109,
+  wait: 36914,
+  look: 6564,
+  listen: 6572,
+  come: 32669,
+  turn: 6630,
+  put: 32757,
+  get: 24208,
+  make: 32751,
+  do: 32751,
+  see: 2474,
+  feel: 3293,
+  good: 4581,
+  bad: 5504,
+  sorry: 11625,
+  'thank-you': 8129,
+  me: 6632,
+  my: 12264,
+  it: 31670,
+  that: 6906,
+  this: 7095,
+  here: 5382,
+  there: 5375,
+  up: 5388,
+  down: 37428,
+  in: 5439,
+  out: 8252,
+  on: 7814,
+  off: 7020,
+  home: 6882,
+  school: 32446,
 };
 
-function withCoreSymbols(board: Board, slugs: string[]): Board {
+function arasaacSymbolUrl(pictogramId: number): string {
+  return `https://static.arasaac.org/pictograms/${pictogramId}/${pictogramId}_300.png`;
+}
+
+function withCoreSymbols(board: Board): Board {
   return {
     ...board,
     grid: {
@@ -53,9 +97,8 @@ function withCoreSymbols(board: Board, slugs: string[]): Board {
       buttons: board.grid.buttons.map((button) => {
         if (button.kind !== 'analytic') return button;
         const slug = button.id as string;
-        if (!slugs.includes(slug)) return button;
-        const symbolUrl = CORE_SYMBOLS[slug];
-        return symbolUrl ? { ...button, symbolUrl } : button;
+        const pictogramId = CORE_SYMBOL_IDS[slug];
+        return pictogramId ? { ...button, symbolUrl: arasaacSymbolUrl(pictogramId) } : button;
       }),
     },
   };
@@ -65,10 +108,9 @@ export function createDemoCoreBoard(): Board {
   return withCoreSymbols(
     createStarterBoard('core-47', {
       boardId: 'demo-core',
-      name: 'Core 47 Demo',
+      name: 'Core 47',
       profileId: 'demo-user',
     }),
-    Object.keys(CORE_SYMBOLS),
   );
 }
 
@@ -102,7 +144,7 @@ export function createDemoAccessBoard(): Board {
     id: createButtonId(word.id),
     label: word.label,
     speechText: word.speech,
-    symbolUrl: CORE_SYMBOLS[word.id],
+    symbolUrl: arasaacSymbolUrl(CORE_SYMBOL_IDS[word.id]!),
     locale: 'en-US',
     position: { row: Math.floor(index / 2), column: index % 2 },
     locked: false,

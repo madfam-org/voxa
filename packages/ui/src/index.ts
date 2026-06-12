@@ -17,6 +17,12 @@ export const CVI_THEMES = {
     foreground: '#ffffff',
     buttonBorder: '#ffffff',
   },
+  /** Light grid inspired by classic AAC apps (e.g. Proloquo2Go-style layouts). */
+  'classic-light': {
+    background: '#e5e7eb',
+    foreground: '#111827',
+    buttonBorder: '#9ca3af',
+  },
 } as const;
 
 export type CviTheme = keyof typeof CVI_THEMES;
