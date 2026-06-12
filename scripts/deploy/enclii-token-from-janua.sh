@@ -13,9 +13,12 @@ PASSWORD="${JANUA_ADMIN_PASSWORD:?Set JANUA_ADMIN_PASSWORD}"
 
 token="$(/usr/bin/curl -sS -X POST 'https://auth.madfam.io/api/v1/auth/login' \
   -H 'Content-Type: application/json' \
-  -d "$(python3 - <<PY
+  -d "$(python3 - <<'PY'
 import json, os
-print(json.dumps({"email": os.environ["EMAIL"], "password": os.environ["PASSWORD"]}))
+print(json.dumps({
+    "email": os.environ["JANUA_ADMIN_EMAIL"],
+    "password": os.environ["JANUA_ADMIN_PASSWORD"],
+}))
 PY
 )" | python3 -c "
 import json, sys
