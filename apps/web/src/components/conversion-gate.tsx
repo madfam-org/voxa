@@ -1,6 +1,7 @@
 'use client';
 
-import Link from 'next/link';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/navigation';
 
 export type ConversionGateVariant = 'parent' | 'institution' | 'feature';
 
@@ -43,10 +44,19 @@ export function ConversionGate({
   onClose,
   signInHref = '/auth/signin?redirect_to=%2Fapp',
 }: ConversionGateProps): React.ReactNode {
+  const t = useTranslations('gate');
+
   if (!open) return null;
 
   const institutionHref =
     'mailto:hello@madfam.io?subject=Voxa%20institutional%20plan&body=Organization%20name%3A%0AExpected%20communicators%3A%0A';
+
+  const eyebrow =
+    variant === 'institution'
+      ? t('institutionEyebrow')
+      : variant === 'parent'
+        ? t('parentEyebrow')
+        : t('featureEyebrow');
 
   return (
     <div
@@ -85,7 +95,7 @@ export function ConversionGate({
             color: variant === 'institution' ? '#fbbf24' : '#93c5fd',
           }}
         >
-          {variant === 'institution' ? 'Schools & clinics' : variant === 'parent' ? 'Free for parents' : 'Unlock with Voxa'}
+          {eyebrow}
         </p>
         <h2 id="conversion-gate-title" style={{ margin: '0 0 12px', fontSize: '1.5rem' }}>
           {title}
@@ -94,20 +104,20 @@ export function ConversionGate({
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {variant === 'institution' ? (
             <a href={institutionHref} style={btnPrimary}>
-              Request institutional demo
+              {t('requestDemo')}
             </a>
           ) : (
             <Link href={signInHref} style={btnPrimary}>
-              Create free parent account
+              {t('createAccount')}
             </Link>
           )}
           {variant !== 'institution' && (
-            <a href="/#institutions" style={btnSecondary} onClick={onClose}>
-              I represent a school or clinic
-            </a>
+            <Link href="/#institutions" style={btnSecondary} onClick={onClose}>
+              {t('representInstitution')}
+            </Link>
           )}
           <button type="button" onClick={onClose} style={{ ...btnSecondary, background: '#262626' }}>
-            Keep exploring demo
+            {t('keepExploring')}
           </button>
         </div>
       </div>

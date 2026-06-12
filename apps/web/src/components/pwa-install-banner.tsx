@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { usePwaInstall } from '@/hooks/use-pwa-install';
 
 interface PwaInstallBannerProps {
@@ -7,6 +8,7 @@ interface PwaInstallBannerProps {
 }
 
 export function PwaInstallBanner({ compact = false }: PwaInstallBannerProps): React.ReactNode {
+  const t = useTranslations('pwa');
   const { canInstall, promptInstall, dismiss } = usePwaInstall();
 
   if (!canInstall) return null;
@@ -27,7 +29,7 @@ export function PwaInstallBanner({ compact = false }: PwaInstallBannerProps): Re
           cursor: 'pointer',
         }}
       >
-        Install app
+        {t('installApp')}
       </button>
     );
   }
@@ -35,7 +37,7 @@ export function PwaInstallBanner({ compact = false }: PwaInstallBannerProps): Re
   return (
     <aside
       role="region"
-      aria-label="Install Voxa"
+      aria-label={t('ariaLabel')}
       style={{
         marginTop: 20,
         padding: '14px 16px',
@@ -49,18 +51,15 @@ export function PwaInstallBanner({ compact = false }: PwaInstallBannerProps): Re
       }}
     >
       <div style={{ flex: '1 1 220px' }}>
-        <strong style={{ display: 'block', marginBottom: 4, color: '#dbeafe' }}>Install Voxa</strong>
-        <span style={{ color: '#93c5fd', fontSize: '0.875rem', lineHeight: 1.5 }}>
-          Add the communicator to your home screen for fullscreen, offline-ready access — no app store
-          required.
-        </span>
+        <strong style={{ display: 'block', marginBottom: 4, color: '#dbeafe' }}>{t('title')}</strong>
+        <span style={{ color: '#93c5fd', fontSize: '0.875rem', lineHeight: 1.5 }}>{t('body')}</span>
       </div>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <button type="button" onClick={() => void promptInstall()} style={primaryBtn}>
-          Install
+          {t('install')}
         </button>
         <button type="button" onClick={dismiss} style={secondaryBtn}>
-          Not now
+          {t('notNow')}
         </button>
       </div>
     </aside>

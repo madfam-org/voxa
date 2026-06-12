@@ -1,5 +1,7 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
+
 export type SyncConnectionStatus = 'offline' | 'connecting' | 'live';
 
 interface SyncStatusBannerProps {
@@ -25,6 +27,8 @@ export function SyncStatusBanner({
   onRetry,
   onDismissConflict,
 }: SyncStatusBannerProps): React.ReactNode {
+  const t = useTranslations('sync');
+
   const showConnecting = syncStatus === 'connecting';
   const showOffline = syncStatus === 'offline';
   const showPending = pendingSave;
@@ -48,27 +52,23 @@ export function SyncStatusBanner({
 
   let message = '';
   if (showConflict) {
-    message =
-      'Another editor saved changes first — your board was refreshed to the latest version. Review and save again.';
+    message = t('conflict');
   } else if (showOffline && error) {
     message = error;
   } else if (showOffline) {
-    message = 'Offline — changes stay on this device until the connection returns.';
+    message = t('offlineError');
   } else if (showConnecting) {
-    message = 'Connecting to cloud sync…';
+    message = t('connecting');
   }
   if (showPending) {
-    message = message
-      ? `${message} Changes queued — will sync when back online.`
-      : 'Changes queued — will sync when back online.';
+    message = message ? `${message} ${t('queuedSuffix')}` : t('queuedSuffix');
   }
   if (showSyncError && syncError) {
     message = message ? `${message} ${syncError}` : syncError;
   }
   if (showWarnings) {
-    message = message
-      ? `${message} OBF warnings: ${warnings.join('; ')}`
-      : `OBF warnings: ${warnings.join('; ')}`;
+    const warningText = t('obfWarnings', { warnings: warnings.join('; ') });
+    message = message ? `${message} ${warningText}` : warningText;
   }
 
   return (
@@ -102,7 +102,7 @@ export function SyncStatusBanner({
             cursor: 'pointer',
           }}
         >
-          Dismiss
+          {t('dismiss')}
         </button>
       ) : null}
       {(showPending || showSyncError) && isEditor && onRetry ? (
@@ -119,7 +119,7 @@ export function SyncStatusBanner({
             cursor: 'pointer',
           }}
         >
-          Retry sync
+          {t('retry')}
         </button>
       ) : null}
     </div>

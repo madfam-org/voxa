@@ -1,4 +1,5 @@
-import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
+import { Link } from '@/i18n/navigation';
 
 export interface LegalSection {
   title: string;
@@ -31,17 +32,26 @@ const linkStyle: React.CSSProperties = {
   textDecoration: 'none',
 };
 
-export function LegalPage({ title, intro, lastUpdated, sections }: LegalPageProps): React.ReactNode {
+export async function LegalPage({
+  title,
+  intro,
+  lastUpdated,
+  sections,
+}: LegalPageProps): Promise<React.ReactNode> {
+  const t = await getTranslations('legal.shared');
+
   return (
     <main style={pageStyle}>
       <article style={containerStyle}>
         <p style={{ marginBottom: 24 }}>
           <Link href="/" style={linkStyle}>
-            ← Back to Voxa
+            {t('back')}
           </Link>
         </p>
         <h1 style={{ fontSize: '2rem', marginBottom: 8 }}>{title}</h1>
-        <p style={{ color: '#a3a3a3', marginBottom: 24 }}>Last updated: {lastUpdated}</p>
+        <p style={{ color: '#a3a3a3', marginBottom: 24 }}>
+          {t('lastUpdatedLabel', { date: lastUpdated })}
+        </p>
         <p style={{ marginBottom: 32 }}>{intro}</p>
 
         <nav
@@ -54,7 +64,7 @@ export function LegalPage({ title, intro, lastUpdated, sections }: LegalPageProp
             background: '#171717',
           }}
         >
-          <strong>Contents</strong>
+          <strong>{t('contents')}</strong>
           <ol style={{ marginTop: 12, paddingLeft: 20 }}>
             {sections.map((section, index) => (
               <li key={section.title} style={{ marginBottom: 6 }}>
@@ -83,7 +93,7 @@ export function LegalPage({ title, intro, lastUpdated, sections }: LegalPageProp
 
         <hr style={{ borderColor: '#404040', margin: '32px 0' }} />
         <p style={{ color: '#a3a3a3', fontSize: '0.875rem' }}>
-          Questions:{' '}
+          {t('questions')}{' '}
           <a href="mailto:legal@madfam.io" style={linkStyle}>
             legal@madfam.io
           </a>

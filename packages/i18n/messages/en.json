@@ -297,5 +297,148 @@
     "pinPrompt": "New editor PIN (4–8 digits)",
     "pinSaved": "Editor PIN saved.",
     "pinRemoveConfirm": "Remove editor PIN? Editor mode will open without a prompt."
+  },
+  "legal": {
+    "shared": {
+      "back": "← Back to Voxa",
+      "contents": "Contents",
+      "questions": "Questions:",
+      "lastUpdatedLabel": "Last updated: {date}"
+    },
+    "privacy": {
+      "title": "Privacy Policy",
+      "lastUpdated": "June 7, 2026",
+      "intro": "Voxa is an augmentative and alternative communication (AAC) platform operated by MADFAM. This policy describes how we collect, use, and protect information when you use voxa.madfam.io and related services.",
+      "sections": [
+        {
+          "title": "Information we collect",
+          "content": "We collect account information from Janua SSO (name, email, user id), communication board data you create or sync, optional usage telemetry if you opt in, and standard service logs (IP address, user agent, request timestamps) for security and reliability."
+        },
+        {
+          "title": "How we use information",
+          "content": "We use your data to provide AAC board sync, team collaboration, accessibility features, and optional AI-assisted predictions. We do not sell utterance or board data to third parties. AI features send only the minimum context required and only when you have opted in."
+        },
+        {
+          "title": "Children and guardians",
+          "content": "Voxa may be used by minors with guardian or clinician oversight. Account creation and billing are managed by adults. We do not knowingly collect marketing profiles on children. Guardians may request access, correction, or deletion of a dependent’s board data by contacting us."
+        },
+        {
+          "title": "Data storage and retention",
+          "content": "Board data is stored in encrypted PostgreSQL in our cloud infrastructure. You may export boards in Open Board Format (OBF). We retain data while your account is active and for a limited period after closure for backup integrity, unless law requires longer retention."
+        },
+        {
+          "title": "Sharing",
+          "content": "We share data only with infrastructure providers (hosting, identity, payment when applicable) under contract, or when required by law. Clinical records belong in your healthcare provider’s systems — Voxa is a communication tool, not an electronic health record."
+        },
+        {
+          "title": "Your choices",
+          "content": "You can opt out of AI telemetry in Settings. You can export or delete boards where your role permits. You may sign out at any time to end your browser session."
+        },
+        {
+          "title": "Security",
+          "content": "We use TLS in transit, access controls, and MADFAM platform security practices. No method is 100% secure; report concerns to security@madfam.io."
+        },
+        {
+          "title": "Changes",
+          "content": "We will post updates on this page with a revised “Last updated” date. Material changes may be notified by email or in-product notice."
+        }
+      ]
+    },
+    "terms": {
+      "title": "Terms of Service",
+      "lastUpdated": "June 7, 2026",
+      "intro": "These terms govern your use of Voxa at voxa.madfam.io and related MADFAM services. By using Voxa, you agree to these terms.",
+      "sections": [
+        {
+          "title": "Service description",
+          "content": "Voxa provides cloud-synced AAC communication boards, team editing for caregivers and SLPs, accessibility modes, and optional AI-assisted features. The service is provided on an “as available” basis during preview and general availability phases."
+        },
+        {
+          "title": "Accounts",
+          "content": "You sign in through Janua (auth.madfam.io). You are responsible for activity under your account and for maintaining the confidentiality of your session. Notify us promptly of unauthorized access."
+        },
+        {
+          "title": "Acceptable use",
+          "content": "Do not misuse Voxa to harass others, upload illegal content, attempt to bypass security, or interfere with service operation. Do not use generated symbols or speech output to impersonate others or violate applicable law."
+        },
+        {
+          "title": "Content and ownership",
+          "content": "You retain ownership of boards and media you upload. You grant MADFAM a limited license to host, sync, and display that content solely to operate the service. Open Board Format export remains available to avoid lock-in."
+        },
+        {
+          "title": "Clinical disclaimer",
+          "content": "Voxa is not a medical device unless explicitly labeled and cleared as such. It does not provide diagnosis or treatment. Clinicians remain responsible for assessment and therapy decisions."
+        },
+        {
+          "title": "Paid plans",
+          "content": "When billing is enabled through MADFAM (Dhanam), subscription terms, refunds, and taxes will be presented at checkout. Free tiers may have usage limits."
+        },
+        {
+          "title": "Termination",
+          "content": "You may stop using Voxa at any time. We may suspend access for violations of these terms or to protect the platform. Upon termination, export your boards where possible before account closure."
+        },
+        {
+          "title": "Limitation of liability",
+          "content": "To the maximum extent permitted by law, MADFAM is not liable for indirect or consequential damages. Our aggregate liability is limited to fees paid in the twelve months before the claim, or fifty US dollars if no fees were paid."
+        },
+        {
+          "title": "Governing law",
+          "content": "These terms are governed by the laws of the State of Delaware, USA, without regard to conflict-of-law rules, except where mandatory consumer protections apply in your jurisdiction."
+        }
+      ]
+    },
+    "accessibility": {
+      "title": "Accessibility Statement",
+      "lastUpdated": "June 7, 2026",
+      "intro": "Voxa targets WCAG 2.2 Level AA and AAC-specific accessibility beyond baseline web requirements. We welcome feedback from communicators, caregivers, and SLPs.",
+      "sections": [
+        {
+          "title": "Conformance target",
+          "content": "We design for WCAG 2.2 Level AA including target size (2.5.8), pointer alternatives (2.5.7), contrast, and keyboard operability. AAC buttons default to at least 1 cm × 1 cm with user-adjustable scaling."
+        },
+        {
+          "title": "AAC-specific features",
+          "content": "Voxa includes CVI themes, switch scanning, eye-dwell selection, single-pointer alternatives to drag gestures, and motor-planning grid locks. See docs/accessibility.md in our repository for engineering details."
+        },
+        {
+          "title": "Known limitations",
+          "content": "Third-party symbol images may lack alternative text if imported from external boards. Some AI prediction features require connectivity. Mobile apps are catching up to web accessibility parity."
+        },
+        {
+          "title": "Assessment approach",
+          "content": "We combine automated checks, manual SLP review before releases, and hardware testing with switch and eye-tracking devices where available."
+        },
+        {
+          "title": "Feedback",
+          "content": "Email accessibility@madfam.io with the page or feature, assistive technology used, and steps to reproduce barriers. We aim to respond within five business days."
+        }
+      ]
+    }
+  },
+  "sync": {
+    "conflict": "Another editor saved changes first — your board was refreshed to the latest version. Review and save again.",
+    "offlineError": "Offline — changes stay on this device until the connection returns.",
+    "connecting": "Connecting to cloud sync…",
+    "queuedSuffix": "Changes queued — will sync when back online.",
+    "obfWarnings": "OBF warnings: {warnings}",
+    "dismiss": "Dismiss",
+    "retry": "Retry sync"
+  },
+  "pwa": {
+    "installApp": "Install app",
+    "ariaLabel": "Install Voxa",
+    "title": "Install Voxa",
+    "body": "Add the communicator to your home screen for fullscreen, offline-ready access — no app store required.",
+    "install": "Install",
+    "notNow": "Not now"
+  },
+  "gate": {
+    "institutionEyebrow": "Schools & clinics",
+    "parentEyebrow": "Free for parents",
+    "featureEyebrow": "Unlock with Voxa",
+    "requestDemo": "Request institutional demo",
+    "createAccount": "Create free parent account",
+    "representInstitution": "I represent a school or clinic",
+    "keepExploring": "Keep exploring demo"
   }
 }

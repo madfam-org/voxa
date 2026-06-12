@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/navigation';
 import type { BoardButton, BoardDisplayPreferences, PartOfSpeechTag, StarterTemplateId, TeamRole } from '@voxa/core';
 import {
   applyKeyboardActivation,
@@ -84,6 +85,7 @@ export interface BoardScreenProps {
 export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.ReactNode {
   const tc = useTranslations('common');
   const tcx = useTranslations('communicator');
+  const tn = useTranslations('nav');
   const remoteEditor = mode === 'remote-editor';
   const [role, setRole] = useState<TeamRole>(remoteEditor ? 'editor' : 'communicator');
   const [utterance, setUtterance] = useState<string[]>([]);
@@ -1212,15 +1214,15 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
           flexWrap: 'wrap',
         }}
       >
-        <a href="/legal/privacy" style={{ color: '#93c5fd' }}>
-          Privacy
-        </a>
-        <a href="/legal/terms" style={{ color: '#93c5fd' }}>
-          Terms
-        </a>
-        <a href="/legal/accessibility" style={{ color: '#93c5fd' }}>
-          Accessibility
-        </a>
+        <Link href="/legal/privacy" style={{ color: '#93c5fd' }}>
+          {tn('privacy')}
+        </Link>
+        <Link href="/legal/terms" style={{ color: '#93c5fd' }}>
+          {tn('terms')}
+        </Link>
+        <Link href="/legal/accessibility" style={{ color: '#93c5fd' }}>
+          {tn('accessibility')}
+        </Link>
       </footer>
     </div>
   );

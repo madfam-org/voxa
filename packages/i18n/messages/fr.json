@@ -297,5 +297,148 @@
     "pinPrompt": "Nouveau PIN éditeur (4–8 chiffres)",
     "pinSaved": "PIN éditeur enregistré.",
     "pinRemoveConfirm": "Supprimer le PIN éditeur ? Le mode éditeur s'ouvrira sans demande."
+  },
+  "legal": {
+    "shared": {
+      "back": "← Retour à Voxa",
+      "contents": "Sommaire",
+      "questions": "Questions :",
+      "lastUpdatedLabel": "Dernière mise à jour : {date}"
+    },
+    "privacy": {
+      "title": "Politique de confidentialité",
+      "lastUpdated": "7 juin 2026",
+      "intro": "Voxa est une plateforme de communication augmentative et alternative (CAA) exploitée par MADFAM. Cette politique décrit comment nous collectons, utilisons et protégeons les informations lorsque vous utilisez voxa.madfam.io et les services associés.",
+      "sections": [
+        {
+          "title": "Informations collectées",
+          "content": "Nous collectons les informations de compte Janua SSO (nom, e-mail, identifiant), les données de tableaux de communication que vous créez ou synchronisez, la télémétrie d'usage optionnelle si vous y consentez, et les journaux standard (adresse IP, agent utilisateur, horodatages) pour la sécurité et la fiabilité."
+        },
+        {
+          "title": "Utilisation des informations",
+          "content": "Nous utilisons vos données pour la synchronisation des tableaux CAA, la collaboration d'équipe, l'accessibilité et les prédictions IA optionnelles. Nous ne vendons pas les énoncés ni les données de tableaux à des tiers. Les fonctions IA n'envoient que le contexte minimal requis et uniquement avec votre consentement."
+        },
+        {
+          "title": "Enfants et tuteurs",
+          "content": "Voxa peut être utilisé par des mineurs sous la supervision d'un tuteur ou d'un clinicien. La création de compte et la facturation sont gérées par des adultes. Nous ne collectons pas sciemment de profils marketing sur les enfants. Les tuteurs peuvent demander l'accès, la correction ou la suppression des données d'un dépendant en nous contactant."
+        },
+        {
+          "title": "Stockage et conservation",
+          "content": "Les données de tableaux sont stockées dans PostgreSQL chiffré dans notre cloud. Vous pouvez exporter en Open Board Format (OBF). Nous conservons les données tant que votre compte est actif et pour une période limitée après fermeture, sauf obligation légale contraire."
+        },
+        {
+          "title": "Partage",
+          "content": "Nous partageons les données uniquement avec des fournisseurs d'infrastructure (hébergement, identité, paiement le cas échéant) sous contrat, ou lorsque la loi l'exige. Les dossiers cliniques appartiennent aux systèmes de votre prestataire de santé — Voxa est un outil de communication, pas un dossier médical électronique."
+        },
+        {
+          "title": "Vos choix",
+          "content": "Vous pouvez refuser la télémétrie IA dans Réglages. Vous pouvez exporter ou supprimer des tableaux selon votre rôle. Vous pouvez vous déconnecter à tout moment."
+        },
+        {
+          "title": "Sécurité",
+          "content": "Nous utilisons TLS en transit, des contrôles d'accès et les pratiques de sécurité MADFAM. Aucune méthode n'est 100 % sûre ; signalez les problèmes à security@madfam.io."
+        },
+        {
+          "title": "Modifications",
+          "content": "Nous publierons les mises à jour sur cette page avec une date révisée. Les changements importants peuvent être notifiés par e-mail ou dans le produit."
+        }
+      ]
+    },
+    "terms": {
+      "title": "Conditions d'utilisation",
+      "lastUpdated": "7 juin 2026",
+      "intro": "Ces conditions régissent votre utilisation de Voxa sur voxa.madfam.io et les services MADFAM associés. En utilisant Voxa, vous acceptez ces conditions.",
+      "sections": [
+        {
+          "title": "Description du service",
+          "content": "Voxa fournit des tableaux CAA synchronisés dans le cloud, l'édition d'équipe pour aidants et orthophonistes, des modes d'accessibilité et des fonctions IA optionnelles. Le service est fourni « selon disponibilité » pendant les phases d'aperçu et de disponibilité générale."
+        },
+        {
+          "title": "Comptes",
+          "content": "Vous vous connectez via Janua (auth.madfam.io). Vous êtes responsable de l'activité sous votre compte et de la confidentialité de votre session. Signalez rapidement tout accès non autorisé."
+        },
+        {
+          "title": "Usage acceptable",
+          "content": "N'utilisez pas Voxa pour harceler, téléverser du contenu illégal, contourner la sécurité ou perturber le service. N'utilisez pas symboles ou voix générés pour usurper une identité ou violer la loi."
+        },
+        {
+          "title": "Contenu et propriété",
+          "content": "Vous conservez la propriété des tableaux et médias que vous téléversez. Vous accordez à MADFAM une licence limitée pour héberger, synchroniser et afficher ce contenu uniquement pour exploiter le service. L'export OBF reste disponible pour éviter l'enfermement."
+        },
+        {
+          "title": "Avertissement clinique",
+          "content": "Voxa n'est pas un dispositif médical sauf indication et autorisation explicites. Il ne fournit ni diagnostic ni traitement. Les cliniciens restent responsables de l'évaluation et des décisions thérapeutiques."
+        },
+        {
+          "title": "Offres payantes",
+          "content": "Lorsque la facturation est activée via MADFAM (Dhanam), les conditions d'abonnement, remboursements et taxes seront présentés au paiement. Les niveaux gratuits peuvent avoir des limites d'usage."
+        },
+        {
+          "title": "Résiliation",
+          "content": "Vous pouvez cesser d'utiliser Voxa à tout moment. Nous pouvons suspendre l'accès en cas de violation ou pour protéger la plateforme. À la résiliation, exportez vos tableaux lorsque possible avant la fermeture du compte."
+        },
+        {
+          "title": "Limitation de responsabilité",
+          "content": "Dans la mesure permise par la loi, MADFAM n'est pas responsable des dommages indirects ou consécutifs. Notre responsabilité globale est limitée aux frais payés dans les douze mois précédant la réclamation, ou cinquante dollars US si aucun frais n'a été payé."
+        },
+        {
+          "title": "Droit applicable",
+          "content": "Ces conditions sont régies par les lois de l'État du Delaware, États-Unis, sans égard aux règles de conflit de lois, sauf protections obligatoires du consommateur dans votre juridiction."
+        }
+      ]
+    },
+    "accessibility": {
+      "title": "Déclaration d'accessibilité",
+      "lastUpdated": "7 juin 2026",
+      "intro": "Voxa vise WCAG 2.2 niveau AA et une accessibilité CAA au-delà des exigences web de base. Nous accueillons les retours des communicateurs, aidants et orthophonistes.",
+      "sections": [
+        {
+          "title": "Objectif de conformité",
+          "content": "Nous concevons pour WCAG 2.2 AA incluant la taille des cibles (2.5.8), les alternatives au pointeur (2.5.7), le contraste et l'opérabilité clavier. Les boutons CAA font par défaut au moins 1 cm × 1 cm avec échelle ajustable."
+        },
+        {
+          "title": "Fonctions CAA spécifiques",
+          "content": "Voxa inclut thèmes CVI, balayage par interrupteur, sélection par fixation oculaire, alternatives à un seul pointeur aux gestes de glissement, et verrouillages de plan moteur. Voir docs/accessibility.md dans notre dépôt."
+        },
+        {
+          "title": "Limites connues",
+          "content": "Les symboles tiers peuvent manquer de texte alternatif s'ils sont importés. Certaines prédictions IA nécessitent une connexion. Les apps mobiles rattrapent la parité d'accessibilité web."
+        },
+        {
+          "title": "Approche d'évaluation",
+          "content": "Nous combinons vérifications automatisées, revue orthophoniste avant publication, et tests matériels avec interrupteurs et eye-tracking lorsque disponible."
+        },
+        {
+          "title": "Retours",
+          "content": "Écrivez à accessibility@madfam.io avec la page ou fonction, la technologie d'assistance et les étapes pour reproduire les barrières. Réponse visée sous cinq jours ouvrables."
+        }
+      ]
+    }
+  },
+  "sync": {
+    "conflict": "Un autre éditeur a enregistré en premier — votre tableau a été actualisé. Vérifiez et enregistrez à nouveau.",
+    "offlineError": "Hors ligne — les modifications restent sur cet appareil jusqu'au retour de la connexion.",
+    "connecting": "Connexion à la synchronisation cloud…",
+    "queuedSuffix": "Modifications en file — synchronisation au retour en ligne.",
+    "obfWarnings": "Avertissements OBF : {warnings}",
+    "dismiss": "Ignorer",
+    "retry": "Réessayer la sync"
+  },
+  "pwa": {
+    "installApp": "Installer l'app",
+    "ariaLabel": "Installer Voxa",
+    "title": "Installer Voxa",
+    "body": "Ajoutez le communicateur à l'écran d'accueil pour un accès plein écran et hors ligne — sans store.",
+    "install": "Installer",
+    "notNow": "Pas maintenant"
+  },
+  "gate": {
+    "institutionEyebrow": "Écoles et cliniques",
+    "parentEyebrow": "Gratuit pour les parents",
+    "featureEyebrow": "Débloquer avec Voxa",
+    "requestDemo": "Demander une démo institutionnelle",
+    "createAccount": "Créer un compte parent gratuit",
+    "representInstitution": "Je représente une école ou une clinique",
+    "keepExploring": "Continuer la démo"
   }
 }
