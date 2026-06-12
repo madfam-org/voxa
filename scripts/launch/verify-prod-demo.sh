@@ -11,6 +11,21 @@ WEB_BASE="${VOXA_PROD_WEB_URL:-https://voxa.madfam.io}"
 ATTEMPTS="${VOXA_DEMO_VERIFY_ATTEMPTS:-18}"
 SLEEP_SEC="${VOXA_DEMO_VERIFY_SLEEP_SEC:-20}"
 
+# Scene UI strings across es (default), en, and fr demo bundles.
+DEMO_SCENE_MARKERS='Try Voxa|Core vocabulary|Prueba Voxa|Vocabulario|Essayez Voxa|Vocabulaire de base'
+
+demo_has_scene_ui() {
+  grep -qE "${DEMO_SCENE_MARKERS}" <<<"$1"
+}
+
+demo_has_arasaac() {
+  grep -q 'static\.arasaac' <<<"$1"
+}
+
+extract_demo_chunk() {
+  grep -oE 'app/(%5Blocale%5D|\[locale\]|demo)/demo/page-[a-f0-9]+\.js|app/demo/page-[a-f0-9]+\.js' <<<"$1" | head -1 || true
+}
+
 check_demo_bundle() {
   local html chunk body
   html="$(curl -sf "${WEB_BASE}/demo" 2>/dev/null || true)"
@@ -19,13 +34,13 @@ check_demo_bundle() {
     return 1
   fi
 
-  chunk="$(grep -oE 'app/demo/page-[a-f0-9]+\.js' <<<"${html}" | head -1 || true)"
+  chunk="$(extract_demo_chunk "${html}")"
   if [ -z "${chunk}" ]; then
     echo "No demo page chunk reference in HTML" >&2
     return 1
   fi
 
-  if grep -q 'static\.arasaac' <<<"${html}" && grep -qE 'Try Voxa|Core vocabulary' <<<"${html}"; then
+  if demo_has_arasaac "${html}" && demo_has_scene_ui "${html}"; then
     echo "OK   demo page HTML includes ARASAAC pictograms and new scene UI"
     return 0
   fi
@@ -36,9 +51,16 @@ check_demo_bundle() {
     return 1
   fi
 
-  if grep -q 'static\.arasaac' <<<"${body}" && grep -qE 'Try Voxa|Core vocabulary' <<<"${body}"; then
+  if demo_has_arasaac "${body}" && demo_has_scene_ui "${body}"; then
     echo "OK   demo bundle ${chunk} includes ARASAAC pictograms and new scene UI"
     return 0
+  fi
+
+  if demo_has_arasaac "${html}" || demo_has_arasaac "${body}"; then
+    if demo_has_scene_ui "${html}" || demo_has_scene_ui "${body}"; then
+      echo "OK   demo bundle ${chunk} includes ARASAAC pictograms and scene UI (split HTML/chunk)"
+      return 0
+    fi
   fi
 
   if grep -q 'Visitor demo' <<<"${body}"; then
