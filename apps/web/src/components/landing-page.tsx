@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { SiteFooter, SiteNav } from '@/components/site-chrome';
 import { PwaInstallBanner } from '@/components/pwa-install-banner';
+import { formatMxn, PRICING, clinicListMonthly } from '@/lib/pricing';
 
 const section: React.CSSProperties = {
   maxWidth: 1100,
@@ -22,6 +23,9 @@ const FEATURE_KEYS = ['motor', 'cvi', 'ai', 'obf', 'offline', 'janua'] as const;
 
 export function LandingPage(): React.ReactNode {
   const t = useTranslations('landing');
+  const familyMonthly = formatMxn(PRICING.family.monthly);
+  const familyAnnual = formatMxn(PRICING.family.annual);
+  const clinicFrom = formatMxn(clinicListMonthly());
 
   return (
     <div style={{ minHeight: '100dvh', background: '#0a0a0a', color: '#fafafa' }}>
@@ -149,6 +153,10 @@ export function LandingPage(): React.ReactNode {
                 {t('parentsLabel')}
               </p>
               <h3 style={{ margin: '0 0 8px', fontSize: '1.5rem' }}>{t('free')}</h3>
+              <p style={{ margin: '0 0 4px', fontSize: '2rem', fontWeight: 800, letterSpacing: '-0.02em' }}>
+                {t('priceFree')}
+              </p>
+              <p style={{ margin: '0 0 16px', color: '#737373', fontSize: '0.8125rem' }}>{t('priceIvaNote')}</p>
               <p style={{ margin: '0 0 16px', color: '#a3a3a3', fontSize: '0.9375rem' }}>
                 {t('parentsBody')}
               </p>
@@ -167,15 +175,22 @@ export function LandingPage(): React.ReactNode {
                 {t('familyLabel')}
               </p>
               <h3 style={{ margin: '0 0 8px', fontSize: '1.5rem' }}>{t('family')}</h3>
-              <p style={{ margin: '0 0 16px', color: '#a3a3a3', fontSize: '0.9375rem' }}>
-                {t('familyBody')}
+              <p style={{ margin: '0 0 4px', fontSize: '2rem', fontWeight: 800, letterSpacing: '-0.02em' }}>
+                {familyMonthly}
+                <span style={{ fontSize: '1rem', fontWeight: 600, color: '#a3a3a3' }}>{t('pricePerMonth')}</span>
               </p>
+              <p style={{ margin: '0 0 16px', color: '#737373', fontSize: '0.8125rem' }}>
+                {t('priceAnnualOption', { annual: familyAnnual })}
+                {' · '}
+                {t('priceIvaNote')}
+              </p>
+              <p style={{ margin: '0 0 16px', color: '#a3a3a3', fontSize: '0.9375rem' }}>{t('familyBody')}</p>
               <ul style={{ margin: '0 0 20px', paddingLeft: 18, color: '#d4d4d4', lineHeight: 1.7, fontSize: '0.9375rem' }}>
                 <li>{t('familyLi1')}</li>
                 <li>{t('familyLi2')}</li>
                 <li>{t('familyLi3')}</li>
               </ul>
-              <Link href="/auth/signin?redirect_to=%2Fapp" style={secondaryCta}>
+              <Link href="/auth/signin?redirect_to=%2Fapp%3Fupgrade%3Dfamily" style={secondaryCta}>
                 {t('signInUpgrade')}
               </Link>
             </div>
@@ -184,9 +199,16 @@ export function LandingPage(): React.ReactNode {
                 {t('instLabel')}
               </p>
               <h3 style={{ margin: '0 0 8px', fontSize: '1.5rem' }}>{t('institutional')}</h3>
-              <p style={{ margin: '0 0 16px', color: '#a3a3a3', fontSize: '0.9375rem' }}>
-                {t('instBody')}
+              <p style={{ margin: '0 0 4px', fontSize: '1.625rem', fontWeight: 800, letterSpacing: '-0.02em', color: '#fde68a' }}>
+                {t('priceFrom')} {clinicFrom}
+                <span style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#a3a3a3' }}>{t('pricePerMonth')}</span>
               </p>
+              <p style={{ margin: '0 0 16px', color: '#737373', fontSize: '0.8125rem' }}>
+                {t('priceClinicDetail')}
+                {' · '}
+                {t('priceIvaNote')}
+              </p>
+              <p style={{ margin: '0 0 16px', color: '#a3a3a3', fontSize: '0.9375rem' }}>{t('instBody')}</p>
               <ul style={{ margin: '0 0 20px', paddingLeft: 18, color: '#d4d4d4', lineHeight: 1.7, fontSize: '0.9375rem' }}>
                 <li>{t('instLi1')}</li>
                 <li>{t('instLi2')}</li>

@@ -1,0 +1,11 @@
+vendor,competitor_slug,sku,tier,unit,price_usd,price_mxn,annual_discount_pct,source_url,captured_at,normalization_notes
+AssistiveWare,assistiveware__proloquo,proloquo,monthly,flat_monthly,9.99,170,17,https://apps.apple.com/us/app/proloquo/id1521978238,2026-06-12,App Store USD; includes Proloquo Coach; team share at no extra cost
+AssistiveWare,assistiveware__proloquo,proloquo,yearly,flat_annual,99.99,1700,17,https://www.assistiveware.com/products/proloquo,2026-06-12,Amortized ~8.33 USD/mo; use flat_monthly row for Tulana median
+Tobii Dynavox,tobii__td_snap,td_snap,speaking_upgrade,flat_monthly,9.99,170,0,https://apps.apple.com/us/app/td-snap/id1072799231,2026-06-12,Minimum paid tier for speech output; editing/sync free
+Tobii Dynavox,tobii__td_snap,td_snap,speaking_plus_podd,flat_monthly,14.98,255,0,https://apps.apple.com/us/app/td-snap/id1072799231,2026-06-12,Speaking 9.99 + PODD 4.99; clinical bundle proxy
+AssistiveWare,assistiveware__proloquo2go,proloquo2go,ios_one_time,one_time,249.99,4250,0,https://www.assistiveware.com/products/proloquo2go,2026-06-12,Amortize 60mo → 4.17 USD/mo ≈ 71 MXN; adjacent not primary sub comp
+PRC-Saltillo,prc__touchchat,touchchat_hd,ios_one_time,one_time,249.99,4250,0,https://www.prc-saltillo.com/,2026-06-12,One-time; amortize 60mo for sensitivity only
+Avaz,avaz__aac,avaz,premium,flat_monthly,14.99,255,0,https://www.avazapp.com/,2026-06-12,Indicative international premium; verify regional App Store
+Attainment,attainment__gotalk,gotalk_now,plus,flat_monthly,5.00,85,0,https://www.attainmentcompany.com/,2026-06-12,Tier B adjacent; freemium plus estimate
+Cboard,cboard__hosted,cboard,free,flat_monthly,0,0,0,https://www.cboard.io/,2026-06-12,Open-source anchor; price pressure not revenue comp
+Flexspeak,flexspeak__app,flexspeak,subscription,flat_monthly,12.99,221,0,https://flexspeak.com/,2026-06-12,Indicative; verify VPP/edu pricing

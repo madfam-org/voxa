@@ -306,6 +306,7 @@ quadrantChart
 
 ## Related internal docs
 
+- [PRICING_STRATEGY.md](./PRICING_STRATEGY.md) — Tulana-anchored tiers, competitor normalization, Dhanam handoff
 - [FEATURE_PARITY.md](./FEATURE_PARITY.md) — GA parity checklist vs this benchmark
 - [PARITY_REMEDIATION_PLAN.md](./PARITY_REMEDIATION_PLAN.md) — remediation waves, epics, M6 gates
 - [GA_ROADMAP.md](./GA_ROADMAP.md) — phased delivery including parity phase

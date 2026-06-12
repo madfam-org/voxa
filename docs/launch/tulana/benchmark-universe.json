@@ -1,0 +1,151 @@
+{
+  "dry_run": false,
+  "replace_competitors": false,
+  "universes": [
+    {
+      "sku_slug": "voxa__family",
+      "scope": "direct_market",
+      "benchmark_segment": "other",
+      "comparable_unit": "flat_monthly",
+      "required_direct_competitor_count": 4,
+      "required_adjacent_competitor_count": 2,
+      "observation_freshness_days": 45,
+      "notes": "Family cloud AAC: web sync, multi-board, team editors. Compare to subscription-native AAC (Proloquo, TD Snap speaking tier). One-time iOS purchases are adjacent only. See voxa/docs/launch/AAC_PLATFORM_BENCHMARK.md and tulana/competitor-prices-seed.csv.",
+      "competitors": [
+        {
+          "competitor_slug": "assistiveware__proloquo",
+          "relevance": "direct",
+          "required": true,
+          "pricing_url": "https://www.assistiveware.com/products/proloquo",
+          "legal_status": "needs_review",
+          "capture_cadence": "monthly",
+          "confidence_score": 85,
+          "normalization_notes": "App Store monthly 9.99 USD; includes Coach and team sharing",
+          "notes": "Primary subscription comparator 2026"
+        },
+        {
+          "competitor_slug": "tobii__td_snap",
+          "relevance": "direct",
+          "required": true,
+          "pricing_url": "https://apps.apple.com/us/app/td-snap/id1072799231",
+          "legal_status": "needs_review",
+          "capture_cadence": "monthly",
+          "confidence_score": 85,
+          "normalization_notes": "Speaking upgrade 9.99 USD/mo; optional page-set add-ons 4.99 each",
+          "notes": "Modular subscription model since 2024"
+        },
+        {
+          "competitor_slug": "avaz__aac",
+          "relevance": "direct",
+          "required": true,
+          "pricing_url": "https://www.avazapp.com/",
+          "legal_status": "needs_review",
+          "capture_cadence": "monthly",
+          "confidence_score": 70,
+          "normalization_notes": "Cross-platform iOS/Android; premium tier ~15 USD/mo indicative",
+          "notes": "Strong in India/LATAM clinics"
+        },
+        {
+          "competitor_slug": "flexspeak__app",
+          "relevance": "direct",
+          "required": false,
+          "pricing_url": "https://flexspeak.com/",
+          "legal_status": "needs_review",
+          "capture_cadence": "monthly",
+          "confidence_score": 65,
+          "normalization_notes": "AI-assisted multilingual AAC subscription",
+          "notes": "Modern AI-adjacent comp"
+        },
+        {
+          "competitor_slug": "assistiveware__proloquo2go",
+          "relevance": "adjacent",
+          "required": false,
+          "pricing_url": "https://www.assistiveware.com/products/proloquo2go",
+          "legal_status": "needs_review",
+          "capture_cadence": "quarterly",
+          "confidence_score": 60,
+          "normalization_notes": "One-time ~250 USD; amortize 60 months for monthly sensitivity",
+          "notes": "Legacy SLP default; not subscription-native"
+        },
+        {
+          "competitor_slug": "cboard__hosted",
+          "relevance": "adjacent",
+          "required": false,
+          "pricing_url": "https://www.cboard.io/",
+          "legal_status": "allowed",
+          "capture_cadence": "quarterly",
+          "confidence_score": 90,
+          "normalization_notes": "Free hosted OSS; sets price floor at 0 for open alternatives",
+          "notes": "Voxa free tier competes here on openness"
+        }
+      ]
+    },
+    {
+      "sku_slug": "voxa__clinic",
+      "scope": "direct_market",
+      "benchmark_segment": "other",
+      "comparable_unit": "per_seat",
+      "required_direct_competitor_count": 3,
+      "required_adjacent_competitor_count": 2,
+      "observation_freshness_days": 45,
+      "notes": "Institutional AAC: unlimited boards, full AI, usage reports, SSO. Compare per-seat or site-license enterprise AAC (TD Snap Enterprise, Grid, Tobii care team).",
+      "competitors": [
+        {
+          "competitor_slug": "tobii__td_snap_enterprise",
+          "relevance": "direct",
+          "required": true,
+          "pricing_url": "https://www.tobiidynavox.com/products/td-snap",
+          "legal_status": "needs_review",
+          "capture_cadence": "quarterly",
+          "confidence_score": 60,
+          "normalization_notes": "Apple School Manager / enterprise form; quote-based per seat",
+          "notes": "Sales-led; capture list price when disclosed"
+        },
+        {
+          "competitor_slug": "smartbox__grid",
+          "relevance": "direct",
+          "required": true,
+          "pricing_url": "https://thinksmartbox.com/products/grid/",
+          "legal_status": "needs_review",
+          "capture_cadence": "quarterly",
+          "confidence_score": 55,
+          "normalization_notes": "Grid 3 license + device bundles; normalize to per-seat monthly",
+          "notes": "UK/EU + US clinics"
+        },
+        {
+          "competitor_slug": "avaz__aac",
+          "relevance": "direct",
+          "required": true,
+          "pricing_url": "https://www.avazapp.com/",
+          "legal_status": "needs_review",
+          "capture_cadence": "monthly",
+          "confidence_score": 70,
+          "normalization_notes": "School/clinic site licenses vary by region",
+          "notes": "Institutional tier proxy"
+        },
+        {
+          "competitor_slug": "assistiveware__proloquo",
+          "relevance": "adjacent",
+          "required": false,
+          "pricing_url": "https://www.assistiveware.com/products/proloquo",
+          "legal_status": "needs_review",
+          "capture_cadence": "monthly",
+          "confidence_score": 75,
+          "normalization_notes": "Consumer sub used as per-user floor when no enterprise quote",
+          "notes": "Low-end institutional fallback"
+        },
+        {
+          "competitor_slug": "prc__touchchat",
+          "relevance": "adjacent",
+          "required": false,
+          "pricing_url": "https://www.prc-saltillo.com/",
+          "legal_status": "needs_review",
+          "capture_cadence": "quarterly",
+          "confidence_score": 55,
+          "normalization_notes": "Device + app bundles; amortize one-time over device life",
+          "notes": "Hardware-centric adjacent"
+        }
+      ]
+    }
+  ]
+}

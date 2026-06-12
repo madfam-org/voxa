@@ -1,0 +1,59 @@
+# Proposal: add Voxa to dhanam/catalog.yaml
+# Status: draft — not applied to Dhanam repo
+# Last updated: 2026-06-12
+# Aligns with apps/api/src/lib/dhanam.ts tiers and docs/launch/PRICING_STRATEGY.md
+
+voxa:
+  name: "Voxa"
+  description: "Cross-platform AAC — OBF, cloud sync, consent-gated AI, WCAG-native web"
+  category: platform
+  website: "https://voxa.madfam.io"
+  sort_order: 25
+  tiers:
+    free:
+      dhanam_tier: essentials
+      display_name: "Parent"
+      prices: {}
+      metadata:
+        boards: 1
+        team_seats: 1
+      features:
+        - "1 communication board"
+        - "Cloud sync"
+        - "OBF import/export"
+        - "Basic AI (consent-gated)"
+    family:
+      dhanam_tier: pro
+      display_name: "Family"
+      prices:
+        USD: { monthly: 1176, annual: 11176 }
+        MXN: { monthly: 19900, annual: 189900 }
+      metadata:
+        boards: 10
+        team_seats: 3
+      features:
+        - "Up to 10 boards"
+        - "3 team editors"
+        - "Cloud sync + OBF"
+        - "Basic AI"
+    clinic:
+      dhanam_tier: premium
+      display_name: "Institutional"
+      prices:
+        USD: { monthly: 8999 }
+        MXN: { monthly: 149900 }
+      metadata:
+        boards: unlimited
+        team_seats: unlimited
+        per_seat_mxn: 34900
+        min_seats: 3
+      features:
+        - "Unlimited boards"
+        - "Unlimited team editors"
+        - "Full AI + usage reports"
+        - "SSO via Janua"
+        - "CFDI invoicing"
+        - "Priority onboarding"
+  credit_costs:
+    ai_completion: 1
+    symbol_generation: 2
