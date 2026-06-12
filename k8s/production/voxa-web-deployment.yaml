@@ -13,13 +13,18 @@ metadata:
     reloader.stakater.com/match: "true"
 spec:
   replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
   selector:
     matchLabels:
       app: voxa-web
   template:
     metadata:
       annotations:
-        kubectl.kubernetes.io/restartedAt: "2026-06-12T20:22:46Z"
+        kubectl.kubernetes.io/restartedAt: "2026-06-12T20:32:00Z"
         reloader.stakater.com/match: "true"
         secret.reloader.stakater.com/reload: "voxa-secrets"
       labels:
