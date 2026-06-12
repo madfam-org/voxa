@@ -12,7 +12,7 @@ import {
   listScheduleSteps,
   scheduleProgress,
 } from '@voxa/core';
-import { touchGuardActive } from '@voxa/access';
+import { touchGuardActive, activatesOnPress, activatesOnRelease } from '@voxa/access';
 import { fitzgeraldColor, createButtonAtCell, moveButtonToCell, resizeBoardGrid, type PartOfSpeech } from '@voxa/vocabulary';
 import { AacButton, BoardGrid, CVI_THEMES, themeStyles } from '@voxa/ui';
 import {
@@ -612,13 +612,13 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
       setEditingId(btn.id as string);
       return;
     }
-    if (settings.accessMode === 'touch' && settings.touchActivation === 'press') {
+    if (settings.accessMode === 'touch' && activatesOnPress(settings.touchActivation)) {
       activate(btn);
     }
   };
 
   const touchReleaseHandlers = (btn: BoardButton) => {
-    if (isEditor || settings.accessMode !== 'touch' || settings.touchActivation !== 'release') {
+    if (isEditor || settings.accessMode !== 'touch' || !activatesOnRelease(settings.touchActivation)) {
       return {};
     }
     const id = btn.id as string;

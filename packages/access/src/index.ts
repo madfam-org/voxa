@@ -146,3 +146,9 @@ export {
   type TouchGuardMask,
   type TouchGuardSettings,
 } from './touch-guard.js';
+export {
+  activatesOnPress,
+  activatesOnRelease,
+  DEFAULT_TOUCH_ACTIVATION,
+  type TouchActivationMode,
+} from './touch-activation.js';

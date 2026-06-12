@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Alert,
   Pressable,
@@ -19,7 +19,7 @@ import {
 } from '@voxa/core';
 import { fitzgeraldColor, resolvePartOfSpeech } from '@voxa/vocabulary';
 import type { ScanOrder, SwitchGroupStrategy } from '@voxa/access';
-import { touchGuardActive } from '@voxa/access';
+import { activatesOnPress, activatesOnRelease, touchGuardActive } from '@voxa/access';
 import { buttonLabel, buttonSpeech } from '@/lib/board-utils';
 import { speakButton, speakText } from '@/lib/play-button-speech';
 import { useMobileAuth } from '@/hooks/use-mobile-auth';
@@ -48,7 +48,9 @@ export function MobileBoardScreen() {
     auditoryScanBeep: true,
     touchGuardEnabled: false,
     touchGuardMask: 'both',
+    touchActivation: 'press',
   });
+  const pendingTouchRef = useRef<string | null>(null);
   const { accessToken, userId, isAuthenticated, configured, signIn, signOut, loading: authLoading } =
     useMobileAuth();
   const {
@@ -198,33 +200,69 @@ export function MobileBoardScreen() {
     settings.switchOrder,
   ]);
 
-  const configureTouchGuard = useCallback(() => {
+  const configureTouchAccess = useCallback(() => {
     Alert.alert(
-      'Touch guard',
-      settings.touchGuardEnabled
-        ? `Mask: ${settings.touchGuardMask}`
-        : 'Block accidental touches between targets',
+      'Touch access',
+      `${activatesOnRelease(settings.touchActivation) ? 'Release' : 'Press'} activation · ${
+        settings.touchGuardEnabled ? `guard: ${settings.touchGuardMask}` : 'guard off'
+      }`,
       [
+        {
+          text: 'Activation: press',
+          onPress: () => patchSettings({ touchActivation: 'press' }),
+        },
+        {
+          text: 'Activation: release',
+          onPress: () => patchSettings({ touchActivation: 'release' }),
+        },
         {
           text: settings.touchGuardEnabled ? 'Disable guard' : 'Enable guard',
           onPress: () => patchSettings({ touchGuardEnabled: !settings.touchGuardEnabled }),
         },
         {
-          text: 'Mask: gutters + edge',
+          text: 'Guard: gutters + edge',
           onPress: () => patchSettings({ touchGuardEnabled: true, touchGuardMask: 'both' }),
         },
         {
-          text: 'Mask: between cells',
+          text: 'Guard: between cells',
           onPress: () => patchSettings({ touchGuardEnabled: true, touchGuardMask: 'gutter' }),
         },
         {
-          text: 'Mask: board edge',
+          text: 'Guard: board edge',
           onPress: () => patchSettings({ touchGuardEnabled: true, touchGuardMask: 'perimeter' }),
         },
         { text: 'Cancel', style: 'cancel' },
       ],
     );
-  }, [patchSettings, settings.touchGuardEnabled, settings.touchGuardMask]);
+  }, [
+    patchSettings,
+    settings.touchActivation,
+    settings.touchGuardEnabled,
+    settings.touchGuardMask,
+  ]);
+
+  const handleButtonPress = useCallback(
+    (btn: BoardButton) => {
+      if (switchScanEnabled) {
+        if (isHighlighted(btn)) activate(btn);
+        else if (isGroupHighlighted(btn)) select();
+        return;
+      }
+      if (settings.accessMode === 'touch' && !activatesOnPress(settings.touchActivation)) {
+        return;
+      }
+      activate(btn);
+    },
+    [
+      activate,
+      isGroupHighlighted,
+      isHighlighted,
+      select,
+      settings.accessMode,
+      settings.touchActivation,
+      switchScanEnabled,
+    ],
+  );
 
   const renderBoardButton = (btn: BoardButton) => {
     const borderColor = fitzgeraldColor(resolvePartOfSpeech(btn));
@@ -246,14 +284,27 @@ export function MobileBoardScreen() {
               : buttonLabel(btn)
         }
         accessibilityState={{ selected: highlighted || groupHighlighted }}
-        onPress={() => {
-          if (switchScanEnabled) {
-            if (highlighted) activate(btn);
-            else if (groupHighlighted) select();
-            return;
+        onPressIn={() => {
+          if (
+            !switchScanEnabled &&
+            settings.accessMode === 'touch' &&
+            activatesOnRelease(settings.touchActivation)
+          ) {
+            pendingTouchRef.current = btn.id as string;
           }
-          activate(btn);
         }}
+        onPressOut={() => {
+          if (
+            !switchScanEnabled &&
+            settings.accessMode === 'touch' &&
+            activatesOnRelease(settings.touchActivation) &&
+            pendingTouchRef.current === (btn.id as string)
+          ) {
+            handleButtonPress(btn);
+          }
+          pendingTouchRef.current = null;
+        }}
+        onPress={() => handleButtonPress(btn)}
         style={[
           scheduleMode ? styles.scheduleStep : styles.cell,
           {
@@ -330,9 +381,13 @@ export function MobileBoardScreen() {
           </Text>
         </Pressable>
         {!switchScanEnabled ? (
-          <Pressable style={styles.headerBtnSecondary} onPress={configureTouchGuard}>
+          <Pressable style={styles.headerBtnSecondary} onPress={configureTouchAccess}>
             <Text style={styles.headerBtnText}>
-              {touchGuardOn ? 'Guard on' : 'Guard off'}
+              {activatesOnRelease(settings.touchActivation)
+                ? 'Release'
+                : touchGuardOn
+                  ? 'Guard on'
+                  : 'Touch'}
             </Text>
           </Pressable>
         ) : null}

@@ -1,6 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { ScanOrder, SwitchGroupStrategy, TouchGuardMask } from '@voxa/access';
-import { touchGuardActive } from '@voxa/access';
+import type { ScanOrder, SwitchGroupStrategy, TouchActivationMode, TouchGuardMask } from '@voxa/access';
 
 const SETTINGS_KEY = 'voxa-mobile-communicator-settings';
 
@@ -14,6 +13,7 @@ export interface MobileCommunicatorSettings {
   auditoryScanBeep: boolean;
   touchGuardEnabled: boolean;
   touchGuardMask: TouchGuardMask;
+  touchActivation: TouchActivationMode;
 }
 
 const DEFAULTS: MobileCommunicatorSettings = {
@@ -26,6 +26,7 @@ const DEFAULTS: MobileCommunicatorSettings = {
   auditoryScanBeep: true,
   touchGuardEnabled: false,
   touchGuardMask: 'both',
+  touchActivation: 'press',
 };
 
 export function parseMobileSettings(raw: string | null): MobileCommunicatorSettings {

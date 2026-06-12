@@ -1,4 +1,4 @@
-import type { AccessProfile, ScanOrder, SwitchGroupStrategy, TouchGuardMask } from '@voxa/access';
+import type { AccessProfile, ScanOrder, SwitchGroupStrategy, TouchActivationMode, TouchGuardMask } from '@voxa/access';
 import type { BoardDisplayPreferences } from '@voxa/core';
 import type { CviTheme } from '@voxa/ui';
 
@@ -15,7 +15,7 @@ export interface CommunicatorSettings {
   auditoryScanVoice: boolean;
   auditoryScanBeep: boolean;
   pauseScanWhileSpeaking: boolean;
-  touchActivation: 'press' | 'release';
+  touchActivation: TouchActivationMode;
   touchGuardEnabled: boolean;
   touchGuardMask: TouchGuardMask;
   whisperMode: boolean;

@@ -31,7 +31,7 @@ Actionable **feature parity match** against the AAC platform benchmark. Each row
 | ARIA grid structure | WCAG / access | ✅ | BoardGrid row/cell (2026-06-08) |
 | CVI themes | OpenAAC ⭐ / TD Snap HC | ✅ | cvi-dark, cvi-high-contrast |
 | Switch scanning (configurable) | OpenAAC ⭐ | 🟡 | Web voice cue + USB keys; mobile scan + SR/TTS cues (2026-06-09) |
-| Eye dwell (configurable) | OpenAAC ⭐ | 🟡 | Pointer sim; touch-release option; not Tobii SDK (2026-06-09) |
+| Eye dwell (configurable) | OpenAAC ⭐ | 🟡 | Pointer sim; touch-release on web + mobile (2026-06-09) |
 | Message bar + speak utterance | OpenAAC 🟢 | ✅ | Web Speech API |
 | OBF export | OpenAAC / Cboard | ✅ | API + editor UI |
 | OBZ export (images embedded) | OpenAAC / Cboard | 🟡 | API + editor UI + OBZ round-trip e2e (2026-06-09) |
@@ -140,9 +140,9 @@ Mapped from [OpenAAC considerations](https://www.openaac.org/considerations). �
 | OpenAAC feature | Priority | Voxa status |
 |-----------------|----------|-------------|
 | 🟢 Grid layout | — | ✅ |
-| 🟢 Links to other boards | — | 🔴 |
-| 🟢 Custom speech text vs label | — | 🟡 `speechText` field |
-| ✅ Hide/show buttons | P1 | 🔴 |
+| 🟢 Links to other boards | — | 🟡 |
+| 🟢 Custom speech text vs label | — | 🟡 |
+| ✅ Hide/show buttons | P1 | 🟡 |
 | ✅ Custom grid size | P1 | 🟡 |
 | ✅ Upload sounds | P1 | 🔴 |
 | ⭐ Row/column scanning | P1 | 🟡 |

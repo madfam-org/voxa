@@ -202,7 +202,7 @@ Each epic links to [FEATURE_PARITY.md](./FEATURE_PARITY.md) rows and benchmark d
 | F3 | Group / region scan | Scan by row groups, regions | Extend `SwitchScanConfig` |
 | F4 | Tobii / IrisBond gaze | SDK integration (Windows/iOS first) | Adapter service; dwell from gaze coords |
 | F5 | Keyguard / touch guard | Screen regions masked | `@voxa/access` touch guard + overlay in web/mobile (2026-06-09) |
-| F6 | Touch-release vs touch-start | Setting for motor profile | `@voxa/access` |
+| F6 | Touch-release vs touch-start | Setting for motor profile | `TouchActivationMode` in `@voxa/access`; web + mobile settings (2026-06-09) |
 
 **Acceptance (W4):**
 
