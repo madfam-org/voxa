@@ -1,0 +1,28 @@
+# Temporary cosign bypass until ghcr.io/madfam-org/voxa/* packages are public.
+apiVersion: kyverno.io/v2beta1
+kind: PolicyException
+metadata:
+  name: voxa-signature-temporary
+  namespace: voxa-staging
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+    enclii.dev/reason: "Voxa GHCR packages are private; Kyverno verify-image-signatures cannot pull manifests."
+    enclii.dev/scope: "Voxa staging deployments until GHCR visibility is public."
+spec:
+  exceptions:
+    - policyName: verify-image-signatures
+      ruleNames:
+        - check-signature
+        - autogen-check-signature
+  match:
+    any:
+      - resources:
+          kinds:
+            - Deployment
+            - Pod
+            - ReplicaSet
+          namespaces:
+            - voxa-staging
+          names:
+            - voxa-api*
+            - voxa-web*
