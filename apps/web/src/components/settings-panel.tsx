@@ -260,6 +260,27 @@ export function SettingsPanel({
         </>
       )}
 
+      <Field label="Symbol diversity (default skin tone)">
+        <select
+          value={settings.defaultSymbolSkinTone}
+          onChange={(e) =>
+            onChange({
+              defaultSymbolSkinTone: e.target.value as CommunicatorSettings['defaultSymbolSkinTone'],
+            })
+          }
+          style={fieldStyle}
+        >
+          <option value="white">Light</option>
+          <option value="asian">East Asian</option>
+          <option value="mulatto">Medium</option>
+          <option value="aztec">Tan</option>
+          <option value="black">Deep</option>
+        </select>
+        <p style={hintStyle}>
+          Default for new person symbols in the editor. Per-button overrides remain available.
+        </p>
+      </Field>
+
       <Field label="Whisper mode (build without speaking)">
         <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <input

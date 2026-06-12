@@ -14,11 +14,14 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "node --import tsx --test src/index.test.ts",
+    "test": "node --import tsx --test src/index.test.ts src/arasaac-traits.test.ts",
     "clean": "rm -rf dist"
   },
   "devDependencies": {
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "@voxa/core": "workspace:*"
   }
 }

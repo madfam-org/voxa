@@ -30,6 +30,7 @@ import {
   useTouchChatFileInput,
 } from '@/lib/board-utils';
 import { effectiveDisplaySettings } from '@/lib/communicator-settings';
+import type { CommunicatorSettings } from '@/lib/communicator-settings';
 import { useCommunicatorSettings } from '@/hooks/use-communicator-settings';
 import { useEyeDwellByButton } from '@/hooks/use-eye-dwell';
 import { useGazeBridgeDwell } from '@/hooks/use-gaze-bridge-dwell';
@@ -166,6 +167,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
     !isEditor &&
     settings.accessMode === 'touch' &&
     touchGuardActive({ enabled: settings.touchGuardEnabled, mask: settings.touchGuardMask });
+  const symbolDefaults = { skinTone: settings.defaultSymbolSkinTone };
   const literacyDisplay = literacyMode
     ? { hideSymbols: true, hideLabels: displaySettings.hideLabels }
     : displaySettings;
@@ -648,7 +650,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
       <AacButton
         label={buttonLabel(btn)}
         data-voxa-button-id={btn.id as string}
-        symbolUrl={buttonSymbolUrl(btn)}
+        symbolUrl={buttonSymbolUrl(btn, symbolDefaults)}
         borderColor={buttonBorderColor(btn)}
         targetScale={settings.targetScale}
         hideSymbol={literacyDisplay.hideSymbols}
@@ -1067,7 +1069,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
                     <AacButton
                       label={buttonLabel(btn)}
                       data-voxa-button-id={btn.id as string}
-                      symbolUrl={buttonSymbolUrl(btn)}
+                      symbolUrl={buttonSymbolUrl(btn, symbolDefaults)}
                       borderColor={buttonBorderColor(btn)}
                       targetScale={settings.targetScale}
                       hideSymbol={displaySettings.hideSymbols}
@@ -1183,6 +1185,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
             boardCatalog={boardCatalog}
             accessToken={accessToken}
             recordedBy={sessionUserId}
+            defaultSymbolSkinTone={settings.defaultSymbolSkinTone}
             onClose={() => setEditingId(null)}
             onChange={(patch) => updateButton(editingId, patch)}
           />
@@ -1220,6 +1223,7 @@ function EditorPanel({
   boardCatalog,
   accessToken,
   recordedBy,
+  defaultSymbolSkinTone,
   onClose,
   onChange,
 }: {
@@ -1228,6 +1232,7 @@ function EditorPanel({
   boardCatalog: BoardSummary[];
   accessToken?: string;
   recordedBy: string;
+  defaultSymbolSkinTone: CommunicatorSettings['defaultSymbolSkinTone'];
   onClose: () => void;
   onChange: (patch: Partial<BoardButton>) => void;
 }) {
@@ -1251,10 +1256,16 @@ function EditorPanel({
       <SymbolSearchPanel
         boardId={boardId}
         accessToken={accessToken}
-        currentUrl={button.symbolUrl}
+        currentUrl={buttonSymbolUrl(button, { skinTone: defaultSymbolSkinTone })}
+        defaultSkinTone={defaultSymbolSkinTone}
         disabled={fieldsLocked}
-        onSelect={(imageUrl) => onChange({ symbolUrl: imageUrl })}
-        onClear={() => onChange({ symbolUrl: undefined })}
+        onSelect={(selection) =>
+          onChange({
+            symbolUrl: selection.imageUrl,
+            symbolRef: selection.symbolRef,
+          })
+        }
+        onClear={() => onChange({ symbolUrl: undefined, symbolRef: undefined })}
       />
 
       <RecordedMediaPanel

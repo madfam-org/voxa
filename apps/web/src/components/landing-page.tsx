@@ -53,8 +53,8 @@ export function LandingPage(): React.ReactNode {
           <p style={{ margin: '0 0 28px', color: '#a3a3a3', fontSize: '1.125rem', lineHeight: 1.65, maxWidth: 540 }}>
             AAC apps turn taps, switches, or gaze into spoken language — at home, in therapy, and in
             class. <strong style={{ color: '#e5e5e5' }}>Voxa</strong> is a modern communication board
-            with motor planning, CVI-friendly themes, AI-assisted predictions, and secure cloud sync —
-            designed so families start free and institutions scale with confidence.
+            with motor planning, CVI-friendly themes, AI-assisted predictions, switch scanning, visual schedules,
+            and secure cloud sync — designed so families start free and institutions scale with confidence.
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
             <Link href="/demo" style={primaryCta}>
@@ -121,11 +121,10 @@ export function LandingPage(): React.ReactNode {
           }}
         >
           <div>
-            <h2 style={{ margin: '0 0 8px', fontSize: '1.5rem' }}>High-fidelity demo — no signup wall</h2>
+            <h2 style={{ margin: '0 0 8px', fontSize: '1.5rem' }}>Four-scene interactive demo</h2>
             <p style={{ margin: 0, color: '#a3a3a3', lineHeight: 1.6 }}>
-              Experience a real core-word board: tap &ldquo;I&rdquo;, &ldquo;want&rdquo;, &ldquo;more&rdquo;, hear
-              speech output, and feel how motor planning keeps words in predictable places. When you are
-              ready, one click creates a free account to save and sync.
+              Explore core vocabulary with symbols, literacy keyboard, visual schedules, and access modes
+              (switch scan + touch guard) — no signup required.
             </p>
           </div>
           <Link href="/demo" style={{ ...primaryCta, textAlign: 'center', justifyContent: 'center' }}>

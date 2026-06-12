@@ -86,7 +86,7 @@ Actionable **feature parity match** against the AAC platform benchmark. Each row
 | Snap `.spb` import | TD Snap | 🟡 | SQLite adapter + editor Import Snap (2026-06-09) |
 | TouchChat `.ce` import | TouchChat / LAMP | 🟡 | SQLite zip adapter + editor Import TouchChat (2026-06-09) |
 | Visual schedules / timers | TD Snap tools | 🟡 | Daily routine template + timeline UI web/mobile (2026-06-09) |
-| Diversity / skin tone on symbols | Proloquo, TD Snap | 🔴 | P2 |
+| Diversity / skin tone on symbols | Proloquo, TD Snap | 🟡 | ARASAAC symbolRef + skin-tone picker in editor (2026-06-09) |
 | High-quality neural TTS voices | Proloquo, Acapela | 🟡 | Browser TTS today |
 | Bilingual mid-sentence TTS | Proloquo | 🔴 | [ai-roadmap.md](../ai-roadmap.md) P2 |
 | Literacy / keyboard page set | TD Snap Text | 🟡 | QWERTY template + char typing + prediction strip (2026-06-09) |

@@ -9,6 +9,7 @@ test.describe('Voxa GA smoke', () => {
 
   test('demo page loads communication board', async ({ page }) => {
     await page.goto('/demo');
+    await expect(page.getByRole('tablist', { name: 'Demo scenes' })).toBeVisible();
     await expect(page.getByRole('grid', { name: 'Communication board' })).toBeVisible();
   });
 

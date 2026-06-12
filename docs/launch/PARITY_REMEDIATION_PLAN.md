@@ -245,7 +245,7 @@ Each epic links to [FEATURE_PARITY.md](./FEATURE_PARITY.md) rows and benchmark d
 | H2 | PODD / Gateway | Partner content or licensed sets | Legal review; optional IAP |
 | H3 | Visual schedules | Timeline board type or linked schedule view | `layout: visual-schedule` + Daily Routine starter template (2026-06-09) |
 | H4 | Literacy / keyboard | Text keyboard page for literate users | Text buttons + prediction strip |
-| H5 | Diversity / skin tone | ARASAAC variant picker | Symbol metadata |
+| H5 | Diversity / skin tone | ARASAAC variant picker | `symbolRef` metadata + editor skin-tone picker (2026-06-09) |
 
 ---
 

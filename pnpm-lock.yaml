@@ -289,6 +289,10 @@ importers:
         version: 5.9.3
 
   packages/symbols:
+    dependencies:
+      '@voxa/core':
+        specifier: workspace:*
+        version: link:../core
     devDependencies:
       tsx:
         specifier: ^4.19.2

@@ -1,5 +1,5 @@
 import type { AccessProfile, ScanOrder, SwitchGroupStrategy, TouchActivationMode, TouchGuardMask } from '@voxa/access';
-import type { BoardDisplayPreferences } from '@voxa/core';
+import type { ArasaacSkinTone, BoardDisplayPreferences } from '@voxa/core';
 import type { CviTheme } from '@voxa/ui';
 
 export interface CommunicatorSettings {
@@ -18,6 +18,7 @@ export interface CommunicatorSettings {
   touchActivation: TouchActivationMode;
   touchGuardEnabled: boolean;
   touchGuardMask: TouchGuardMask;
+  defaultSymbolSkinTone: ArasaacSkinTone;
   whisperMode: boolean;
   hideSymbols: boolean;
   hideLabels: boolean;
@@ -39,6 +40,7 @@ export const DEFAULT_COMMUNICATOR_SETTINGS: CommunicatorSettings = {
   touchActivation: 'press',
   touchGuardEnabled: false,
   touchGuardMask: 'both',
+  defaultSymbolSkinTone: 'white',
   whisperMode: false,
   hideSymbols: false,
   hideLabels: false,

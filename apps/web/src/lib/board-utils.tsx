@@ -1,8 +1,9 @@
 'use client';
 
 import { useRef } from 'react';
-import type { BoardButton, PartOfSpeechTag } from '@voxa/core';
+import type { BoardButton, PartOfSpeechTag, SymbolDisplayDefaults } from '@voxa/core';
 import { resolveButtonSpeech } from '@voxa/core';
+import { resolveButtonSymbolUrl } from '@voxa/symbols';
 import { fitzgeraldColor, resolvePartOfSpeech, type PartOfSpeech } from '@voxa/vocabulary';
 
 export function buttonLabel(btn: BoardButton): string {
@@ -13,8 +14,16 @@ export function buttonSpeech(btn: BoardButton, formIndex?: number): string {
   return resolveButtonSpeech(btn, formIndex);
 }
 
-export function buttonSymbolUrl(btn: BoardButton): string | undefined {
-  return btn.symbolUrl;
+export function buttonSymbolUrl(
+  btn: BoardButton,
+  defaults?: SymbolDisplayDefaults,
+): string | undefined {
+  const symbolRef = btn.kind === 'analytic' || btn.kind === 'glp' ? btn.symbolRef : undefined;
+  return resolveButtonSymbolUrl(
+    btn.kind === 'analytic' || btn.kind === 'glp' ? btn.symbolUrl : undefined,
+    symbolRef,
+    defaults,
+  );
 }
 
 export function buttonBorderColor(btn: BoardButton): string {

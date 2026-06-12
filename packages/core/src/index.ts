@@ -59,6 +59,8 @@ export interface AnalyticButton {
   id: ButtonId;
   label: string;
   symbolUrl?: string;
+  /** ARASAAC pictogram metadata for diversity traits and re-rendering. */
+  symbolRef?: import('./symbol-ref.js').SymbolRef;
   speechText: string;
   audio?: RecordedSpeech;
   /** Alternate inflected forms; active form selected via activeSpeechFormId or tap-cycle */
@@ -73,6 +75,7 @@ export interface GlpButton {
   id: ButtonId;
   phrase: string;
   symbolUrl?: string;
+  symbolRef?: import('./symbol-ref.js').SymbolRef;
   audio?: RecordedSpeech;
   video?: MediaAsset;
   intonationNotes?: string;
@@ -204,6 +207,23 @@ export function resolveButtonSpeech(btn: BoardButton, formIndex?: number): strin
 }
 
 export { createDemoBoard, DEMO_BOARD_ID } from './demo-board.js';
+export {
+  boardForDemoScene,
+  createDemoAccessBoard,
+  createDemoCoreBoard,
+  createDemoLiteracyBoard,
+  createDemoScheduleBoard,
+  DEMO_SCENE_META,
+  type DemoSceneId,
+  type DemoSceneMeta,
+} from './demo-experience.js';
+export type {
+  ArasaacHairColor,
+  ArasaacSkinTone,
+  ArasaacSymbolRef,
+  SymbolDisplayDefaults,
+  SymbolRef,
+} from './symbol-ref.js';
 export {
   createStarterBoard,
   listStarterTemplates,

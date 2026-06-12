@@ -1,6 +1,8 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
+import type { ArasaacSkinTone, SymbolRef } from '@voxa/core';
+import { ARASAAC_SKIN_TONE_OPTIONS, isPersonPictogram } from '@voxa/symbols';
 import { uploadBoardMedia } from '@/lib/upload-media';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
@@ -13,12 +15,18 @@ export interface SymbolHit {
   tags: string[];
 }
 
+export interface SymbolSelection {
+  imageUrl: string;
+  symbolRef?: SymbolRef;
+}
+
 interface SymbolSearchPanelProps {
   boardId: string;
   accessToken?: string;
   currentUrl?: string;
+  defaultSkinTone?: ArasaacSkinTone;
   disabled?: boolean;
-  onSelect: (imageUrl: string) => void;
+  onSelect: (selection: SymbolSelection) => void;
   onClear: () => void;
 }
 
@@ -26,6 +34,7 @@ export function SymbolSearchPanel({
   boardId,
   accessToken,
   currentUrl,
+  defaultSkinTone = 'white',
   disabled,
   onSelect,
   onClear,
@@ -35,12 +44,28 @@ export function SymbolSearchPanel({
   const [attribution, setAttribution] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pendingHit, setPendingHit] = useState<SymbolHit | null>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
+
+  const applyHit = useCallback(
+    (hit: SymbolHit, skinTone?: ArasaacSkinTone) => {
+      const symbolRef: SymbolRef = {
+        provider: 'arasaac',
+        pictogramId: hit.id,
+        ...(skinTone ? { skinTone } : {}),
+      };
+      onSelect({ imageUrl: hit.imageUrl, symbolRef });
+      setPendingHit(null);
+      setResults([]);
+    },
+    [onSelect],
+  );
 
   const search = useCallback(async () => {
     if (query.trim().length < 2) return;
     setBusy(true);
     setError(null);
+    setPendingHit(null);
     try {
       const headers: Record<string, string> = { 'X-Voxa-Role': 'editor' };
       if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
@@ -73,7 +98,7 @@ export function SymbolSearchPanel({
       setError(null);
       try {
         const uploaded = await uploadBoardMedia(accessToken, boardId, file, file.name);
-        onSelect(uploaded.url);
+        onSelect({ imageUrl: uploaded.url });
       } catch (err) {
         setError((err as Error).message);
       } finally {
@@ -144,6 +169,38 @@ export function SymbolSearchPanel({
 
       {error ? <p style={{ color: '#f87171', fontSize: '0.8125rem' }}>{error}</p> : null}
 
+      {pendingHit ? (
+        <div style={{ marginBottom: 12, padding: 10, border: '1px solid #404040', borderRadius: 8 }}>
+          <p style={{ margin: '0 0 8px', fontSize: '0.8125rem', color: '#d4d4d4' }}>
+            Choose skin tone for <strong>{pendingHit.keyword}</strong>
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {ARASAAC_SKIN_TONE_OPTIONS.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                disabled={disabled}
+                onClick={() => applyHit(pendingHit, option.value)}
+                style={smallBtn}
+              >
+                {option.label}
+              </button>
+            ))}
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={() => applyHit(pendingHit, defaultSkinTone)}
+              style={{ ...smallBtn, borderColor: '#2563eb' }}
+            >
+              Profile default
+            </button>
+            <button type="button" disabled={disabled} onClick={() => setPendingHit(null)} style={smallBtn}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : null}
+
       {results.length > 0 ? (
         <div
           style={{
@@ -160,7 +217,13 @@ export function SymbolSearchPanel({
               type="button"
               title={hit.keyword}
               disabled={disabled}
-              onClick={() => onSelect(hit.imageUrl)}
+              onClick={() => {
+                if (isPersonPictogram(hit.tags)) {
+                  setPendingHit(hit);
+                  return;
+                }
+                applyHit(hit);
+              }}
               style={{
                 border: '1px solid #404040',
                 borderRadius: 6,
