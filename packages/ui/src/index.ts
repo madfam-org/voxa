@@ -27,6 +27,13 @@ export const CVI_THEMES = {
 
 export type CviTheme = keyof typeof CVI_THEMES;
 
+export const CVI_THEME_LABELS: Record<CviTheme, string> = {
+  default: 'Default',
+  'cvi-dark': 'CVI dark',
+  'cvi-high-contrast': 'CVI high contrast',
+  'classic-light': 'Classic light (Proloquo-style)',
+};
+
 export function targetSizePx(scale = 1): number {
   return Math.round(MIN_TARGET_PX * Math.max(scale, 1));
 }

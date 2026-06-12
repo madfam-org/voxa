@@ -19,6 +19,7 @@ Built-in themes:
 | Theme | Background | Use case |
 |-------|------------|----------|
 | `default` | System preference | General use |
+| `classic-light` | Light gray + white cells | Classic AAC apps (Proloquo-style layouts) |
 | `cvi-dark` | `#0a0a0a` | Cortical visual impairment — reduced visual complexity |
 | `cvi-high-contrast` | Black + saturated symbols | Maximum figure/ground separation |
 
@@ -36,8 +37,18 @@ Users can disable decorative imagery, reduce grid chrome, and enlarge symbol-onl
 - **Scan-step beep** (880 Hz tone; 660 Hz for group scan) with optional spoken label
 - Scan pauses automatically while TTS or recorded speech plays (configurable)
 - **Eye dwell (web):** pointer hover simulation, or **Tobii bridge** via `voxa:gaze` / `window.__voxaInjectGaze(x,y)` in settings
-- **Hardware USB/BT switches (web):** keyboard keys + Gamepad API buttons 0/1 during switch scan
+- **Hardware USB/BT switches (web):** `@voxa/access` `HardwareSwitchAdapter` — keyboard keys (Space/Enter/Tab/Arrow/F13) + Gamepad API buttons 0/1 during switch scan
 - **Hardware USB/BT switches (mobile):** BT switches that emulate a keyboard drive scan via hidden focus capture (`MobileSwitchKeyCapture`, `classifySwitchNativeKey`); on-screen Next/Select/Tune always available
+
+#### Supported hardware matrix (reference)
+
+| Device class | Web | Mobile | Notes |
+|--------------|-----|--------|-------|
+| USB switch (keyboard emulation) | ✅ | ✅ (via BT keyboard mode) | Space/Enter = select; Tab/Arrow Right = advance |
+| Bluetooth switch (keyboard mode) | ✅ | ✅ | Same key map; pair before opening Voxa |
+| Gamepad / switch box (HID gamepad) | ✅ | — | Buttons 0/1 via Gamepad API |
+| Tobii eye gaze | 🟡 | — | `voxa:gaze` bridge + dwell sim |
+| iOS External Accessory switch | — | 🔴 | Planned native module (TestFlight) |
 
 ### Eye Tracking
 

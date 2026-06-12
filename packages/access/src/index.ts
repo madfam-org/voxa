@@ -152,3 +152,14 @@ export {
   DEFAULT_TOUCH_ACTIVATION,
   type TouchActivationMode,
 } from './touch-activation.js';
+export {
+  attachBrowserHardwareSwitch,
+  DEFAULT_GAMEPAD_BUTTONS,
+  detectGamepadSwitchAction,
+  handleHardwareSwitchKey,
+  isGamepadConnected,
+  type BrowserHardwareSwitchOptions,
+  type GamepadButtonSpec,
+  type GamepadLike,
+  type HardwareSwitchHandlers,
+} from './hardware-switch-adapter.js';

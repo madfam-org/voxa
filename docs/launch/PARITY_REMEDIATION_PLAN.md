@@ -197,7 +197,7 @@ Each epic links to [FEATURE_PARITY.md](./FEATURE_PARITY.md) rows and benchmark d
 
 | ID | Feature | Remediation | Implementation |
 |----|---------|-------------|----------------|
-| F1 | Bluetooth/USB switch | iOS `ExternalAccessory` / Android HID; web Gamepad API | `packages/access` `HardwareSwitchAdapter`; mobile native module |
+| F1 | Bluetooth/USB switch | iOS `ExternalAccessory` / Android HID; web Gamepad API | `@voxa/access` `HardwareSwitchAdapter`; mobile keyboard capture ✅; iOS native module pending |
 | F2 | Auditory scanning | Beep on scan step; voice prompt option | `@voxa/access` audio cues |
 | F3 | Group / region scan | Scan by row groups, regions | Extend `SwitchScanConfig` |
 | F4 | Tobii / IrisBond gaze | SDK integration (Windows/iOS first) | Adapter service; dwell from gaze coords |
@@ -451,6 +451,12 @@ pnpm test && pnpm typecheck
 | 48 | Group / region switch scanning rows + quadrants (F3) | F | Engineering ✅ 2026-06-09 |
 | 49 | Literacy QWERTY keyboard template + typed message bar (H4) | H | Engineering ✅ 2026-06-09 |
 | 50 | Auditory scan-step beep + settings on web/mobile (F2) | F | Engineering ✅ 2026-06-09 |
+| 51 | Visual schedule board type + Daily Routine template (H3) | H | Engineering ✅ 2026-06-09 |
+| 52 | Touch guard / keyguard overlays web + mobile (F5) | F | Engineering ✅ 2026-06-09 |
+| 53 | Touch-release vs touch-start activation (F6) | F | Engineering ✅ 2026-06-09 |
+| 54 | ARASAAC symbol diversity metadata + skin-tone picker (H5) | H | Engineering ✅ 2026-06-09 |
+| 55 | Proloquo-style demo Core scene + classic-light theme | H/demo | Engineering ✅ 2026-06-09 |
+| 56 | `HardwareSwitchAdapter` in `@voxa/access` + web refactor (F1) | F | Engineering ✅ 2026-06-09 |
 
 ---
 

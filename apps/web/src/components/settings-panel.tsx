@@ -9,7 +9,7 @@ import {
   type SwitchGroupStrategy,
   type TouchGuardMask,
 } from '@voxa/access';
-import { CVI_THEMES, type CviTheme } from '@voxa/ui';
+import { CVI_THEMES, CVI_THEME_LABELS, type CviTheme } from '@voxa/ui';
 import type { BoardDisplayPreferences } from '@voxa/core';
 import type { CommunicatorSettings } from '@/lib/communicator-settings';
 import {
@@ -63,7 +63,7 @@ export function SettingsPanel({
         >
           {(Object.keys(CVI_THEMES) as CviTheme[]).map((theme) => (
             <option key={theme} value={theme}>
-              {theme}
+              {CVI_THEME_LABELS[theme]}
             </option>
           ))}
         </select>
@@ -134,8 +134,8 @@ export function SettingsPanel({
           </Field>
           <p style={hintStyle}>
             {settings.switchGroupStrategy === 'none'
-              ? 'Press Space or Enter to select. Arrow Right advances manually.'
-              : 'Select a group, then select a cell inside it. Space/Enter selects; Arrow Right advances.'}
+              ? 'Hardware: Space/Enter selects; Tab/Arrow Right advances. Bluetooth switches and USB adapters that emulate a keyboard work automatically. Gamepad button 0 selects; button 1 advances.'
+              : 'Select a group, then a cell. Hardware keys and gamepad buttons work the same as single-level scan.'}
           </p>
           <Field label="Auditory scan highlight">
             <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
