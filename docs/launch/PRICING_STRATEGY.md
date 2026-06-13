@@ -151,32 +151,22 @@ Prices **exclude 16% IVA** in internal planning; display on madfam.io with IVA p
 
 ## 7. Operator runbook (Tulana)
 
-Run from `tulana/apps/api` on Enclii builder or local venv with Dhanam sync configured.
+**One-shot (Enclii):**
 
 ```bash
-# 1. Register Voxa in Dhanam catalog (see dhanam-catalog-proposal.yaml), then:
-python manage.py tulana_pull_catalog
-
-# 2. Validate benchmark import (starts dry_run in repo copy)
-python manage.py tulana_import_benchmark_universes \
-  --file /path/to/voxa/docs/launch/tulana/benchmark-universe.json \
-  --dry-run
-
-# 3. After legal marks sources allowed, import for real (set dry_run false in JSON)
-python manage.py tulana_import_benchmark_universes \
-  --file /path/to/voxa/docs/launch/tulana/benchmark-universe.json
-
-# 4. Enter COGS from cogs-assumptions.md in admin UI
-
-# 5. Recommend
-python manage.py tulana_recommend --sku voxa__family
-python manage.py tulana_recommend --sku voxa__clinic
-
-# 6. Capture queue
-python manage.py tulana_capture_targets --status ready_for_capture --json
+cd tulana
+./scripts/voxa-pricing-bootstrap.sh --persist
 ```
 
-Seed competitor observations from CSV via Tulana admin or future `tulana_seed_competitors` extension for AAC segment.
+Full steps: [`tulana/docs/voxa-pricing-runbook.md`](../../../tulana/docs/voxa-pricing-runbook.md).
+
+| Step | Status |
+|------|--------|
+| Dhanam catalog | PR https://github.com/madfam-org/dhanam/pull/485 |
+| `sync-catalog.ts` on Enclii | Pending merge |
+| `tulana_voxa_pricing_bootstrap --persist` | Ready (commands + data in Tulana repo) |
+| Phynd WTP | Template at `tulana/wtp-campaign-template.json` |
+| Selva approve → Dhanam apply | Pending WTP |
 
 ---
 
@@ -224,4 +214,6 @@ Survey copy should name deliverables: “10 boards, 3 editors, cloud sync, OBF, 
 - [tulana/benchmark-universe.json](./tulana/benchmark-universe.json) — import payload
 - [tulana/cogs-assumptions.md](./tulana/cogs-assumptions.md) — floor inputs
 - [tulana/competitor-prices-seed.csv](./tulana/competitor-prices-seed.csv) — observation seed
-- [tulana/dhanam-catalog-proposal.yaml](./tulana/dhanam-catalog-proposal.yaml) — Dhanam registration draft
+- [tulana/dossiers/voxa__family.md](./tulana/dossiers/voxa__family.md) — Family tier dossier
+- [tulana/dossiers/voxa__clinic.md](./tulana/dossiers/voxa__clinic.md) — Institutional dossier
+- [tulana/wtp-campaign-template.json](./tulana/wtp-campaign-template.json) — Phynd Van Westendorp template
