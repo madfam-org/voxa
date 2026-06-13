@@ -1,5 +1,11 @@
 {
   "campaign_name": "Voxa Van Westendorp 2026-06",
+  "display_prices_mxn_iva_inclusive": {
+    "voxa__family_monthly": 231,
+    "voxa__family_annual": 2203,
+    "voxa__clinic_min_3_seats_monthly": 2953
+  },
+  "launch_doc": "voxa/docs/launch/PHYND_WTP_LAUNCH.md",
   "audiences": [
     {
       "sku": "voxa__family",

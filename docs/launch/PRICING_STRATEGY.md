@@ -166,7 +166,7 @@ Full steps: [`tulana/docs/voxa-pricing-runbook.md`](../../../tulana/docs/voxa-pr
 | `sync-catalog.ts` on Enclii | ❌ Blocked — populate GitHub **Production** env secrets or run from Enclii shell (see `internal-devops/runbooks/voxa-pricing-activation-2026-06.md`) |
 | Landing MXN display | ✅ IVA-inclusive (`apps/web/src/lib/pricing.ts`) |
 | `tulana_voxa_pricing_bootstrap --persist` | ✅ Validated locally; run on Enclii |
-| Phynd WTP | Template at `docs/launch/tulana/wtp-campaign-template.json` |
+| Phynd WTP | Template + [`PHYND_WTP_LAUNCH.md`](./PHYND_WTP_LAUNCH.md) (IVA-inclusive survey copy) |
 | Selva approve → Dhanam apply | Pending WTP |
 
 ---
