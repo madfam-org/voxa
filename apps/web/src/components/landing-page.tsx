@@ -4,7 +4,7 @@ import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { SiteFooter, SiteNav } from '@/components/site-chrome';
 import { PwaInstallBanner } from '@/components/pwa-install-banner';
-import { formatMxn, PRICING, clinicListMonthly } from '@/lib/pricing';
+import { formatMxnGross, PRICING, clinicListMonthly } from '@/lib/pricing';
 
 const section: React.CSSProperties = {
   maxWidth: 1100,
@@ -23,9 +23,9 @@ const FEATURE_KEYS = ['motor', 'cvi', 'ai', 'obf', 'offline', 'janua'] as const;
 
 export function LandingPage(): React.ReactNode {
   const t = useTranslations('landing');
-  const familyMonthly = formatMxn(PRICING.family.monthly);
-  const familyAnnual = formatMxn(PRICING.family.annual);
-  const clinicFrom = formatMxn(clinicListMonthly());
+  const familyMonthly = formatMxnGross(PRICING.family.monthly);
+  const familyAnnual = formatMxnGross(PRICING.family.annual);
+  const clinicFrom = formatMxnGross(clinicListMonthly());
 
   return (
     <div style={{ minHeight: '100dvh', background: '#0a0a0a', color: '#fafafa' }}>
@@ -156,7 +156,9 @@ export function LandingPage(): React.ReactNode {
               <p style={{ margin: '0 0 4px', fontSize: '2rem', fontWeight: 800, letterSpacing: '-0.02em' }}>
                 {t('priceFree')}
               </p>
-              <p style={{ margin: '0 0 16px', color: '#737373', fontSize: '0.8125rem' }}>{t('priceIvaNote')}</p>
+              <p style={{ margin: '0 0 16px', color: '#737373', fontSize: '0.8125rem' }}>
+                {t('priceFreeForever')}
+              </p>
               <p style={{ margin: '0 0 16px', color: '#a3a3a3', fontSize: '0.9375rem' }}>
                 {t('parentsBody')}
               </p>
@@ -204,7 +206,11 @@ export function LandingPage(): React.ReactNode {
                 <span style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#a3a3a3' }}>{t('pricePerMonth')}</span>
               </p>
               <p style={{ margin: '0 0 16px', color: '#737373', fontSize: '0.8125rem' }}>
-                {t('priceClinicDetail')}
+                {t('priceClinicDetail', {
+                  base: formatMxnGross(PRICING.clinic.baseMonthly),
+                  seat: formatMxnGross(PRICING.clinic.seatMonthly),
+                  minSeats: PRICING.clinic.minSeats,
+                })}
                 {' · '}
                 {t('priceIvaNote')}
               </p>

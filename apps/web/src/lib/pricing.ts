@@ -1,9 +1,13 @@
 // Pricing anchored on Tulana competitive intel (v0.1, 2026-06-12):
 // - AAC subscription median ~221 MXN/mo (Proloquo/TD Snap ~$9.99 USD).
 // - Tulana mechanical ceiling ~177 MXN/mo; operator anchored Family at 199
-//   MXN (MADFAM consumer SaaS peer: Tezca Essentials, Dhanam Copilot).
+//   MXN net (MADFAM consumer SaaS peer: Tezca Essentials, Dhanam Copilot).
 // - Institutional: 1,499 MXN/mo base + 349/seat (min 3), Dhanam Teams peer.
-// - Confidence: low until Phynd Van Westendorp (see docs/launch/PRICING_STRATEGY.md).
+// - Catalog/Dhanam amounts are net of IVA; public MXN display adds 16% IVA
+//   per MADFAM convention (see docs/launch/PRICING_STRATEGY.md).
+export const MXN_IVA_RATE = 0.16;
+
+/** Net-of-IVA list prices synced to Dhanam catalog (centavos / 100). */
 export const PRICING = {
   family: { monthly: 199, annual: 1899, currency: 'MXN' },
   clinic: { baseMonthly: 1499, seatMonthly: 349, minSeats: 3, currency: 'MXN' },
@@ -18,6 +22,10 @@ export const CHECKOUT_PLANS = {
   familyAnnual: 'voxa_family_yearly',
 } as const;
 
+export function withMxnIva(netMxn: number): number {
+  return Math.round(netMxn * (1 + MXN_IVA_RATE));
+}
+
 export function formatMxn(amount: number): string {
   return new Intl.NumberFormat('es-MX', {
     style: 'currency',
@@ -26,8 +34,17 @@ export function formatMxn(amount: number): string {
   }).format(amount);
 }
 
+/** Format a net catalog price for consumer-facing MXN copy (IVA included). */
+export function formatMxnGross(netMxn: number): string {
+  return formatMxn(withMxnIva(netMxn));
+}
+
 export function clinicListMonthly(minSeats = PRICING.clinic.minSeats): number {
   return PRICING.clinic.baseMonthly + PRICING.clinic.seatMonthly * minSeats;
+}
+
+export function clinicListMonthlyGross(minSeats = PRICING.clinic.minSeats): number {
+  return withMxnIva(clinicListMonthly(minSeats));
 }
 
 export function buildCheckoutUrl(opts: {

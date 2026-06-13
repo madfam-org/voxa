@@ -129,7 +129,7 @@ Alternative quote-friendly packaging: **999/seat/mo** all-in for ≤10 seats (no
 
 ## 6. Recommended price card (pre-WTP)
 
-Prices **exclude 16% IVA** in internal planning; display on madfam.io with IVA per Dhanam convention.
+Prices **exclude 16% IVA** in Dhanam catalog / Tulana math; **Voxa landing displays MXN with IVA included** (×1.16, rounded to whole pesos) per MADFAM convention. Checkout may itemize tax via Stripe automatic tax.
 
 | Plan | Monthly MXN | Annual MXN | IVA-inclusive display (×1.16) |
 |------|-------------|------------|----------------------------------|
