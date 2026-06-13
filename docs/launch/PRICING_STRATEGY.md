@@ -163,8 +163,9 @@ Full steps: [`tulana/docs/voxa-pricing-runbook.md`](../../../tulana/docs/voxa-pr
 | Step | Status |
 |------|--------|
 | Dhanam catalog.yaml | ✅ Merged via PR #484 (`voxa` on main) |
-| `sync-catalog.ts` on Enclii | ⏳ Pending — use `.github/workflows/sync-catalog-prod.yml` |
-| `tulana_voxa_pricing_bootstrap --persist` | Ready (mirror fallback if API lags) |
+| `sync-catalog.ts` on Enclii | ❌ Blocked — populate GitHub **Production** env secrets or run from Enclii shell (see `internal-devops/runbooks/voxa-pricing-activation-2026-06.md`) |
+| Landing MXN display | ✅ IVA-inclusive (`apps/web/src/lib/pricing.ts`) |
+| `tulana_voxa_pricing_bootstrap --persist` | ✅ Validated locally; run on Enclii |
 | Phynd WTP | Template at `docs/launch/tulana/wtp-campaign-template.json` |
 | Selva approve → Dhanam apply | Pending WTP |
 
