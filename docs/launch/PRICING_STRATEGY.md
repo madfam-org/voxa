@@ -162,10 +162,10 @@ Full steps: [`tulana/docs/voxa-pricing-runbook.md`](../../../tulana/docs/voxa-pr
 
 | Step | Status |
 |------|--------|
-| Dhanam catalog | PR https://github.com/madfam-org/dhanam/pull/485 |
-| `sync-catalog.ts` on Enclii | Pending merge |
-| `tulana_voxa_pricing_bootstrap --persist` | Ready (commands + data in Tulana repo) |
-| Phynd WTP | Template at `tulana/wtp-campaign-template.json` |
+| Dhanam catalog.yaml | ✅ Merged via PR #484 (`voxa` on main) |
+| `sync-catalog.ts` on Enclii | ⏳ Pending — use `.github/workflows/sync-catalog-prod.yml` |
+| `tulana_voxa_pricing_bootstrap --persist` | Ready (mirror fallback if API lags) |
+| Phynd WTP | Template at `docs/launch/tulana/wtp-campaign-template.json` |
 | Selva approve → Dhanam apply | Pending WTP |
 
 ---
