@@ -1,0 +1,90 @@
+{
+  "idempotency_key": "voxa-wtp-family-2026-06-v1",
+  "source": "tulana",
+  "orchestrator": "selva",
+  "sku_key": "voxa__family",
+  "platform": "Voxa",
+  "audience": "Parents and caregivers using AAC (Voxa waitlist, demo exit, Phynd healthcare tags)",
+  "ga_readiness": "near_ready",
+  "commercial_ga_status": "candidate",
+  "commercial_ga_gate_version": "2026-06-01",
+  "commercial_ga_environment": "production",
+  "commercial_ga_period": "2026-06",
+  "audience_id": "voxa-family-wtp-parents-2026-06",
+  "consent_basis": "warm_relationship_or_explicit_opt_in_required_per_contact",
+  "campaign_type": "wtp_survey",
+  "value_prop": "Help set fair MXN pricing for Voxa Familia — cloud AAC with boards, sync, OBF, and consent-gated AI.",
+  "gate_evidence": [
+    {
+      "gate_id": "G0",
+      "status": "passed",
+      "evidence_url": "https://api.dhan.am/v1/billing/catalog",
+      "source_system": "dhanam",
+      "source_record_id": "voxa"
+    },
+    {
+      "gate_id": "G1",
+      "status": "pending",
+      "evidence_url": "repo://voxa/docs/launch/tulana/dossiers/voxa__family.md",
+      "source_system": "tulana",
+      "source_record_id": "pricing_recommendation_low_confidence"
+    },
+    {
+      "gate_id": "WTP",
+      "status": "pending",
+      "evidence_url": "repo://voxa/docs/launch/PHYND_WTP_LAUNCH.md",
+      "source_system": "phynd-crm",
+      "source_record_id": "van_westendorp_min_10_responses"
+    }
+  ],
+  "money_path": {
+    "checkout_required": false,
+    "payment_required": false,
+    "entitlement_required": false,
+    "note": "Survey only — do not send checkout links until WTP gate passes"
+  },
+  "proof_points": [
+    {
+      "label": "Display anchor (IVA incl.)",
+      "value": "MXN 231/mo or MXN 2,203/año for Voxa Familia",
+      "source_url": "https://voxa.madfam.io/#pricing"
+    },
+    {
+      "label": "Net catalog",
+      "value": "MXN 199/mo or MXN 1,899/año (Dhanam catalog)",
+      "source_url": "https://api.dhan.am/v1/billing/catalog"
+    },
+    {
+      "label": "Product bundle",
+      "value": "Up to 10 boards, 3 team editors, cloud sync, OBF import/export, basic AI"
+    }
+  ],
+  "guardrails": {
+    "policy_state": "wtp_research_only",
+    "last_verified_at": "2026-06-13",
+    "do_not_claim": [
+      "Do not claim paid checkout is live.",
+      "Do not claim clinical efficacy or regulatory approval.",
+      "Do not quote net prices without IVA context in consumer-facing copy."
+    ]
+  },
+  "survey": {
+    "method": "van_westendorp",
+    "currency": "MXN",
+    "price_basis": "monthly_iva_inclusive",
+    "min_responses": 10,
+    "questions_es": {
+      "too_expensive": "¿A qué precio mensual en MXN (IVA incluido) Voxa Familia te parecería demasiado caro para comprarlo?",
+      "too_cheap": "¿A qué precio mensual en MXN (IVA incluido) Voxa Familia te parecería tan barato que dudarías de la calidad?",
+      "expensive_but_consider": "¿A qué precio mensual en MXN (IVA incluido) Voxa Familia empieza a sentirse caro pero aún lo considerarías?",
+      "bargain": "¿A qué precio mensual en MXN (IVA incluido) Voxa Familia sería una excelente oferta?"
+    }
+  },
+  "drafts": [
+    {
+      "channel": "email",
+      "locale": "es-MX",
+      "body": "Estamos definiendo el precio justo de Voxa Familia (comunicación aumentativa en la nube para familias). ¿Nos ayudas con 4 preguntas cortas sobre precio mensual en pesos mexicanos (IVA incluido)? Tu respuesta no activa ningún cobro."
+    }
+  ]
+}

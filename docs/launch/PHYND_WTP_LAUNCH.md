@@ -3,6 +3,8 @@
 **Template:** [`tulana/wtp-campaign-template.json`](./tulana/wtp-campaign-template.json)  
 **Gate:** ≥10 responses per paid SKU before enabling checkout ([PRICING_STRATEGY.md](./PRICING_STRATEGY.md))
 
+**Phynd import payloads:** [`phynd/VOXA_WTP_PHYND_IMPORT_RUNBOOK.md`](./phynd/VOXA_WTP_PHYND_IMPORT_RUNBOOK.md)
+
 ## Display prices (IVA inclusive — use in survey framing)
 
 | SKU | Consumer display | Net catalog (Dhanam) |

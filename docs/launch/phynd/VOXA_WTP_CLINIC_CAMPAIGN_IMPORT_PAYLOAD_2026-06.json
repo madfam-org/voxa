@@ -1,0 +1,78 @@
+{
+  "idempotency_key": "voxa-wtp-clinic-2026-06-v1",
+  "source": "tulana",
+  "orchestrator": "selva",
+  "sku_key": "voxa__clinic",
+  "platform": "Voxa",
+  "audience": "SLPs and clinic administrators (Phynd healthcare / institutional tags)",
+  "ga_readiness": "near_ready",
+  "commercial_ga_status": "candidate",
+  "commercial_ga_gate_version": "2026-06-01",
+  "commercial_ga_environment": "production",
+  "commercial_ga_period": "2026-06",
+  "audience_id": "voxa-clinic-wtp-institutional-2026-06",
+  "consent_basis": "warm_relationship_or_explicit_opt_in_required_per_contact",
+  "campaign_type": "wtp_survey",
+  "value_prop": "Help set fair institutional MXN pricing for Voxa — unlimited boards, AI, usage reports, SSO.",
+  "gate_evidence": [
+    {
+      "gate_id": "G0",
+      "status": "passed",
+      "evidence_url": "https://api.dhan.am/v1/billing/catalog",
+      "source_system": "dhanam",
+      "source_record_id": "voxa"
+    },
+    {
+      "gate_id": "WTP",
+      "status": "pending",
+      "evidence_url": "repo://voxa/docs/launch/PHYND_WTP_LAUNCH.md",
+      "source_system": "phynd-crm",
+      "source_record_id": "van_westendorp_min_10_responses"
+    }
+  ],
+  "money_path": {
+    "checkout_required": false,
+    "payment_required": false,
+    "entitlement_required": false,
+    "note": "Survey only — clinic checkout remains sales-led"
+  },
+  "proof_points": [
+    {
+      "label": "Display anchor (IVA incl., 3 seats)",
+      "value": "Desde MXN 2,953/mo (base + 3 asientos)",
+      "source_url": "https://voxa.madfam.io/#institutions"
+    },
+    {
+      "label": "Net catalog",
+      "value": "MXN 1,499 base + MXN 349/asiento/mo",
+      "source_url": "https://api.dhan.am/v1/billing/catalog"
+    }
+  ],
+  "guardrails": {
+    "policy_state": "wtp_research_only",
+    "last_verified_at": "2026-06-13",
+    "do_not_claim": [
+      "Do not claim self-serve institutional checkout is live.",
+      "Do not claim HIPAA/certification unless documented."
+    ]
+  },
+  "survey": {
+    "method": "van_westendorp",
+    "currency": "MXN",
+    "price_basis": "monthly_total_iva_inclusive_min_seats",
+    "min_responses": 10,
+    "questions_es": {
+      "too_expensive": "¿A qué precio mensual total en MXN (IVA incluido, org + asientos mín.) Voxa Institucional sería demasiado caro?",
+      "too_cheap": "¿A qué precio mensual total en MXN (IVA incluido) sería demasiado barato para confiar en uso clínico?",
+      "expensive_but_consider": "¿A qué precio mensual total en MXN (IVA incluido) empieza a sentirse caro pero aún viable?",
+      "bargain": "¿A qué precio mensual total en MXN (IVA incluido) sería un valor fuerte para tu organización?"
+    }
+  },
+  "drafts": [
+    {
+      "channel": "email",
+      "locale": "es-MX",
+      "body": "Estamos calibrando precios institucionales para Voxa (AAC clínico en la nube). ¿4 preguntas sobre precio mensual total en MXN (IVA incluido)? Sin cobro ni compromiso de compra."
+    }
+  ]
+}
