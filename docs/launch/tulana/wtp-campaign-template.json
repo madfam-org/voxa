@@ -1,0 +1,32 @@
+{
+  "campaign_name": "Voxa Van Westendorp 2026-06",
+  "audiences": [
+    {
+      "sku": "voxa__family",
+      "segment": "parents_caregivers",
+      "channels": ["voxa_waitlist", "demo_exit", "phynd_healthcare"],
+      "min_responses": 10,
+      "questions_mxn": {
+        "too_expensive": "At what monthly MXN price would Voxa Family feel too expensive to buy?",
+        "too_cheap": "At what monthly MXN price would Voxa Family feel so cheap you'd doubt quality?",
+        "expensive_but_consider": "At what monthly MXN price does Voxa Family start to feel expensive but you'd still consider it?",
+        "bargain": "At what monthly MXN price is Voxa Family a great bargain?"
+      },
+      "product_description": "Up to 10 boards, 3 team editors, cloud sync, OBF import/export, basic AI"
+    },
+    {
+      "sku": "voxa__clinic",
+      "segment": "slp_clinic_admin",
+      "channels": ["phynd_slp", "conamece_adjacent"],
+      "min_responses": 10,
+      "questions_mxn": {
+        "too_expensive": "At what monthly MXN price (org + seats) would Voxa Institutional feel too expensive?",
+        "too_cheap": "At what monthly MXN price would Voxa Institutional feel too cheap to trust for clinical use?",
+        "expensive_but_consider": "At what monthly MXN price does Voxa Institutional start to feel expensive but still viable?",
+        "bargain": "At what monthly MXN price is Voxa Institutional a strong value for your organization?"
+      },
+      "product_description": "Unlimited boards, full AI, usage reports, SSO, priority onboarding"
+    }
+  ],
+  "import_after_collection": "python manage.py tulana_import_wtp_signals --file phynd-export.json --aggregate --min-responses 10"
+}
