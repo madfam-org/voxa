@@ -33,6 +33,7 @@
   "devDependencies": {
     "@types/node": "^22.10.0",
     "prettier": "^3.4.2",
+    "shadcn": "^4.11.0",
     "turbo": "^2.3.3",
     "typescript": "^5.7.2"
   },
