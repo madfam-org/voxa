@@ -23,7 +23,7 @@ export const CHECKOUT_PLANS = {
 } as const;
 
 export function withMxnIva(netMxn: number): number {
-  return Math.round(netMxn * (1 + MXN_IVA_RATE));
+  return Math.ceil(netMxn * (1 + MXN_IVA_RATE));
 }
 
 export function formatMxn(amount: number): string {
