@@ -10,7 +10,7 @@
 | SKU | Consumer display | Net catalog (Dhanam) |
 |-----|------------------|----------------------|
 | `voxa__family` | **$231 MXN/mo**, **$2,203/año** | 199 / 1,899 |
-| `voxa__clinic` (3 seats) | **Desde $2,953/mo** | 1,499 + 3×349 |
+| `voxa__clinic` (3 seats) | **Desde $2,954/mo** | 1,499 + 3×349 = 2,546 net; ×1.16 IVA, ceil |
 
 Survey questions should describe the **product bundle**, not repeat list price — respondents set their own price points.
 
