@@ -3,7 +3,7 @@
   "display_prices_mxn_iva_inclusive": {
     "voxa__family_monthly": 231,
     "voxa__family_annual": 2203,
-    "voxa__clinic_min_3_seats_monthly": 2953
+    "voxa__clinic_min_3_seats_monthly": 2954
   },
   "launch_doc": "voxa/docs/launch/PHYND_WTP_LAUNCH.md",
   "audiences": [

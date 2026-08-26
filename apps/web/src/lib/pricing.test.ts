@@ -19,7 +19,8 @@ describe('pricing', () => {
   it('adds 16% IVA for consumer display', () => {
     assert.equal(withMxnIva(199), 231);
     assert.equal(withMxnIva(1899), 2203);
-    assert.equal(withMxnIva(2546), 2953);
+    // 2546 * 1.16 = 2953.36 -> ceil'd to whole pesos (38934a0), never rounded down.
+    assert.equal(withMxnIva(2546), 2954);
   });
 
   it('formatMxnGross applies IVA before formatting', () => {
@@ -28,7 +29,7 @@ describe('pricing', () => {
 
   it('computes clinic list price for minimum seats (net and gross)', () => {
     assert.equal(clinicListMonthly(), 1499 + 349 * 3);
-    assert.equal(clinicListMonthlyGross(), 2953);
+    assert.equal(clinicListMonthlyGross(), 2954);
   });
 
   it('builds Dhanam checkout URL with product slug', () => {
