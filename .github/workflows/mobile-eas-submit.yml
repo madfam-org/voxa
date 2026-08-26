@@ -43,11 +43,19 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Skip when EXPO_TOKEN is not configured
-        if: secrets.EXPO_TOKEN == ''
+      # The `secrets` context is NOT available in step-level `if:` expressions.
+      # Referencing it there makes GitHub reject the whole workflow at parse
+      # time (run is created with 0 jobs and no logs). Check the secret inside
+      # the shell instead. Submitting without credentials is meaningless, so
+      # this lane fails loudly rather than skipping.
+      - name: Require EXPO_TOKEN
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: |
-          echo 'EXPO_TOKEN GitHub secret is not set; cannot submit to TestFlight / Play.'
-          exit 1
+          if [[ -z "${EXPO_TOKEN:-}" ]]; then
+            echo 'EXPO_TOKEN GitHub secret is not set; cannot submit to TestFlight / Play.'
+            exit 1
+          fi
 
       - name: Verify TestFlight readiness
         env:
