@@ -38,24 +38,35 @@ jobs:
       - name: Test mobile app
         run: pnpm --filter @voxa/mobile test
 
-      - name: Skip when EXPO_TOKEN is not configured
-        if: secrets.EXPO_TOKEN == ''
+      # The `secrets` context is NOT available in step-level `if:` expressions.
+      # Referencing it there makes GitHub reject the whole workflow at parse
+      # time (run is created with 0 jobs and no logs). Detect the secret in a
+      # shell step and gate on its output instead.
+      - name: Detect EAS credentials
+        id: eas_creds
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: |
-          echo 'EXPO_TOKEN GitHub secret is not set; skipping EAS preview build.'
-          echo 'Configure EXPO_TOKEN and re-run workflow_dispatch to build TestFlight/Play internal binaries.'
+          if [[ -n "${EXPO_TOKEN:-}" ]]; then
+            echo 'configured=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'configured=false' >> "$GITHUB_OUTPUT"
+            echo 'EXPO_TOKEN GitHub secret is not set; skipping EAS preview build.' >> "$GITHUB_STEP_SUMMARY"
+            echo 'Configure EXPO_TOKEN and re-run workflow_dispatch to build TestFlight/Play internal binaries.' >> "$GITHUB_STEP_SUMMARY"
+          fi
 
       - uses: expo/expo-github-action@v8
-        if: secrets.EXPO_TOKEN != ''
+        if: steps.eas_creds.outputs.configured == 'true'
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
       - name: Require linked EAS project before build
-        if: secrets.EXPO_TOKEN != ''
+        if: steps.eas_creds.outputs.configured == 'true'
         run: REQUIRE_LINKED=1 ./scripts/mobile/verify-eas-config.sh
 
       - name: EAS preview build (staging API)
-        if: secrets.EXPO_TOKEN != ''
+        if: steps.eas_creds.outputs.configured == 'true'
         working-directory: apps/mobile
         run: |
           args=(build --profile preview --platform all --non-interactive)
