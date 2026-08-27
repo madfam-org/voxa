@@ -42,12 +42,25 @@
  *
  * #262626 is the WORST GROUND at 6.00:1. Any future change to `neutral.muted`
  * must clear 4.5:1 against #262626 — that is the binding constraint, not the
- * homepage. The previous value #737373 (neutral-500) measured 3.19:1 there and
- * shipped failing on board-audit-panel and word-forms-panel for months,
- * unnoticed because the a11y suite could not reach authenticated surfaces.
+ * homepage, which sits on lighter-contrast ground and will pass first.
  *
- * If you darken `neutral.muted`, re-run `pnpm test:e2e:a11y` — the authed lane
- * added in this change now scans those two panels, so the suite will catch it.
+ * The previous value #737373 (neutral-500) failed on every one of these
+ * grounds and shipped that way for months, unnoticed because the a11y suite
+ * could not reach authenticated surfaces without operator credentials.
+ * Re-measured with axe while regression-testing the new authed lane:
+ *
+ *   board-audit-panel  muted on #111111  ->  3.98:1  FAIL
+ *   word-forms-panel   muted on #111111  ->  3.98:1  FAIL
+ *   pricing fine print muted on #171717  ->  3.78:1  FAIL
+ *   editor empty cell  muted on #0a0a0a  ->  4.17:1  FAIL
+ *
+ * (PR #4 described the two panels as sitting on #262626; their muted text
+ * actually renders on `surface.section` #111111. Both were failing, so the
+ * fix was right — the ground attribution was not. Corrected here.)
+ *
+ * If you darken `neutral.muted`, re-run `pnpm test:e2e:a11y`. The mock-session
+ * authed lane in e2e/specs/a11y.spec.ts scans these panels on every CI run and
+ * was verified to go red on exactly this regression.
  * ============================================================================
  */
 
