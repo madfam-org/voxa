@@ -156,7 +156,7 @@ export function LandingPage(): React.ReactNode {
               <p style={{ margin: '0 0 4px', fontSize: '2rem', fontWeight: 800, letterSpacing: '-0.02em' }}>
                 {t('priceFree')}
               </p>
-              <p style={{ margin: '0 0 16px', color: '#737373', fontSize: '0.8125rem' }}>
+              <p style={{ margin: '0 0 16px', color: '#a3a3a3', fontSize: '0.8125rem' }}>
                 {t('priceFreeForever')}
               </p>
               <p style={{ margin: '0 0 16px', color: '#a3a3a3', fontSize: '0.9375rem' }}>
@@ -181,7 +181,7 @@ export function LandingPage(): React.ReactNode {
                 {familyMonthly}
                 <span style={{ fontSize: '1rem', fontWeight: 600, color: '#a3a3a3' }}>{t('pricePerMonth')}</span>
               </p>
-              <p style={{ margin: '0 0 16px', color: '#737373', fontSize: '0.8125rem' }}>
+              <p style={{ margin: '0 0 16px', color: '#a3a3a3', fontSize: '0.8125rem' }}>
                 {t('priceAnnualOption', { annual: familyAnnual })}
                 {' · '}
                 {t('priceIvaNote')}
@@ -205,7 +205,7 @@ export function LandingPage(): React.ReactNode {
                 {t('priceFrom')} {clinicFrom}
                 <span style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#a3a3a3' }}>{t('pricePerMonth')}</span>
               </p>
-              <p style={{ margin: '0 0 16px', color: '#737373', fontSize: '0.8125rem' }}>
+              <p style={{ margin: '0 0 16px', color: '#a3a3a3', fontSize: '0.8125rem' }}>
                 {t('priceClinicDetail', {
                   base: formatMxnGross(PRICING.clinic.baseMonthly),
                   seat: formatMxnGross(PRICING.clinic.seatMonthly),
