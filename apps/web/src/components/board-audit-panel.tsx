@@ -93,7 +93,7 @@ export function BoardAuditPanel({
       {error ? <p style={{ color: '#f87171', fontSize: '0.8125rem' }}>{error}</p> : null}
 
       {events.length === 0 && !busy && !error ? (
-        <p style={{ fontSize: '0.875rem', color: '#737373' }}>No edit events yet.</p>
+        <p style={{ fontSize: '0.875rem', color: '#a3a3a3' }}>No edit events yet.</p>
       ) : null}
 
       <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>

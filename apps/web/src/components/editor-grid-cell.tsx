@@ -104,7 +104,7 @@ const emptyCellStyle: CSSProperties = {
   border: '2px dashed #404040',
   borderRadius: 8,
   background: '#0a0a0a',
-  color: '#737373',
+  color: '#a3a3a3',
   fontSize: '1.25rem',
   cursor: 'pointer',
 };

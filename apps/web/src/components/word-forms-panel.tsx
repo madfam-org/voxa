@@ -65,7 +65,7 @@ export function WordFormsPanel({ button, disabled, onChange }: WordFormsPanelPro
       </div>
 
       {forms.length === 0 ? (
-        <p style={{ fontSize: '0.8125rem', color: '#737373', margin: 0 }}>No alternate forms yet.</p>
+        <p style={{ fontSize: '0.8125rem', color: '#a3a3a3', margin: 0 }}>No alternate forms yet.</p>
       ) : (
         <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
           {forms.map((form) => (
