@@ -3,6 +3,7 @@
 import type { BoardButton } from '@voxa/core';
 import { AacButton } from '@voxa/ui';
 import { buttonLabel } from '@/lib/board-utils';
+import { neutral, status, surface } from '@/lib/tokens';
 
 export interface VisualScheduleViewProps {
   steps: BoardButton[];
@@ -79,9 +80,9 @@ export function VisualScheduleView({
                     width: `${Math.round(28 * targetScale)}px`,
                     height: `${Math.round(28 * targetScale)}px`,
                     borderRadius: '50%',
-                    border: `2px solid ${completed ? '#22c55e' : current ? '#facc15' : '#525252'}`,
-                    background: completed ? '#166534' : current ? '#422006' : '#171717',
-                    color: completed ? '#bbf7d0' : current ? '#fde68a' : '#a3a3a3',
+                    border: `2px solid ${completed ? status.successBorder : current ? status.warningAccent : neutral.disabled}`,
+                    background: completed ? status.successFill : current ? status.warningFill : surface.raised,
+                    color: completed ? status.successSoft : current ? status.premium : neutral.muted,
                     display: 'inline-flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -99,7 +100,7 @@ export function VisualScheduleView({
                       width: 2,
                       minHeight: `${Math.round(12 * targetScale)}px`,
                       marginTop: 4,
-                      background: completed ? '#22c55e' : '#404040',
+                      background: completed ? status.successBorder : neutral.border,
                     }}
                   />
                 ) : null}
@@ -118,9 +119,9 @@ export function VisualScheduleView({
                     dwellProgress={dwellProgressFor(id)}
                     style={
                       completed
-                        ? { opacity: 0.72, outline: '2px solid #22c55e' }
+                        ? { opacity: 0.72, outline: `2px solid ${status.successBorder}` }
                         : current
-                          ? { outline: '2px solid #facc15' }
+                          ? { outline: `2px solid ${status.warningAccent}` }
                           : undefined
                     }
                     aria-label={

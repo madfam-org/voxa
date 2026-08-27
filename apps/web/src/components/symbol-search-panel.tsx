@@ -4,6 +4,7 @@ import { useCallback, useRef, useState } from 'react';
 import type { ArasaacSkinTone, SymbolRef } from '@voxa/core';
 import { ARASAAC_SKIN_TONE_OPTIONS, isPersonPictogram } from '@voxa/symbols';
 import { uploadBoardMedia } from '@/lib/upload-media';
+import { brand, neutral, status, surface } from '@/lib/tokens';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
 
@@ -119,7 +120,7 @@ export function SymbolSearchPanel({
           <img
             src={currentUrl}
             alt=""
-            style={{ width: 48, height: 48, objectFit: 'contain', background: '#0a0a0a', borderRadius: 6 }}
+            style={{ width: 48, height: 48, objectFit: 'contain', background: surface.base, borderRadius: 6 }}
           />
           <button type="button" onClick={onClear} disabled={disabled} style={smallBtn}>
             Remove symbol
@@ -128,7 +129,7 @@ export function SymbolSearchPanel({
       ) : null}
 
       <div style={{ marginBottom: 12 }}>
-        <p style={{ margin: '0 0 6px', fontSize: '0.8125rem', color: '#a3a3a3' }}>Custom photo</p>
+        <p style={{ margin: '0 0 6px', fontSize: '0.8125rem', color: neutral.muted }}>Custom photo</p>
         <input
           ref={photoInputRef}
           type="file"
@@ -151,7 +152,7 @@ export function SymbolSearchPanel({
         </button>
       </div>
 
-      <p style={{ margin: '0 0 6px', fontSize: '0.8125rem', color: '#a3a3a3' }}>ARASAAC library</p>
+      <p style={{ margin: '0 0 6px', fontSize: '0.8125rem', color: neutral.muted }}>ARASAAC library</p>
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
         <input
@@ -169,11 +170,11 @@ export function SymbolSearchPanel({
         </button>
       </div>
 
-      {error ? <p style={{ color: '#f87171', fontSize: '0.8125rem' }}>{error}</p> : null}
+      {error ? <p style={{ color: status.danger, fontSize: '0.8125rem' }}>{error}</p> : null}
 
       {pendingHit ? (
-        <div style={{ marginBottom: 12, padding: 10, border: '1px solid #404040', borderRadius: 8 }}>
-          <p style={{ margin: '0 0 8px', fontSize: '0.8125rem', color: '#d4d4d4' }}>
+        <div style={{ marginBottom: 12, padding: 10, border: `1px solid ${neutral.border}`, borderRadius: 8 }}>
+          <p style={{ margin: '0 0 8px', fontSize: '0.8125rem', color: neutral.textSecondary }}>
             Choose skin tone for <strong>{pendingHit.keyword}</strong>
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
@@ -192,7 +193,7 @@ export function SymbolSearchPanel({
               type="button"
               disabled={disabled}
               onClick={() => applyHit(pendingHit, defaultSkinTone)}
-              style={{ ...smallBtn, borderColor: '#2563eb' }}
+              style={{ ...smallBtn, borderColor: brand.primary }}
             >
               Profile default
             </button>
@@ -227,9 +228,9 @@ export function SymbolSearchPanel({
                 applyHit(hit);
               }}
               style={{
-                border: '1px solid #404040',
+                border: `1px solid ${neutral.border}`,
                 borderRadius: 6,
-                background: '#0a0a0a',
+                background: surface.base,
                 padding: 4,
                 cursor: disabled ? 'not-allowed' : 'pointer',
               }}
@@ -245,7 +246,7 @@ export function SymbolSearchPanel({
       ) : null}
 
       {attribution ? (
-        <p style={{ margin: '8px 0 0', fontSize: '0.6875rem', color: '#a3a3a3', lineHeight: 1.4 }}>
+        <p style={{ margin: '8px 0 0', fontSize: '0.6875rem', color: neutral.muted, lineHeight: 1.4 }}>
           {attribution}
         </p>
       ) : null}
@@ -254,17 +255,17 @@ export function SymbolSearchPanel({
 }
 
 const fieldStyle: React.CSSProperties = {
-  background: '#0a0a0a',
-  border: '1px solid #404040',
+  background: surface.base,
+  border: `1px solid ${neutral.border}`,
   borderRadius: 6,
-  color: '#f5f5f5',
+  color: neutral.textSubtle,
   padding: '8px 10px',
 };
 
 const smallBtn: React.CSSProperties = {
-  background: '#262626',
-  color: '#fff',
-  border: '1px solid #404040',
+  background: surface.overlay,
+  color: surface.white,
+  border: `1px solid ${neutral.border}`,
   borderRadius: 6,
   padding: '6px 10px',
   cursor: 'pointer',

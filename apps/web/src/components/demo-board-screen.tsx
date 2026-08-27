@@ -23,6 +23,7 @@ import { SiteFooter, SiteNav } from '@/components/site-chrome';
 import { TouchGuardOverlay } from '@/components/touch-guard-overlay';
 import { VisualScheduleView } from '@/components/visual-schedule-view';
 import { useSwitchScan } from '@/hooks/use-switch-scan';
+import { brand, classic, neutral, status, stone, surface } from '@/lib/tokens';
 
 const DEMO_SCENE_IDS: DemoSceneId[] = ['communicate', 'literacy', 'schedule', 'access'];
 
@@ -186,8 +187,8 @@ export function DemoBoardScreen(): React.ReactNode {
         minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
-        background: classicScene ? '#f9fafb' : '#0a0a0a',
-        color: classicScene ? '#111827' : '#fafafa',
+        background: classicScene ? classic.surface : surface.base,
+        color: classicScene ? classic.text : neutral.text,
       }}
     >
       <SiteNav active="demo" />
@@ -197,11 +198,11 @@ export function DemoBoardScreen(): React.ReactNode {
         <div>
           <strong>{classicScene ? t('classicBannerTitle') : t('platformBannerTitle')}</strong>
           {classicScene ? (
-            <span style={{ display: 'block', marginTop: 4, color: '#4b5563', fontSize: '0.8125rem' }}>
+            <span style={{ display: 'block', marginTop: 4, color: classic.textMutedStrong, fontSize: '0.8125rem' }}>
               {t('classicBannerSubtitle')}
             </span>
           ) : (
-            <span style={{ display: 'block', marginTop: 4, color: '#93c5fd', fontSize: '0.8125rem' }}>
+            <span style={{ display: 'block', marginTop: 4, color: brand.link, fontSize: '0.8125rem' }}>
               {t(`scenes.${scene}.description`)}
             </span>
           )}
@@ -229,8 +230,8 @@ export function DemoBoardScreen(): React.ReactNode {
       <div
         style={{
           ...sceneTabsStyle,
-          background: classicScene ? '#ffffff' : '#0f0f0f',
-          borderBottom: classicScene ? '1px solid #e5e7eb' : '1px solid #262626',
+          background: classicScene ? surface.white : surface.sunken,
+          borderBottom: classicScene ? `1px solid ${classic.border}` : `1px solid ${surface.overlay}`,
         }}
         role="tablist"
         aria-label={t('scenesAriaLabel')}
@@ -244,9 +245,9 @@ export function DemoBoardScreen(): React.ReactNode {
             onClick={() => setScene(id)}
             style={{
               ...sceneTabBtn,
-              color: scene === id ? '#ffffff' : classicScene ? '#111827' : '#f5f5f5',
-              background: scene === id ? '#2563eb' : classicScene ? '#f3f4f6' : '#262626',
-              borderColor: scene === id ? '#3b82f6' : classicScene ? '#d1d5db' : '#404040',
+              color: scene === id ? surface.white : classicScene ? classic.text : neutral.textSubtle,
+              background: scene === id ? brand.primary : classicScene ? classic.surfaceAlt : surface.overlay,
+              borderColor: scene === id ? brand.mid : classicScene ? classic.borderStrong : neutral.border,
             }}
           >
             {t(`scenes.${id}.name`)}
@@ -270,7 +271,7 @@ export function DemoBoardScreen(): React.ReactNode {
             {touchGuardOn ? t('guardOn') : t('guardOff')}
           </button>
           {switchScanOn ? (
-            <span style={{ fontSize: '0.8125rem', color: '#bfdbfe' }}>{t('switchHint')}</span>
+            <span style={{ fontSize: '0.8125rem', color: brand.accentSoft }}>{t('switchHint')}</span>
           ) : null}
         </div>
       ) : null}
@@ -279,17 +280,17 @@ export function DemoBoardScreen(): React.ReactNode {
         <div
           style={{
             ...toolbarStyle,
-            background: classicScene ? '#ffffff' : theme.background,
-            borderBottom: `1px solid ${classicScene ? '#d1d5db' : theme.buttonBorder}`,
+            background: classicScene ? surface.white : theme.background,
+            borderBottom: `1px solid ${classicScene ? classic.borderStrong : theme.buttonBorder}`,
           }}
         >
           {!classicScene ? <strong>{board.name}</strong> : null}
           <div
             style={{
               ...utteranceBarStyle,
-              background: classicScene ? '#ffffff' : '#171717',
-              border: classicScene ? '2px solid #111827' : undefined,
-              color: classicScene ? '#111827' : undefined,
+              background: classicScene ? surface.white : surface.raised,
+              border: classicScene ? `2px solid ${classic.text}` : undefined,
+              color: classicScene ? classic.text : undefined,
               fontWeight: classicScene ? 600 : undefined,
             }}
             aria-live="polite"
@@ -319,13 +320,13 @@ export function DemoBoardScreen(): React.ReactNode {
 
         {!classicScene ? (
           <div style={suggestionBarStyle}>
-            <span style={{ fontSize: '0.75rem', color: '#a8a29e', marginRight: 4 }}>{tc('trySaying')}</span>
+            <span style={{ fontSize: '0.75rem', color: stone.text, marginRight: 4 }}>{tc('trySaying')}</span>
             {sceneSuggestions.map((text) => (
               <button
                 key={text}
                 type="button"
                 onClick={() => openGate('templates')}
-                style={{ ...chipBtn, background: '#292524', cursor: 'pointer' }}
+                style={{ ...chipBtn, background: stone.surfaceRaised, cursor: 'pointer' }}
               >
                 {text}
               </button>
@@ -355,9 +356,9 @@ export function DemoBoardScreen(): React.ReactNode {
                     onClick={() => handleButtonPress(btn)}
                     style={
                       state.completed
-                        ? { opacity: 0.72, outline: '2px solid #22c55e' }
+                        ? { opacity: 0.72, outline: `2px solid ${status.successBorder}` }
                         : state.current
-                          ? { outline: '2px solid #facc15' }
+                          ? { outline: `2px solid ${status.warningAccent}` }
                           : undefined
                     }
                   />
@@ -405,8 +406,8 @@ export function DemoBoardScreen(): React.ReactNode {
       </div>
 
       <section style={ctaSectionStyle}>
-        <h2 style={{ margin: '0 0 8px', fontSize: '1.25rem', color: '#fafafa' }}>{t('readyTitle')}</h2>
-        <p style={{ margin: '0 0 16px', color: '#a3a3a3', maxWidth: 640, marginInline: 'auto' }}>
+        <h2 style={{ margin: '0 0 8px', fontSize: '1.25rem', color: neutral.text }}>{t('readyTitle')}</h2>
+        <p style={{ margin: '0 0 16px', color: neutral.muted, maxWidth: 640, marginInline: 'auto' }}>
           {t('readyBody')}
         </p>
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -446,8 +447,8 @@ const visuallyHidden: React.CSSProperties = {
 
 const bannerStyle: React.CSSProperties = {
   padding: '12px 24px',
-  background: '#111827',
-  borderBottom: '1px solid #1e3a5f',
+  background: classic.text,
+  borderBottom: `1px solid ${brand.gradientDeep}`,
   fontSize: '0.875rem',
   display: 'flex',
   flexWrap: 'wrap',
@@ -458,8 +459,8 @@ const bannerStyle: React.CSSProperties = {
 
 const classicBannerStyle: React.CSSProperties = {
   ...bannerStyle,
-  background: '#ffffff',
-  borderBottom: '1px solid #e5e7eb',
+  background: surface.white,
+  borderBottom: `1px solid ${classic.border}`,
 };
 
 const sceneTabsStyle: React.CSSProperties = {
@@ -467,15 +468,15 @@ const sceneTabsStyle: React.CSSProperties = {
   flexWrap: 'wrap',
   gap: 8,
   padding: '12px 16px',
-  borderBottom: '1px solid #262626',
-  background: '#0f0f0f',
+  borderBottom: `1px solid ${surface.overlay}`,
+  background: surface.sunken,
 };
 
 const sceneTabBtn: React.CSSProperties = {
-  border: '1px solid #404040',
+  border: `1px solid ${neutral.border}`,
   borderRadius: 999,
   padding: '8px 14px',
-  color: '#f5f5f5',
+  color: neutral.textSubtle,
   fontSize: '0.8125rem',
   fontWeight: 600,
   cursor: 'pointer',
@@ -487,8 +488,8 @@ const accessBarStyle: React.CSSProperties = {
   gap: 8,
   alignItems: 'center',
   padding: '8px 16px',
-  background: '#172554',
-  borderBottom: '1px solid #1d4ed8',
+  background: brand.surfaceTint,
+  borderBottom: `1px solid ${brand.primaryStrong}`,
 };
 
 const toolbarStyle: React.CSSProperties = {
@@ -503,7 +504,7 @@ const utteranceBarStyle: React.CSSProperties = {
   flex: 1,
   minWidth: 180,
   minHeight: 44,
-  background: '#171717',
+  background: surface.raised,
   borderRadius: 8,
   padding: '10px 14px',
   fontSize: '1.0625rem',
@@ -511,8 +512,8 @@ const utteranceBarStyle: React.CSSProperties = {
 
 const suggestionBarStyle: React.CSSProperties = {
   padding: '8px 16px',
-  background: '#1c1917',
-  borderBottom: '1px solid #44403c',
+  background: stone.surface,
+  borderBottom: `1px solid ${stone.border}`,
   display: 'flex',
   gap: 8,
   flexWrap: 'wrap',
@@ -521,32 +522,32 @@ const suggestionBarStyle: React.CSSProperties = {
 
 const ctaSectionStyle: React.CSSProperties = {
   padding: '24px',
-  background: '#171717',
-  borderTop: '1px solid #262626',
+  background: surface.raised,
+  borderTop: `1px solid ${surface.overlay}`,
   textAlign: 'center',
-  color: '#fafafa',
+  color: neutral.text,
 };
 
 const classicChipBtn: React.CSSProperties = {
-  background: '#ffffff',
-  border: '1px solid #6b7280',
+  background: surface.white,
+  border: `1px solid ${classic.textMuted}`,
   borderRadius: 999,
   padding: '6px 14px',
-  color: '#374151',
+  color: classic.textSecondary,
   fontSize: '0.8125rem',
   cursor: 'pointer',
 };
 
 const classicChipBtnGold: React.CSSProperties = {
   ...classicChipBtn,
-  borderColor: '#b45309',
-  color: '#78350f',
-  background: '#fef3c7',
+  borderColor: status.warningOnLight,
+  color: status.warningFillDeep,
+  background: status.warningTint,
 };
 
 const actionBtn: React.CSSProperties = {
-  background: '#2563eb',
-  color: '#fff',
+  background: brand.primary,
+  color: surface.white,
   border: 'none',
   borderRadius: 8,
   padding: '10px 16px',
@@ -564,32 +565,32 @@ const classicActionBtn: React.CSSProperties = {
 
 const classicSecondaryBtn: React.CSSProperties = {
   ...classicActionBtn,
-  background: '#ffffff',
-  color: '#111827',
-  border: '2px solid #111827',
+  background: surface.white,
+  color: classic.text,
+  border: `2px solid ${classic.text}`,
 };
 
 const chipBtn: React.CSSProperties = {
   background: 'transparent',
-  border: '1px solid #404040',
+  border: `1px solid ${neutral.border}`,
   borderRadius: 999,
   padding: '6px 14px',
-  color: '#e5e5e5',
+  color: neutral.borderLight,
   fontSize: '0.8125rem',
   cursor: 'pointer',
 };
 
 const chipBtnGold: React.CSSProperties = {
   ...chipBtn,
-  borderColor: '#ca8a04',
-  color: '#fde68a',
+  borderColor: status.premiumBorder,
+  color: status.premium,
 };
 
 const primaryCta: React.CSSProperties = {
   padding: '12px 22px',
   borderRadius: 10,
-  background: '#2563eb',
-  color: '#fff',
+  background: brand.primary,
+  color: surface.white,
   fontWeight: 700,
   textDecoration: 'none',
 };
@@ -597,7 +598,7 @@ const primaryCta: React.CSSProperties = {
 const secondaryCta: React.CSSProperties = {
   padding: '12px 22px',
   borderRadius: 10,
-  border: '1px solid #525252',
-  color: '#e5e5e5',
+  border: `1px solid ${neutral.disabled}`,
+  color: neutral.borderLight,
   textDecoration: 'none',
 };

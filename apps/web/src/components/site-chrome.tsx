@@ -4,9 +4,10 @@ import { Link } from '@/i18n/navigation';
 import { PwaInstallBanner } from '@/components/pwa-install-banner';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { useTranslations } from 'next-intl';
+import { brand, neutral, surface } from '@/lib/tokens';
 
 const navLink: React.CSSProperties = {
-  color: '#d4d4d4',
+  color: neutral.textSecondary,
   textDecoration: 'none',
   fontWeight: 500,
   fontSize: '0.9375rem',
@@ -24,7 +25,7 @@ export function SiteNav({ active }: { active?: 'home' | 'demo' | 'app' }): React
         justifyContent: 'space-between',
         gap: 16,
         padding: '16px 24px',
-        borderBottom: '1px solid #262626',
+        borderBottom: `1px solid ${surface.overlay}`,
         background: 'rgba(10,10,10,0.92)',
         backdropFilter: 'blur(8px)',
         position: 'sticky',
@@ -32,14 +33,14 @@ export function SiteNav({ active }: { active?: 'home' | 'demo' | 'app' }): React
         zIndex: 50,
       }}
     >
-      <Link href="/" style={{ color: '#fafafa', fontWeight: 800, fontSize: '1.25rem', textDecoration: 'none' }}>
+      <Link href="/" style={{ color: neutral.text, fontWeight: 800, fontSize: '1.25rem', textDecoration: 'none' }}>
         {tc('brand')}
       </Link>
       <nav style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
         <Link href="/#why-aac" style={{ ...navLink, opacity: active === 'home' ? 1 : 0.85 }}>
           {t('whyAac')}
         </Link>
-        <Link href="/demo" style={{ ...navLink, color: active === 'demo' ? '#93c5fd' : navLink.color }}>
+        <Link href="/demo" style={{ ...navLink, color: active === 'demo' ? brand.link : navLink.color }}>
           {t('liveDemo')}
         </Link>
         <Link href="/#pricing" style={navLink}>
@@ -53,7 +54,7 @@ export function SiteNav({ active }: { active?: 'home' | 'demo' | 'app' }): React
             ...navLink,
             padding: '8px 14px',
             borderRadius: 8,
-            border: '1px solid #404040',
+            border: `1px solid ${neutral.border}`,
           }}
         >
           {t('signIn')}
@@ -63,8 +64,8 @@ export function SiteNav({ active }: { active?: 'home' | 'demo' | 'app' }): React
           style={{
             padding: '10px 16px',
             borderRadius: 8,
-            background: '#2563eb',
-            color: '#fff',
+            background: brand.primary,
+            color: surface.white,
             fontWeight: 700,
             textDecoration: 'none',
             fontSize: '0.9375rem',
@@ -84,9 +85,9 @@ export function SiteFooter(): React.ReactNode {
     <footer
       style={{
         padding: '32px 24px 48px',
-        borderTop: '1px solid #262626',
-        background: '#0a0a0a',
-        color: '#a3a3a3',
+        borderTop: `1px solid ${surface.overlay}`,
+        background: surface.base,
+        color: neutral.muted,
         fontSize: '0.875rem',
         display: 'flex',
         flexWrap: 'wrap',
@@ -100,13 +101,13 @@ export function SiteFooter(): React.ReactNode {
     >
       <p style={{ margin: 0, maxWidth: 420, lineHeight: 1.6 }}>{t('footerTagline')}</p>
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-        <Link href="/legal/privacy" style={{ color: '#93c5fd' }}>
+        <Link href="/legal/privacy" style={{ color: brand.link }}>
           {t('privacy')}
         </Link>
-        <Link href="/legal/terms" style={{ color: '#93c5fd' }}>
+        <Link href="/legal/terms" style={{ color: brand.link }}>
           {t('terms')}
         </Link>
-        <Link href="/legal/accessibility" style={{ color: '#93c5fd' }}>
+        <Link href="/legal/accessibility" style={{ color: brand.link }}>
           {t('accessibility')}
         </Link>
       </div>

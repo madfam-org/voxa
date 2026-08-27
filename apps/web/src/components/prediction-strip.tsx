@@ -3,6 +3,7 @@
 import type { BoardButton } from '@voxa/core';
 import type { SymbolPrediction, TextPrediction } from '@voxa/ai';
 import { buttonBorderColor, buttonLabel } from '@/lib/board-utils';
+import { neutral, surface } from '@/lib/tokens';
 
 interface PredictionStripProps {
   textPredictions: TextPrediction[];
@@ -30,11 +31,11 @@ export function PredictionStrip({
         flexWrap: 'wrap',
         gap: 8,
         padding: '8px 16px',
-        background: '#111',
-        borderBottom: '1px solid #333',
+        background: surface.section,
+        borderBottom: `1px solid ${neutral.borderSubtle}`,
       }}
     >
-      <span style={{ color: '#a3a3a3', fontSize: '0.75rem', alignSelf: 'center' }}>Suggest:</span>
+      <span style={{ color: neutral.muted, fontSize: '0.75rem', alignSelf: 'center' }}>Suggest:</span>
 
       {textPredictions.map((p) => (
         <button
@@ -68,9 +69,9 @@ export function PredictionStrip({
 }
 
 const chipStyle: React.CSSProperties = {
-  background: '#1a1a1a',
-  color: '#f5f5f5',
-  border: '2px solid #404040',
+  background: surface.baseHover,
+  color: neutral.textSubtle,
+  border: `2px solid ${neutral.border}`,
   borderRadius: 999,
   padding: '8px 14px',
   minHeight: 38,
