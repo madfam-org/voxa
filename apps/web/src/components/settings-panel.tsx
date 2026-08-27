@@ -25,6 +25,7 @@ import {
   setEditorPin,
 } from '@/lib/editor-pin';
 import { LanguageSwitcher } from '@/components/language-switcher';
+import { neutral, surface } from '@/lib/tokens';
 
 interface SettingsPanelProps {
   settings: CommunicatorSettings;
@@ -54,9 +55,9 @@ export function SettingsPanel({
       aria-label={t('title')}
       style={{
         width: 320,
-        background: '#111',
-        color: '#f5f5f5',
-        borderLeft: '1px solid #333',
+        background: surface.section,
+        color: neutral.textSubtle,
+        borderLeft: `1px solid ${neutral.borderSubtle}`,
         padding: 16,
         overflowY: 'auto',
       }}
@@ -353,7 +354,7 @@ export function SettingsPanel({
       </Field>
 
       {onBoardDisplayChange ? (
-        <section style={{ borderTop: '1px solid #333', paddingTop: 12, marginTop: 8 }}>
+        <section style={{ borderTop: `1px solid ${neutral.borderSubtle}`, paddingTop: 12, marginTop: 8 }}>
           <h3 style={{ margin: '0 0 8px', fontSize: '0.9375rem' }}>{t('boardDisplay')}</h3>
           <p style={hintStyle}>{t('boardDisplayHint')}</p>
           <Field label={t('boardHideSymbols')}>
@@ -384,7 +385,7 @@ export function SettingsPanel({
       ) : null}
 
       {showEditorPinSettings ? (
-        <section style={{ borderTop: '1px solid #333', paddingTop: 12, marginTop: 8 }}>
+        <section style={{ borderTop: `1px solid ${neutral.borderSubtle}`, paddingTop: 12, marginTop: 8 }}>
           <h3 style={{ margin: '0 0 8px', fontSize: '0.9375rem' }}>{t('editorPin')}</h3>
           <p style={hintStyle}>
             {editorPinIsConfigured() ? t('editorPinConfigured') : t('editorPinUnset')}
@@ -434,17 +435,17 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 const fieldStyle: React.CSSProperties = {
-  background: '#0a0a0a',
-  border: '1px solid #404040',
+  background: surface.base,
+  border: `1px solid ${neutral.border}`,
   borderRadius: 6,
-  color: '#f5f5f5',
+  color: neutral.textSubtle,
   padding: '8px 10px',
 };
 
 const closeBtn: React.CSSProperties = {
-  background: '#262626',
-  color: '#fff',
-  border: '1px solid #404040',
+  background: surface.overlay,
+  color: surface.white,
+  border: `1px solid ${neutral.border}`,
   borderRadius: 6,
   padding: '8px 12px',
   minWidth: 38,
@@ -454,7 +455,7 @@ const closeBtn: React.CSSProperties = {
 
 const hintStyle: React.CSSProperties = {
   fontSize: '0.75rem',
-  color: '#a3a3a3',
+  color: neutral.muted,
   marginTop: -8,
   marginBottom: 12,
 };

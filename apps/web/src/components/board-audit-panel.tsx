@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import type { SyncEvent } from '@voxa/core';
+import { neutral, status, surface } from '@/lib/tokens';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
 
@@ -68,9 +69,9 @@ export function BoardAuditPanel({
       aria-label="Edit audit log"
       style={{
         width: 320,
-        background: '#111',
-        color: '#f5f5f5',
-        borderLeft: '1px solid #333',
+        background: surface.section,
+        color: neutral.textSubtle,
+        borderLeft: `1px solid ${neutral.borderSubtle}`,
         padding: 16,
         overflowY: 'auto',
       }}
@@ -82,7 +83,7 @@ export function BoardAuditPanel({
         </button>
       </div>
 
-      <p style={{ margin: '0 0 12px', fontSize: '0.8125rem', color: '#a3a3a3', lineHeight: 1.5 }}>
+      <p style={{ margin: '0 0 12px', fontSize: '0.8125rem', color: neutral.muted, lineHeight: 1.5 }}>
         Remote SLP edits are recorded when vocabulary is saved, created, or imported.
       </p>
 
@@ -90,10 +91,10 @@ export function BoardAuditPanel({
         {busy ? 'Loading…' : 'Refresh'}
       </button>
 
-      {error ? <p style={{ color: '#f87171', fontSize: '0.8125rem' }}>{error}</p> : null}
+      {error ? <p style={{ color: status.danger, fontSize: '0.8125rem' }}>{error}</p> : null}
 
       {events.length === 0 && !busy && !error ? (
-        <p style={{ fontSize: '0.875rem', color: '#a3a3a3' }}>No edit events yet.</p>
+        <p style={{ fontSize: '0.875rem', color: neutral.muted }}>No edit events yet.</p>
       ) : null}
 
       <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -101,14 +102,14 @@ export function BoardAuditPanel({
           <li
             key={event.id}
             style={{
-              border: '1px solid #333',
+              border: `1px solid ${neutral.borderSubtle}`,
               borderRadius: 8,
               padding: '8px 10px',
-              background: '#0a0a0a',
+              background: surface.base,
             }}
           >
             <div style={{ fontSize: '0.875rem', fontWeight: 600 }}>{describeEvent(event)}</div>
-            <div style={{ fontSize: '0.75rem', color: '#a3a3a3', marginTop: 4 }}>
+            <div style={{ fontSize: '0.75rem', color: neutral.muted, marginTop: 4 }}>
               {new Date(event.timestamp).toLocaleString()} · {event.actorUserId}
             </div>
           </li>
@@ -119,9 +120,9 @@ export function BoardAuditPanel({
 }
 
 const btnStyle: React.CSSProperties = {
-  background: '#262626',
-  color: '#fff',
-  border: '1px solid #404040',
+  background: surface.overlay,
+  color: surface.white,
+  border: `1px solid ${neutral.border}`,
   borderRadius: 6,
   padding: '6px 10px',
   cursor: 'pointer',

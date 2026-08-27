@@ -3,6 +3,7 @@
 import { Link } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
+import { brand, neutral, surface } from '@/lib/tokens';
 
 const CONSENT_KEY = 'voxa-ai-consent';
 
@@ -45,16 +46,16 @@ export function ConsentBanner(): React.ReactNode {
         margin: '0 auto',
         padding: 16,
         borderRadius: 12,
-        background: '#171717',
-        color: '#fafafa',
-        border: '1px solid #404040',
+        background: surface.raised,
+        color: neutral.text,
+        border: `1px solid ${neutral.border}`,
         boxShadow: '0 8px 32px rgba(0,0,0,0.45)',
         zIndex: 1000,
       }}
     >
       <p style={{ margin: '0 0 12px', fontSize: '0.875rem', lineHeight: 1.5 }}>
         {t('body')}{' '}
-        <Link href="/legal/privacy" style={{ color: '#93c5fd' }}>
+        <Link href="/legal/privacy" style={{ color: brand.link }}>
           {t('privacyLink')}
         </Link>
         .
@@ -72,8 +73,8 @@ export function ConsentBanner(): React.ReactNode {
 }
 
 const primaryBtn: React.CSSProperties = {
-  background: '#2563eb',
-  color: '#fff',
+  background: brand.primary,
+  color: surface.white,
   border: 'none',
   borderRadius: 8,
   padding: '8px 14px',
@@ -82,9 +83,9 @@ const primaryBtn: React.CSSProperties = {
 };
 
 const secondaryBtn: React.CSSProperties = {
-  background: '#262626',
-  color: '#fafafa',
-  border: '1px solid #404040',
+  background: surface.overlay,
+  color: neutral.text,
+  border: `1px solid ${neutral.border}`,
   borderRadius: 8,
   padding: '8px 14px',
   cursor: 'pointer',

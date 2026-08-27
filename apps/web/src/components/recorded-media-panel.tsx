@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState } from 'react';
 import type { BoardButton, MediaAsset, RecordedSpeech } from '@voxa/core';
 import { uploadBoardMedia } from '@/lib/upload-media';
+import { neutral, status, surface } from '@/lib/tokens';
 
 interface RecordedMediaPanelProps {
   boardId: string;
@@ -98,12 +99,12 @@ export function RecordedMediaPanel({
   return (
     <section style={{ marginBottom: 16 }}>
       <h3 style={{ margin: '0 0 8px', fontSize: '0.875rem' }}>Recorded speech</h3>
-      <p style={{ margin: '0 0 8px', fontSize: '0.75rem', color: '#a3a3a3', lineHeight: 1.4 }}>
+      <p style={{ margin: '0 0 8px', fontSize: '0.75rem', color: neutral.muted, lineHeight: 1.4 }}>
         Caregiver recordings play instead of TTS — essential for GLP intonation.
       </p>
 
       {audio?.url ? (
-        <p style={{ fontSize: '0.8125rem', color: '#4ade80', margin: '0 0 8px' }}>
+        <p style={{ fontSize: '0.8125rem', color: status.success, margin: '0 0 8px' }}>
           Audio attached
         </p>
       ) : null}
@@ -114,7 +115,7 @@ export function RecordedMediaPanel({
             Record
           </button>
         ) : (
-          <button type="button" onClick={stopRecording} style={{ ...btnStyle, background: '#991b1b' }}>
+          <button type="button" onClick={stopRecording} style={{ ...btnStyle, background: status.dangerStrong }}>
             Stop
           </button>
         )}
@@ -149,7 +150,7 @@ export function RecordedMediaPanel({
         <>
           <h3 style={{ margin: '12px 0 8px', fontSize: '0.875rem' }}>GLP video (optional)</h3>
           {video?.url ? (
-            <p style={{ fontSize: '0.8125rem', color: '#4ade80', margin: '0 0 8px' }}>
+            <p style={{ fontSize: '0.8125rem', color: status.success, margin: '0 0 8px' }}>
               Video attached
             </p>
           ) : null}
@@ -183,15 +184,15 @@ export function RecordedMediaPanel({
         </>
       ) : null}
 
-      {error ? <p style={{ color: '#f87171', fontSize: '0.8125rem', margin: '8px 0 0' }}>{error}</p> : null}
+      {error ? <p style={{ color: status.danger, fontSize: '0.8125rem', margin: '8px 0 0' }}>{error}</p> : null}
     </section>
   );
 }
 
 const btnStyle: React.CSSProperties = {
-  background: '#262626',
-  color: '#fff',
-  border: '1px solid #404040',
+  background: surface.overlay,
+  color: surface.white,
+  border: `1px solid ${neutral.border}`,
   borderRadius: 6,
   padding: '8px 12px',
   minHeight: 38,

@@ -59,10 +59,11 @@ import { SyncStatusBanner } from '@/components/sync-status-banner';
 import { DraggableButtonShell, EditorGridCell } from '@/components/editor-grid-cell';
 import { VisualScheduleView } from '@/components/visual-schedule-view';
 import { TouchGuardListOverlay, TouchGuardOverlay } from '@/components/touch-guard-overlay';
+import { brand, neutral, status, surface } from '@/lib/tokens';
 
 const headerBtn: React.CSSProperties = {
-  background: '#2563eb',
-  color: '#fff',
+  background: brand.primary,
+  color: surface.white,
   border: 'none',
   borderRadius: 8,
   padding: '10px 16px',
@@ -74,8 +75,8 @@ const headerBtn: React.CSSProperties = {
 
 const secondaryBtn: React.CSSProperties = {
   ...headerBtn,
-  background: '#262626',
-  border: '1px solid #404040',
+  background: surface.overlay,
+  border: `1px solid ${neutral.border}`,
 };
 
 export interface BoardScreenProps {
@@ -672,7 +673,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
         {...touchReleaseHandlers(btn)}
         onPointerEnter={() => onEnter(btn.id as string)}
         onPointerLeave={onLeave}
-        style={revealedHidden ? { opacity: 0.72, outline: '2px dashed #f59e0b' } : undefined}
+        style={revealedHidden ? { opacity: 0.72, outline: `2px dashed ${status.warningBorder}` } : undefined}
         aria-label={
           isEditor && btn.locked
             ? `${buttonLabel(btn)} (locked motor-plan slot)`
@@ -694,7 +695,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
               bottom: 4,
               right: 4,
               fontSize: '0.625rem',
-              color: '#93c5fd',
+              color: brand.link,
               fontWeight: 700,
             }}
           >
@@ -757,9 +758,9 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
         <div
           style={{
             padding: '10px 16px',
-            background: '#172554',
-            color: '#dbeafe',
-            borderBottom: '1px solid #1d4ed8',
+            background: brand.surfaceTint,
+            color: brand.onSurfaceTint,
+            borderBottom: `1px solid ${brand.primaryStrong}`,
             fontSize: '0.875rem',
             lineHeight: 1.5,
           }}
@@ -774,7 +775,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
           ) : (
             <>
               Sign in with your clinician account to edit boards remotely.{' '}
-              <a href="/auth/signin?redirect_to=%2Fapp%2Fedit" style={{ color: '#93c5fd' }}>
+              <a href="/auth/signin?redirect_to=%2Fapp%2Fedit" style={{ color: brand.link }}>
                 Sign in
               </a>
             </>
@@ -824,7 +825,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
               <select
                 value={newBoardTemplate}
                 onChange={(e) => setNewBoardTemplate(e.target.value as '' | StarterTemplateId)}
-                style={{ background: '#262626', color: '#f5f5f5', border: '1px solid #404040', borderRadius: 6 }}
+                style={{ background: surface.overlay, color: neutral.textSubtle, border: `1px solid ${neutral.border}`, borderRadius: 6 }}
               >
                 <option value="">Blank 4×4</option>
                 <option value="core-47">Core 47</option>
@@ -853,7 +854,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
         <span
           style={{
             fontSize: '0.75rem',
-            color: syncStatus === 'live' ? '#4ade80' : CVI_THEMES[theme].foreground,
+            color: syncStatus === 'live' ? status.success : CVI_THEMES[theme].foreground,
           }}
         >
           {syncLabel} v{board.version}
@@ -881,8 +882,8 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
             onClick={() => setBabbleActive((active) => !active)}
             style={{
               ...secondaryBtn,
-              background: babbleActive ? '#422006' : secondaryBtn.background,
-              borderColor: babbleActive ? '#f59e0b' : '#404040',
+              background: babbleActive ? status.warningFill : secondaryBtn.background,
+              borderColor: babbleActive ? status.warningBorder : neutral.border,
             }}
             aria-pressed={babbleActive}
           >
@@ -1013,8 +1014,8 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
       {babbleActive && !isEditor ? (
         <div
           style={{
-            background: '#422006',
-            color: '#fcd34d',
+            background: status.warningFill,
+            color: status.warningText,
             padding: '6px 16px',
             fontSize: '0.8125rem',
           }}
@@ -1039,8 +1040,8 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
       {isEditor ? (
         <div
           style={{
-            background: '#171717',
-            color: '#a3a3a3',
+            background: surface.raised,
+            color: neutral.muted,
             padding: '6px 16px',
             fontSize: '0.8125rem',
           }}
@@ -1093,11 +1094,11 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
                       onPointerLeave={onLeave}
                       style={
                         revealedHidden
-                          ? { opacity: 0.72, outline: '2px dashed #f59e0b' }
+                          ? { opacity: 0.72, outline: `2px dashed ${status.warningBorder}` }
                           : state.completed
-                            ? { opacity: 0.72, outline: '2px solid #22c55e' }
+                            ? { opacity: 0.72, outline: `2px solid ${status.successBorder}` }
                             : state.current
-                              ? { outline: '2px solid #facc15' }
+                              ? { outline: `2px solid ${status.warningAccent}` }
                               : undefined
                       }
                       aria-label={
@@ -1207,20 +1208,20 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
         style={{
           padding: '10px 16px',
           fontSize: '0.75rem',
-          color: '#a3a3a3',
-          borderTop: '1px solid #262626',
+          color: neutral.muted,
+          borderTop: `1px solid ${surface.overlay}`,
           display: 'flex',
           gap: 12,
           flexWrap: 'wrap',
         }}
       >
-        <Link href="/legal/privacy" style={{ color: '#93c5fd' }}>
+        <Link href="/legal/privacy" style={{ color: brand.link }}>
           {tn('privacy')}
         </Link>
-        <Link href="/legal/terms" style={{ color: '#93c5fd' }}>
+        <Link href="/legal/terms" style={{ color: brand.link }}>
           {tn('terms')}
         </Link>
-        <Link href="/legal/accessibility" style={{ color: '#93c5fd' }}>
+        <Link href="/legal/accessibility" style={{ color: brand.link }}>
           {tn('accessibility')}
         </Link>
       </footer>
@@ -1257,9 +1258,9 @@ function EditorPanel({
     <aside
       style={{
         width: 280,
-        background: '#111',
-        color: '#f5f5f5',
-        borderLeft: '1px solid #333',
+        background: surface.section,
+        color: neutral.textSubtle,
+        borderLeft: `1px solid ${neutral.borderSubtle}`,
         padding: 16,
         overflowY: 'auto',
       }}
@@ -1320,7 +1321,7 @@ function EditorPanel({
       </label>
 
       {fieldsLocked ? (
-        <p style={{ fontSize: '0.8125rem', color: '#fcd34d', margin: '0 0 12px' }}>
+        <p style={{ fontSize: '0.8125rem', color: status.warningText, margin: '0 0 12px' }}>
           Motor-plan slot locked — unlock below to change label, speech, or visibility.
         </p>
       ) : null}
@@ -1398,9 +1399,9 @@ function EditorPanel({
 }
 
 const selectStyle: React.CSSProperties = {
-  background: '#171717',
-  color: '#f5f5f5',
-  border: '1px solid #404040',
+  background: surface.raised,
+  color: neutral.textSubtle,
+  border: `1px solid ${neutral.border}`,
   borderRadius: 6,
   padding: '6px 8px',
   minHeight: 38,
@@ -1410,7 +1411,7 @@ const utteranceBarStyle: React.CSSProperties = {
   flex: 1,
   minWidth: 200,
   minHeight: 40,
-  background: '#171717',
+  background: surface.raised,
   borderRadius: 8,
   padding: '8px 12px',
 };
@@ -1436,9 +1437,9 @@ const labelStyle: React.CSSProperties = {
 };
 
 const fieldStyle: React.CSSProperties = {
-  background: '#0a0a0a',
-  border: '1px solid #404040',
+  background: surface.base,
+  border: `1px solid ${neutral.border}`,
   borderRadius: 6,
-  color: '#f5f5f5',
+  color: neutral.textSubtle,
   padding: '8px 10px',
 };

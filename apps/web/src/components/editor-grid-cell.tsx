@@ -1,6 +1,7 @@
 'use client';
 
 import type { CSSProperties, DragEvent } from 'react';
+import { brand, neutral, surface } from '@/lib/tokens';
 
 const DRAG_MIME = 'application/x-voxa-button-id';
 
@@ -63,8 +64,8 @@ export function EditorGridCell({
       onClick={() => onAddButton?.(row, column)}
       style={{
         ...emptyCellStyle,
-        borderColor: dropHighlight ? '#2563eb' : '#404040',
-        background: dropHighlight ? '#172554' : '#0a0a0a',
+        borderColor: dropHighlight ? brand.primary : neutral.border,
+        background: dropHighlight ? brand.surfaceTint : surface.base,
       }}
       aria-label={`Empty grid cell row ${row + 1} column ${column + 1}. Drop a button here or click to add.`}
     >
@@ -101,10 +102,10 @@ const emptyCellStyle: CSSProperties = {
   width: '100%',
   height: '100%',
   minHeight: 48,
-  border: '2px dashed #404040',
+  border: `2px dashed ${neutral.border}`,
   borderRadius: 8,
-  background: '#0a0a0a',
-  color: '#a3a3a3',
+  background: surface.base,
+  color: neutral.muted,
   fontSize: '1.25rem',
   cursor: 'pointer',
 };

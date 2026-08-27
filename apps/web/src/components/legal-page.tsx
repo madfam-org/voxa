@@ -1,4 +1,5 @@
 import { Link } from '@/i18n/navigation';
+import { brand, neutral, surface } from '@/lib/tokens';
 
 export interface LegalSection {
   title: string;
@@ -18,8 +19,8 @@ interface LegalPageProps {
 
 const pageStyle: React.CSSProperties = {
   minHeight: '100dvh',
-  background: '#0a0a0a',
-  color: '#fafafa',
+  background: surface.base,
+  color: neutral.text,
   padding: '32px 20px 64px',
 };
 
@@ -30,7 +31,7 @@ const containerStyle: React.CSSProperties = {
 };
 
 const linkStyle: React.CSSProperties = {
-  color: '#93c5fd',
+  color: brand.link,
   textDecoration: 'none',
 };
 
@@ -52,7 +53,7 @@ export function LegalPage({
           </Link>
         </p>
         <h1 style={{ fontSize: '2rem', marginBottom: 8 }}>{title}</h1>
-        <p style={{ color: '#a3a3a3', marginBottom: 24 }}>{lastUpdatedLabel}</p>
+        <p style={{ color: neutral.muted, marginBottom: 24 }}>{lastUpdatedLabel}</p>
         <p style={{ marginBottom: 32 }}>{intro}</p>
 
         <nav
@@ -60,9 +61,9 @@ export function LegalPage({
           style={{
             marginBottom: 32,
             padding: 16,
-            border: '1px solid #404040',
+            border: `1px solid ${neutral.border}`,
             borderRadius: 8,
-            background: '#171717',
+            background: surface.raised,
           }}
         >
           <strong>{contentsLabel}</strong>
@@ -92,8 +93,8 @@ export function LegalPage({
           </section>
         ))}
 
-        <hr style={{ borderColor: '#404040', margin: '32px 0' }} />
-        <p style={{ color: '#a3a3a3', fontSize: '0.875rem' }}>
+        <hr style={{ borderColor: neutral.border, margin: '32px 0' }} />
+        <p style={{ color: neutral.muted, fontSize: '0.875rem' }}>
           {questionsLabel}{' '}
           <a href="mailto:legal@madfam.io" style={linkStyle}>
             legal@madfam.io

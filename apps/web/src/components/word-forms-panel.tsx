@@ -2,6 +2,7 @@
 
 import type { BoardButton, PartOfSpeechTag } from '@voxa/core';
 import { mergeSpeechForms, suggestInflections } from '@voxa/vocabulary';
+import { brand, neutral, surface } from '@/lib/tokens';
 
 interface WordFormsPanelProps {
   button: BoardButton;
@@ -51,7 +52,7 @@ export function WordFormsPanel({ button, disabled, onChange }: WordFormsPanelPro
   return (
     <section style={{ marginBottom: 16 }}>
       <h3 style={{ margin: '0 0 8px', fontSize: '0.875rem' }}>Word forms</h3>
-      <p style={{ margin: '0 0 8px', fontSize: '0.75rem', color: '#a3a3a3', lineHeight: 1.4 }}>
+      <p style={{ margin: '0 0 8px', fontSize: '0.75rem', color: neutral.muted, lineHeight: 1.4 }}>
         Alternate tenses or plurals. Communicators double-tap quickly to cycle forms.
       </p>
 
@@ -65,7 +66,7 @@ export function WordFormsPanel({ button, disabled, onChange }: WordFormsPanelPro
       </div>
 
       {forms.length === 0 ? (
-        <p style={{ fontSize: '0.8125rem', color: '#a3a3a3', margin: 0 }}>No alternate forms yet.</p>
+        <p style={{ fontSize: '0.8125rem', color: neutral.muted, margin: 0 }}>No alternate forms yet.</p>
       ) : (
         <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
           {forms.map((form) => (
@@ -77,8 +78,8 @@ export function WordFormsPanel({ button, disabled, onChange }: WordFormsPanelPro
                 gap: 8,
                 padding: '6px 8px',
                 borderRadius: 6,
-                border: form.id === button.activeSpeechFormId ? '1px solid #2563eb' : '1px solid #404040',
-                background: '#0a0a0a',
+                border: form.id === button.activeSpeechFormId ? `1px solid ${brand.primary}` : `1px solid ${neutral.border}`,
+                background: surface.base,
               }}
             >
               <button
@@ -102,9 +103,9 @@ export function WordFormsPanel({ button, disabled, onChange }: WordFormsPanelPro
 }
 
 const btnStyle: React.CSSProperties = {
-  background: '#262626',
-  color: '#fff',
-  border: '1px solid #404040',
+  background: surface.overlay,
+  color: surface.white,
+  border: `1px solid ${neutral.border}`,
   borderRadius: 6,
   padding: '6px 10px',
   minHeight: 34,

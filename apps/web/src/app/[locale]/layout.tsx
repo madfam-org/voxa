@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { ConsentBanner } from '@/components/consent-banner';
 import { ServiceWorkerRegistration } from '@/components/service-worker-registration';
 import { routing } from '@/i18n/routing';
+import { surface } from '@/lib/tokens';
 
 export function generateStaticParams(): Array<{ locale: string }> {
   return routing.locales.map((locale) => ({ locale }));
@@ -36,7 +37,7 @@ export async function generateMetadata({
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#0a0a0a',
+  themeColor: surface.base,
 };
 
 export default async function LocaleLayout({

@@ -10,6 +10,7 @@ import {
   normalizeAuthRedirectPath,
   oidcTransientCookieAttrs,
 } from '@/lib/auth';
+import { brand, neutral, status, surface } from '@/lib/tokens';
 
 function firstParam(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
@@ -80,24 +81,24 @@ export default async function SignInPage({
         display: 'grid',
         placeItems: 'center',
         padding: 24,
-        background: '#0a0a0a',
-        color: '#fafafa',
+        background: surface.base,
+        color: neutral.text,
       }}
     >
       <section
         style={{
           width: '100%',
           maxWidth: 420,
-          border: '1px solid #404040',
+          border: `1px solid ${neutral.border}`,
           borderRadius: 12,
           padding: 24,
-          background: '#171717',
+          background: surface.raised,
         }}
       >
         <h1 style={{ marginTop: 0 }}>{t('title')}</h1>
-        <p style={{ color: '#a3a3a3' }}>{t('subtitle')}</p>
+        <p style={{ color: neutral.muted }}>{t('subtitle')}</p>
         {errorMessage ? (
-          <p role="alert" style={{ color: '#f87171' }}>
+          <p role="alert" style={{ color: status.danger }}>
             {errorMessage}
           </p>
         ) : null}
@@ -112,8 +113,8 @@ export default async function SignInPage({
                 padding: '12px 16px',
                 borderRadius: 8,
                 border: 'none',
-                background: '#2563eb',
-                color: '#fff',
+                background: brand.primary,
+                color: surface.white,
                 fontWeight: 600,
                 cursor: 'pointer',
               }}
@@ -122,7 +123,7 @@ export default async function SignInPage({
             </button>
           </form>
         ) : (
-          <p role="status" style={{ color: '#fbbf24' }}>
+          <p role="status" style={{ color: status.warning }}>
             {t('oidcNotConfigured')}
           </p>
         )}

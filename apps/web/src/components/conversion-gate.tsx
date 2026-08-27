@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
+import { brand, neutral, status, surface } from '@/lib/tokens';
 
 export type ConversionGateVariant = 'parent' | 'institution' | 'feature';
 
@@ -21,8 +22,8 @@ const btnPrimary: React.CSSProperties = {
   padding: '12px 20px',
   borderRadius: 10,
   border: 'none',
-  background: '#2563eb',
-  color: '#fff',
+  background: brand.primary,
+  color: surface.white,
   fontWeight: 700,
   textDecoration: 'none',
   cursor: 'pointer',
@@ -32,8 +33,8 @@ const btnPrimary: React.CSSProperties = {
 const btnSecondary: React.CSSProperties = {
   ...btnPrimary,
   background: 'transparent',
-  border: '1px solid #525252',
-  color: '#e5e5e5',
+  border: `1px solid ${neutral.disabled}`,
+  color: neutral.borderLight,
 };
 
 export function ConversionGate({
@@ -78,11 +79,11 @@ export function ConversionGate({
         style={{
           maxWidth: 480,
           width: '100%',
-          background: '#171717',
-          border: '1px solid #404040',
+          background: surface.raised,
+          border: `1px solid ${neutral.border}`,
           borderRadius: 16,
           padding: 28,
-          color: '#fafafa',
+          color: neutral.text,
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -92,7 +93,7 @@ export function ConversionGate({
             fontSize: '0.75rem',
             letterSpacing: '0.08em',
             textTransform: 'uppercase',
-            color: variant === 'institution' ? '#fbbf24' : '#93c5fd',
+            color: variant === 'institution' ? status.warning : brand.link,
           }}
         >
           {eyebrow}
@@ -100,7 +101,7 @@ export function ConversionGate({
         <h2 id="conversion-gate-title" style={{ margin: '0 0 12px', fontSize: '1.5rem' }}>
           {title}
         </h2>
-        <p style={{ margin: '0 0 20px', color: '#a3a3a3', lineHeight: 1.6 }}>{body}</p>
+        <p style={{ margin: '0 0 20px', color: neutral.muted, lineHeight: 1.6 }}>{body}</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {variant === 'institution' ? (
             <a href={institutionHref} style={btnPrimary}>
@@ -116,7 +117,7 @@ export function ConversionGate({
               {t('representInstitution')}
             </Link>
           )}
-          <button type="button" onClick={onClose} style={{ ...btnSecondary, background: '#262626' }}>
+          <button type="button" onClick={onClose} style={{ ...btnSecondary, background: surface.overlay }}>
             {t('keepExploring')}
           </button>
         </div>

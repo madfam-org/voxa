@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { BoardButton } from '@voxa/core';
 import { buttonLabel } from '@/lib/board-utils';
+import { neutral, status, surface } from '@/lib/tokens';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
 
@@ -79,9 +80,9 @@ export function UsageReportPanel({
       aria-label="Usage report"
       style={{
         width: 320,
-        background: '#111',
-        color: '#f5f5f5',
-        borderLeft: '1px solid #333',
+        background: surface.section,
+        color: neutral.textSubtle,
+        borderLeft: `1px solid ${neutral.borderSubtle}`,
         padding: 16,
         overflowY: 'auto',
       }}
@@ -93,7 +94,7 @@ export function UsageReportPanel({
         </button>
       </div>
 
-      <p style={{ margin: '0 0 12px', fontSize: '0.8125rem', color: '#a3a3a3', lineHeight: 1.5 }}>
+      <p style={{ margin: '0 0 12px', fontSize: '0.8125rem', color: neutral.muted, lineHeight: 1.5 }}>
         Button activations logged when the communicator opted in to AI/analytics consent. No raw utterance
         text is shown here — counts only.
       </p>
@@ -115,7 +116,7 @@ export function UsageReportPanel({
         {busy ? 'Loading…' : 'Refresh'}
       </button>
 
-      {error ? <p style={{ color: '#f87171', fontSize: '0.875rem' }}>{error}</p> : null}
+      {error ? <p style={{ color: status.danger, fontSize: '0.875rem' }}>{error}</p> : null}
 
       {summary ? (
         <>
@@ -123,7 +124,7 @@ export function UsageReportPanel({
             {summary.totalActivations} activation{summary.totalActivations === 1 ? '' : 's'}
           </p>
           {rows.length === 0 ? (
-            <p style={{ color: '#a3a3a3', fontSize: '0.875rem' }}>No activations in this period.</p>
+            <p style={{ color: neutral.muted, fontSize: '0.875rem' }}>No activations in this period.</p>
           ) : (
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
               <thead>
@@ -157,17 +158,17 @@ const labelStyle: React.CSSProperties = {
 };
 
 const fieldStyle: React.CSSProperties = {
-  background: '#0a0a0a',
-  border: '1px solid #404040',
+  background: surface.base,
+  border: `1px solid ${neutral.border}`,
   borderRadius: 6,
-  color: '#f5f5f5',
+  color: neutral.textSubtle,
   padding: '8px 10px',
 };
 
 const closeBtn: React.CSSProperties = {
-  background: '#262626',
-  color: '#fff',
-  border: '1px solid #404040',
+  background: surface.overlay,
+  color: surface.white,
+  border: `1px solid ${neutral.border}`,
   borderRadius: 6,
   padding: '8px 12px',
   minWidth: 38,
@@ -177,13 +178,13 @@ const closeBtn: React.CSSProperties = {
 
 const thStyle: React.CSSProperties = {
   textAlign: 'left',
-  borderBottom: '1px solid #404040',
+  borderBottom: `1px solid ${neutral.border}`,
   padding: '6px 4px',
-  color: '#a3a3a3',
+  color: neutral.muted,
   fontWeight: 600,
 };
 
 const tdStyle: React.CSSProperties = {
-  borderBottom: '1px solid #262626',
+  borderBottom: `1px solid ${surface.overlay}`,
   padding: '8px 4px',
 };

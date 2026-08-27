@@ -1,6 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import { brand, classic, neutral, status, surface } from '@/lib/tokens';
 
 export type SyncConnectionStatus = 'offline' | 'connecting' | 'live';
 
@@ -41,14 +42,14 @@ export function SyncStatusBanner({
   }
 
   const background = showConflict
-    ? '#172554'
+    ? brand.surfaceTint
     : showOffline || showPending
-      ? '#422006'
+      ? status.warningFill
       : showConnecting
-        ? '#1e293b'
-        : '#171717';
+        ? classic.slate
+        : surface.raised;
 
-  const color = showConflict ? '#bfdbfe' : '#fcd34d';
+  const color = showConflict ? brand.accentSoft : status.warningText;
 
   let message = '';
   if (showConflict) {
@@ -94,8 +95,8 @@ export function SyncStatusBanner({
           onClick={onDismissConflict}
           style={{
             background: 'transparent',
-            color: '#93c5fd',
-            border: '1px solid #334155',
+            color: brand.link,
+            border: `1px solid ${classic.slateMid}`,
             borderRadius: 8,
             padding: '6px 12px',
             fontSize: '0.8125rem',
@@ -110,9 +111,9 @@ export function SyncStatusBanner({
           type="button"
           onClick={() => void onRetry()}
           style={{
-            background: '#262626',
-            color: '#f5f5f5',
-            border: '1px solid #404040',
+            background: surface.overlay,
+            color: neutral.textSubtle,
+            border: `1px solid ${neutral.border}`,
             borderRadius: 8,
             padding: '6px 12px',
             fontSize: '0.8125rem',

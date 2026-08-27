@@ -5,6 +5,7 @@ import { Link } from '@/i18n/navigation';
 import { SiteFooter, SiteNav } from '@/components/site-chrome';
 import { PwaInstallBanner } from '@/components/pwa-install-banner';
 import { formatMxnGross, PRICING, clinicListMonthly } from '@/lib/pricing';
+import { brand, neutral, status, surface } from '@/lib/tokens';
 
 const section: React.CSSProperties = {
   maxWidth: 1100,
@@ -13,8 +14,8 @@ const section: React.CSSProperties = {
 };
 
 const card: React.CSSProperties = {
-  background: '#171717',
-  border: '1px solid #333',
+  background: surface.raised,
+  border: `1px solid ${neutral.borderSubtle}`,
   borderRadius: 16,
   padding: 24,
 };
@@ -28,7 +29,7 @@ export function LandingPage(): React.ReactNode {
   const clinicFrom = formatMxnGross(clinicListMonthly());
 
   return (
-    <div style={{ minHeight: '100dvh', background: '#0a0a0a', color: '#fafafa' }}>
+    <div style={{ minHeight: '100dvh', background: surface.base, color: neutral.text }}>
       <SiteNav active="home" />
 
       {/* Hero */}
@@ -47,7 +48,7 @@ export function LandingPage(): React.ReactNode {
           <p
             style={{
               margin: '0 0 12px',
-              color: '#93c5fd',
+              color: brand.link,
               fontWeight: 600,
               letterSpacing: '0.06em',
               textTransform: 'uppercase',
@@ -59,7 +60,7 @@ export function LandingPage(): React.ReactNode {
           <h1 style={{ margin: '0 0 16px', fontSize: 'clamp(2rem, 5vw, 3rem)', lineHeight: 1.1 }}>
             {t('heroTitle')}
           </h1>
-          <p style={{ margin: '0 0 28px', color: '#a3a3a3', fontSize: '1.125rem', lineHeight: 1.65, maxWidth: 540 }}>
+          <p style={{ margin: '0 0 28px', color: neutral.muted, fontSize: '1.125rem', lineHeight: 1.65, maxWidth: 540 }}>
             {t('heroBody')}
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
@@ -72,25 +73,25 @@ export function LandingPage(): React.ReactNode {
           </div>
           <PwaInstallBanner />
         </div>
-        <div style={{ ...card, background: 'linear-gradient(145deg, #1e3a5f 0%, #171717 60%)' }}>
+        <div style={{ ...card, background: `linear-gradient(145deg, ${brand.gradientDeep} 0%, ${surface.raised} 60%)` }}>
           <h2 style={{ margin: '0 0 12px', fontSize: '1.125rem' }}>{t('whyChangingTitle')}</h2>
-          <ul style={{ margin: 0, paddingLeft: 20, color: '#d4d4d4', lineHeight: 1.7 }}>
+          <ul style={{ margin: 0, paddingLeft: 20, color: neutral.textSecondary, lineHeight: 1.7 }}>
             <li>{t('whyChangingList1')}</li>
             <li>{t('whyChangingList2')}</li>
             <li>{t('whyChangingList3')}</li>
             <li>{t('whyChangingList4')}</li>
           </ul>
-          <p style={{ margin: '16px 0 0', fontSize: '0.875rem', color: '#93c5fd' }}>
+          <p style={{ margin: '16px 0 0', fontSize: '0.875rem', color: brand.link }}>
             {t('whyChangingNote')}
           </p>
         </div>
       </section>
 
       {/* Why AAC deep dive */}
-      <section id="why-aac" style={{ background: '#111', borderBlock: '1px solid #262626' }}>
+      <section id="why-aac" style={{ background: surface.section, borderBlock: `1px solid ${surface.overlay}` }}>
         <div style={section}>
           <h2 style={{ margin: '0 0 12px', fontSize: '1.75rem' }}>{t('humanRightTitle')}</h2>
-          <p style={{ margin: '0 0 32px', color: '#a3a3a3', maxWidth: 720, lineHeight: 1.65 }}>
+          <p style={{ margin: '0 0 32px', color: neutral.muted, maxWidth: 720, lineHeight: 1.65 }}>
             {t('humanRightBody')}
           </p>
           <div
@@ -103,7 +104,7 @@ export function LandingPage(): React.ReactNode {
             {FEATURE_KEYS.map((key) => (
               <div key={key} style={card}>
                 <h3 style={{ margin: '0 0 8px', fontSize: '1.0625rem' }}>{t(`features.${key}.title`)}</h3>
-                <p style={{ margin: 0, color: '#a3a3a3', lineHeight: 1.6, fontSize: '0.9375rem' }}>
+                <p style={{ margin: 0, color: neutral.muted, lineHeight: 1.6, fontSize: '0.9375rem' }}>
                   {t(`features.${key}.body`)}
                 </p>
               </div>
@@ -121,12 +122,12 @@ export function LandingPage(): React.ReactNode {
             gap: 24,
             gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
             alignItems: 'center',
-            borderColor: '#2563eb',
+            borderColor: brand.primary,
           }}
         >
           <div>
             <h2 style={{ margin: '0 0 8px', fontSize: '1.5rem' }}>{t('demoCtaTitle')}</h2>
-            <p style={{ margin: 0, color: '#a3a3a3', lineHeight: 1.6 }}>{t('demoCtaBody')}</p>
+            <p style={{ margin: 0, color: neutral.muted, lineHeight: 1.6 }}>{t('demoCtaBody')}</p>
           </div>
           <Link href="/demo" style={{ ...primaryCta, textAlign: 'center', justifyContent: 'center' }}>
             {t('openDemo')}
@@ -135,10 +136,10 @@ export function LandingPage(): React.ReactNode {
       </section>
 
       {/* Pricing */}
-      <section id="pricing" style={{ background: '#111', borderBlock: '1px solid #262626' }}>
+      <section id="pricing" style={{ background: surface.section, borderBlock: `1px solid ${surface.overlay}` }}>
         <div style={section}>
           <h2 style={{ margin: '0 0 8px', fontSize: '1.75rem', textAlign: 'center' }}>{t('pricingTitle')}</h2>
-          <p style={{ margin: '0 0 40px', textAlign: 'center', color: '#a3a3a3' }}>
+          <p style={{ margin: '0 0 40px', textAlign: 'center', color: neutral.muted }}>
             {t('pricingSubtitle')}
           </p>
           <div
@@ -148,21 +149,21 @@ export function LandingPage(): React.ReactNode {
               gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
             }}
           >
-            <div style={{ ...card, borderColor: '#2563eb' }}>
-              <p style={{ margin: '0 0 4px', color: '#93c5fd', fontWeight: 700, fontSize: '0.8125rem' }}>
+            <div style={{ ...card, borderColor: brand.primary }}>
+              <p style={{ margin: '0 0 4px', color: brand.link, fontWeight: 700, fontSize: '0.8125rem' }}>
                 {t('parentsLabel')}
               </p>
               <h3 style={{ margin: '0 0 8px', fontSize: '1.5rem' }}>{t('free')}</h3>
               <p style={{ margin: '0 0 4px', fontSize: '2rem', fontWeight: 800, letterSpacing: '-0.02em' }}>
                 {t('priceFree')}
               </p>
-              <p style={{ margin: '0 0 16px', color: '#a3a3a3', fontSize: '0.8125rem' }}>
+              <p style={{ margin: '0 0 16px', color: neutral.muted, fontSize: '0.8125rem' }}>
                 {t('priceFreeForever')}
               </p>
-              <p style={{ margin: '0 0 16px', color: '#a3a3a3', fontSize: '0.9375rem' }}>
+              <p style={{ margin: '0 0 16px', color: neutral.muted, fontSize: '0.9375rem' }}>
                 {t('parentsBody')}
               </p>
-              <ul style={{ margin: '0 0 20px', paddingLeft: 18, color: '#d4d4d4', lineHeight: 1.7, fontSize: '0.9375rem' }}>
+              <ul style={{ margin: '0 0 20px', paddingLeft: 18, color: neutral.textSecondary, lineHeight: 1.7, fontSize: '0.9375rem' }}>
                 <li>{t('parentsLi1')}</li>
                 <li>{t('parentsLi2')}</li>
                 <li>{t('parentsLi3')}</li>
@@ -173,21 +174,21 @@ export function LandingPage(): React.ReactNode {
               </Link>
             </div>
             <div style={card}>
-              <p style={{ margin: '0 0 4px', color: '#a3a3a3', fontWeight: 700, fontSize: '0.8125rem' }}>
+              <p style={{ margin: '0 0 4px', color: neutral.muted, fontWeight: 700, fontSize: '0.8125rem' }}>
                 {t('familyLabel')}
               </p>
               <h3 style={{ margin: '0 0 8px', fontSize: '1.5rem' }}>{t('family')}</h3>
               <p style={{ margin: '0 0 4px', fontSize: '2rem', fontWeight: 800, letterSpacing: '-0.02em' }}>
                 {familyMonthly}
-                <span style={{ fontSize: '1rem', fontWeight: 600, color: '#a3a3a3' }}>{t('pricePerMonth')}</span>
+                <span style={{ fontSize: '1rem', fontWeight: 600, color: neutral.muted }}>{t('pricePerMonth')}</span>
               </p>
-              <p style={{ margin: '0 0 16px', color: '#a3a3a3', fontSize: '0.8125rem' }}>
+              <p style={{ margin: '0 0 16px', color: neutral.muted, fontSize: '0.8125rem' }}>
                 {t('priceAnnualOption', { annual: familyAnnual })}
                 {' · '}
                 {t('priceIvaNote')}
               </p>
-              <p style={{ margin: '0 0 16px', color: '#a3a3a3', fontSize: '0.9375rem' }}>{t('familyBody')}</p>
-              <ul style={{ margin: '0 0 20px', paddingLeft: 18, color: '#d4d4d4', lineHeight: 1.7, fontSize: '0.9375rem' }}>
+              <p style={{ margin: '0 0 16px', color: neutral.muted, fontSize: '0.9375rem' }}>{t('familyBody')}</p>
+              <ul style={{ margin: '0 0 20px', paddingLeft: 18, color: neutral.textSecondary, lineHeight: 1.7, fontSize: '0.9375rem' }}>
                 <li>{t('familyLi1')}</li>
                 <li>{t('familyLi2')}</li>
                 <li>{t('familyLi3')}</li>
@@ -196,16 +197,16 @@ export function LandingPage(): React.ReactNode {
                 {t('signInUpgrade')}
               </Link>
             </div>
-            <div id="institutions" style={{ ...card, borderColor: '#ca8a04' }}>
-              <p style={{ margin: '0 0 4px', color: '#fbbf24', fontWeight: 700, fontSize: '0.8125rem' }}>
+            <div id="institutions" style={{ ...card, borderColor: status.premiumBorder }}>
+              <p style={{ margin: '0 0 4px', color: status.warning, fontWeight: 700, fontSize: '0.8125rem' }}>
                 {t('instLabel')}
               </p>
               <h3 style={{ margin: '0 0 8px', fontSize: '1.5rem' }}>{t('institutional')}</h3>
-              <p style={{ margin: '0 0 4px', fontSize: '1.625rem', fontWeight: 800, letterSpacing: '-0.02em', color: '#fde68a' }}>
+              <p style={{ margin: '0 0 4px', fontSize: '1.625rem', fontWeight: 800, letterSpacing: '-0.02em', color: status.premium }}>
                 {t('priceFrom')} {clinicFrom}
-                <span style={{ fontSize: '0.9375rem', fontWeight: 600, color: '#a3a3a3' }}>{t('pricePerMonth')}</span>
+                <span style={{ fontSize: '0.9375rem', fontWeight: 600, color: neutral.muted }}>{t('pricePerMonth')}</span>
               </p>
-              <p style={{ margin: '0 0 16px', color: '#a3a3a3', fontSize: '0.8125rem' }}>
+              <p style={{ margin: '0 0 16px', color: neutral.muted, fontSize: '0.8125rem' }}>
                 {t('priceClinicDetail', {
                   base: formatMxnGross(PRICING.clinic.baseMonthly),
                   seat: formatMxnGross(PRICING.clinic.seatMonthly),
@@ -214,8 +215,8 @@ export function LandingPage(): React.ReactNode {
                 {' · '}
                 {t('priceIvaNote')}
               </p>
-              <p style={{ margin: '0 0 16px', color: '#a3a3a3', fontSize: '0.9375rem' }}>{t('instBody')}</p>
-              <ul style={{ margin: '0 0 20px', paddingLeft: 18, color: '#d4d4d4', lineHeight: 1.7, fontSize: '0.9375rem' }}>
+              <p style={{ margin: '0 0 16px', color: neutral.muted, fontSize: '0.9375rem' }}>{t('instBody')}</p>
+              <ul style={{ margin: '0 0 20px', paddingLeft: 18, color: neutral.textSecondary, lineHeight: 1.7, fontSize: '0.9375rem' }}>
                 <li>{t('instLi1')}</li>
                 <li>{t('instLi2')}</li>
                 <li>{t('instLi3')}</li>
@@ -223,7 +224,7 @@ export function LandingPage(): React.ReactNode {
               </ul>
               <a
                 href="mailto:hello@madfam.io?subject=Voxa%20institutional%20plan"
-                style={{ ...secondaryCta, borderColor: '#ca8a04', color: '#fde68a' }}
+                style={{ ...secondaryCta, borderColor: status.premiumBorder, color: status.premium }}
               >
                 {t('contactSales')}
               </a>
@@ -235,7 +236,7 @@ export function LandingPage(): React.ReactNode {
       {/* Conversion footer CTA */}
       <section style={{ ...section, textAlign: 'center', paddingBottom: 32 }}>
         <h2 style={{ margin: '0 0 12px', fontSize: '1.75rem' }}>{t('footerCtaTitle')}</h2>
-        <p style={{ margin: '0 0 24px', color: '#a3a3a3', maxWidth: 560, marginInline: 'auto', lineHeight: 1.6 }}>
+        <p style={{ margin: '0 0 24px', color: neutral.muted, maxWidth: 560, marginInline: 'auto', lineHeight: 1.6 }}>
           {t('footerCtaBody')}
         </p>
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -258,8 +259,8 @@ const primaryCta: React.CSSProperties = {
   alignItems: 'center',
   padding: '14px 22px',
   borderRadius: 10,
-  background: '#2563eb',
-  color: '#fff',
+  background: brand.primary,
+  color: surface.white,
   fontWeight: 700,
   textDecoration: 'none',
   fontSize: '1rem',
@@ -268,6 +269,6 @@ const primaryCta: React.CSSProperties = {
 const secondaryCta: React.CSSProperties = {
   ...primaryCta,
   background: 'transparent',
-  border: '1px solid #404040',
-  color: '#e5e5e5',
+  border: `1px solid ${neutral.border}`,
+  color: neutral.borderLight,
 };

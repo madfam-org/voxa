@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { GRID_MAX_CELLS, GRID_MAX_DIMENSION, GRID_MIN_CELLS, GRID_MIN_DIMENSION } from '@voxa/vocabulary';
+import { brand, neutral, status, surface } from '@/lib/tokens';
 
 interface GridSettingsPanelProps {
   rows: number;
@@ -28,9 +29,9 @@ export function GridSettingsPanel({
       aria-label="Grid size"
       style={{
         width: 300,
-        background: '#111',
-        color: '#f5f5f5',
-        borderLeft: '1px solid #333',
+        background: surface.section,
+        color: neutral.textSubtle,
+        borderLeft: `1px solid ${neutral.borderSubtle}`,
         padding: 16,
         overflowY: 'auto',
       }}
@@ -42,7 +43,7 @@ export function GridSettingsPanel({
         </button>
       </div>
 
-      <p style={{ margin: '0 0 12px', fontSize: '0.8125rem', color: '#a3a3a3', lineHeight: 1.5 }}>
+      <p style={{ margin: '0 0 12px', fontSize: '0.8125rem', color: neutral.muted, lineHeight: 1.5 }}>
         {GRID_MIN_CELLS}–{GRID_MAX_CELLS} cells ({GRID_MIN_DIMENSION}–{GRID_MAX_DIMENSION} rows/columns). Locked
         motor-plan slots stay fixed; unlocked buttons reflow when the grid shrinks.
       </p>
@@ -74,13 +75,13 @@ export function GridSettingsPanel({
       <p style={{ fontSize: '0.875rem', margin: '0 0 12px' }}>
         {cells} cells · {buttonCount} button{buttonCount === 1 ? '' : 's'}
         {buttonCount > cells ? (
-          <span style={{ color: '#f87171' }}> — too many buttons for this grid</span>
+          <span style={{ color: status.danger }}> — too many buttons for this grid</span>
         ) : null}
       </p>
 
       <button
         type="button"
-        style={{ ...btnStyle, width: '100%', background: '#2563eb', borderColor: '#2563eb' }}
+        style={{ ...btnStyle, width: '100%', background: brand.primary, borderColor: brand.primary }}
         disabled={buttonCount > cells}
         onClick={() => onApply(nextRows, nextColumns)}
       >
@@ -99,17 +100,17 @@ const labelStyle: React.CSSProperties = {
 };
 
 const fieldStyle: React.CSSProperties = {
-  background: '#0a0a0a',
-  border: '1px solid #404040',
+  background: surface.base,
+  border: `1px solid ${neutral.border}`,
   borderRadius: 6,
-  color: '#f5f5f5',
+  color: neutral.textSubtle,
   padding: '8px 10px',
 };
 
 const btnStyle: React.CSSProperties = {
-  background: '#262626',
-  color: '#fff',
-  border: '1px solid #404040',
+  background: surface.overlay,
+  color: surface.white,
+  border: `1px solid ${neutral.border}`,
   borderRadius: 6,
   padding: '8px 12px',
   minHeight: 38,

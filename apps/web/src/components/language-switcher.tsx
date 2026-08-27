@@ -3,11 +3,12 @@
 import { useLocale, useTranslations } from 'next-intl';
 import { UI_LOCALES, type UiLocale } from '@voxa/i18n';
 import { usePathname, useRouter } from '@/i18n/navigation';
+import { neutral, surface } from '@/lib/tokens';
 
 const selectStyle: React.CSSProperties = {
-  background: '#171717',
-  color: '#fafafa',
-  border: '1px solid #404040',
+  background: surface.raised,
+  color: neutral.text,
+  border: `1px solid ${neutral.border}`,
   borderRadius: 8,
   padding: '6px 10px',
   fontSize: '0.8125rem',
@@ -27,7 +28,7 @@ export function LanguageSwitcher({ compact = false }: { compact?: boolean }): Re
         display: 'inline-flex',
         alignItems: 'center',
         gap: compact ? 6 : 8,
-        color: '#d4d4d4',
+        color: neutral.textSecondary,
         fontSize: '0.8125rem',
       }}
     >
