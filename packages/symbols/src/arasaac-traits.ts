@@ -1,5 +1,12 @@
-import type { ArasaacHairColor, ArasaacSkinTone, ArasaacSymbolRef, SymbolDisplayDefaults } from '@voxa/core';
+import type {
+  ArasaacHairColor,
+  ArasaacSkinTone,
+  ArasaacSymbolRef,
+  SymbolDisplayDefaults,
+  SymbolRef,
+} from '@voxa/core';
 import { arasaacImageUrl } from './arasaac.js';
+import { resolveMulberrySymbolUrl } from './mulberry.js';
 
 export interface SkinToneOption {
   value: ArasaacSkinTone;
@@ -42,13 +49,34 @@ export function resolveArasaacSymbolUrl(
   return arasaacImageUrl(ref.pictogramId);
 }
 
+/**
+ * Resolve any {@link SymbolRef} to a display URL, dispatching on its provider.
+ * ARASAAC refs resolve to the static pictogram CDN; Mulberry refs resolve to a
+ * locally vendored SVG. Falls back to the legacy `symbolUrl` when unresolved.
+ */
+export function resolveSymbolRefUrl(
+  ref: SymbolRef,
+  defaults?: SymbolDisplayDefaults,
+): string | undefined {
+  switch (ref.provider) {
+    case 'arasaac':
+      return resolveArasaacSymbolUrl(ref, defaults);
+    case 'mulberry':
+      return resolveMulberrySymbolUrl(ref);
+    default: {
+      const _exhaustive: never = ref;
+      return _exhaustive;
+    }
+  }
+}
+
 export function resolveButtonSymbolUrl(
   symbolUrl: string | undefined,
-  symbolRef: ArasaacSymbolRef | undefined,
+  symbolRef: SymbolRef | undefined,
   defaults?: SymbolDisplayDefaults,
 ): string | undefined {
   if (symbolRef) {
-    return resolveArasaacSymbolUrl(symbolRef, defaults);
+    return resolveSymbolRefUrl(symbolRef, defaults) ?? symbolUrl;
   }
   return symbolUrl;
 }
