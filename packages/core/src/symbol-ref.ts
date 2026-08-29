@@ -17,7 +17,19 @@ export interface ArasaacSymbolRef {
   hairColor?: ArasaacHairColor;
 }
 
-export type SymbolRef = ArasaacSymbolRef;
+/**
+ * Reference to a locally vendored Mulberry Symbol (CC BY-SA 4.0, © Steve Lee /
+ * mulberrysymbols.org). Unlike ARASAAC (CC BY-NC-SA, non-commercial only),
+ * Mulberry permits commercial use, so it is the commercially-clean default
+ * source for Voxa's imagery. `slug` is a concept slug that maps to a vendored
+ * SVG (see `@voxa/symbols` `mulberryImageUrl`).
+ */
+export interface MulberrySymbolRef {
+  provider: 'mulberry';
+  slug: string;
+}
+
+export type SymbolRef = ArasaacSymbolRef | MulberrySymbolRef;
 
 export interface SymbolDisplayDefaults {
   skinTone?: ArasaacSkinTone;

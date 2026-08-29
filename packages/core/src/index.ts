@@ -222,6 +222,7 @@ export type {
   ArasaacHairColor,
   ArasaacSkinTone,
   ArasaacSymbolRef,
+  MulberrySymbolRef,
   SymbolDisplayDefaults,
   SymbolRef,
 } from './symbol-ref.js';

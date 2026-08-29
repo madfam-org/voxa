@@ -1,8 +1,12 @@
+/** Identifies which source a symbol came from. */
+export type SymbolSource = 'arasaac' | 'mulberry';
+
 export interface SymbolSearchHit {
-  id: number;
+  /** Numeric ARASAAC pictogram id, or string concept slug for local sources. */
+  id: number | string;
   keyword: string;
   imageUrl: string;
-  source: 'arasaac';
+  source: SymbolSource;
   tags: string[];
 }
 

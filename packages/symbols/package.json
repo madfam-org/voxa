@@ -14,7 +14,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "node --import tsx --test src/index.test.ts src/arasaac-traits.test.ts",
+    "test": "node --import tsx --test src/index.test.ts src/arasaac-traits.test.ts src/mulberry.test.ts",
     "clean": "rm -rf dist"
   },
   "devDependencies": {
