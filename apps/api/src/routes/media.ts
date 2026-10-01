@@ -3,6 +3,7 @@ import { canAccessBoard, canEditBoard } from '../lib/board-access.js';
 import { getMediaAsset, isAllowedMediaMime, saveMediaAsset } from '../lib/media-store.js';
 import { requireEditor } from '../middleware/team-auth.js';
 import { getStore } from '../store/index.js';
+import { errorMessage } from '../lib/db-errors.js';
 
 export const mediaRoutes = new Hono();
 
@@ -59,7 +60,7 @@ mediaRoutes.post('/', async (c) => {
       201,
     );
   } catch (err) {
-    return c.json({ error: (err as Error).message }, 400);
+    return c.json({ error: errorMessage(err) }, 400);
   }
 });
 
