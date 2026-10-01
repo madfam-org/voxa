@@ -5,6 +5,7 @@ import { maxBoardCount, resolveEntitlement } from '../lib/dhanam.js';
 import { requireEditor } from '../middleware/team-auth.js';
 import { getStore } from '../store/index.js';
 import { broadcastBoardEvent } from '../ws/sync-hub.js';
+import { errorMessage, unwrapDbError } from '../lib/db-errors.js';
 
 export const boardRoutes = new Hono();
 
@@ -93,7 +94,7 @@ boardRoutes.post('/', async (c) => {
     broadcastBoardEvent(result.event);
     return c.json(result, 201);
   } catch (err) {
-    return c.json({ error: (err as Error).message }, 400);
+    return c.json({ error: errorMessage(err) }, 400);
   }
 });
 
@@ -120,7 +121,7 @@ boardRoutes.put('/:boardId', async (c) => {
     broadcastBoardEvent(result.event);
     return c.json(result);
   } catch (err) {
-    const error = err as Error & { status?: number; details?: unknown };
+    const error = unwrapDbError(err) as Error & { status?: number; details?: unknown };
     if (error.status === 409) {
       return c.json({ error: error.message }, 409);
     }
@@ -149,7 +150,7 @@ boardRoutes.delete('/:boardId', async (c) => {
     await getStore().deleteBoard(boardId, userId, role, orgId);
     return c.body(null, 204);
   } catch (err) {
-    const error = err as Error & { status?: number };
+    const error = unwrapDbError(err) as Error & { status?: number };
     if (error.status === 403) return c.json({ error: 'Forbidden' }, 403);
     return c.json({ error: error.message }, 400);
   }
@@ -175,7 +176,7 @@ boardRoutes.post('/:boardId/import/obf', async (c) => {
     broadcastBoardEvent(result.event);
     return c.json(result);
   } catch (err) {
-    const error = err as Error & { status?: number; details?: unknown };
+    const error = unwrapDbError(err) as Error & { status?: number; details?: unknown };
     if (error.status === 422 && error.details) {
       return c.json({ error: error.message, details: error.details }, 422);
     }
@@ -203,7 +204,7 @@ boardRoutes.post('/:boardId/import/obz', async (c) => {
     broadcastBoardEvent(result.event);
     return c.json(result);
   } catch (err) {
-    const error = err as Error & { status?: number; details?: unknown };
+    const error = unwrapDbError(err) as Error & { status?: number; details?: unknown };
     if (error.status === 422 && error.details) {
       return c.json({ error: error.message, details: error.details }, 422);
     }
@@ -231,7 +232,7 @@ boardRoutes.post('/:boardId/import/gridset', async (c) => {
     broadcastBoardEvent(result.event);
     return c.json(result);
   } catch (err) {
-    const error = err as Error & { status?: number; details?: unknown };
+    const error = unwrapDbError(err) as Error & { status?: number; details?: unknown };
     if (error.status === 422 && error.details) {
       return c.json({ error: error.message, details: error.details }, 422);
     }
@@ -259,7 +260,7 @@ boardRoutes.post('/:boardId/import/snap', async (c) => {
     broadcastBoardEvent(result.event);
     return c.json(result);
   } catch (err) {
-    const error = err as Error & { status?: number; details?: unknown };
+    const error = unwrapDbError(err) as Error & { status?: number; details?: unknown };
     if (error.status === 422 && error.details) {
       return c.json({ error: error.message, details: error.details }, 422);
     }
@@ -287,7 +288,7 @@ boardRoutes.post('/:boardId/import/touchchat', async (c) => {
     broadcastBoardEvent(result.event);
     return c.json(result);
   } catch (err) {
-    const error = err as Error & { status?: number; details?: unknown };
+    const error = unwrapDbError(err) as Error & { status?: number; details?: unknown };
     if (error.status === 422 && error.details) {
       return c.json({ error: error.message, details: error.details }, 422);
     }
@@ -314,7 +315,7 @@ boardRoutes.get('/:boardId/export/obz', async (c) => {
       },
     });
   } catch (err) {
-    return c.json({ error: (err as Error).message }, 404);
+    return c.json({ error: errorMessage(err) }, 404);
   }
 });
 
@@ -335,6 +336,6 @@ boardRoutes.get('/:boardId/export/obf', async (c) => {
       'Content-Disposition': `attachment; filename="${boardId}.obf"`,
     });
   } catch (err) {
-    return c.json({ error: (err as Error).message }, 404);
+    return c.json({ error: errorMessage(err) }, 404);
   }
 });

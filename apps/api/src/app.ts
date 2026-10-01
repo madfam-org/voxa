@@ -11,6 +11,7 @@ import { mediaRoutes } from './routes/media.js';
 import { symbolRoutes } from './routes/symbols.js';
 import { syncRoutes } from './routes/sync.js';
 import { canAccessBoard } from './lib/board-access.js';
+import { unwrapDbError } from './lib/db-errors.js';
 import { resolveWsTeam } from './lib/ws-auth.js';
 import { checkStoreReady, getStore, getStoreDriver } from './store/index.js';
 import { getSyncHubMode, presenceCount, registerClient, unregisterClient } from './ws/sync-hub.js';
@@ -19,6 +20,19 @@ export const API_VERSION = '1.0.0';
 
 const app = new Hono();
 const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({ app });
+
+// Same contract as Hono's default error handler (HTTPException responses pass
+// through, anything else is a plain 500), except that the logged error goes
+// through unwrapDbError: a DrizzleQueryError's message carries the query's bound
+// parameters, which are user data.
+app.onError((err, c) => {
+  if ('getResponse' in err && typeof err.getResponse === 'function') {
+    const res = (err as { getResponse: () => Response }).getResponse();
+    return c.newResponse(res.body, res);
+  }
+  console.error(unwrapDbError(err));
+  return c.text('Internal Server Error', 500);
+});
 
 app.use('*', corsMiddleware());
 app.use('/v1/*', rateLimit());

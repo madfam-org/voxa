@@ -1,5 +1,6 @@
 import { serve } from '@hono/node-server';
 import app, { injectWebSocket } from './app.js';
+import { unwrapDbError } from './lib/db-errors.js';
 import { initObservability } from './lib/observability.js';
 import { initStore } from './store/index.js';
 import { initSyncHub, shutdownSyncHub } from './ws/sync-hub.js';
@@ -28,7 +29,10 @@ async function main(): Promise<void> {
 }
 
 main().catch((err) => {
-  console.error('Failed to start Voxa API', err);
-  void import('./lib/observability.js').then(({ captureException }) => captureException(err));
+  const startupError = unwrapDbError(err);
+  console.error('Failed to start Voxa API', startupError);
+  void import('./lib/observability.js').then(({ captureException }) =>
+    captureException(startupError),
+  );
   process.exit(1);
 });
