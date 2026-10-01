@@ -9,7 +9,7 @@ permissions:
 jobs:
   public:
     name: Set Voxa packages public
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Patch package visibility
         env:
