@@ -65,6 +65,8 @@ DATABASE_URL='postgresql://…' pnpm --filter @voxa/api db:migrate
 
 The API container runs migrations automatically on startup when `DATABASE_URL` is set.
 
+The migrator only applies files listed in `drizzle/migrations/meta/_journal.json`, and `db:generate` diffs against the newest `meta/NNNN_snapshot.json`. Always add migrations with `db:generate` (or, for a hand-written file, add its journal entry with a `when` greater than the previous entry, plus a matching snapshot). `src/db/migrations-journal.test.ts` and the CI drift step (`drizzle-kit generate` must produce no changes) enforce this.
+
 ### `activation_events`
 
 | Column | Type | Description |

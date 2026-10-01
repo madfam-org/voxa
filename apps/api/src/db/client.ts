@@ -4,7 +4,7 @@ import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import postgres from 'postgres';
 import * as schema from './schema.js';
 
-function migrationsFolder(): string {
+export function migrationsFolder(): string {
   return join(process.cwd(), 'drizzle/migrations');
 }
 

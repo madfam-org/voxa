@@ -24,6 +24,16 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm turbo typecheck --filter='!@voxa/mobile'
       - run: pnpm test
+      - name: Drizzle schema has no unmigrated changes
+        run: |
+          set -euo pipefail
+          timeout 120 pnpm --filter @voxa/api exec drizzle-kit generate
+          drift="$(git status --porcelain -- apps/api/drizzle)"
+          if [ -n "$drift" ]; then
+            echo "$drift"
+            echo "::error::drizzle-kit generate produced changes: apps/api/src/db/schema.ts differs from the latest snapshot in apps/api/drizzle/migrations/meta. Run 'pnpm --filter @voxa/api db:generate' and commit the migration, journal entry and snapshot."
+            exit 1
+          fi
       - run: ./scripts/mobile/verify-eas-config.sh
       - run: pnpm build
 

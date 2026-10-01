@@ -4,6 +4,10 @@ All notable changes to Voxa are documented here.
 
 ## [Unreleased]
 
+### Fixed
+
+- API: migration `0003_media_assets` is now listed in the drizzle journal (it was never applied by the startup migrator, so `media_assets` was missing on migrator-built databases); it is idempotent for databases that already have the table. Drizzle snapshots added so `db:generate` diffs against the real schema; CI fails on migration/journal/snapshot drift.
+
 ### Added
 
 - Full GA remediation plan: `docs/launch/REMEDIATION_PLAN.md` (W1–W4 waves)
