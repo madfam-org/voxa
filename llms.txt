@@ -1,0 +1,39 @@
+# Voxa
+
+> Open, cross-platform AAC (Augmentative and Alternative Communication) platform: a Next.js board app, an Expo mobile app and a Hono sync/AI API in one pnpm + Turborepo monorepo. Apache-2.0. Public repository.
+
+## Read first
+
+- [AGENTS.md](./AGENTS.md): canonical agent instructions: layout, commands, tests, invariants, deploy workflows, known gaps, related contracts.
+- [README.md](./README.md): product overview, quick start, environments.
+- [CONTRIBUTING.md](./CONTRIBUTING.md): PR checklist (accessibility and clinical review).
+
+## Code map
+
+- `apps/api/src/app.ts`: Hono app, routes under `/v1/*`, `/health`, `/health/ready`, WebSocket `/v1/ws`, `app.onError` (scrubs database errors).
+- `apps/api/src/index.ts`: startup (store, migrations, sync hub) and graceful shutdown (`closeSharedDb`).
+- `apps/api/src/db/client.ts`: `getSharedDb()` (one postgres-js pool per process, `DATABASE_POOL_MAX`, default 5), `runMigrations()` (own `max: 1` client).
+- `apps/api/src/db/startup-retry.ts`: bounded retry of connection-level errors on the startup migration (`DATABASE_STARTUP_RETRY_MS`, default 30 s).
+- `apps/api/src/lib/db-errors.ts`: `unwrapDbError` keeps `DrizzleQueryError` SQL parameters out of responses and logs.
+- `apps/api/src/store/`: board store drivers (PostgreSQL, or an atomic JSON file under `VOXA_DATA_DIR` when `DATABASE_URL` is unset).
+- `apps/api/src/lib/janua.ts`, `apps/api/src/lib/dhanam.ts`: identity (JWKS verification) and entitlement clients.
+- `apps/api/drizzle/migrations/`: SQL migrations, `meta/_journal.json`, snapshots 0000–0003; guarded by `src/db/migrations-journal.test.ts` and the CI drift step.
+- `apps/web`, `apps/mobile`, `packages/*`, `e2e`: web app, Expo app, shared packages, Playwright specs.
+
+## Docs
+
+- [docs/architecture.md](./docs/architecture.md): system design and platform targets.
+- [docs/data-model.md](./docs/data-model.md): tables, migrations and the journal rule.
+- [docs/auth/JANUA.md](./docs/auth/JANUA.md): SSO for web and API.
+- [docs/deploy/ENCLII.md](./docs/deploy/ENCLII.md): deploy workflows, storage, Postgres connection budget.
+- [docs/ops/RUNBOOK.md](./docs/ops/RUNBOOK.md): on-call incidents.
+- [docs/ops/BACKUP_RESTORE.md](./docs/ops/BACKUP_RESTORE.md): backups.
+- [docs/accessibility.md](./docs/accessibility.md), [docs/linguistic-framework.md](./docs/linguistic-framework.md), [docs/ai-roadmap.md](./docs/ai-roadmap.md).
+- [docs/launch/](./docs/launch/): GA roadmap, checklist, status, parity and pricing records.
+- [docs/legal/](./docs/legal/): privacy, terms, data handling.
+
+## Contracts with other repositories
+
+- Janua (identity): https://github.com/madfam-org/janua/blob/main/docs/guides/ECOSYSTEM_INTEGRATION.md
+- Enclii (deploy): https://github.com/madfam-org/enclii/blob/main/docs/guides/ZERO_TOUCH_CONTRACT.md
+- Dhanam (billing): entitlements over HTTP, described in AGENTS.md.

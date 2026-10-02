@@ -34,10 +34,14 @@ voxa/
 │   ├── core/         # Domain models — boards, buttons, profiles
 │   ├── ui/           # WCAG 2.2 accessible UI primitives
 │   ├── obf/          # Open Board Format parser & exporter
+│   ├── import-adapters/ # Imports from other AAC formats (Gridset, Snap, TouchChat)
 │   ├── vocabulary/   # GLP, Fitzgerald Key, motor planning
+│   ├── symbols/      # Symbol sources and search
 │   ├── access/       # Switch scanning & eye-tracking adapters
 │   ├── sync/         # Cloud sync REST + WebSocket client
+│   ├── i18n/         # Shared translations
 │   └── ai/           # LLM, PictoBERT, symbol gen interfaces
+├── e2e/              # Playwright smoke, accessibility and staging specs
 ├── k8s/              # Enclii production & staging manifests (Kustomize)
 ├── enclii.yaml       # Enclii domain, network, and status declarations
 └── docs/             # Architecture, accessibility, deployment
@@ -58,7 +62,19 @@ pnpm dev:web      # board UI on http://localhost:3000
 pnpm dev:mobile   # Expo app (iOS / Android / simulator)
 ```
 
+Without `DATABASE_URL` the API keeps boards in `apps/api/data/boards.json` (override with `VOXA_DATA_DIR`); set `DATABASE_URL` for PostgreSQL. See [.env.example](./.env.example).
+
 On web, tap **I** → **want** to see AI prediction chips. Switch to **Editor (SLP)** for OBF editing, or **Settings** for CVI themes and switch scanning.
+
+### Tests
+
+```bash
+pnpm turbo typecheck --filter='!@voxa/mobile'
+pnpm test              # unit and route tests for every package (not e2e)
+pnpm test:e2e:smoke    # Playwright, needs a running web app
+```
+
+Each package lists its test files explicitly in its `test` script. The API suite gives every test process its own data directory, and its PostgreSQL test runs only when `VOXA_TEST_DATABASE_URL` points at a throwaway database (CI provides one). Details: [AGENTS.md](./AGENTS.md#tests).
 
 ### Status & monitoring
 
@@ -76,6 +92,8 @@ See [docs/deploy/ENCLII.md](./docs/deploy/ENCLII.md) for CI, onboarding, and ope
 
 ## Documentation
 
+- [AGENTS.md](./AGENTS.md) — contributor and agent guide: layout, tests, invariants, deploy workflows
+- [llms.txt](./llms.txt) — compact index for LLM tools
 - [Product Requirements Document](./PRD.md) — full product specification
 - [Architecture](./docs/architecture.md) — system design and platform targets
 - [Data model](./docs/data-model.md) — PostgreSQL schema and migrations
@@ -94,6 +112,12 @@ See [docs/deploy/ENCLII.md](./docs/deploy/ENCLII.md) for CI, onboarding, and ope
 - [Legal summaries](./docs/legal/) — privacy, terms, data handling (live pages at `/legal/*`)
 - [Linguistic Framework](./docs/linguistic-framework.md) — GLP, motor planning, Fitzgerald Key
 - [AI Roadmap](./docs/ai-roadmap.md) — LLM, PictoBERT, symbol generation, TTS
+
+## Related repositories
+
+- [Janua](https://github.com/madfam-org/janua) — identity. The API verifies Janua access tokens against its JWKS; contract: [ecosystem integration guide](https://github.com/madfam-org/janua/blob/main/docs/guides/ECOSYSTEM_INTEGRATION.md).
+- [Enclii](https://github.com/madfam-org/enclii) — deployment platform; contract: [zero-touch contract](https://github.com/madfam-org/enclii/blob/main/docs/guides/ZERO_TOUCH_CONTRACT.md).
+- Dhanam — billing entitlements over HTTP (`apps/api/src/lib/dhanam.ts`; see [AGENTS.md](./AGENTS.md#related-repositories-and-contracts)).
 
 ## License
 

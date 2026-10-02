@@ -8,8 +8,8 @@ Voxa deploys to **madfam.io** via Enclii using the [zero-touch contract](https:/
 
 ```
 GitHub (madfam-org/voxa)
-  ├── push main     → CI builds images → digest commit → k8s/production
-  ├── push staging  → CI builds images → digest commit → k8s/staging
+  ├── push main     → deploy-voxa-{web,api}.yml build, sign, digest commit → k8s/production
+  ├── push staging  → deploy-voxa-{web,api}-staging.yml build, digest commit → k8s/staging
   └── lifecycle callback → api.enclii.dev
 
 Enclii (ArgoCD + Cloudflare Tunnel)
@@ -26,10 +26,10 @@ Routing uses Cloudflare Tunnel to cluster services (`http://voxa-web.{namespace}
 ## Prerequisites
 
 1. **GitHub integration** on `madfam-org/voxa`:
-   - **Webhook** → `https://api.enclii.dev/v1/webhooks/github` (HMAC secret = cluster `enclii/enclii-github-webhook`, key `secret`)
-   - **`ENCLII_CALLBACK_TOKEN`** — lifecycle events from Actions to Enclii (same value as other MADFAM repos; = cluster `enclii/enclii-argocd-webhook`, key `secret`)
+   - **Webhook** → `https://api.enclii.dev/v1/webhooks/github` (HMAC secret = the platform's GitHub webhook secret)
+   - **`ENCLII_CALLBACK_TOKEN`** — lifecycle events from Actions to Enclii (the platform's callback token)
 
-   Setup scripts (values from cluster break-glass — see [GA_STATUS.md](../launch/GA_STATUS.md)):
+   Setup scripts (values come from the platform operator, never from this repo):
 
    ```bash
    ENCLII_WEBHOOK_SECRET='…' ./scripts/deploy/setup-github-webhook.sh
@@ -67,6 +67,17 @@ Routing uses Cloudflare Tunnel to cluster services (`http://voxa-web.{namespace}
 5. **Staging** — `voxa-staging-services` ArgoCD app tracks branch `staging` and `k8s/staging/` (registered at runtime via `POST /v1/admin/onboard/ensure`, not via Enclii `infra/argocd/projects/` entries).
 
 ## Day-to-day deploys
+
+Four workflows build and pin images. Each runs on `workflow_dispatch` and on a push to its branch that touches its app, `packages/**` or its Dockerfile:
+
+| Workflow | Branch | Paths | Signs (cosign) | Pins digests in |
+|----------|--------|-------|----------------|-----------------|
+| `deploy-voxa-api.yml` | `main` | `apps/api/**`, `packages/**` | yes | `k8s/production/` |
+| `deploy-voxa-web.yml` | `main` | `apps/web/**`, `packages/**` | yes | `k8s/production/` |
+| `deploy-voxa-api-staging.yml` | `staging` | `apps/api/**`, `packages/**` | no | `k8s/staging/` |
+| `deploy-voxa-web-staging.yml` | `staging` | `apps/web/**`, `packages/**` | no | `k8s/staging/` |
+
+The production workflows share the `voxa-kustomization-production` concurrency group and the pin step retries up to 3 times (fetch, reset to `origin/main`, re-apply the digest). They then smoke the public health URL and fail loudly if an image was pushed but never pinned. A docs-only change (root `*.md`, `docs/**`) deploys nothing. All GitHub-hosted jobs are pinned to `ubuntu-24.04`.
 
 | Environment | Branch | Manifests | Domains |
 |-------------|--------|-----------|---------|
@@ -146,11 +157,7 @@ ENCLII_CALLBACK_TOKEN='<token>' ./scripts/deploy/setup-github-secrets.sh
 GitHub deliveries show `Invalid signature` when the cluster secret and `switchyard-api` pod env diverge, or after a platform secret rotation without recycling pods.
 
 1. Ensure repo webhook secret matches `enclii/enclii-github-webhook` (update via `setup-github-webhook.sh` or Enclii `POST /v1/admin/provision/secrets`).
-2. Roll `switchyard-api` — Enclii service restart alone may not recycle pods under Argo self-heal:
-
-   ```bash
-   ssh ssh.madfam.io 'sudo /usr/local/bin/k3s kubectl rollout restart deployment/switchyard-api -n enclii'
-   ```
+2. Roll `switchyard-api` — Enclii service restart alone may not recycle pods under Argo self-heal. Use `scripts/deploy/rollout-switchyard-api.sh --via-enclii-scale`; a direct cluster restart is platform break-glass only.
 
 3. Redeliver a hook `ping`; expect **200**. Details: [RUNBOOK.md](../ops/RUNBOOK.md), [GA_STATUS.md](../launch/GA_STATUS.md).
 
@@ -161,76 +168,48 @@ The API selects a store driver at startup:
 | `DATABASE_URL` | Driver | Use |
 |----------------|--------|-----|
 | Set | PostgreSQL | Production and staging (durable) |
-| Unset | JSON file (`./data/boards.json`) | Local dev only |
+| Unset | JSON file (`boards.json` under `VOXA_DATA_DIR`, default `./data`) | Local dev and tests |
 
-### Enable PostgreSQL in cluster
+Without `DATABASE_URL`, pods fall back to the file store on the `/app/data` `emptyDir` volume: data is lost on restart and each replica has its own copy. The file store replaces `boards.json` atomically (temp file, `fsync`, `rename`), so a crash mid-write never leaves a truncated file.
 
-1. Provision credentials (template: `deploy/secrets-template.yaml`).
-2. Apply via Enclii onboard:
+### How the API reaches Postgres
 
-   ```bash
-   enclii onboard --repo madfam-org/voxa --project voxa \
-     --manifest-path k8s/production \
-     --secrets-file deploy/secrets-template.yaml
-   ```
+Production and staging connect **directly** to a shared PostgreSQL server on port 5432 (not through a connection pooler). `DATABASE_URL` lives in the `voxa-secrets` Secret; never commit it. `scripts/deploy/provision-shared-postgres.sh` creates the databases and writes the URL. Templates: `deploy/secrets-template.yaml`, `deploy/secrets.env.example`.
 
-3. Sync ArgoCD (`voxa-services`). The API runs Drizzle migrations on startup and seeds the demo board when the database is empty.
+On startup the API runs the Drizzle migrations (`apps/api/drizzle/migrations`, journaled in `meta/_journal.json`) on a dedicated single connection, closes it, seeds the demo board when the database is empty, and only then listens. A pod whose first connection is refused, reset, times out or cannot resolve the host (a transient connection refusal at startup, e.g. before the pod's network is ready) retries with backoff (0.5 s doubling to 5 s) for up to `DATABASE_STARTUP_RETRY_MS` (default 30 s), logging the error code only. After that, or on any SQL or migration error, it exits as before. Then verify readiness:
 
-4. Verify readiness:
+```bash
+curl -sS https://voxa-api.madfam.io/health/ready
+# {"status":"ready","service":"voxa-api","store":"postgres",...}
+```
 
-   ```bash
-   curl -sS https://voxa-api.madfam.io/health/ready
-   # {"status":"ready","service":"voxa-api","store":"postgres"}
-   ```
+### Connection budget (contract)
 
-Until `DATABASE_URL` is bound, pods use the file store on an `emptyDir` volume (data lost on restart).
+The Postgres server is shared with other services under a fixed connection limit, so the API's share is bounded:
 
-### Connection pool
-
-Each API process opens **one** PostgreSQL pool (`getSharedDb` in `apps/api/src/db/client.ts`), shared by the board store, media store and activation events, and closes it on `SIGTERM`/`SIGINT`. Request handlers must never open their own pool.
+- Each API process opens **one** pool (`getSharedDb` in `apps/api/src/db/client.ts`), shared by the board store, the media store and `POST /v1/events/activations`. Request handlers must never open their own pool (`createDb` is for owners that close what they open, such as migrations).
+- `DATABASE_POOL_MAX` (default `5`) caps that pool. Two production replicas hold at most 10 connections, plus 1 per pod while startup migrations run. Raise it only after checking the server's budget.
+- Idle pooled connections close after 30 s. `closeSharedDb()` ends the pool on `SIGTERM`/`SIGINT`.
+- The `/health/ready` probe pings through the same shared pool (`SELECT 1`); it opens no connection of its own.
 
 | Variable | Default | Notes |
 |----------|---------|-------|
-| `DATABASE_POOL_MAX` | `5` | Max connections per API process. Two production replicas hold at most 10. The database is shared with other services under a fixed connection budget, so raise this only after checking that budget. |
+| `DATABASE_POOL_MAX` | `5` | Max pooled connections per API process. |
+| `DATABASE_STARTUP_RETRY_MS` | `30000` | Total time startup retries connection-level errors. `0` disables the retry. |
+| `VOXA_DATA_DIR` | `./data` | File-store directory when `DATABASE_URL` is unset. |
 
-Idle pooled connections close after 30 s. Startup migrations use a separate single connection that is closed before the server listens.
+### Managed Postgres addon (alternative)
 
-### Shared Postgres (recommended for GA)
-
-Most MADFAM apps use logical databases on the shared `data/postgres` cluster (via PgBouncer). This avoids waiting on per-project CloudNativePG addons when CNPG provisioning stalls.
-
-```bash
-ENCLII_TOKEN='…' ./scripts/deploy/provision-shared-postgres.sh
-```
-
-Then roll the API deployment (restart annotation in GitOps or `kubectl rollout restart deployment/voxa-api -n voxa`) and verify:
+An isolated Enclii-managed Postgres can replace the shared server:
 
 ```bash
-curl -sS https://voxa-api.madfam.io/health/ready
-# {"status":"ready","service":"voxa-api","store":"postgres"}
-```
-
-Credentials live in `voxa-secrets` (`DATABASE_URL`); never commit passwords. Platform ops should add `voxa` / `voxa_staging` to `pgbouncer-config` when PgBouncer RBAC is fixed, then switch the URL host to `pgbouncer.data.svc.cluster.local:6432`.
-
-### Managed Postgres addon (isolated CNPG)
-
-```bash
-# Create addon (Enclii UI or API)
 enclii addon create voxa --project voxa --plan standard-0 --engine postgres
-
-# Wait until status=ready, then bind to voxa-api
+# when status=ready:
 enclii addon bind <addon_id> --service <voxa-api-service-id> --env-var DATABASE_URL
-
-# Sync workloads
 enclii ops apps sync --application voxa-services
 ```
 
-Production addon `voxa` (id `c3ea79f2-e05e-4567-8f10-d9d98a0fc2dd`) was provisioned via Enclii; bind once status is **ready**, then verify:
-
-```bash
-curl -sS https://voxa-api.madfam.io/health/ready
-# expect store: postgres
-```
+`scripts/deploy/bind-database-addon.sh` automates the poll-and-bind. Keep the connection budget above in mind for any target.
 
 Schema reference: [docs/data-model.md](../data-model.md).
 
