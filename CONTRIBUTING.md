@@ -18,6 +18,8 @@ pnpm typecheck
 pnpm test
 ```
 
+Each package's `test` script lists its test files explicitly: add a new test file there or it will not run. API tests must not share state through `apps/api/data/`; the test preload gives every test process its own `VOXA_DATA_DIR`. See [AGENTS.md](./AGENTS.md) for the invariants (migration journal, shared database pool, error scrubbing).
+
 Health endpoints used by Kubernetes probes (`/api/health` on web, `/health` on API) have unit tests under `apps/web` and `apps/api`.
 
 For deployment changes, see [Enclii Deployment](./docs/deploy/ENCLII.md).

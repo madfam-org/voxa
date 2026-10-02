@@ -33,6 +33,18 @@ Unauthenticated `GET /v1/boards` should return **401** when `authEnforced` is tr
 3. Inspect API pod logs: `kubectl logs -l app=voxa-api -n voxa --tail=200`.
 4. If migrations failed, fix schema and restart deployment.
 
+### API pod exits at boot with a connection error
+
+Symptom: a new API pod logs `Voxa API startup migrations: database unreachable (ECONNREFUSED) …` lines, then either becomes ready or exits with `Failed to start Voxa API`.
+
+1. A few retry lines followed by readiness are expected: startup retries a transient connection refusal (also `ECONNRESET`, `ETIMEDOUT`, `ENOTFOUND`, `EAI_AGAIN`) for `DATABASE_STARTUP_RETRY_MS` (default 30 s). Nothing to do.
+2. If the pod still exits after the budget, the database is unreachable from the pod: check the Postgres server's health, the `postgres` egress in `enclii.yaml`, and the `DATABASE_URL` host and port in `voxa-secrets`.
+3. An SQL or migration error is never retried; fix the migration (see [data-model.md](../data-model.md#migrations)) and redeploy.
+
+### Postgres reports too many connections
+
+The API holds one pool per process, capped by `DATABASE_POOL_MAX` (default 5), against a shared server with a fixed connection limit. See the [connection budget](../deploy/ENCLII.md#connection-budget-contract). Check the replica count times `DATABASE_POOL_MAX` before raising either.
+
 ### Web loads but sync fails
 
 1. Confirm `NEXT_PUBLIC_API_URL` points to `https://voxa-api.madfam.io`.
@@ -73,10 +85,7 @@ Symptom: GitHub hook deliveries show `Invalid HTTP Response: 401`; Enclii respon
    ENCLII_TOKEN='…' ENCLII_WEBHOOK_SECRET='…' \
      ./scripts/deploy/rollout-switchyard-api.sh --via-enclii-scale
    ```
-   Break-glass (requires Cloudflare Access SSH):
-   ```bash
-   ssh ssh.madfam.io 'sudo /usr/local/bin/k3s kubectl rollout restart deployment/switchyard-api -n enclii'
-   ```
+   A direct cluster restart is platform break-glass only; follow the platform operator's procedure.
 4. Re-test: GitHub hook **Redeliver** on a `ping` event should return **200**.
 
 ### Rate limit spikes (429)

@@ -9,6 +9,23 @@ on:
 jobs:
   build:
     runs-on: ubuntu-24.04
+    # Throwaway PostgreSQL for apps/api/src/routes/media.pg.test.ts, which runs
+    # the real migrations and proves the API keeps one shared database pool.
+    # Without VOXA_TEST_DATABASE_URL that test file skips itself.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: voxa_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci -d voxa_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
 
@@ -24,6 +41,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm turbo typecheck --filter='!@voxa/mobile'
       - run: pnpm test
+        env:
+          VOXA_TEST_DATABASE_URL: postgres://ci:ci@127.0.0.1:5432/voxa_test
       - name: Drizzle schema has no unmigrated changes
         run: |
           set -euo pipefail

@@ -89,16 +89,4 @@ export async function runMigrations(databaseUrl: string): Promise<void> {
   }
 }
 
-export async function pingDatabase(databaseUrl: string): Promise<boolean> {
-  const client = postgres(databaseUrl, { max: 1 });
-  try {
-    await client`SELECT 1`;
-    return true;
-  } catch {
-    return false;
-  } finally {
-    await client.end();
-  }
-}
-
 export { schema };

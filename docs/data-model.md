@@ -1,6 +1,6 @@
 # Voxa data model
 
-Voxa stores communication boards and sync events. PostgreSQL is the production store; local development falls back to `data/boards.json` when `DATABASE_URL` is unset.
+Voxa stores communication boards and sync events. PostgreSQL is the production store. When `DATABASE_URL` is unset (local development, tests) the API falls back to a JSON file, `boards.json` under `VOXA_DATA_DIR` (default `./data` in the API's working directory), which it replaces atomically (temp file, `fsync`, `rename`). Media and activation events are kept in memory in that mode.
 
 ## Tables
 
@@ -63,9 +63,9 @@ pnpm --filter @voxa/api db:generate
 DATABASE_URL='postgresql://…' pnpm --filter @voxa/api db:migrate
 ```
 
-The API container runs migrations automatically on startup when `DATABASE_URL` is set.
+The API container runs migrations automatically on startup when `DATABASE_URL` is set, on a dedicated single connection that is closed before the server listens. A transient connection refusal at startup is retried for `DATABASE_STARTUP_RETRY_MS` (default 30 s); SQL and migration errors are never retried. Pool sizing and the connection budget: [deploy/ENCLII.md](./deploy/ENCLII.md#connection-budget-contract).
 
-The migrator only applies files listed in `drizzle/migrations/meta/_journal.json`, and `db:generate` diffs against the newest `meta/NNNN_snapshot.json`. Always add migrations with `db:generate` (or, for a hand-written file, add its journal entry with a `when` greater than the previous entry, plus a matching snapshot). `src/db/migrations-journal.test.ts` and the CI drift step (`drizzle-kit generate` must produce no changes) enforce this.
+The migrator only applies files listed in `drizzle/migrations/meta/_journal.json`, and `db:generate` diffs against the newest `meta/NNNN_snapshot.json`. Migration `0003_media_assets` is idempotent (`IF NOT EXISTS`, guarded FK), so databases that already had the table apply it cleanly. Always add migrations with `db:generate` (or, for a hand-written file, add its journal entry with a `when` greater than the previous entry, plus a matching snapshot). `src/db/migrations-journal.test.ts` and the CI drift step (`drizzle-kit generate` must produce no changes) enforce this.
 
 ### `activation_events`
 

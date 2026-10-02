@@ -8,9 +8,13 @@ All notable changes to Voxa are documented here.
 
 - API: migration `0003_media_assets` is now listed in the drizzle journal (it was never applied by the startup migrator, so `media_assets` was missing on migrator-built databases); it is idempotent for databases that already have the table. Drizzle snapshots added so `db:generate` diffs against the real schema; CI fails on migration/journal/snapshot drift.
 - API: the media store (`POST/GET /v1/media`) and activation events opened a new PostgreSQL pool on every request and never closed it. The API now uses one process-wide pool (default 5 connections, `DATABASE_POOL_MAX`), shared with the board store and closed on shutdown.
+- API: the JSON file store (used when `DATABASE_URL` is unset) rewrote `boards.json` in place, so a concurrent reader or a restart after a crash mid-write could see a truncated file. Writes are now atomic (temp file, `fsync`, `rename`). The directory is configurable with `VOXA_DATA_DIR`, and the API test suite gives every parallel test process its own directory, which removes the intermittent `Unexpected end of JSON input` test failures.
+- API: a transient connection refusal at startup no longer exits the process on the first attempt. Startup migrations retry connection-level errors with backoff for up to `DATABASE_STARTUP_RETRY_MS` (default 30 s); SQL and migration errors still fail immediately.
+- API: `db:migrate` scrubs query parameters from its error output, like the server does.
 
 ### Added
 
+- `AGENTS.md` and `llms.txt`; CI runs the PostgreSQL-backed API test against a `postgres:16` service container.
 - Full GA remediation plan: `docs/launch/REMEDIATION_PLAN.md` (W1–W4 waves)
 - Customer migration guide: `docs/launch/MIGRATION.md` (OBF import path)
 - Multi-board library: web board picker, **New board**, `VoxaClient.createBoard()`
