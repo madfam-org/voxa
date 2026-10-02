@@ -1,4 +1,5 @@
 import { runMigrations } from '../db/client.js';
+import { withStartupConnectRetry } from '../db/startup-retry.js';
 import { createFileBoardStore } from './file-board-store.js';
 import { createPgBoardStore } from './pg-board-store.js';
 import type { BoardStore, StoreDriver } from './types.js';
@@ -22,7 +23,10 @@ export async function initStore(): Promise<StoreDriver> {
   const databaseUrl = process.env.DATABASE_URL?.trim();
 
   if (databaseUrl) {
-    await runMigrations(databaseUrl);
+    // First database contact. A transient connection refusal at startup is
+    // retried for DATABASE_STARTUP_RETRY_MS (default 30 s); SQL and migration
+    // errors are not. See src/db/startup-retry.ts.
+    await withStartupConnectRetry('Voxa API startup migrations', () => runMigrations(databaseUrl));
     activeStore = createPgBoardStore(databaseUrl);
     await activeStore.ensureSeeded?.();
     driver = 'postgres';

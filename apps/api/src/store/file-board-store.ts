@@ -1,5 +1,16 @@
-import { mkdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { randomBytes } from 'node:crypto';
+import {
+  closeSync,
+  existsSync,
+  fsyncSync,
+  mkdirSync,
+  openSync,
+  readFileSync,
+  renameSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
 import {
   createDemoBoard,
   DEMO_BOARD_ID,
@@ -30,8 +41,19 @@ interface StoreState {
   events: SyncEvent[];
 }
 
-const DATA_DIR = join(process.cwd(), 'data');
-const STORE_PATH = join(DATA_DIR, 'boards.json');
+/**
+ * Directory holding `boards.json`: `VOXA_DATA_DIR` when set, else `./data`
+ * relative to the working directory (`/app/data` in the container). Read on
+ * every call so tests can point each process at its own directory.
+ */
+export function fileStoreDataDir(): string {
+  const configured = process.env.VOXA_DATA_DIR?.trim();
+  return configured ? resolve(configured) : join(process.cwd(), 'data');
+}
+
+export function boardStorePath(): string {
+  return join(fileStoreDataDir(), 'boards.json');
+}
 
 function emptyState(): StoreState {
   const demo = createDemoBoard();
@@ -39,16 +61,40 @@ function emptyState(): StoreState {
 }
 
 function loadState(): StoreState {
-  if (!existsSync(STORE_PATH)) {
+  const storePath = boardStorePath();
+  if (!existsSync(storePath)) {
     return emptyState();
   }
-  const raw = readFileSync(STORE_PATH, 'utf8');
+  const raw = readFileSync(storePath, 'utf8');
   return JSON.parse(raw) as StoreState;
 }
 
+/**
+ * Atomic replace: write a sibling temp file, fsync it, then rename it over
+ * `filePath`. rename() on the same filesystem swaps the directory entry in one
+ * step, so a reader (or a restart after a crash mid-write) sees either the old
+ * file or the new one, never a truncated one.
+ */
+export function writeFileAtomic(filePath: string, contents: string): void {
+  mkdirSync(dirname(filePath), { recursive: true });
+  const tempPath = `${filePath}.${process.pid}.${randomBytes(6).toString('hex')}.tmp`;
+  try {
+    const fd = openSync(tempPath, 'w');
+    try {
+      writeFileSync(fd, contents);
+      fsyncSync(fd);
+    } finally {
+      closeSync(fd);
+    }
+    renameSync(tempPath, filePath);
+  } catch (err) {
+    rmSync(tempPath, { force: true });
+    throw err;
+  }
+}
+
 function saveState(state: StoreState): void {
-  mkdirSync(dirname(STORE_PATH), { recursive: true });
-  writeFileSync(STORE_PATH, JSON.stringify(state, null, 2));
+  writeFileAtomic(boardStorePath(), JSON.stringify(state, null, 2));
 }
 
 export function createFileBoardStore(initialState?: StoreState): BoardStore {

@@ -17,7 +17,8 @@
     },
     "test": {
       "dependsOn": ["^build"],
-      "outputs": ["coverage/**"]
+      "outputs": ["coverage/**"],
+      "passThroughEnv": ["VOXA_TEST_DATABASE_URL"]
     },
     "clean": {
       "cache": false

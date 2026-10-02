@@ -1,3 +1,4 @@
+import { unwrapDbError } from '../lib/db-errors.js';
 import { runMigrations } from './client.js';
 
 async function main(): Promise<void> {
@@ -12,6 +13,7 @@ async function main(): Promise<void> {
 }
 
 main().catch((err) => {
-  console.error(err);
+  // A DrizzleQueryError message carries the query's bound parameters.
+  console.error(unwrapDbError(err));
   process.exit(1);
 });
