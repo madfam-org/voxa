@@ -89,13 +89,22 @@ pnpm build
 5. **Atomic file store.** Without `DATABASE_URL` the API keeps boards in
    `boards.json` under `VOXA_DATA_DIR` (default `./data`) and replaces it with
    temp file + `fsync` + `rename`. Do not reintroduce in-place writes.
+6. **Next image optimizer off.** `apps/web/next.config.ts` sets
+   `images.unoptimized: true` with `remotePatterns: []`, so `/_next/image`
+   answers 404 (GHSA-2xp9-vwfh-vxw4 defence in depth). Nothing imports
+   `next/image`; pictograms are plain `<img>` tags loaded straight from their
+   URLs. Enforced by `apps/web/src/next-config.test.ts`, by the CI a11y job
+   against the built standalone server and by
+   `scripts/launch/verify-prod-image-optimizer.sh` after each production web
+   deploy. Re-enabling the optimizer or adding a remote origin means changing
+   the config, the test and this entry together, with exact origins only.
 
 ## Deploy
 
 | Workflow                                                     | Trigger                                                        | Effect                                                                           |
 | ------------------------------------------------------------ | -------------------------------------------------------------- | -------------------------------------------------------------------------------- |
 | `deploy-voxa-api.yml`                                        | push to `main` touching `apps/api/**`, `packages/**`; dispatch | build, cosign-sign, pin digest in `k8s/production`, smoke `/health`              |
-| `deploy-voxa-web.yml`                                        | push to `main` touching `apps/web/**`, `packages/**`; dispatch | same for web                                                                     |
+| `deploy-voxa-web.yml`                                        | push to `main` touching `apps/web/**`, `packages/**`; dispatch | same for web; smoke `/demo` and `/_next/image` → 404                             |
 | `deploy-voxa-api-staging.yml`, `deploy-voxa-web-staging.yml` | push to `staging` with the same paths; dispatch                | build and pin in `k8s/staging` (not signed)                                      |
 | `mobile-eas.yml`, `mobile-eas-submit.yml`, `ghcr-public.yml` | dispatch only                                                  | EAS build/submit, package visibility                                             |
 | `e2e-smoke.yml`                                              | daily schedule; dispatch                                       | soak checks, scenario scripts and production GA verification (`scripts/launch/`) |
