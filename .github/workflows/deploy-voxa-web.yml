@@ -193,9 +193,10 @@ jobs:
       - name: Smoke test production web
         if: success()
         run: |
-          chmod +x scripts/launch/verify-prod-ga.sh scripts/launch/verify-prod-demo.sh
+          chmod +x scripts/launch/verify-prod-ga.sh scripts/launch/verify-prod-demo.sh scripts/launch/verify-prod-image-optimizer.sh
           ./scripts/launch/verify-prod-ga.sh || true
           ./scripts/launch/verify-prod-demo.sh
+          ./scripts/launch/verify-prod-image-optimizer.sh
 
       - name: Restart voxa-web pods (optional legacy token)
         if: success()

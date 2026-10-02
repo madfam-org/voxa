@@ -87,6 +87,9 @@ jobs:
           HOSTNAME: 127.0.0.1
       - name: Wait for web
         run: npx --yes wait-on http://127.0.0.1:3000/api/health --timeout 120000
+      - name: Image optimizer is off (/_next/image -> 404)
+        # GHSA-2xp9-vwfh-vxw4: apps/web/next.config.ts sets images.unoptimized.
+        run: VOXA_PROD_WEB_URL=http://127.0.0.1:3000 VOXA_IMAGE_VERIFY_ATTEMPTS=1 ./scripts/launch/verify-prod-image-optimizer.sh
       - run: pnpm test:e2e:a11y
         env:
           PLAYWRIGHT_BASE_URL: http://127.0.0.1:3000
