@@ -4,7 +4,7 @@
 
 ## Read first
 
-- [AGENTS.md](./AGENTS.md): canonical agent instructions: layout, commands, tests, invariants, deploy workflows, known gaps, related contracts.
+- [AGENTS.md](./AGENTS.md): canonical agent instructions: layout, commands, tests, invariants, deploy workflows, related contracts, and "Pending work and known gaps", the single prioritized backlog.
 - [README.md](./README.md): product overview, quick start, environments.
 - [CONTRIBUTING.md](./CONTRIBUTING.md): PR checklist (accessibility and clinical review).
 
@@ -29,7 +29,7 @@
 - [docs/ops/RUNBOOK.md](./docs/ops/RUNBOOK.md): on-call incidents.
 - [docs/ops/BACKUP_RESTORE.md](./docs/ops/BACKUP_RESTORE.md): backups.
 - [docs/accessibility.md](./docs/accessibility.md), [docs/linguistic-framework.md](./docs/linguistic-framework.md), [docs/ai-roadmap.md](./docs/ai-roadmap.md).
-- [docs/launch/](./docs/launch/): GA roadmap, checklist, status, parity and pricing records.
+- [docs/launch/](./docs/launch/): GA roadmap (product and launch phases), checklist, status, parity and pricing records. Engineering pending work is in AGENTS.md.
 - [docs/legal/](./docs/legal/): privacy, terms, data handling.
 
 ## Contracts with other repositories

@@ -113,17 +113,23 @@ Argo CD syncs the pinned manifests. GitHub-hosted jobs are pinned to
 `ubuntu-24.04`. Full runbook: [docs/deploy/ENCLII.md](./docs/deploy/ENCLII.md);
 on-call: [docs/ops/RUNBOOK.md](./docs/ops/RUNBOOK.md).
 
-## Known gaps
+## Pending work and known gaps (as of 2026-10-02)
 
-- `tar` 6.2.1 (critical advisory) ships inside the Expo SDK 52 CLI
-  (`@expo/cli`). It is mobile build tooling only, never in the API or web
-  images; the fix is an Expo SDK upgrade.
-- The web app does not set `images.unoptimized`; it renders no `next/image`
-  today, so the image optimizer is unused but still reachable.
-- `e2e-smoke.yml`: the last recorded scheduled runs (2026-08-20 to 08-22)
-  failed on the demo-board smoke, and no scheduled run is recorded since.
-- Staging images are not signed; only production deploys run cosign.
-- `pnpm format` (Prettier) is not enforced in CI and several files predate it.
+This is the single pending-work list for the repository; `llms.txt` points
+here. Product and launch phases live in
+[docs/launch/GA_ROADMAP.md](./docs/launch/GA_ROADMAP.md). Priorities: **P0**
+blocks production use, **P1** next, **P2** planned, **P3** cleanup.
+
+| Item                                                                                                                                                                                                                         | Why it matters                                                                                                                                                                          | Priority | Kind                                                                            | Tracking |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------- | -------- |
+| **Expo SDK upgrade** for `apps/mobile` (Expo SDK 52 today).                                                                                                                                                                  | The Expo SDK 52 CLI (`@expo/cli`) bundles a `tar` release with a critical advisory. It is mobile build tooling only, never in the API or web images, and only an SDK upgrade clears it. | P1       | Engineering work                                                                | —        |
+| **`e2e-smoke.yml` schedule is not producing runs.** The workflow is active with a daily cron, but the last scheduled run was 2026-08-22, and the scheduled runs from 2026-08-15 to 08-22 all failed on the demo-board smoke. | The daily soak and production GA verification in `scripts/launch/` are not running, so a regression would go unnoticed.                                                                 | P1       | Engineering work (find why the schedule stopped, then fix the demo-board smoke) | —        |
+| **Staging images are unsigned.** Only the production deploy workflows run cosign.                                                                                                                                            | Staging cannot be verified the same way as production.                                                                                                                                  | P2       | Engineering work                                                                | —        |
+| **Prettier is not enforced.** `pnpm format` exists but CI does not check it, and several files predate it.                                                                                                                   | Formatting drifts and creates noise in unrelated PRs.                                                                                                                                   | P3       | Engineering work (one reformat, then a CI check)                                | —        |
+| **Operational docs to be generalized** for a public repository.                                                                                                                                                              | Keeps the public docs useful without operator-specific detail.                                                                                                                          | P2       | Owner decision pending                                                          | —        |
+
+The Next image optimizer gap listed here before 2026-10-02 is closed (#13,
+invariant 6).
 
 ## Related repositories and contracts
 
