@@ -7,6 +7,7 @@ All notable changes to Voxa are documented here.
 ### Fixed
 
 - API: migration `0003_media_assets` is now listed in the drizzle journal (it was never applied by the startup migrator, so `media_assets` was missing on migrator-built databases); it is idempotent for databases that already have the table. Drizzle snapshots added so `db:generate` diffs against the real schema; CI fails on migration/journal/snapshot drift.
+- API: the media store (`POST/GET /v1/media`) and activation events opened a new PostgreSQL pool on every request and never closed it. The API now uses one process-wide pool (default 5 connections, `DATABASE_POOL_MAX`), shared with the board store and closed on shutdown.
 
 ### Added
 

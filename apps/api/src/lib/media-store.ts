@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { eq } from 'drizzle-orm';
-import { createDb } from '../db/client.js';
+import { getSharedDb } from '../db/client.js';
 import { mediaAssets } from '../db/schema.js';
 import { getStoreDriver } from '../store/index.js';
 
@@ -78,7 +78,7 @@ export async function saveMediaAsset(
     return record;
   }
 
-  const { db } = createDb(databaseUrl);
+  const { db } = getSharedDb(databaseUrl);
   await db.insert(mediaAssets).values({
     id: record.id,
     boardId: record.boardId,
@@ -100,7 +100,7 @@ export async function getMediaAsset(
     return fileMedia.get(id) ?? null;
   }
 
-  const { db } = createDb(databaseUrl);
+  const { db } = getSharedDb(databaseUrl);
   const rows = await db
     .select()
     .from(mediaAssets)

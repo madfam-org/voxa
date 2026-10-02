@@ -185,6 +185,16 @@ The API selects a store driver at startup:
 
 Until `DATABASE_URL` is bound, pods use the file store on an `emptyDir` volume (data lost on restart).
 
+### Connection pool
+
+Each API process opens **one** PostgreSQL pool (`getSharedDb` in `apps/api/src/db/client.ts`), shared by the board store, media store and activation events, and closes it on `SIGTERM`/`SIGINT`. Request handlers must never open their own pool.
+
+| Variable | Default | Notes |
+|----------|---------|-------|
+| `DATABASE_POOL_MAX` | `5` | Max connections per API process. Two production replicas hold at most 10. The database is shared with other services under a fixed connection budget, so raise this only after checking that budget. |
+
+Idle pooled connections close after 30 s. Startup migrations use a separate single connection that is closed before the server listens.
+
 ### Shared Postgres (recommended for GA)
 
 Most MADFAM apps use logical databases on the shared `data/postgres` cluster (via PgBouncer). This avoids waiting on per-project CloudNativePG addons when CNPG provisioning stalls.

@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { and, eq, gte, sql } from 'drizzle-orm';
-import { createDb } from '../db/client.js';
+import { getSharedDb } from '../db/client.js';
 import { activationEvents, boards } from '../db/schema.js';
 import { getStoreDriver } from '../store/index.js';
 
@@ -32,7 +32,7 @@ export async function recordActivation(
     return;
   }
 
-  const { db } = createDb(databaseUrl);
+  const { db } = getSharedDb(databaseUrl);
   await db.insert(activationEvents).values({
     id: randomUUID(),
     boardId: input.boardId,
@@ -66,7 +66,7 @@ export async function getActivationSummary(
     };
   }
 
-  const { db } = createDb(databaseUrl);
+  const { db } = getSharedDb(databaseUrl);
   const rows = await db
     .select({
       buttonId: activationEvents.buttonId,
@@ -89,7 +89,7 @@ export async function boardExists(databaseUrl: string | undefined, boardId: stri
   if (!databaseUrl || getStoreDriver() !== 'postgres') {
     return true;
   }
-  const { db } = createDb(databaseUrl);
+  const { db } = getSharedDb(databaseUrl);
   const row = await db.select({ id: boards.id }).from(boards).where(eq(boards.id, boardId)).limit(1);
   return row.length > 0;
 }
