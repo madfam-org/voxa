@@ -9,7 +9,7 @@ import {
   type TeamRole,
 } from '@voxa/core';
 import { canEditBoard } from '../lib/board-access.js';
-import { createDb } from '../db/client.js';
+import { getSharedDb } from '../db/client.js';
 import { boards, syncEvents } from '../db/schema.js';
 import {
   applyCreateBoard,
@@ -39,7 +39,7 @@ function rowToBoard(row: typeof boards.$inferSelect): Board {
 }
 
 export function createPgBoardStore(databaseUrl: string): BoardStore {
-  const { db, client } = createDb(databaseUrl);
+  const { db, client } = getSharedDb(databaseUrl);
 
   async function loadBoardMap(): Promise<Record<string, Board>> {
     const rows = await db.select().from(boards);

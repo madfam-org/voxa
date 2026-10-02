@@ -1,5 +1,6 @@
 import { serve } from '@hono/node-server';
 import app, { injectWebSocket } from './app.js';
+import { closeSharedDb } from './db/client.js';
 import { unwrapDbError } from './lib/db-errors.js';
 import { initObservability } from './lib/observability.js';
 import { initStore } from './store/index.js';
@@ -22,6 +23,11 @@ async function main(): Promise<void> {
   const shutdown = async () => {
     await shutdownSyncHub();
     server.close();
+    try {
+      await closeSharedDb();
+    } catch (err) {
+      console.error('Failed to close the database client on shutdown', err);
+    }
     process.exit(0);
   };
   process.on('SIGINT', () => void shutdown());
