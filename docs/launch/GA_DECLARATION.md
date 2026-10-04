@@ -27,10 +27,10 @@
 # Production gate
 ./scripts/launch/verify-prod-ga.sh
 
-# Soak window only (7 consecutive days from 2026-06-12)
-./scripts/launch/verify-soak-window.sh --required 7 --start 2026-06-12
+# Soak window only (7 consecutive days): operator script, moved to MADFAM's
+# private operations repository on 2026-10-03 with the other soak-window tools.
 
-# CI
+# CI (daily read-only production smoke)
 gh workflow run e2e-smoke.yml --repo madfam-org/voxa
 ```
 

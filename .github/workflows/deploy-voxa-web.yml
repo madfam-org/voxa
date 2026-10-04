@@ -10,8 +10,12 @@ on:
       - "apps/web/Dockerfile"
       - "!k8s/production/kustomization.yaml"
 
+# One group per workflow: GitHub keeps only the newest pending run per group,
+# so a shared web+API group let one workflow's pending run displace the
+# other's. The digest pin step fetches, resets to origin/main and retries its
+# push, so the two workflows cannot clobber each other's pin.
 concurrency:
-  group: voxa-kustomization-production
+  group: voxa-web-production
   cancel-in-progress: false
 
 env:
@@ -177,23 +181,11 @@ jobs:
               }
             }" || true
 
-      - name: Sync Argo and restart voxa-web
-        if: success()
-        env:
-          JANUA_ADMIN_EMAIL: ${{ secrets.MADFAM_ADMIN_EMAIL }}
-          JANUA_ADMIN_PASSWORD: ${{ secrets.MADFAM_ADMIN_PASSWORD }}
-          VOXA_WEB_SERVICE_ID: ${{ vars.VOXA_WEB_SERVICE_ID }}
-        run: |
-          if [ -z "${JANUA_ADMIN_EMAIL}" ] || [ -z "${JANUA_ADMIN_PASSWORD}" ]; then
-            echo "MADFAM_ADMIN_* secrets not configured — skipping Argo sync + web restart"
-            exit 0
-          fi
-          chmod +x scripts/deploy/enclii-token-from-janua.sh scripts/deploy/sync-voxa-services.sh scripts/deploy/restart-voxa-web.sh
-          eval "$(JANUA_ADMIN_EMAIL="${JANUA_ADMIN_EMAIL}" JANUA_ADMIN_PASSWORD="${JANUA_ADMIN_PASSWORD}" ./scripts/deploy/enclii-token-from-janua.sh)"
-          ./scripts/deploy/sync-voxa-services.sh voxa-services
-          sleep 45
-          ENCLII_TOKEN="${ENCLII_TOKEN}" ./scripts/deploy/restart-voxa-web.sh prod
-
+      # No Argo sync or restart step: the digest pin commit above also bumps the
+      # pod template's restartedAt, and Argo CD auto-syncs the production app
+      # (automated sync with self-heal), exactly as for the API workflow, which
+      # never had a sync step. The demo smoke below retries while the rollout
+      # lands.
       - name: Smoke test production web
         if: success()
         run: |
@@ -201,18 +193,6 @@ jobs:
           ./scripts/launch/verify-prod-ga.sh || true
           ./scripts/launch/verify-prod-demo.sh
           ./scripts/launch/verify-prod-image-optimizer.sh
-
-      - name: Restart voxa-web pods (optional legacy token)
-        if: success()
-        env:
-          ENCLII_TOKEN: ${{ secrets.ENCLII_TOKEN }}
-          VOXA_WEB_SERVICE_ID: ${{ vars.VOXA_WEB_SERVICE_ID }}
-        run: |
-          if [ -z "${ENCLII_TOKEN}" ]; then
-            exit 0
-          fi
-          chmod +x scripts/deploy/restart-voxa-web.sh
-          ./scripts/deploy/restart-voxa-web.sh prod
 
       # Loud-stale guard (2026-08-26 crea-frontend OIDC incident): the failure
       # mode that hurts is a pushed image whose digest pin never ran — main goes

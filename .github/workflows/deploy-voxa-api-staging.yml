@@ -10,8 +10,12 @@ on:
       - "apps/api/Dockerfile"
       - "!k8s/staging/kustomization.yaml"
 
+# One group per workflow: GitHub keeps only the newest pending run per group,
+# so a shared web+API group let one workflow's pending run displace the
+# other's. The digest pin step fetches, resets to origin/main and retries its
+# push, so the two workflows cannot clobber each other's pin.
 concurrency:
-  group: voxa-kustomization-staging
+  group: voxa-api-staging
   cancel-in-progress: false
 
 env:
