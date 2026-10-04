@@ -10,6 +10,7 @@ All notable changes to Voxa are documented here.
 - Activations on the shared `demo-core` board answer 403. A board owner can delete the board's activation history (`DELETE /v1/events/activations?boardId=`).
 - Startup migrations hold a PostgreSQL advisory lock, so processes that start together do not race.
 - API: plan entitlements come from the `voxa_tier` claim of the verified Janua access token (`free`, `family`, `clinic`) instead of a per-request call to the billing API, which answered for no user, so everyone silently got the free tier. A missing, malformed or unknown claim still resolves to `free` and is logged. `GET /v1/billing/entitlement` now answers `{ tier, features, source: "janua" }` (previously `{ entitlement: { … } }`). `DHANAM_API_URL` and `DHANAM_API_TOKEN` are no longer read.
+- Migration `0005_purge_legacy_utterance_text` clears `activation_events.speech_text` on rows recorded before server-side consent existed (irreversible; count rows stay). Count-only dry run: `apps/api/scripts/legacy-utterance-text-dry-run.sql`.
 
 ### Removed
 
