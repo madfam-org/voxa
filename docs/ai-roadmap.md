@@ -2,6 +2,17 @@
 
 AI features are **assistive, not autonomous** — the communicator always confirms output before speech.
 
+## Current state (2026-10)
+
+- Text suggestions come from the local rule-based predictor in `@voxa/ai`
+  (English and Spanish continuation tables, chosen by the board locale; the
+  Spanish table awaits review by a credentialed speech-language pathologist).
+- With `SELVA_ENABLED=true` the API asks Selva, the ecosystem model gateway,
+  first. It sends only the current partial utterance, always as
+  `X-Sensitivity: restricted` (local models only), and falls back to the local
+  predictor on any failure. See `apps/api/src/lib/selva.ts`.
+- Symbol suggestions are local only.
+
 ## LLM-Powered Predictive Text
 
 **Goal:** Replace n-gram suggestions with context-aware phrase completion tuned to the user's history.

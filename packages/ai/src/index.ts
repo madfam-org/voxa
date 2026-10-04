@@ -20,6 +20,8 @@ export interface SymbolPredictionRequest {
   boardButtons?: BoardButton[];
   contextTags?: string[];
   maxSuggestions?: number;
+  /** Board content locale; defaults to the last symbol's own locale. */
+  locale?: LocaleCode;
 }
 
 export interface SymbolPrediction {
@@ -72,17 +74,19 @@ export interface AiService {
 /**
  * Local, rule-based predictor. It runs in-process and makes no network
  * request: suggestions come from the board's own vocabulary and a small
- * continuation table. No third-party model is called.
+ * continuation table in the board's language (English or Spanish). No
+ * third-party model is called.
  */
 export const localAiService: AiService = {
   async predictText(req) {
-    return buildTextPredictions(req.partialText, req.maxSuggestions ?? 3);
+    return buildTextPredictions(req.partialText, req.maxSuggestions ?? 3, req.locale);
   },
   async predictSymbols(req) {
     return buildSymbolPredictions(
       req.recentSymbolIds,
       req.boardButtons ?? [],
       req.maxSuggestions ?? 3,
+      req.locale,
     );
   },
   async generateSymbols(req) {
@@ -98,14 +102,25 @@ export const localAiService: AiService = {
   },
 };
 
-/** Where predictions come from. Only the local predictor exists today. */
-export type PredictionSource = 'local';
+/**
+ * Where predictions come from: `local` is this package's in-process
+ * predictor; `selva` is the ecosystem model gateway, called only by the API
+ * when it is enabled and answering.
+ */
+export type PredictionSource = 'local' | 'selva';
 
+/** The source of every prediction this package computes itself. */
 export const PREDICTION_SOURCE: PredictionSource = 'local';
 
-/** Returns the prediction service. Always the local predictor. */
+/** Returns the in-process prediction service (the local predictor). */
 export function createAiService(): AiService {
   return localAiService;
 }
 
-export { buildSymbolPredictions, buildTextPredictions } from './predict.js';
+export {
+  buildSymbolPredictions,
+  buildTextPredictions,
+  foldWord,
+  predictionLanguage,
+  type PredictionLanguage,
+} from './predict.js';

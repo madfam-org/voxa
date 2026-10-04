@@ -3,11 +3,14 @@ import { createAiService, PREDICTION_SOURCE } from '@voxa/ai';
 import type { PredictionRequest, SymbolPredictionRequest } from '@voxa/ai';
 import { hasConsent } from '../lib/consents.js';
 import { hasFeature, resolveEntitlement } from '../lib/entitlement.js';
+import { predictTextPreferSelva } from '../lib/selva.js';
 
 export const aiRoutes = new Hono();
 
-// Predictions come only from the in-process local predictor; this route makes
-// no outbound request.
+// Symbol predictions come only from the in-process local predictor. Text
+// predictions go through Selva (`X-Sensitivity: restricted`, partial utterance
+// only) when SELVA_ENABLED=true and it answers; otherwise they are local too.
+// See src/lib/selva.ts.
 const aiService = createAiService();
 
 // Consent is the caller's server-side `ai_processing` record (PUT /v1/consents),
@@ -25,9 +28,13 @@ aiRoutes.post('/predict/text', async (c) => {
     return c.json({ error: 'AI not included in your plan', tier: entitlement.tier }, 402);
   }
 
-  const body = (await c.req.json()) as PredictionRequest;
-  const predictions = await aiService.predictText(body);
-  return c.json({ predictions, source: PREDICTION_SOURCE });
+  const body = ((await c.req.json()) ?? {}) as Partial<PredictionRequest>;
+  const { predictions, source } = await predictTextPreferSelva({
+    partialText: body.partialText,
+    locale: body.locale,
+    maxSuggestions: body.maxSuggestions,
+  });
+  return c.json({ predictions, source });
 });
 
 aiRoutes.post('/predict/symbols', async (c) => {
