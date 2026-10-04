@@ -174,9 +174,10 @@ jobs:
           IMAGE: voxa-api:smoke
         run: |
           set -uo pipefail
+          # The step shell runs with -e: capture the expected non-zero exit.
+          code=0
           out="$(timeout 60 docker run --rm --user 1001:1001 --read-only --cap-drop ALL \
-            --tmpfs "/app/data:rw,uid=1001,gid=1001,mode=0755" "$IMAGE" 2>&1)"
-          code=$?
+            --tmpfs "/app/data:rw,uid=1001,gid=1001,mode=0755" "$IMAGE" 2>&1)" || code=$?
           echo "$out" | tail -n 5
           if [ "$code" != "1" ] || ! grep -q "DATABASE_URL is required" <<<"$out"; then
             echo "::error::expected exit 1 naming DATABASE_URL, got exit ${code}"
