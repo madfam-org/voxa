@@ -37,7 +37,7 @@ Reference: [accessibility.md](../accessibility.md) (WCAG 2.2 AA + AAC extensions
 
 ## Auth & trust
 
-- [x] Janua sign-in → session → authenticated board access — **API token soak** + CI auth specs green; **browser callback** pending pod secret reload ([GA_STATUS.md](./GA_STATUS.md) §5)
+- [x] Janua sign-in → session → authenticated board access — **API token soak** + CI auth specs green; **browser callback** pending pod secret reload (resolved 2026-06-08)
 - [x] Sign-out clears session; protected API returns 401 — GET `/auth/signout` shipped; Playwright `staging-auth-ux` (manual staging)
 - [x] Legal pages: `/legal/privacy`, `/legal/terms`, `/legal/accessibility` — soak + CI
 - [x] AI consent banner: predictions blocked until consent; revoke blocks AI routes — auth soak 403/200; consent banner e2e
@@ -51,7 +51,7 @@ Reference: [accessibility.md](../accessibility.md) (WCAG 2.2 AA + AAC extensions
 ## Notes / exceptions
 
 1. **7-day soak window** continues through **2026-06-15** for full commercial GA declaration; controlled web launch proceeds with daily CI soak.
-2. **Browser Janua OAuth** on staging may show `token_exchange_failed` until `voxa-web` pods reload `OIDC_CLIENT_SECRET` after GitOps sync of `secretKeyRef` + `bootstrap-authenticated-soak.sh`. **Mitigation:** API JWT auth soak covers boards, OBF, billing, and AI consent gates.
+2. **Browser Janua OAuth** on staging may show `token_exchange_failed` until `voxa-web` pods reload `OIDC_CLIENT_SECRET` after GitOps sync of `secretKeyRef` and the operator's authenticated-soak bootstrap. **Mitigation:** API JWT auth soak covers boards, OBF, billing, and AI consent gates.
 3. **CVI / switch Playwright** UX spec runs manually on staging (skipped in CI until browser OAuth verified).
 
 ## Approval

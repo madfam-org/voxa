@@ -4,35 +4,12 @@
       "type": "http",
       "url": "https://mcp.figma.com/mcp"
     },
-    "v0": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "mcp-remote",
-        "https://mcp.v0.dev",
-        "--header",
-        "Authorization: Bearer ${env:V0_API_KEY}"
-      ],
-      "env": {
-        "V0_API_KEY": ""
-      }
-    },
     "animotion": {
       "command": "npx",
       "args": [
         "-y",
         "animotion-mcp"
       ]
-    },
-    "sketchfab": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "sketchfab-mcp-server"
-      ],
-      "env": {
-        "SKETCHFAB_API_KEY": ""
-      }
     },
     "threejs": {
       "command": "npx",

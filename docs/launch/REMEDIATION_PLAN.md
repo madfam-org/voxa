@@ -2,9 +2,11 @@
 
 **Target:** Close remaining M2–M3 gates for full web commercial GA by **2026-06-15**.
 
-**Benchmark parity (M6):** See [PARITY_REMEDIATION_PLAN.md](./PARITY_REMEDIATION_PLAN.md) — separate multi-quarter program (~38% → ≥75% weighted scorecard).
+**Feature roadmap (M6):** a separate multi-quarter program, tracked privately with its competitive research.
 
-Track execution in [GA_CHECKLIST.md](./GA_CHECKLIST.md). Live state: [GA_STATUS.md](./GA_STATUS.md).
+Track execution in [GA_CHECKLIST.md](./GA_CHECKLIST.md).
+
+> Public-safe plan. Operator procedures and commercial research live in MADFAM's private operations repository.
 
 ## Remediation waves
 
@@ -14,14 +16,14 @@ Track execution in [GA_CHECKLIST.md](./GA_CHECKLIST.md). Live state: [GA_STATUS.
 | **W1** | Soak automation + ops safety | 🟡 In progress | CI auth soak green; daily soak log 7/7 |
 | **W2** | P0 product gaps | 🟡 In progress | OBF soak ✅; board library MVP; migration doc |
 | **W3** | Clinical + launch gate | 🟡 In progress | SLP ✅ 2026-06-08; soak through **2026-06-15** |
-| **W4** | P1 baseline (post-M3) | Q3 2026 | [PARITY_REMEDIATION_PLAN.md](./PARITY_REMEDIATION_PLAN.md) W1–W2 |
-| **W5** | P2 + M6 parity | Q3–Q4 2026 | Scorecard ≥ 75%; SLP parity sign-off |
+| **W4** | P1 baseline (post-M3) | Q3 2026 | Feature roadmap W1–W2 (private tracker) |
+| **W5** | P2 + M6 feature baseline | Q3–Q4 2026 | P2 rows shipped; SLP review |
 
 ## W1 — Soak automation & ops safety
 
 | # | Item | Implementation | Owner |
 |---|------|----------------|-------|
-| 1 | Janua OAuth script idempotent | `register-janua-oauth-client.sh` — noop on 409; `--rotate-secret` opt-in | Engineering ✅ |
+| 1 | Janua OAuth client registration idempotent | Operator script (private) — noop on 409; secret rotation opt-in | Engineering ✅ |
 | 2 | Auth soak in CI | `e2e-smoke.yml` + GitHub secrets → `fetch-staging-access-token.sh` | Engineering ✅ |
 | 3 | Extended API soak | `soak-scenarios.sh --with-auth`: billing, AI consent, board create | Engineering ✅ |
 | 4 | Daily soak cron | Daily 14:00 UTC through GA window (`e2e-smoke.yml`) | CI ✅ |
@@ -56,9 +58,9 @@ Track execution in [GA_CHECKLIST.md](./GA_CHECKLIST.md). Live state: [GA_STATUS.
 | 12 | SLP sign-off | ✅ [SLP_SIGNOFF.md](./SLP_SIGNOFF.md) — 2026-06-08 |
 | 13 | Declare M3 web GA | [GA_DECLARATION.md](./GA_DECLARATION.md) on/after **2026-06-15** |
 
-## W4 — P1 parity (post-M3)
+## W4 — P1 features (post-M3)
 
-Full epic breakdown: [PARITY_REMEDIATION_PLAN.md § Epic B–E](./PARITY_REMEDIATION_PLAN.md).
+Full epic breakdown: private feature-roadmap plan.
 
 | # | Item | Target |
 |---|------|--------|
@@ -68,14 +70,14 @@ Full epic breakdown: [PARITY_REMEDIATION_PLAN.md § Epic B–E](./PARITY_REMEDIA
 | 17 | Mobile EAS preview | M4 — [MOBILE_GA.md](./MOBILE_GA.md) |
 | 18 | Usage logs + SLP reporting | W3 |
 
-## W5 — P2 parity → M6
+## W5 — P2 features → M6
 
 | # | Item | Target |
 |---|------|--------|
 | 19 | Grid/TouchChat/Snap import | W5 — AACProcessors |
 | 20 | Hardware switch + gaze adapters | W4 |
 | 21 | Neural bilingual TTS | W6 — [ai-roadmap.md](../ai-roadmap.md) |
-| 22 | M6 scorecard ≥ 75% | 2026-09-30 |
+| 22 | M6 feature baseline | 2026-09-30 |
 
 ## Platform (non-blocking for M3)
 
@@ -112,6 +114,6 @@ pnpm test && pnpm typecheck
 - [ ] [GA_DECLARATION.md](./GA_DECLARATION.md) signed on/after 2026-06-15
 - [ ] No open S1/S2 on staging during soak window
 
-## Definition of done (full benchmark parity — M6)
+## Definition of done (feature roadmap — M6)
 
-See [PARITY_REMEDIATION_PLAN.md §9](./PARITY_REMEDIATION_PLAN.md#9-definition-of-done--full-benchmark-parity-m6).
+Kept with the private feature-roadmap plan.

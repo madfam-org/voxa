@@ -14,7 +14,7 @@
 | SLP accessibility sign-off | ✅ 2026-06-08 ([SLP_SIGNOFF.md](./SLP_SIGNOFF.md)) |
 | Commercial landing + visitor demo | ✅ 2026-06-08 |
 | Staging soak (7 consecutive green days) | **In progress** → 2026-06-19 ([SOAK_LOG.md](./SOAK_LOG.md); window restarted 2026-06-12 after prod i18n incident) |
-| GHCR public (Kyverno PolicyException removed) | ✅ 2026-06-08 — anonymous pull verified ([GHCR_ORG_ADMIN.md](./GHCR_ORG_ADMIN.md)) |
+| GHCR public (Kyverno PolicyException removed) | ✅ 2026-06-08 — anonymous pull verified |
 
 ## Pre-declaration verification (run on declaration day)
 
@@ -22,14 +22,10 @@
 # Staging soak (must be green)
 ./scripts/launch/soak-daily-check.sh
 ./scripts/launch/soak-scenarios.sh
-JANUA_ADMIN_EMAIL='…' JANUA_ADMIN_PASSWORD='…' \
-  ./scripts/launch/bootstrap-authenticated-soak.sh
+# (authenticated soak: operator bootstrap with admin credentials, private procedure)
 
 # Production gate
 ./scripts/launch/verify-prod-ga.sh
-
-# Full declaration-day bundle (staging + prod + soak window)
-./scripts/launch/verify-declaration-day.sh --required 7 --start 2026-06-12
 
 # Soak window only (7 consecutive days from 2026-06-12)
 ./scripts/launch/verify-soak-window.sh --required 7 --start 2026-06-12
@@ -54,4 +50,4 @@ We declare **Voxa web commercially generally available** at `voxa.madfam.io` for
 **Notes:**
 
 - Mobile store GA tracked separately: [MOBILE_GA.md](./MOBILE_GA.md)
-- Feature parity roadmap continues post-GA: [FEATURE_PARITY.md](./FEATURE_PARITY.md) · [PARITY_REMEDIATION_PLAN.md](./PARITY_REMEDIATION_PLAN.md)
+- Feature roadmap continues post-GA: [GA_ROADMAP.md](./GA_ROADMAP.md) (Phase 6)

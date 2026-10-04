@@ -4,6 +4,10 @@ All notable changes to Voxa are documented here.
 
 ## [Unreleased]
 
+### Removed
+
+- Commercial research (pricing strategy, competitor benchmark, feature-parity scorecard, survey payloads), the GA status record with platform identifiers, the GHCR org-admin procedure and the operator-only scripts under `scripts/deploy/` and `scripts/launch/` that no workflow runs. They moved to MADFAM's private operations repository; the deploy, on-call, backup and auth docs were generalized for a public repo. `scripts/deploy/restart-voxa-web.sh` now reads the Enclii service id from `VOXA_WEB_SERVICE_ID` / `VOXA_STAGING_WEB_SERVICE_ID` and fails closed when it is unset.
+
 ### Fixed
 
 - API: migration `0003_media_assets` is now listed in the drizzle journal (it was never applied by the startup migrator, so `media_assets` was missing on migrator-built databases); it is idempotent for databases that already have the table. Drizzle snapshots added so `db:generate` diffs against the real schema; CI fails on migration/journal/snapshot drift.
@@ -30,18 +34,18 @@ All notable changes to Voxa are documented here.
 - Soak fixture aligned to OBF 3.x format
 
 ### Added (prior unreleased)
-- Feature parity tracker: `docs/launch/FEATURE_PARITY.md` (P0–P3 checklist, scorecard, OpenAAC alignment)
+- Feature parity tracker (P0–P3 checklist; moved to the private operations repository on 2026-10-03)
 - GA roadmap Phase 6 (competitive parity) and milestone M6
 
 ### Added (prior unreleased)
 
-- Janua duplicate OAuth cleanup: `scripts/deploy/cleanup-duplicate-janua-voxa-clients.sh`
+- Janua duplicate OAuth cleanup script (operator-only; moved to the private operations repository on 2026-10-03)
 - Staging soak secrets helper: `scripts/launch/setup-staging-soak-secrets.sh`
 - Playwright staging soak: `e2e/specs/staging-ux.spec.ts`, `staging-auth.spec.ts`, Janua login helper
 - SLP accessibility sign-off template: `docs/launch/SLP_SIGNOFF.md`
 - Mobile GA path: `docs/launch/MOBILE_GA.md`, `apps/mobile/eas.json` (preview + production profiles)
 - Staging soak log: `docs/launch/SOAK_LOG.md`; daily check script `scripts/launch/soak-daily-check.sh`
-- GHCR visibility script: `scripts/deploy/make-ghcr-packages-public.sh`
+- GHCR visibility script (org admin; moved to the private operations repository on 2026-10-03)
 - `@axe-core/playwright` e2e suite: `e2e/specs/a11y.spec.ts`, CI `a11y` job on PR/main
 - `e2e` workspace in `pnpm-workspace.yaml` (fixes `pnpm test:e2e`)
 
@@ -58,13 +62,13 @@ All notable changes to Voxa are documented here.
 
 ### Added (prior unreleased)
 
-- GA wrap-up doc: `docs/launch/GA_STATUS.md` (live state, platform IDs, remaining P0–P2 items)
+- GA wrap-up doc (live state and remaining P0–P2 items; moved to the private operations repository on 2026-10-03)
 - Runbook: GitHub → Enclii webhook 401 after secret rotation (`docs/ops/RUNBOOK.md`)
 
 ### Changed (prior unreleased)
 
 - GA checklist and Enclii deploy runbook updated for GitHub webhook + callback token setup
-- Platform webhook/callback secrets rotated; `ENCLII_CALLBACK_TOKEN` and Enclii webhook registered on `madfam-org/voxa` (hook `637900323`)
+- Platform webhook/callback secrets rotated; `ENCLII_CALLBACK_TOKEN` and Enclii webhook registered on `madfam-org/voxa`
 - Enclii webhook signature verified (2026-06-08)
 
 ## [1.0.0] — 2026-06-06

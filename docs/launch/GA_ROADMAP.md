@@ -2,7 +2,9 @@
 
 Target: **full commercial general availability** for the Voxa AAC platform at [voxa.madfam.io](https://voxa.madfam.io).
 
-Track checkbox progress in [GA_CHECKLIST.md](./GA_CHECKLIST.md). Live deploy state: [GA_STATUS.md](./GA_STATUS.md).
+Track checkbox progress in [GA_CHECKLIST.md](./GA_CHECKLIST.md).
+
+> Public-safe roadmap. Live deploy state, platform identifiers, competitive research and parity scorecards live in MADFAM's private operations repository.
 
 ## Current state (2026-06-08)
 
@@ -33,8 +35,8 @@ gantt
   section Post-GA
   REDIS_URL multi-replica WS    :redis, 2026-06-22, 14d
   section Parity
-  Feature parity P1 baseline    :parity, 2026-06-18, 42d
-  Tier A competitive match      :parity2, 2026-07-20, 60d
+  Feature roadmap P1 baseline   :parity, 2026-06-18, 42d
+  Feature roadmap P2           :parity2, 2026-07-20, 60d
 ```
 
 ### Phase 1 — Launch gate (product / clinical)
@@ -57,10 +59,10 @@ gantt
 
 | Work item | Owner | Target | Notes |
 |-----------|-------|--------|-------|
-| GHCR packages public (`voxa-api`, `voxa-web`) | Org admin | ✅ 2026-06-08 | [GHCR_ORG_ADMIN.md](./GHCR_ORG_ADMIN.md) |
-| Remove `k8s/*/signature-policyexception.yaml` | Engineering | ✅ 2026-06-08 | [GHCR_ORG_ADMIN.md](./GHCR_ORG_ADMIN.md) |
-| PgBouncer entries for `voxa` / `voxa_staging` | Platform | Non-blocking | Direct Postgres OK today |
-| Cluster CPU headroom | Platform | Ongoing | Prevents `switchyard-api` Pending rollouts |
+| GHCR packages public (`voxa-api`, `voxa-web`) | Org admin | ✅ 2026-06-08 | Org-admin procedure (private) |
+| Remove `k8s/*/signature-policyexception.yaml` | Engineering | ✅ 2026-06-08 | — |
+| PgBouncer entries for the Voxa databases | Platform | Non-blocking | Direct Postgres OK today |
+| Cluster CPU headroom | Platform | Ongoing | Prevents stalled platform rollouts |
 
 ### Phase 3 — Quality & accessibility automation
 
@@ -93,27 +95,23 @@ Web GA does **not** block on mobile store listings; mobile is tracked as **Phase
 | `SENTRY_DSN` in prod | When DSN provisioned | Hook already in API |
 | Symbol generation / PictoBERT | Product roadmap | [ai-roadmap.md](../ai-roadmap.md) |
 
-### Phase 6 — Competitive feature parity
+### Phase 6 — Feature roadmap
 
-**Goal:** Close gaps vs Tier A AAC apps (Proloquo2Go, TD Snap, LAMP, SFY, Grid) documented in [AAC_PLATFORM_BENCHMARK.md](./AAC_PLATFORM_BENCHMARK.md). Track rows in [FEATURE_PARITY.md](./FEATURE_PARITY.md).
+**Goal:** Close the remaining AAC feature gaps after web GA. The competitive research, parity tracker and scorecard behind this phase are private commercial material.
 
-**Master plan:** [PARITY_REMEDIATION_PLAN.md](./PARITY_REMEDIATION_PLAN.md) — waves W1–W6, epics A–I, M6 definition of done.
+**Not a single-release gate:** web GA (M3) required the P0 rows and SLP sign-off; platform GA (M5) adds mobile store presence.
 
-**Not a single-release gate:** Web GA (M3) requires P0 parity + SLP sign-off (~52% weighted score). Platform GA (M5) targets **~75%+ weighted parity** plus differentiation.
-
-| Work stream | Priority | Target | Parity doc section |
-|-------------|----------|--------|-------------------|
-| Multi-board library + motor-plan locks in UI | P1 | Q3 2026 | P1 vocabulary |
-| ARASAAC / OpenSymbols integration | P1 | Q3 2026 | P1 symbols |
-| Recorded speech + GLP media upload | P1 | Q3 2026 | P1 GLP |
-| Hide/show + babble mode | P1 | Q3 2026 | OpenAAC backlog |
-| Usage logs + SLP reporting UI | P1 | Q3 2026 | P1 analytics |
-| Grid/TouchChat/Snap import (AACProcessors) | P2 | Q4 2026 | Migration paths |
-| Hardware switch + Tobii eye gaze SDK | P2 | Q4 2026 | P2 access |
-| Neural bilingual TTS | P2 | Q4 2026 | P2 speech |
-| PictoBERT + symbol generation GA | P3 | 2026 H2 | P3 differentiation |
-
-**Exit criteria (M5+ parity):** P0 all ✅; P1 ≥ 80% ✅/🟡; weighted scorecard ≥ 75%; quarterly benchmark doc refresh.
+| Work stream | Priority | Target |
+|-------------|----------|--------|
+| Multi-board library + motor-plan locks in UI | P1 | Q3 2026 |
+| ARASAAC / OpenSymbols integration | P1 | Q3 2026 |
+| Recorded speech + GLP media upload | P1 | Q3 2026 |
+| Hide/show + babble mode | P1 | Q3 2026 |
+| Usage logs + SLP reporting UI | P1 | Q3 2026 |
+| Grid/TouchChat/Snap import (AACProcessors) | P2 | Q4 2026 |
+| Hardware switch + eye-gaze adapters | P2 | Q4 2026 |
+| Neural bilingual TTS | P2 | Q4 2026 |
+| PictoBERT + symbol generation GA | P3 | 2026 H2 |
 
 ## Milestones
 
@@ -125,32 +123,23 @@ Web GA does **not** block on mobile store listings; mobile is tracked as **Phase
 | **M3 — Full web GA** | 2026-06-15 | Soak complete + [GA_DECLARATION.md](./GA_DECLARATION.md) signed |
 | **M4 — Mobile beta** | 2026-07-06 | EAS builds in TestFlight / Play internal |
 | **M5 — Full platform GA** | 2026-07-20 | Web + mobile store listings live |
-| **M6 — Tier A parity baseline** | 2026-09-30 | P1 ≥ 80%; scorecard ≥ 75% ([FEATURE_PARITY.md](./FEATURE_PARITY.md)) |
+| **M6 — Feature roadmap baseline** | 2026-09-30 | P1 feature rows shipped (tracked privately) |
 
-## Operator commands
+## Verification commands
 
 ```bash
-# Daily soak (staging health + optional GitHub issue comment)
+# Daily soak (staging health)
 ./scripts/launch/soak-daily-check.sh
 
-# Full platform operator pass
-ENCLII_TOKEN='…' ./scripts/deploy/complete-ga-operator.sh
-
-# GHCR visibility (org admin, read:packages scope)
-./scripts/deploy/make-ghcr-packages-public.sh
-
-# After GHCR public — remove PolicyExceptions and sync Argo
-git rm k8s/production/signature-policyexception.yaml k8s/staging/signature-policyexception.yaml
-# update kustomization.yaml in each env, commit, push
+# Production GA gate
+./scripts/launch/verify-prod-ga.sh
 ```
+
+Platform operator passes and org-admin steps run from MADFAM's private operations repository.
 
 ## Related docs
 
 - [GA_CHECKLIST.md](./GA_CHECKLIST.md) — checkbox tracker
-- [GA_STATUS.md](./GA_STATUS.md) — deploy state and platform IDs
-- [AAC_PLATFORM_BENCHMARK.md](./AAC_PLATFORM_BENCHMARK.md) — competitive research
-- [FEATURE_PARITY.md](./FEATURE_PARITY.md) — parity checklist vs Tier A AAC
-- [PARITY_REMEDIATION_PLAN.md](./PARITY_REMEDIATION_PLAN.md) — full parity implementation program
 - [STAGING_SOAK.md](./STAGING_SOAK.md) — soak procedures and log
 - [SLP_SIGNOFF.md](./SLP_SIGNOFF.md) — clinical accessibility gate
 - [MOBILE_GA.md](./MOBILE_GA.md) — Expo / EAS store path

@@ -21,7 +21,7 @@ Expo / EAS track for Voxa native communicator apps. **Web GA does not block on m
 - [Expo account](https://expo.dev) linked to MADFAM org
 - Apple Developer + App Store Connect app record
 - Google Play Console app + service account JSON (never commit — use `apps/mobile/secrets/`, gitignored)
-- Janua mobile redirect URI `voxa://auth/callback` on the Voxa OAuth client ([register-janua-oauth-client.sh](../../scripts/deploy/register-janua-oauth-client.sh))
+- Janua mobile redirect URI `voxa://auth/callback` on the Voxa OAuth client (registered by a platform operator)
 
 ## Runtime environment
 

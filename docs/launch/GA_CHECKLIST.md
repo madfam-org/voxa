@@ -2,14 +2,16 @@
 
 Track progress toward general availability at `voxa.madfam.io`.
 
+> Public-safe checklist. Operator procedures, platform identifiers and commercial research live in MADFAM's private operations repository.
+
 ## Platform (Enclii / ops)
 
 - [x] GHCR packages public; Kyverno `PolicyException` removed after anonymous pull verified (2026-06-08)
 - [x] `ENCLII_CALLBACK_TOKEN` set on `madfam-org/voxa` (2026-06-07; synced across MADFAM deploy repos)
-- [x] GitHub webhook registered on `madfam-org/voxa` → `https://api.enclii.dev/v1/webhooks/github` (hook `637900323`)
-- [x] Enclii webhook signature verified (2026-06-08; scale + restart — see [GA_STATUS.md](./GA_STATUS.md))
-- [x] `DATABASE_URL` applied via shared Postgres (`data/postgres`, prod + staging live)
-- [ ] PgBouncer config includes `voxa` / `voxa_staging` (platform RBAC fix)
+- [x] GitHub webhook registered on `madfam-org/voxa` → `https://api.enclii.dev/v1/webhooks/github`
+- [x] Enclii webhook signature verified (2026-06-08)
+- [x] `DATABASE_URL` applied via the shared PostgreSQL server (prod + staging live)
+- [ ] PgBouncer entries for the Voxa databases (platform fix; direct connections work today)
 - [ ] `REDIS_URL` applied (WebSocket multi-replica — post-GA scaling)
 - [x] Post-deploy smoke tests in deploy workflows (prod + staging)
 - [x] Backup/restore runbook (`docs/ops/BACKUP_RESTORE.md`)
@@ -23,7 +25,7 @@ Track progress toward general availability at `voxa.madfam.io`.
 - [x] Janua SSO scaffold (web OIDC + API JWT verification)
 - [x] Janua OAuth client registered + `OIDC_CLIENT_SECRET` in prod secrets
 - [x] Janua client audience `voxa` aligned with API `JANUA_AUDIENCE`
-- [x] `NEXT_PUBLIC_OIDC_CLIENT_ID` GitHub repo variable (`jnc_4qRWyI-ul_GL28hrSxrX7AvIyotFMBuB`)
+- [x] `NEXT_PUBLIC_OIDC_CLIENT_ID` GitHub repo variable set
 - [x] `JANUA_AUTH_REQUIRED=true` — prod + staging (`VOXA_JANUA_AUTH_REQUIRED`, verify `health/ready.authEnforced`)
 - [x] Board ownership / tenant isolation (`owner_user_id`, route ACLs)
 - [x] Dhanam billing + entitlements (`/v1/billing/entitlement`, board limits)
@@ -46,24 +48,20 @@ Track progress toward general availability at `voxa.madfam.io`.
 - [x] `@axe-core/playwright` in CI (`e2e/specs/a11y.spec.ts`, `.github/workflows/ci.yml`)
 - [ ] Mobile EAS pipeline + store listings — [MOBILE_GA.md](./MOBILE_GA.md) — preview CI ✅
 
-## Competitive parity (Phase 6)
+## Feature roadmap (Phase 6)
 
-**Master plan:** [PARITY_REMEDIATION_PLAN.md](./PARITY_REMEDIATION_PLAN.md) · Tracker: [FEATURE_PARITY.md](./FEATURE_PARITY.md) · Research: [AAC_PLATFORM_BENCHMARK.md](./AAC_PLATFORM_BENCHMARK.md)
+Competitive research, the parity tracker and scorecard targets are private commercial material. Public status of shipped features is in [CHANGELOG.md](../../CHANGELOG.md).
 
-- [x] P0 parity rows complete (web GA gate) — OBF soak ✅; SLP sign-off ✅ 2026-06-08
-- [ ] Weighted scorecard ≥ 52% at M3 (web GA) — **~38% now**
-- [ ] P1 robust AAC baseline ≥ 80% at M6 (2026-09-30)
-- [ ] Weighted scorecard ≥ 75% at M6
 - [x] Migration guide: OBF import path — [MIGRATION.md](./MIGRATION.md)
-- [ ] Epic B–C: ARASAAC + recorded speech + GLP media + OBZ (W2) — ARASAAC ✅; media ✅; OBZ ✅
-- [ ] Epic D: Mobile store beta (M4)
-- [ ] Epic E: Usage logs + co-edit (W3)
-- [ ] Epic F–G: Hardware access + legacy import (W4–W5)
-- [ ] M6 SLP parity sign-off
+- [x] ARASAAC symbol search, recorded speech + GLP media, OBZ import
+- [ ] Mobile store beta (M4)
+- [ ] Usage logs + co-edit
+- [ ] Hardware access + legacy-format import
+- [ ] Clinical (SLP) review of the extended feature set
 
 ## Launch
 
-- [x] `VOXA_STAGING_*` GitHub secrets for CI auth soak (`bootstrap-authenticated-soak.sh`, 2026-06-08)
+- [x] `VOXA_STAGING_*` GitHub secrets for CI auth soak (operator bootstrap, 2026-06-08)
 - [x] Weekday `e2e-smoke` CI (health + auth API soak + Playwright) — green 2026-06-08
 - [ ] Staging soak (1 week) — **in progress** 2026-06-12 → 2026-06-19 — [STAGING_SOAK.md](./STAGING_SOAK.md) · [SOAK_LOG.md](./SOAK_LOG.md)
 - [ ] **Commercial GA declaration** — sign [GA_DECLARATION.md](./GA_DECLARATION.md) after soak completes
@@ -72,34 +70,10 @@ Track progress toward general availability at `voxa.madfam.io`.
 - [x] API `1.0.0` live on prod + staging (2026-06-07)
 - [x] Status page linked from README ([status.madfam.io](https://status.madfam.io))
 
-**Roadmap:** [GA_ROADMAP.md](./GA_ROADMAP.md) · **Remediation:** [REMEDIATION_PLAN.md](./REMEDIATION_PLAN.md) · **Parity:** [FEATURE_PARITY.md](./FEATURE_PARITY.md) · **Parity implementation:** [PARITY_REMEDIATION_PLAN.md](./PARITY_REMEDIATION_PLAN.md)
+**Roadmap:** [GA_ROADMAP.md](./GA_ROADMAP.md) · **Remediation:** [REMEDIATION_PLAN.md](./REMEDIATION_PLAN.md)
 
-## Operator quick commands
+## Operator steps
 
-Full status and IDs: **[GA_STATUS.md](./GA_STATUS.md)**.
+Platform operator steps (database provisioning, Janua client registration, repository webhook and secrets, service restarts) are run with admin credentials from MADFAM's private operations repository. The public verification scripts are in `scripts/launch/`.
 
-```bash
-# All-in-one (needs ENCLII_TOKEN; optional Janua + GitHub secret env vars):
-ENCLII_TOKEN='…' ./scripts/deploy/complete-ga-operator.sh
-
-# Shared Postgres (prod + staging DATABASE_URL):
-ENCLII_TOKEN='…' ./scripts/deploy/provision-shared-postgres.sh
-
-# Janua OAuth client (once per platform):
-JANUA_ADMIN_EMAIL='…' JANUA_ADMIN_PASSWORD='…' ./scripts/deploy/register-janua-oauth-client.sh
-
-# GitHub lifecycle callbacks (token = enclii-argocd-webhook secret):
-ENCLII_CALLBACK_TOKEN='…' ./scripts/deploy/setup-github-secrets.sh
-
-# GitHub push webhook (secret = enclii-github-webhook secret):
-ENCLII_WEBHOOK_SECRET='…' ./scripts/deploy/setup-github-webhook.sh
-
-# After API env-only deploys (authEnforced):
-ENCLII_TOKEN='…' ./scripts/deploy/restart-voxa-api.sh all
-
-# After platform webhook secret rotation:
-ENCLII_TOKEN='…' ENCLII_WEBHOOK_SECRET='…' ./scripts/deploy/rollout-switchyard-api.sh --via-enclii-scale
-# or break-glass SSH: ./scripts/deploy/rollout-switchyard-api.sh
-```
-
-See [CHANGELOG.md](../CHANGELOG.md) and [data-model.md](../data-model.md).
+See [CHANGELOG.md](../../CHANGELOG.md) and [data-model.md](../data-model.md).

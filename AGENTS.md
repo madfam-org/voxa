@@ -1,5 +1,9 @@
 # Voxa agent guide
 
+> Last Updated: 2026-10-03
+
+> **Repository boundary:** operational detail (platform identifiers, operator procedures, break-glass steps) and commercial research (pricing, competitor benchmarks, outreach) live in MADFAM's private operations repository; this public repo holds only public-safe context, per MADFAM's repo-boundary contract.
+
 Canonical instructions for any LLM agent (Claude, Codex, Cursor, …) working in
 this repository. Human overview: [README.md](./README.md). Compact index for
 LLMs: [llms.txt](./llms.txt).
@@ -126,7 +130,7 @@ blocks production use, **P1** next, **P2** planned, **P3** cleanup.
 | **`e2e-smoke.yml` schedule is not producing runs.** The workflow is active with a daily cron, but the last scheduled run was 2026-08-22, and the scheduled runs from 2026-08-15 to 08-22 all failed on the demo-board smoke. | The daily soak and production GA verification in `scripts/launch/` are not running, so a regression would go unnoticed.                                                                 | P1       | Engineering work (find why the schedule stopped, then fix the demo-board smoke) | —        |
 | **Staging images are unsigned.** Only the production deploy workflows run cosign.                                                                                                                                            | Staging cannot be verified the same way as production.                                                                                                                                  | P2       | Engineering work                                                                | —        |
 | **Prettier is not enforced.** `pnpm format` exists but CI does not check it, and several files predate it.                                                                                                                   | Formatting drifts and creates noise in unrelated PRs.                                                                                                                                   | P3       | Engineering work (one reformat, then a CI check)                                | —        |
-| **Operational docs to be generalized** for a public repository.                                                                                                                                                              | Keeps the public docs useful without operator-specific detail.                                                                                                                          | P2       | Owner decision pending                                                          | —        |
+| **Two internal literals left in deploy-functional or app files.** The Kubernetes web deployments still carry the OAuth client id as a literal, and a code comment in `apps/web/src/lib/pricing.ts` points at a pricing document that is now private. | The operational and commercial docs moved out on 2026-10-03; these two need a deploy-touching change, so they were left for a separate PR. | P2       | Engineering work (read the client id from configuration; reword the comment)    | —        |
 
 The Next image optimizer gap listed here before 2026-10-02 is closed (#13,
 invariant 6).

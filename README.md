@@ -1,5 +1,7 @@
 # Voxa
 
+> **Repository boundary:** operational detail (platform identifiers, operator procedures, break-glass steps) and commercial research (pricing, competitor benchmarks, outreach) live in MADFAM's private operations repository; this public repo holds only public-safe context.
+
 ![License](https://img.shields.io/badge/License-Apache--2.0-blue)
 ![Node.js](https://img.shields.io/badge/Node.js-20.x-green)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)
@@ -79,7 +81,7 @@ Each package lists its test files explicitly in its `test` script. The API suite
 ### Status & monitoring
 
 - **Service status:** [status.madfam.io](https://status.madfam.io) (Voxa entries under AAC Platform)
-- **GA progress:** [docs/launch/GA_ROADMAP.md](./docs/launch/GA_ROADMAP.md) · [REMEDIATION_PLAN.md](./docs/launch/REMEDIATION_PLAN.md) · [GA_CHECKLIST.md](./docs/launch/GA_CHECKLIST.md) · [GA_STATUS.md](./docs/launch/GA_STATUS.md)
+- **GA progress:** [docs/launch/GA_ROADMAP.md](./docs/launch/GA_ROADMAP.md) · [REMEDIATION_PLAN.md](./docs/launch/REMEDIATION_PLAN.md) · [GA_CHECKLIST.md](./docs/launch/GA_CHECKLIST.md)
 
 ### Deployed environments (Enclii / madfam.io)
 
@@ -88,7 +90,7 @@ Each package lists its test files explicitly in its `test` script. The API suite
 | Production | [voxa.madfam.io](https://voxa.madfam.io) | [voxa-app.madfam.io](https://voxa-app.madfam.io) | [voxa-api.madfam.io](https://voxa-api.madfam.io) |
 | Staging | [voxa-staging.madfam.io](https://voxa-staging.madfam.io) | [voxa-app-staging.madfam.io](https://voxa-app-staging.madfam.io) | [voxa-api-staging.madfam.io](https://voxa-api-staging.madfam.io) |
 
-See [docs/deploy/ENCLII.md](./docs/deploy/ENCLII.md) for CI, onboarding, and operator steps.
+See [docs/deploy/ENCLII.md](./docs/deploy/ENCLII.md) for CI, onboarding and the deploy model.
 
 ## Documentation
 
@@ -98,12 +100,9 @@ See [docs/deploy/ENCLII.md](./docs/deploy/ENCLII.md) for CI, onboarding, and ope
 - [Architecture](./docs/architecture.md) — system design and platform targets
 - [Data model](./docs/data-model.md) — PostgreSQL schema and migrations
 - [Janua authentication](./docs/auth/JANUA.md) — SSO for web and API
-- [AAC platform benchmark](./docs/launch/AAC_PLATFORM_BENCHMARK.md) — competitive research (commercial + OSS)
-- [Feature parity tracker](./docs/launch/FEATURE_PARITY.md) — GA parity checklist vs Tier A AAC
 - [Remediation plan](./docs/launch/REMEDIATION_PLAN.md) — W1–W4 execution tracker for full web GA
 - [Migration guide](./docs/launch/MIGRATION.md) — OBF import from other AAC platforms
 - [GA checklist](./docs/launch/GA_CHECKLIST.md) — commercial launch criteria
-- [GA status](./docs/launch/GA_STATUS.md) — production deploy wrap-up and remaining platform items
 - [Staging soak](./docs/launch/STAGING_SOAK.md) — pre-GA validation checklist
 - [SLP sign-off](./docs/launch/SLP_SIGNOFF.md) — clinical accessibility gate
 - [Mobile GA](./docs/launch/MOBILE_GA.md) — Expo / EAS store path

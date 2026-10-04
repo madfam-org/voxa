@@ -3,7 +3,7 @@
 #
 # Usage:
 #   ./scripts/launch/verify-prod-ga.sh
-#   ./scripts/launch/verify-prod-web-oidc.sh   # optional OAuth callback (needs env creds)
+#   (the optional OAuth-callback check is an operator script, kept private)
 
 set -euo pipefail
 
