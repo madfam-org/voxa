@@ -1,6 +1,22 @@
 import { encode } from 'next-auth/jwt';
 import { armorSessionJwe } from './session-cookie-codec';
-import type { VoxaSessionToken } from './session-token';
+
+/**
+ * The session fields (same shape as `VoxaSessionToken` in `session-token.ts`).
+ * Declared here so this file imports nothing from the workspace packages: the
+ * Playwright helpers import it, and `@voxa/e2e` typechecks before
+ * `@voxa/core` is built.
+ */
+export interface MintableSessionToken {
+  userId?: string;
+  name?: string | null;
+  email?: string | null;
+  teamRole?: 'communicator' | 'editor' | 'admin';
+  accessToken?: string;
+  refreshToken?: string;
+  idToken?: string;
+  expiresAt?: number;
+}
 
 /**
  * Encrypts a session exactly as Auth.js does for Voxa (same salt, same armor).
@@ -8,7 +24,7 @@ import type { VoxaSessionToken } from './session-token';
  * test-only AUTH_SECRET; it can only mint for a server that holds that secret.
  */
 export async function mintSessionCookieValue(input: {
-  token: VoxaSessionToken & { sub?: string };
+  token: MintableSessionToken & { sub?: string };
   secret: string;
   cookieName: string;
   maxAgeSeconds?: number;

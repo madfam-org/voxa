@@ -1,6 +1,7 @@
 import { mapTeamRoleFromClaims, type TeamRole } from '@voxa/core';
 import type { JWTPayload } from 'jose';
 import type { RefreshedTokens } from './janua-oidc';
+import type { MintableSessionToken } from './session-mint';
 
 /**
  * What Voxa keeps in its (encrypted, httpOnly) Auth.js session cookie. The
@@ -132,3 +133,7 @@ export function publicSession(token: VoxaSessionToken, expires: string): VoxaPub
     expires,
   };
 }
+
+// Keeps the test-session minting shape in step with the real session.
+const _sameShape: (t: VoxaSessionToken) => MintableSessionToken = (t) => t;
+void _sameShape;
