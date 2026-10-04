@@ -213,8 +213,6 @@ export function LandingPage(): React.ReactNode {
                   seat: formatMxn(PRICING.clinic.seatMonthly),
                   minSeats: PRICING.clinic.minSeats,
                 })}
-                {' · '}
-                {t('priceIvaNote')}
               </p>
               <p style={{ margin: '0 0 16px', color: neutral.muted, fontSize: '0.9375rem' }}>{t('instBody')}</p>
               <ul style={{ margin: '0 0 20px', paddingLeft: 18, color: neutral.textSecondary, lineHeight: 1.7, fontSize: '0.9375rem' }}>

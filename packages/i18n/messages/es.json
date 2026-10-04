@@ -81,7 +81,7 @@
     "priceIvaNote": "Precios con IVA (16%) incluido",
     "priceFreeForever": "Gratis para siempre — sin IVA",
     "priceAnnualOption": "o {annual}/año",
-    "priceClinicDetail": "{base} org + {seat}/asiento antes de IVA (mín. {minSeats})",
+    "priceClinicDetail": "Total con IVA (16%) incluido · {base}/mes org + {seat}/asiento antes de IVA (mín. {minSeats})",
     "parentsLabel": "PADRES Y CUIDADORES",
     "free": "Gratis",
     "parentsBody": "Gratis para siempre para familias que apoyan a un comunicador en casa.",

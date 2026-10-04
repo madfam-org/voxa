@@ -81,7 +81,7 @@
     "priceIvaNote": "Prix TVA (16%) incluse",
     "priceFreeForever": "Gratuit pour toujours — sans TVA",
     "priceAnnualOption": "ou {annual}/an",
-    "priceClinicDetail": "{base}/mois org + {seat}/poste hors TVA (min. {minSeats})",
+    "priceClinicDetail": "Total TVA (16%) incluse · {base}/mois org + {seat}/poste hors TVA (min. {minSeats})",
     "parentsLabel": "PARENTS ET AIDANTS",
     "free": "Gratuit",
     "parentsBody": "Gratuit pour toujours pour les familles soutenant un communicateur à domicile.",
