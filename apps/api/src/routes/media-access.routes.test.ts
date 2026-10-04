@@ -25,8 +25,8 @@ after(async () => {
 });
 
 async function auth(claims: Record<string, unknown>): Promise<Record<string, string>> {
-  const { Authorization } = await issuer.bearer(claims);
-  return { Authorization };
+  const headers = await issuer.bearer(claims);
+  return { Authorization: headers.Authorization ?? '' };
 }
 
 async function createBoard(id: string, claims: Record<string, unknown>): Promise<void> {
