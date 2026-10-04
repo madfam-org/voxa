@@ -19,10 +19,9 @@ export async function uploadBoardMedia(
 
   const res = await fetch(`${API_URL.replace(/\/$/, '')}/v1/media`, {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'X-Voxa-Role': 'editor',
-    },
+    // The bearer token alone identifies the caller; development identity
+    // headers are not CORS-allowed in production.
+    headers: { Authorization: `Bearer ${accessToken}` },
     body: form,
   });
 

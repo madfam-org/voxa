@@ -169,6 +169,8 @@ export async function verifyIdToken(idToken: string): Promise<JWTPayload> {
   const { payload } = await jwtVerify(idToken, getJwks(), {
     issuer: OIDC_ISSUER,
     audience: getOidcClientId(),
+    algorithms: ['RS256'],
+    clockTolerance: 30,
   });
   return payload;
 }
