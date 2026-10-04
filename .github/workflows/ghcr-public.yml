@@ -4,12 +4,16 @@ on:
   workflow_dispatch:
 
 permissions:
-  packages: write
+  contents: read
 
 jobs:
   public:
     name: Set Voxa packages public
     runs-on: ubuntu-24.04
+    # The only grant this job uses: `gh api -X PATCH` on the org's container
+    # packages. It never checks out the repository.
+    permissions:
+      packages: write
     steps:
       - name: Patch package visibility
         env:

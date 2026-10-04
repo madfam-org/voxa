@@ -8,6 +8,8 @@
 //   llm egress (R88)  model-vendor hosts, SDK imports, vendor API-key variables
 //   hygiene           private addresses, cluster DNS, operator SSH host,
 //                     tunnel ids, staff addresses
+//   workflows (A-026) top-level `permissions` without write scopes, every
+//                     action pinned to a full commit SHA with its version
 //
 // Exit 1 when any guard finds something or reads too little to be credible.
 import { readFileSync } from 'node:fs';
@@ -17,6 +19,7 @@ import { checkVendoredSymbolSets, licenceHits } from './licence.mjs';
 import { REPO_ROOT, readText, trackedFiles } from './lib.mjs';
 import { llmEgressHits } from './llm-egress.mjs';
 import { checkTestDiscovery } from './test-discovery.mjs';
+import { isWorkflowFile, workflowHits } from './workflows.mjs';
 
 const MIN_FILES = 500; // read-proof: the repo tracks thousands of files
 
@@ -40,14 +43,19 @@ function main() {
   const licence = [];
   const egress = [];
   const hygiene = [];
+  const workflow = [];
   let textFiles = 0;
+  let workflowFiles = 0;
   for (const rel of files) {
     const text = readText(rel);
     if (text != null) textFiles += 1;
     for (const h of licenceHits(rel, text)) licence.push(`${rel}:${h.line} ${h.rule}`);
     for (const h of llmEgressHits(rel, text)) egress.push(`${rel}:${h.line} ${h.rule}`);
     for (const h of hygieneHits(rel, text)) hygiene.push(`${rel}:${h.line} ${h.rule}`);
+    if (isWorkflowFile(rel) && text != null) workflowFiles += 1;
+    for (const h of workflowHits(rel, text)) workflow.push(`${rel}:${h.line} ${h.rule}`);
   }
+  if (workflowFiles === 0) workflow.push('read-proof: no .github/workflows/*.yml file read');
   if (files.length < MIN_FILES) {
     console.log(`FAIL read-proof: only ${files.length} tracked files listed (expected >= ${MIN_FILES})`);
     ok = false;
@@ -67,6 +75,7 @@ function main() {
   ok = report('licence (R86)', textFiles, licence) && ok;
   ok = report('llm egress (R88)', textFiles, egress) && ok;
   ok = report('public-repo hygiene', textFiles, hygiene) && ok;
+  ok = report('workflows (A-026)', workflowFiles, workflow) && ok;
 
   if (!ok) {
     console.log('\nSee AGENTS.md "Guards" for what each rule protects and how to allowlist a file.');
