@@ -2,6 +2,12 @@
 # Each `uses:` carries its version in a trailing comment (`@<sha> # v4.4.0`);
 # Dependabot updates both. scripts/guards/workflows.mjs fails CI on an action
 # that is not pinned to a full commit SHA.
+#
+# Minor and patch bumps arrive as one grouped PR. Major bumps are never grouped:
+# each arrives as its own PR, so a major of a deploy-critical action
+# (actions/checkout, docker/*, sigstore/cosign-installer) is reviewed alone.
+# PR CI does not run the deploy workflows (build, cosign sign, digest-pin
+# commit, build-identity smoke); those only run after merge, on main.
 version: 2
 updates:
   - package-ecosystem: github-actions
@@ -9,8 +15,23 @@ updates:
     schedule:
       interval: weekly
     groups:
-      github-actions:
+      github-actions-minor-patch:
         patterns:
           - "*"
+        update-types:
+          - minor
+          - patch
+    ignore:
+      # cosign-installer v4 installs cosign v3 by default, and `cosign sign` in
+      # cosign v3 writes a protobuf Sigstore bundle as an OCI 1.1 referrer
+      # instead of the legacy `sha256-<digest>.sig` tag. The cluster admits
+      # ghcr.io/madfam-org/* images through Kyverno's verify-image-signatures
+      # policy (enclii infra/k8s/base/kyverno/policies/image-policies.yaml,
+      # chart 3.1.4 = Kyverno v1.11.4, `keyless` Cosign attestor), which reads
+      # the legacy tag. Take a cosign-installer major only after enclii proves
+      # Kyverno verifies the new format, or pin `cosign-release` to cosign v2.
+      - dependency-name: sigstore/cosign-installer
+        update-types:
+          - version-update:semver-major
     commit-message:
       prefix: ci
