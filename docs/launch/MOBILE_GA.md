@@ -6,7 +6,7 @@ Expo / EAS track for Voxa native communicator apps. **Web GA does not block on m
 
 | Item | Status |
 |------|--------|
-| Expo app (`apps/mobile`) | Expo SDK 57 (React Native 0.86, React 19.2). Board UI, Janua OAuth, offline sync hook |
+| Expo app (`apps/mobile`) | Expo SDK 57 (React Native 0.86, React 19.2). Board UI with Mulberry symbols (label-only where a button has none, as on web), Janua OAuth, offline sync hook |
 | Runtime config | `app.config.js` maps `EXPO_PUBLIC_*` → `expo.extra` ✅ 2026-06-09 |
 | App icons | `assets/icon.png` + `adaptive-icon.png` ✅ 2026-06-09 |
 | EAS profiles | `eas.json` — development, preview (staging API), production |
@@ -32,8 +32,11 @@ Expo / EAS track for Voxa native communicator apps. **Web GA does not block on m
 | Variable | Preview | Production | Local dev default |
 |----------|---------|------------|-------------------|
 | `EXPO_PUBLIC_API_URL` | `https://voxa-api-staging.madfam.io` | `https://voxa-api.madfam.io` | `http://localhost:4000` |
+| `EXPO_PUBLIC_WEB_URL` | `https://voxa.madfam.io` | `https://voxa.madfam.io` | `http://localhost:3000` |
 | `EXPO_PUBLIC_OIDC_ISSUER` | `https://auth.madfam.io` | same | same |
 | `EXPO_PUBLIC_OIDC_CLIENT_ID` | `voxa` | `voxa` | `voxa` |
+
+`EXPO_PUBLIC_WEB_URL` is the web host whose public `/symbols/mulberry/` SVGs the board shows. Both store profiles use the production web host: the symbols are static and identical, and the staging web host currently redirects symbol requests to sign-in.
 
 ## Build profiles
 

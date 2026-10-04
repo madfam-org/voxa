@@ -15,6 +15,7 @@
       "autoIncrement": true,
       "env": {
         "EXPO_PUBLIC_API_URL": "https://voxa-api-staging.madfam.io",
+        "EXPO_PUBLIC_WEB_URL": "https://voxa.madfam.io",
         "EXPO_PUBLIC_OIDC_ISSUER": "https://auth.madfam.io",
         "EXPO_PUBLIC_OIDC_CLIENT_ID": "voxa"
       },
@@ -26,6 +27,7 @@
       "channel": "production",
       "env": {
         "EXPO_PUBLIC_API_URL": "https://voxa-api.madfam.io",
+        "EXPO_PUBLIC_WEB_URL": "https://voxa.madfam.io",
         "EXPO_PUBLIC_OIDC_ISSUER": "https://auth.madfam.io",
         "EXPO_PUBLIC_OIDC_CLIENT_ID": "voxa"
       }

@@ -20,7 +20,9 @@ import {
 import { fitzgeraldColor, resolvePartOfSpeech } from '@voxa/vocabulary';
 import type { ScanOrder, SwitchGroupStrategy } from '@voxa/access';
 import { activatesOnPress, activatesOnRelease, touchGuardActive } from '@voxa/access';
-import { buttonLabel, buttonSpeech } from '@/lib/board-utils';
+import { buttonLabel, buttonSpeech, WEB_URL } from '@/lib/board-utils';
+import { boardHidesSymbols, buttonSymbolUri, showsMulberrySymbol } from '@/lib/symbol-uri';
+import { MobileButtonSymbol, MobileSymbolCredit } from '@/components/mobile-button-symbol';
 import { speakButton, speakText } from '@/lib/play-button-speech';
 import { useMobileAuth } from '@/hooks/use-mobile-auth';
 import { useMobileSwitchScan } from '@/hooks/use-mobile-switch-scan';
@@ -74,6 +76,10 @@ export function MobileBoardScreen() {
     (a, b) => a.position.row - b.position.row || a.position.column - b.position.column,
   );
 
+  const hideSymbols = boardHidesSymbols(board);
+  const symbolUris = new Map(
+    sorted.map((btn) => [btn.id as string, hideSymbols ? undefined : buttonSymbolUri(btn, WEB_URL)]),
+  );
   const literacyMode = isLiteracyKeyboardBoard(board);
   const scheduleMode = isVisualScheduleBoard(board);
   const scheduleSteps = scheduleMode ? listScheduleSteps(board) : [];
@@ -268,6 +274,7 @@ export function MobileBoardScreen() {
     const borderColor = fitzgeraldColor(resolvePartOfSpeech(btn));
     const highlighted = isHighlighted(btn);
     const groupHighlighted = isGroupHighlighted(btn);
+    const symbolUri = symbolUris.get(btn.id as string);
     const stepCompleted = scheduleMode && completedStepIds.has(btn.id as string);
     const stepCurrent =
       scheduleMode && !stepCompleted && (btn.id as string) === scheduleState.currentStepId;
@@ -331,6 +338,9 @@ export function MobileBoardScreen() {
       >
         {scheduleMode ? (
           <Text style={styles.scheduleStepIndex}>{stepCompleted ? '✓' : btn.position.row + 1}</Text>
+        ) : null}
+        {symbolUri ? (
+          <MobileButtonSymbol uri={symbolUri} size={scheduleMode ? TARGET : Math.round(TARGET * 1.1)} />
         ) : null}
         <Text style={styles.cellLabel}>{buttonLabel(btn)}</Text>
       </Pressable>
@@ -508,6 +518,7 @@ export function MobileBoardScreen() {
           sorted.map((btn) => renderBoardButton(btn))
         )}
       </ScrollView>
+      {showsMulberrySymbol([...symbolUris.values()]) ? <MobileSymbolCredit /> : null}
     </View>
   );
 }

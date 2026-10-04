@@ -8,7 +8,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "node --import tsx --test src/lib/auth.test.ts src/lib/mobile-settings.test.ts"
+    "test": "node --import tsx --test src/lib/auth.test.ts src/lib/mobile-settings.test.ts src/lib/symbol-uri.test.ts"
   },
   "dependencies": {
     "@expo/metro-runtime": "~57.0.16",
@@ -16,15 +16,20 @@
     "@react-native-community/netinfo": "^12.0.1",
     "@voxa/access": "workspace:*",
     "@voxa/core": "workspace:*",
+    "@voxa/symbols": "workspace:*",
     "@voxa/sync": "workspace:*",
     "@voxa/vocabulary": "workspace:*",
     "expo": "~57.0.26",
+    "expo-asset": "~57.0.18",
     "expo-audio": "~57.0.5",
     "expo-auth-session": "~57.0.13",
     "expo-constants": "~57.0.20",
+    "expo-image": "~57.0.5",
+    "expo-linking": "~57.0.11",
     "expo-router": "~57.0.24",
     "expo-secure-store": "~57.0.4",
     "expo-speech": "~57.0.3",
+    "expo-splash-screen": "~57.0.9",
     "expo-status-bar": "~57.0.1",
     "expo-system-ui": "~57.0.4",
     "expo-web-browser": "~57.0.3",
@@ -38,5 +43,12 @@
     "@types/react": "~19.2.17",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"
+  },
+  "expo": {
+    "install": {
+      "exclude": [
+        "typescript"
+      ]
+    }
   }
 }

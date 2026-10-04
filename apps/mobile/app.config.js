@@ -40,18 +40,24 @@ function resolveEasProjectId() {
   return projectId;
 }
 
-/** @returns {import('expo/config').ExpoConfig} */
-module.exports = () => {
+/**
+ * @param {{ config?: import('expo/config').ExpoConfig }} [context] Expo passes
+ *   the static app.json config; scripts may call this without it.
+ * @returns {import('expo/config').ExpoConfig}
+ */
+module.exports = (context = {}) => {
+  const base = context.config ?? appJson.expo;
   const projectId = resolveEasProjectId();
   const owner = readEnv('EAS_PROJECT_OWNER');
-  const { eas: _ignoredEas, ...extra } = appJson.expo.extra ?? {};
+  const { eas: _ignoredEas, ...extra } = base.extra ?? {};
 
   return {
-    ...appJson.expo,
+    ...base,
     ...(owner ? { owner } : {}),
     extra: {
       ...extra,
       apiUrl: process.env.EXPO_PUBLIC_API_URL ?? extra.apiUrl,
+      webUrl: process.env.EXPO_PUBLIC_WEB_URL ?? extra.webUrl,
       oidcIssuer: process.env.EXPO_PUBLIC_OIDC_ISSUER ?? extra.oidcIssuer,
       oidcClientId: process.env.EXPO_PUBLIC_OIDC_CLIENT_ID ?? extra.oidcClientId,
       ...(projectId ? { eas: { projectId } } : {}),
