@@ -11,11 +11,11 @@ describe('symbol routes', () => {
     useTestStore(store);
   });
 
-  it('requires editor role', async () => {
-    const res = await app.request('/v1/symbols/search?q=eat', {
+  it('is open to any signed-in role (board owners edit their own boards)', async () => {
+    const res = await app.request('/v1/symbols/search?q=a', {
       headers: { 'X-Voxa-User-Id': 'user-1', 'X-Voxa-Role': 'communicator' },
     });
-    assert.equal(res.status, 403);
+    assert.equal(res.status, 200);
   });
 
   it('returns empty for short queries', async () => {

@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import { afterEach, beforeEach, describe, it, mock } from 'node:test';
-import { DEMO_BOARD_ID } from '@voxa/core';
+import { createBoardId, createDemoBoard } from '@voxa/core';
 import { DrizzleQueryError } from 'drizzle-orm';
 import app from '../app.js';
 import { createFileBoardStore } from '../store/file-board-store.js';
-import { useTestStore } from '../store/index.js';
+import { getStore, useTestStore } from '../store/index.js';
 import { errorMessage, unwrapDbError } from './db-errors.js';
 
 const SECRET_PARAM = 'private words the user typed';
@@ -52,7 +52,7 @@ describe('API error paths with a wrapped database error', () => {
     await store.resetStoreForTests?.();
     useTestStore({
       ...store,
-      appendSyncEvents: async () => {
+      listBoards: async () => {
         throw wrappedDbError();
       },
       updateBoard: async () => {
@@ -66,11 +66,7 @@ describe('API error paths with a wrapped database error', () => {
   });
 
   it('an uncaught error answers 500 and logs the driver error only', async () => {
-    const res = await app.request('/v1/sync/events', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ events: [] }),
-    });
+    const res = await app.request('/v1/boards');
     assert.equal(res.status, 500);
     assert.equal(await res.text(), 'Internal Server Error');
     assert.equal(logged.length, 1);
@@ -80,10 +76,12 @@ describe('API error paths with a wrapped database error', () => {
   });
 
   it('a caught error does not echo query parameters to the client', async () => {
-    const current = await (await app.request(`/v1/boards/${DEMO_BOARD_ID}`)).json();
-    const res = await app.request(`/v1/boards/${DEMO_BOARD_ID}`, {
+    const owner = { 'X-Voxa-User-Id': 'owner-1', 'X-Voxa-Role': 'communicator' };
+    await getStore().createBoard({ ...createDemoBoard(), id: createBoardId('owned-board') }, 'owner-1');
+    const current = await (await app.request('/v1/boards/owned-board', { headers: owner })).json();
+    const res = await app.request('/v1/boards/owned-board', {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...owner },
       body: JSON.stringify(current),
     });
     assert.equal(res.status, 400);

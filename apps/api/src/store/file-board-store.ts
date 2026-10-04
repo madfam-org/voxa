@@ -104,6 +104,11 @@ export function createFileBoardStore(initialState?: StoreState): BoardStore {
     saveState(state);
   }
 
+  function recordEvent(event: SyncEvent): void {
+    state.events.push(event);
+    state.events = trimSyncEvents(state.events, event.boardId as string);
+  }
+
   return {
     async listBoards() {
       return Object.values(state.boards);
@@ -115,49 +120,49 @@ export function createFileBoardStore(initialState?: StoreState): BoardStore {
 
     async createBoard(board: Board, actorUserId: string): Promise<BoardUpdateResult> {
       const result = applyCreateBoard(state.boards, board, actorUserId);
-      state.events.push(result.event);
+      recordEvent(result.event);
       persist();
       return result;
     },
 
     async updateBoard(boardId, next, actorUserId, options) {
       const result = applyUpdateBoard(state.boards, boardId, next, actorUserId, options);
-      state.events.push(result.event);
+      recordEvent(result.event);
       persist();
       return result;
     },
 
     async importObfBoard(boardId, rawObf, actorUserId): Promise<ImportObfResult> {
       const result = applyImportObfBoard(state.boards, boardId, rawObf, actorUserId);
-      state.events.push(result.event);
+      recordEvent(result.event);
       persist();
       return result;
     },
 
     async importObzBoard(boardId, archive, actorUserId): Promise<ImportObfResult> {
       const result = applyImportObzBoard(state.boards, boardId, archive, actorUserId);
-      state.events.push(result.event);
+      recordEvent(result.event);
       persist();
       return result;
     },
 
     async importGridsetBoard(boardId, archive, actorUserId): Promise<ImportObfResult> {
       const result = applyImportGridsetBoard(state.boards, boardId, archive, actorUserId);
-      state.events.push(result.event);
+      recordEvent(result.event);
       persist();
       return result;
     },
 
     async importSnapBoard(boardId, archive, actorUserId): Promise<ImportObfResult> {
       const result = await applyImportSnapBoard(state.boards, boardId, archive, actorUserId);
-      state.events.push(result.event);
+      recordEvent(result.event);
       persist();
       return result;
     },
 
     async importTouchChatBoard(boardId, archive, actorUserId): Promise<ImportObfResult> {
       const result = await applyImportTouchChatBoard(state.boards, boardId, archive, actorUserId);
-      state.events.push(result.event);
+      recordEvent(result.event);
       persist();
       return result;
     },
@@ -183,8 +188,7 @@ export function createFileBoardStore(initialState?: StoreState): BoardStore {
     },
 
     async appendSyncEvents(events: SyncEvent[]) {
-      state.events.push(...events);
-      state.events = trimSyncEvents(state.events);
+      for (const event of events) recordEvent(event);
       persist();
     },
 

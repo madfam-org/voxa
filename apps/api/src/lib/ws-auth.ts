@@ -1,17 +1,14 @@
 import type { Context } from 'hono';
-import type { TeamRole } from '@voxa/core';
-import { isJanuaConfigured, mapJanuaRole, verifyAccessToken } from './janua.js';
+import { devAuthEnabled, parseDevRole } from './dev-auth.js';
+import { mapJanuaRole, verifyAccessToken } from './janua.js';
 import type { TeamContext } from '../middleware/team-auth.js';
 
-const VALID_ROLES: TeamRole[] = ['communicator', 'editor', 'admin'];
-
-function isAuthRequired(): boolean {
-  return (
-    process.env.VOXA_JANUA_AUTH_REQUIRED === 'true' ||
-    process.env.JANUA_AUTH_REQUIRED === 'true'
-  );
-}
-
+/**
+ * Resolves the WebSocket caller from an access token (`?accessToken=` or a
+ * bearer header). Without one it returns null (the socket is closed with 4401),
+ * unless the local-development shortcut (`?userId=&role=`) is enabled; see
+ * `devAuthEnabled()`.
+ */
 export async function resolveWsTeam(c: Context): Promise<TeamContext | null> {
   const queryToken = c.req.query('accessToken');
   const headerAuth = c.req.header('Authorization');
@@ -31,14 +28,10 @@ export async function resolveWsTeam(c: Context): Promise<TeamContext | null> {
     }
   }
 
-  if (isAuthRequired() || isJanuaConfigured()) {
-    if (isAuthRequired()) return null;
-  }
+  if (!devAuthEnabled()) return null;
 
-  const userId = c.req.query('userId') ?? 'dev-user';
-  const roleHeader = c.req.query('role') ?? 'editor';
-  const role = VALID_ROLES.includes(roleHeader as TeamRole)
-    ? (roleHeader as TeamRole)
-    : 'communicator';
-  return { userId, role };
+  return {
+    userId: c.req.query('userId') ?? 'dev-user',
+    role: parseDevRole(c.req.query('role')),
+  };
 }

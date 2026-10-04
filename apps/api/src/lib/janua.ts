@@ -20,8 +20,7 @@ export interface JanuaClaims extends JWTPayload {
   email?: string;
   name?: string;
   preferred_username?: string;
-  role?: string;
-  voxa_role?: string;
+  /** Janua application roles; only `voxa:*` entries are read (see mapTeamRoleFromClaims). */
   roles?: string[];
   org_id?: string;
   organization_id?: string;
@@ -36,10 +35,7 @@ export async function verifyAccessToken(token: string): Promise<JanuaClaims> {
     issuer: ISSUER,
     audience: AUDIENCE,
     algorithms: ['RS256'],
+    clockTolerance: 30,
   });
   return payload as JanuaClaims;
-}
-
-export function isJanuaConfigured(): boolean {
-  return Boolean(process.env.JANUA_ISSUER_URL || process.env.JANUA_AUTH_REQUIRED === 'true');
 }

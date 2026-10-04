@@ -15,6 +15,12 @@ import { join } from 'node:path';
 const dataDir = mkdtempSync(join(tmpdir(), 'voxa-api-test-'));
 process.env.VOXA_DATA_DIR = dataDir;
 
+// Route tests identify callers with the development headers
+// (`X-Voxa-User-Id` / `X-Voxa-Role`), which the API honours only when
+// VOXA_DEV_AUTH=true outside production. Tests that check the fail-closed
+// behaviour override these variables themselves.
+process.env.VOXA_DEV_AUTH ??= 'true';
+
 process.on('exit', () => {
   rmSync(dataDir, { recursive: true, force: true });
 });

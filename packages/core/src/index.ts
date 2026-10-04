@@ -272,4 +272,4 @@ export {
   listScheduleSteps,
   scheduleProgress,
 } from './visual-schedule.js';
-export { mapTeamRoleFromClaims } from './team-role.js';
+export { mapTeamRoleFromClaims, VOXA_APP_ROLE_PREFIX } from './team-role.js';

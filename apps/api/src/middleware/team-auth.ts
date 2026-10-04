@@ -1,6 +1,7 @@
 import type { Context, Next } from 'hono';
 import type { TeamRole } from '@voxa/core';
-import { isJanuaConfigured, mapJanuaRole, verifyAccessToken } from '../lib/janua.js';
+import { devAuthEnabled, parseDevRole } from '../lib/dev-auth.js';
+import { mapJanuaRole, verifyAccessToken } from '../lib/janua.js';
 
 export interface TeamContext {
   userId: string;
@@ -14,24 +15,18 @@ declare module 'hono' {
   }
 }
 
-const VALID_ROLES: TeamRole[] = ['communicator', 'editor', 'admin'];
-
-function isAuthRequired(): boolean {
-  return (
-    process.env.VOXA_JANUA_AUTH_REQUIRED === 'true' ||
-    process.env.JANUA_AUTH_REQUIRED === 'true'
-  );
-}
-
 function devTeamFromHeaders(c: Context): TeamContext {
-  const userId = c.req.header('X-Voxa-User-Id') ?? 'dev-user';
-  const roleHeader = c.req.header('X-Voxa-Role') ?? 'editor';
-  const role = VALID_ROLES.includes(roleHeader as TeamRole)
-    ? (roleHeader as TeamRole)
-    : 'communicator';
-  return { userId, role };
+  return {
+    userId: c.req.header('X-Voxa-User-Id') ?? 'dev-user',
+    role: parseDevRole(c.req.header('X-Voxa-Role')),
+  };
 }
 
+/**
+ * Resolves the caller from a Janua bearer token. Without one the request is
+ * rejected with 401, unless the local-development header shortcut is enabled
+ * (see `devAuthEnabled()`: never in production).
+ */
 export function teamAuth() {
   return async (c: Context, next: Next) => {
     const authorization = c.req.header('Authorization');
@@ -50,18 +45,11 @@ export function teamAuth() {
       }
     }
 
-    if (isAuthRequired() || isJanuaConfigured()) {
-      if (isAuthRequired()) {
-        return c.json({ error: 'Authentication required' }, 401);
-      }
+    if (!devAuthEnabled()) {
+      return c.json({ error: 'Authentication required' }, 401);
     }
 
     c.set('team', devTeamFromHeaders(c));
     await next();
   };
-}
-
-export function requireEditor(c: Context): boolean {
-  const { role } = c.get('team');
-  return role === 'editor' || role === 'admin';
 }
