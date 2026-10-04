@@ -163,7 +163,8 @@ test('consent off: nothing is sent, and turning sync off deletes the server copy
   const device = await openDevice(browser, user);
   const settingsRequests: Request[] = [];
   device.page.on('request', (request) => {
-    if (new URL(request.url()).pathname === SETTINGS_PATH) settingsRequests.push(request);
+    // Through the same-origin proxy (/api/v1/me/settings) or straight to the API.
+    if (new URL(request.url()).pathname.endsWith(SETTINGS_PATH)) settingsRequests.push(request);
   });
   try {
     await gotoApp(device.page);
@@ -183,6 +184,8 @@ test('consent off: nothing is sent, and turning sync off deletes the server copy
     await toggle.check();
     await expectSyncStatus(device.page, 'synced');
     await expect.poll(async () => (await serverSettings(user)).status).toBe(200);
+    // The request watch does see settings traffic once sync is on (the "nothing sent" check above is not vacuous).
+    expect(settingsRequests.filter((r) => r.method() === 'PUT').length).toBeGreaterThan(0);
     await toggle.uncheck();
     await expectSyncStatus(device.page, 'off');
     expect((await serverSettings(user)).status).toBe(403);

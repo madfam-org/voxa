@@ -107,7 +107,7 @@ One row per user and purpose in `consents` (`user_id`, `purpose`, `granted`, `po
 
 ### `user_settings`
 
-Communicator settings that follow the user between devices (migration 0008), one row per user, written only with the `settings_sync` consent.
+Communicator settings that follow the user between devices (migration 0009), one row per user, written only with the `settings_sync` consent.
 
 | Column | Type | Description |
 |--------|------|-------------|

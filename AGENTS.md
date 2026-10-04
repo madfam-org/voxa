@@ -29,7 +29,7 @@ fixtures free of real names and health information.
 | `e2e`                           | Playwright smoke, accessibility (axe), browser workflow and staging specs.                                                          |
 | `scripts/`                      | `run-unit-tests.mjs` (test discovery), `guards/` (repository guards), `launch/` (deploy smokes), `mobile/` (EAS checks).             |
 | `fixtures/`                     | Synthetic OBF/OBZ files and soak fixtures (no real names or health data).                                                           |
-| `apps/api/drizzle/migrations`   | SQL migrations, `meta/_journal.json` and their snapshots (`0000`–`0008`).                                                           |
+| `apps/api/drizzle/migrations`   | SQL migrations, `meta/_journal.json` and their snapshots (`0000`–`0009`).                                                           |
 | `k8s/production`, `k8s/staging` | Kustomize manifests (digest-pinned images).                                                                                         |
 | `enclii.yaml`                   | Enclii network and status declarations.                                                                                             |
 | `docs/`                         | Architecture, data model, auth, deploy, ops, launch and legal docs.                                                                 |
