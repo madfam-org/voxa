@@ -59,6 +59,6 @@ Users can disable decorative imagery, reduce grid chrome, and enlarge symbol-onl
 ## Testing
 
 - Automated: `@axe-core/playwright` in CI on critical pages (`e2e/specs/a11y.spec.ts` — home, legal, sign-in)
-- Staging: daily soak script + weekday `e2e-smoke` workflow (smoke + axe against staging)
+- Daily `e2e-smoke` workflow ("Daily smoke"): Playwright smoke and axe against the production public pages; staging specs return when staging is rebuilt
 - Manual: SLP review checklist before release ([SLP_SIGNOFF.md](./launch/SLP_SIGNOFF.md))
 - Hardware: Tobii, IrisBond, and switch interfaces on reference devices

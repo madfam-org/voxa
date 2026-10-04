@@ -6,10 +6,14 @@ All notable changes to Voxa are documented here.
 
 ### Removed
 
+- CI: the production web deploy no longer logs in to the identity provider with an admin account to sync Argo CD and restart pods; Argo CD auto-syncs the digest pin, which already bumps the pod template's `restartedAt`. The three scripts that step used (`scripts/deploy/*`) and the June GA soak-window tools (`soak-window-progress.sh`, `soak-status.sh`, `verify-soak-window.sh`, `setup-staging-soak-secrets.sh`) moved to MADFAM's private operations repository.
+- CI: the daily smoke no longer appends to `docs/launch/SOAK_LOG.md` or pushes to `main`; its permissions are read-only.
 - Commercial research (pricing strategy, competitor benchmark, feature-parity scorecard, survey payloads), the GA status record with platform identifiers, the GHCR org-admin procedure and the operator-only scripts under `scripts/deploy/` and `scripts/launch/` that no workflow runs. They moved to MADFAM's private operations repository; the deploy, on-call, backup and auth docs were generalized for a public repo. `scripts/deploy/restart-voxa-web.sh` now reads the Enclii service id from `VOXA_WEB_SERVICE_ID` / `VOXA_STAGING_WEB_SERVICE_ID` and fails closed when it is unset.
 
 ### Fixed
 
+- CI: each deploy workflow has its own concurrency group. The shared web+API group let one workflow's pending run displace the other's, so a merge could leave production web without the change while its API deploy succeeded.
+- CI: the daily smoke (`e2e-smoke.yml`, now "Daily smoke") runs only checks that mean something today: production GA gate, production demo, Redis readiness (warning), and Playwright smoke plus axe on production public pages.
 - Web: paid-plan calls to action (Family, Institutional, demo gate) go to a discovery call at `https://kalya.app/madfam` until a checkout exists; the `/app?upgrade=family` dead end and the unused checkout URL builder are removed. Prices stay visible.
 - API: predictions come only from the in-process local predictor (`source: "local"`); the optional third-party LLM backend is removed. The suggestion strip is labelled as basic suggestions.
 - Copy (es/en/fr): removed or reworded claims with nothing behind them (SLA, priority sync, full AI and GLP workflows, per-end-user dashboards, care-team invites and team roles, offline-ready, eye-dwell, centrally enforced AI policy, release review by speech therapists). Contact mailbox is `hola@madfam.io`. A stop-list test guards the catalogs.

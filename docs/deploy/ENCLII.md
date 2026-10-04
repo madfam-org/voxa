@@ -74,14 +74,14 @@ Four workflows build and pin images. Each runs on `workflow_dispatch` and on a p
 | `deploy-voxa-api-staging.yml` | `staging` | `apps/api/**`, `packages/**` | no | `k8s/staging/` |
 | `deploy-voxa-web-staging.yml` | `staging` | `apps/web/**`, `packages/**` | no | `k8s/staging/` |
 
-The production workflows share the `voxa-kustomization-production` concurrency group and the pin step retries up to 3 times (fetch, reset to `origin/main`, re-apply the digest). They then smoke the public health URL and fail loudly if an image was pushed but never pinned. A docs-only change (root `*.md`, `docs/**`) deploys nothing. All GitHub-hosted jobs are pinned to `ubuntu-24.04`.
+Each workflow has its own concurrency group (`voxa-web-production`, `voxa-api-production`, `voxa-web-staging`, `voxa-api-staging`): GitHub keeps only the newest pending run per group, so a shared web+API group let one workflow's pending run displace the other's. The pin step retries up to 3 times (fetch, reset to `origin/main`, re-apply the digest), so the two workflows cannot clobber each other's pin. They then smoke the public health URL and fail loudly if an image was pushed but never pinned. A docs-only change (root `*.md`, `docs/**`) deploys nothing. All GitHub-hosted jobs are pinned to `ubuntu-24.04`.
 
 | Environment | Branch | Manifests | Domains |
 |-------------|--------|-----------|---------|
 | Production | `main` | `k8s/production/` | `voxa.madfam.io`, `voxa-app.madfam.io`, `voxa-api.madfam.io` |
 | Staging | `staging` | `k8s/staging/` | `voxa-staging.madfam.io`, `voxa-app-staging.madfam.io`, `voxa-api-staging.madfam.io` |
 
-ArgoCD syncs after digest commits. Check status at [app.enclii.dev](https://app.enclii.dev) and the Enclii status page entries declared in `enclii.yaml`.
+ArgoCD auto-syncs after digest commits (automated sync with self-heal); the web pin also bumps the pod template's `restartedAt`. No workflow calls Argo or restarts pods. Check status at [app.enclii.dev](https://app.enclii.dev) and the Enclii status page entries declared in `enclii.yaml`.
 
 ## Health checks
 
