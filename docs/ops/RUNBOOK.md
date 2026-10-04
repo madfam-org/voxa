@@ -1,5 +1,7 @@
 # Voxa on-call runbook
 
+> Public-safe summary. Platform identifiers, operator scripts and break-glass procedures live in MADFAM's private operations repository, not here.
+
 ## Severity levels
 
 | Level | Example | Response |
@@ -30,7 +32,7 @@ Unauthenticated `GET /v1/boards` should return **401** when `authEnforced` is tr
 
 1. Check ArgoCD app `voxa-services` sync status in Enclii.
 2. Verify `voxa-secrets` contains `DATABASE_URL` if Postgres is expected.
-3. Inspect API pod logs: `kubectl logs -l app=voxa-api -n voxa --tail=200`.
+3. Read the `voxa-api` logs through Enclii (web console or CLI).
 4. If migrations failed, fix schema and restart deployment.
 
 ### API pod exits at boot with a connection error
@@ -63,10 +65,7 @@ Symptom: Argo shows **Synced** but `/health/ready` has no `authEnforced` field a
 
 1. Confirm Git has `VOXA_JANUA_AUTH_REQUIRED=true` on `voxa-api` deployment and the latest API digest in `kustomization.yaml`.
 2. Sync Argo app (`voxa-services` / `voxa-staging-services`) via Enclii.
-3. **Rolling-restart API** (Argo ignores `restartedAt`; env-only changes may not recycle pods):
-   ```bash
-   ENCLII_TOKEN='…' ./scripts/deploy/restart-voxa-api.sh all
-   ```
+3. **Rolling-restart the API** through an Enclii service restart (Argo ignores `restartedAt`; env-only changes may not recycle pods). The operator procedure is private.
 4. Re-verify:
    ```bash
    curl -sS https://voxa-api.madfam.io/health/ready
@@ -78,15 +77,9 @@ Symptom: Argo shows **Synced** but `/health/ready` has no `authEnforced` field a
 
 Symptom: GitHub hook deliveries show `Invalid HTTP Response: 401`; Enclii responds `{"error":"Invalid signature"}`.
 
-1. Confirm `madfam-org/voxa` has a webhook to `https://api.enclii.dev/v1/webhooks/github` and `ENCLII_CALLBACK_TOKEN` is set (see `scripts/deploy/setup-github-*.sh`).
-2. Platform HMAC secret lives in cluster secret `enclii/enclii-github-webhook` (key `secret`). Update via Enclii `POST /v1/admin/provision/secrets` if rotating.
-3. **Recycle `switchyard-api` pods** so `ENCLII_GITHUB_WEBHOOK_SECRET` reloads. If new pods stay **Pending** (`Insufficient cpu`), scale down first via Enclii API:
-   ```bash
-   ENCLII_TOKEN='…' ENCLII_WEBHOOK_SECRET='…' \
-     ./scripts/deploy/rollout-switchyard-api.sh --via-enclii-scale
-   ```
-   A direct cluster restart is platform break-glass only; follow the platform operator's procedure.
-4. Re-test: GitHub hook **Redeliver** on a `ping` event should return **200**.
+1. Confirm `madfam-org/voxa` has a webhook to `https://api.enclii.dev/v1/webhooks/github` and the `ENCLII_CALLBACK_TOKEN` repository secret is set.
+2. Escalate to the platform operator: the platform's webhook secret must match the repository's, and the platform API must reload it. That procedure (and any break-glass step) is private.
+3. Re-test: GitHub hook **Redeliver** on a `ping` event should return **200**.
 
 ### Rate limit spikes (429)
 
