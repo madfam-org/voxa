@@ -120,6 +120,9 @@ for (const [control, prompt] of [
   ['auth.signInAsSomeoneElse', 'login'],
 ] as const) {
   test(`sign-in page: ${control} goes to Janua with prompt=${prompt}`, async ({ page }) => {
+    // A decided consent keeps the first-run privacy banner from covering the
+    // lower controls on a short viewport.
+    await seedLocalState(page);
     await page.goto('/auth/signin');
     await page.getByRole('button', { name: ui(control) }).click();
     await page.waitForURL((url) => url.href.startsWith(`${ISSUER}/api/v1/oauth/authorize`), { timeout: 30_000 });
