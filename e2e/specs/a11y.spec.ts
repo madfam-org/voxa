@@ -133,8 +133,8 @@ test.describe('Voxa accessibility (axe) — authenticated surfaces (mock session
 const BOARD_THEMES = ['default', 'classic-light', 'cvi-dark', 'cvi-high-contrast'] as const;
 
 test.describe('Voxa accessibility (axe) — /app in every board theme', () => {
-  // The standalone server in CI listens on 127.0.0.1; pin the UI language so
-  // every run takes the same `/app` -> `/en/app` route.
+  // Pin the UI language so every run takes the same `/app` -> `/en/app` route;
+  // the Spanish (default-locale) pages are scanned in their own block below.
   test.use({ locale: 'en-US' });
 
   for (const theme of BOARD_THEMES) {
@@ -155,6 +155,58 @@ test.describe('Voxa accessibility (axe) — /app in every board theme', () => {
       expect(blocking, JSON.stringify(formatViolations(blocking), null, 2)).toEqual([]);
     });
   }
+});
+
+/**
+ * Spanish, the default UI locale. Spanish pages are served unprefixed (`/`,
+ * `/demo`, `/app`), so a run in English (Playwright's default `en-US`) never
+ * renders them. Each test asserts the page really is Spanish before scanning,
+ * so a redirect to `/en/...` fails instead of passing on the wrong page.
+ * Serious and critical violations fail.
+ */
+test.describe('Voxa accessibility (axe) — Spanish (default locale)', () => {
+  test.use({ locale: 'es-MX', extraHTTPHeaders: { 'Accept-Language': 'es-MX,es;q=0.9' } });
+
+  async function expectSpanishAt(page: import('@playwright/test').Page, path: string) {
+    const url = new URL(page.url());
+    expect(url.pathname, `stayed on the unprefixed Spanish route ${path}`).toBe(path);
+    await expect(page.locator('html')).toHaveAttribute('lang', /^es\b/);
+  }
+
+  async function expectNoBlocking(page: import('@playwright/test').Page) {
+    const results = await analyzeCurrentPage(page);
+    const blocking = blockingViolations(results.violations);
+    expect(blocking, JSON.stringify(formatViolations(blocking), null, 2)).toEqual([]);
+  }
+
+  for (const { name, path } of [
+    { name: 'landing', path: '/' },
+    { name: 'live demo', path: '/demo' },
+  ] as const) {
+    test(`${name} (${path}) in Spanish has no serious or critical WCAG 2.2 AA violations`, async ({ page }) => {
+      await page.goto(path);
+      await page.waitForLoadState('domcontentloaded');
+      await expectSpanishAt(page, path);
+      await expectNoBlocking(page);
+    });
+  }
+
+  test('/app communicator in Spanish has no serious or critical WCAG 2.2 AA violations', async ({ page }) => {
+    await seedLocalState(page);
+    await page.goto('/app');
+    await page.locator('[data-voxa-button-id]').first().waitFor({ timeout: 30_000 });
+    await expectSpanishAt(page, '/app');
+    await expectNoBlocking(page);
+  });
+
+  test('/app settings in Spanish has no serious or critical WCAG 2.2 AA violations', async ({ page }) => {
+    await seedLocalState(page);
+    await page.goto('/app');
+    await page.locator('[data-voxa-button-id]').first().waitFor({ timeout: 30_000 });
+    await expectSpanishAt(page, '/app');
+    await openAccessibilitySettings(page);
+    await expectNoBlocking(page);
+  });
 });
 
 /**

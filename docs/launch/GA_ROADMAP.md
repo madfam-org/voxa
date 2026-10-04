@@ -104,7 +104,7 @@ Web GA does **not** block on mobile store listings; mobile is tracked as **Phase
 | Work stream | Priority | Target |
 |-------------|----------|--------|
 | Multi-board library + motor-plan locks in UI | P1 | Q3 2026 |
-| ARASAAC / OpenSymbols integration | P1 | Q3 2026 |
+| Commercial-licence symbol library and search (Mulberry Symbols, CC BY-SA 4.0) | P1 | Q3 2026 |
 | Recorded speech + GLP media upload | P1 | Q3 2026 |
 | Hide/show + babble mode | P1 | Q3 2026 |
 | Usage logs + SLP reporting UI | P1 | Q3 2026 |

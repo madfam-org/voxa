@@ -14,7 +14,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "node --import tsx --test src/ws-url.test.ts src/errors.test.ts src/save-board.test.ts",
+    "test": "node ../../scripts/run-unit-tests.mjs",
     "clean": "rm -rf dist"
   },
   "dependencies": {

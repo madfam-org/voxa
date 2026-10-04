@@ -8,7 +8,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "node --import tsx --test src/lib/auth.test.ts src/lib/mobile-settings.test.ts src/lib/symbol-uri.test.ts"
+    "test": "node ../../scripts/run-unit-tests.mjs"
   },
   "dependencies": {
     "@expo/metro-runtime": "~57.0.16",

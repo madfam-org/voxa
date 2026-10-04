@@ -63,12 +63,14 @@ function unsignedJwt(claims: Record<string, unknown>): string {
 }
 
 /**
- * Hostnames the cookie must cover. Next.js normalizes the standalone server's
- * host during the locale redirect, so a run started against 127.0.0.1 ends up
- * on localhost (and vice versa). Cookies are host-scoped, so seeding both
- * keeps the in-page /api/auth/session XHR authenticated after the redirect —
- * without this, the page silently falls back to unauthenticated and the
- * editor-only surfaces never render.
+ * Hostnames the cookie must cover. A standalone server bound to one address
+ * (HOSTNAME=127.0.0.1) hands middleware a `localhost` request URL, so its
+ * locale redirect moves a run started against 127.0.0.1 to localhost (and vice
+ * versa); CI binds 0.0.0.0 like production, which keeps the host, but a local
+ * run may not. Cookies are host-scoped, so seeding both keeps the in-page
+ * /api/auth/session XHR authenticated after such a redirect — without this,
+ * the page silently falls back to unauthenticated and the editor-only
+ * surfaces never render.
  */
 function cookieHosts(baseURL: string): string[] {
   const hosts = new Set<string>();

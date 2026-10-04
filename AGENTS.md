@@ -42,9 +42,20 @@ pnpm build
 
 ## Tests
 
-- Every package uses `node --import tsx --test` with an **explicit file list**
-  in its `package.json` `test` script. A new test file does not run until you
-  add it there.
+- Test files are **discovered, never listed**. Every package's `test` script
+  is `node ../../scripts/run-unit-tests.mjs` (the API adds
+  `--import ./src/test-support/isolated-data-dir.ts`): it finds every
+  `*.test.{ts,tsx,mts,cts,js,mjs}` under the package's `src/` (skipping
+  `node_modules` and build output) and runs them with
+  `node --import tsx --test`. A new test file runs as soon as it exists; do
+  not add file names to `package.json`. To keep a file out of the unit job,
+  add it to `EXCLUDED` in `scripts/run-unit-tests.mjs` with the reason (empty
+  today: Postgres suites skip themselves, browser specs live in `e2e/`). The
+  test-discovery guard fails if a tracked test does not run or if a file the
+  old hand-written lists ran (`scripts/guards/fixtures/unit-tests-before-discovery.txt`)
+  is no longer discovered; when you rename or delete one of those tests,
+  edit that file in the same change. `pnpm test:guards` runs the guards' own
+  tests (`scripts/**/*.test.mjs`, plain Node).
 - `node --test` runs each file in its own process, in parallel. The API suite
   also preloads `apps/api/src/test-support/isolated-data-dir.ts`, which gives
   every test process its own temporary `VOXA_DATA_DIR`, so test files never
@@ -60,8 +71,9 @@ pnpm build
   Redis and proves cross-replica delivery and global presence. CI provides
   `postgres:16` and `redis:7` service containers; `turbo.json` passes both
   variables through.
-- CI (`.github/workflows/ci.yml`, on pushes and PRs to `main`): typecheck,
-  `pnpm test`, the Drizzle drift step (`drizzle-kit generate` must produce no
+- CI (`.github/workflows/ci.yml`, on pushes and PRs to `main`): the
+  repository guards (`pnpm guards`, `pnpm test:guards`; see [Guards](#guards)),
+  typecheck, `pnpm test`, the Drizzle drift step (`drizzle-kit generate` must produce no
   changes), the EAS config check, `pnpm build`, then an axe job against the
   built web app, which also runs `pnpm test:e2e:offline`
   (`e2e/specs/offline-media.spec.ts`: offline reload of `/app`, uploaded
@@ -74,7 +86,11 @@ pnpm build
   proves a button press, "Speak" and a prediction chip speak with the chosen
   `voiceURI`, rate, pitch, volume and the board's `lang`; axe on the Voice
   settings section in a light and a dark theme). The axe job scans `/app`
-  in all four board themes and fails on serious or critical violations.
+  in all four board themes and, in Spanish (the default, unprefixed locale),
+  the landing, `/demo`, `/app` and its settings panel; both fail on serious
+  or critical violations. The standalone server binds `HOSTNAME=0.0.0.0` as
+  in production: bound to `127.0.0.1`, Next hands middleware a `localhost`
+  request URL and every unprefixed Spanish path redirects to itself.
 - Playwright: `pnpm test:e2e:smoke`, `pnpm test:e2e:a11y`,
   `pnpm test:e2e:offline`, `pnpm test:e2e:access`, `pnpm test:e2e:voices`,
   `pnpm test:e2e:staging`,
@@ -200,7 +216,7 @@ pnpm build
     `apps/web/src/lib/play-button-speech.test.ts` and
     `e2e/specs/voice-choice.spec.ts`.
 
-12. **Board writes are compare-and-set; reads are scoped.** The PostgreSQL
+13. **Board writes are compare-and-set; reads are scoped.** The PostgreSQL
     store reads one board by id, applies the change, and updates the row only
     `WHERE id = $1 AND version = $2`, with the sync event in the same
     transaction: of two writers on one version exactly one wins and the other
@@ -220,7 +236,7 @@ pnpm build
     `WHERE`) on a request path. Tested in `src/store/pg-board-store.pg.test.ts`
     (a test-only SQL observer in `src/db/client.ts` sees query text, never
     parameters).
-13. **Request limits and media checks.** On `/v1/*`, in memory per replica
+14. **Request limits and media checks.** On `/v1/*`, in memory per replica
     with pruned, bounded buckets (`src/middleware/rate-limit.ts`). The web
     server proxies browser calls, so every user can arrive from one address:
     **authenticated traffic is never limited per address.** A per-address
@@ -244,12 +260,38 @@ pnpm build
     one address: 429; 300 media reads by one user: no 429),
     `src/middleware/body-limit.test.ts` and
     `src/routes/media-hardening.routes.test.ts`.
-14. **Co-editing across replicas needs Redis, and degrades loudly.** With
+15. **Co-editing across replicas needs Redis, and degrades loudly.** With
     `REDIS_URL` reachable the sync hub relays board events between replicas and
     counts presence globally (`syncHub: "redis"`). Without it, or with Redis
     down, it serves locally, keeps reconnecting, and `/health/ready` stays 200
     with a `syncHubWarning`; Redis never blocks startup or readiness. Tested in
     `src/ws/sync-hub.test.ts` and `src/ws/sync-hub.redis.test.ts`.
+
+## Guards
+
+Checks that keep fixed things fixed. "Unit job" is `pnpm test` in the CI
+`build` job; "axe job" is the CI `a11y` job. A guard that reads nothing fails
+rather than passing (each one asserts how much it read).
+
+| Guard | What it fails on | Where it lives | Where it runs | Added |
+| ----- | ---------------- | -------------- | ------------- | ----- |
+| Test discovery | a tracked `*.test.*` the unit job does not run; a package test script that names files by hand; a test the old lists ran that is no longer discovered | `scripts/run-unit-tests.mjs`, `scripts/guards/test-discovery.mjs` | CI build job (`pnpm guards`, `pnpm test:guards`) | this guard set |
+| Licence (ruling R86) | the removed non-commercial symbol library's name or hosts (case-insensitive) in any tracked file outside a short allowlist (history, legacy-data shim, guards, tests); a vendored symbol set (`apps/*/{public,assets}/symbols/<set>/`) without a licence file at its root or a `NOTICE` entry | `scripts/guards/licence.mjs`; also `packages/symbols/src/no-removed-symbol-hosts.test.ts` (hosts in source), `apps/web/src/symbol-credits-messages.test.ts` (credits copy) | CI build job; unit job | voxa#18, voxa#35 (OBF licence objects), this guard set |
+| No direct LLM egress (ruling R88) | model-vendor API hosts and SDK imports or dependencies in `apps/` or `packages/` (the Selva client `apps/api/src/lib/selva.ts` may import an OpenAI-compatible SDK); vendor API-key variables (`OPENAI_API_KEY` style) in code, manifests or workflows anywhere | `scripts/guards/llm-egress.mjs` | CI build job | this guard set |
+| Public-repo hygiene | RFC 1918 addresses (outside test fixtures and SVG path data), `*.svc.cluster.local` names, the operator SSH host pattern, Cloudflare tunnel ids, `@madfam.io` addresses other than role mailboxes. Real client names are checked by MADFAM's private estate scan, not in this repository. | `scripts/guards/hygiene.mjs` (per-rule allowlist by file) | CI build job | this guard set |
+| Claims stop-list | public copy claims with nothing behind them, the retired mailbox, the upgrade dead end | `apps/web/src/lib/claims-stoplist.test.ts` | unit job | voxa#20 |
+| Crawling and security headers | robots, sitemap and `llms.txt` per host; CSP, HSTS and the static header set | `apps/web/src/lib/crawling.test.ts`, `apps/web/src/lib/security-headers.test.ts`, `apps/web/src/next-config.test.ts`, `apps/api/src/middleware/security-headers.test.ts` | unit job | voxa#21 |
+| Authorization regressions | namespaced app roles, org scope, read-only demo board, fail-closed dev auth | `apps/api/src/routes/authz.routes.test.ts`, `apps/api/src/lib/board-access.test.ts` | unit job | voxa#16 |
+| Hardcoded UI text | user-facing literals outside the es/en/fr catalogs | `apps/web/src/hardcoded-ui-text.test.ts` | unit job | voxa#29 |
+| Service worker | `sw.js` must parse as plain JavaScript and never cache `/api/*` or other origins | `apps/web/src/service-worker.test.ts` | unit job | voxa#32 |
+| Image optimizer off | `/_next/image` must answer 404 | `apps/web/src/next-config.test.ts`; `scripts/launch/verify-prod-image-optimizer.sh` | unit job; axe job; after each production web deploy | voxa#13 |
+| Image smoke and build identity | images on Node 22 without package managers, health 200 under the Deployment's securityContext; deploys wait until `/health` serves the commit's `build` | `.github/workflows/image-smoke.yml`, `apps/*/src/lib/build-info.test.ts`, `scripts/launch/wait-for-build.sh` | image-smoke workflow (Dockerfile, lockfile or `package.json` changes); deploy workflows | voxa#33 |
+| Accessibility (axe) | serious or critical WCAG 2.2 AA violations on public pages, the editor panels, `/app` in four themes and the Spanish landing, `/demo`, `/app` and settings | `e2e/specs/a11y.spec.ts` | axe job | voxa#4, voxa#36, this guard set (Spanish) |
+
+Guard output is `file:line rule`, never the matched text, because CI logs of
+a public repository are public. To allowlist a file, add its path (not a
+wildcard over the repo) to the guard's list with the reason, in the same PR.
+
 ## Deploy
 
 | Workflow                                                     | Trigger                                                        | Effect                                                                           |

@@ -21,6 +21,8 @@
     "dev:mobile": "pnpm --filter @voxa/mobile dev",
     "build": "turbo build",
     "test": "turbo test --filter=!@voxa/e2e",
+    "guards": "node scripts/guards/check.mjs",
+    "test:guards": "node scripts/run-unit-tests.mjs --root scripts --no-tsx",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
     "clean": "turbo clean && rm -rf node_modules",
