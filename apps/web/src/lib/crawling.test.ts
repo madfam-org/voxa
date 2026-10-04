@@ -57,7 +57,7 @@ describe('robots.txt', () => {
 
   it('allows public pages in every locale and disallows app, auth and api', () => {
     const body = buildRobotsTxt(LANDING, true);
-    for (const line of ['Allow: /$', 'Allow: /en$', 'Allow: /fr$', 'Allow: /demo', 'Allow: /en/demo', 'Allow: /fr/legal/privacy']) {
+    for (const line of ['Allow: /$', 'Allow: /en$', 'Allow: /fr$', 'Allow: /demo', 'Allow: /en/demo', 'Allow: /legal/', 'Allow: /fr/legal/']) {
       assert.ok(body.includes(`${line}\n`), line);
     }
     for (const line of ['Disallow: /app', 'Disallow: /auth', 'Disallow: /api', 'Disallow: /en/app', 'Disallow: /fr/auth']) {
@@ -78,6 +78,7 @@ describe('sitemap.xml', () => {
     assert.ok(xml.includes(`hreflang="en" href="${LANDING}/en/demo"`));
     assert.ok(xml.includes(`hreflang="fr" href="${LANDING}/fr"`));
     assert.ok(xml.includes(`hreflang="x-default" href="${LANDING}/legal/terms"`));
+    assert.ok(xml.includes(`<loc>${LANDING}/legal/symbols</loc>`));
   });
 
   it('lists nothing behind sign-in', () => {

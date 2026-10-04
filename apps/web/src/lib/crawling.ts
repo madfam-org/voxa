@@ -32,7 +32,11 @@ export const PUBLIC_PAGES = [
   '/legal/privacy',
   '/legal/terms',
   '/legal/accessibility',
+  '/legal/symbols',
 ] as const;
+
+/** Path prefixes crawlers may read (each also under every non-default locale). */
+const ALLOWED_PREFIXES = ['/demo', '/legal/'] as const;
 
 const DISALLOWED_PREFIXES = ['/app', '/auth', '/api'] as const;
 
@@ -75,10 +79,9 @@ function disallowLines(): string[] {
 function allowLines(): string[] {
   const lines = ['Allow: /$'];
   for (const locale of NON_DEFAULT_LOCALES) lines.push(`Allow: /${locale}$`);
-  for (const page of PUBLIC_PAGES) {
-    if (page === '/') continue;
-    lines.push(`Allow: ${page}`);
-    for (const locale of NON_DEFAULT_LOCALES) lines.push(`Allow: /${locale}${page}`);
+  for (const prefix of ALLOWED_PREFIXES) {
+    lines.push(`Allow: ${prefix}`);
+    for (const locale of NON_DEFAULT_LOCALES) lines.push(`Allow: /${locale}${prefix}`);
   }
   return lines;
 }
@@ -153,6 +156,7 @@ export function buildLlmsTxt(origin: string): string {
     `- [Privacy](${origin}/legal/privacy)`,
     `- [Terms](${origin}/legal/terms)`,
     `- [Accessibility](${origin}/legal/accessibility)`,
+    `- [Symbol credits](${origin}/legal/symbols)`,
     `- English: ${origin}/en · French: ${origin}/fr`,
     '',
     '## Source',
