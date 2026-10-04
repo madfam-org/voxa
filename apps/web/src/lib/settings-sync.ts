@@ -152,6 +152,24 @@ export function buildPushFields(settings: CommunicatorSettings, times: FieldTime
   return fields;
 }
 
+/**
+ * Field times after a successful push: the server's time for every field that
+ * did not change on this device while the push was in flight (the server may
+ * have replaced a future time with its own), the newer local time otherwise.
+ */
+export function timesAfterPush(
+  fields: Record<string, { updatedAt: string } | undefined>,
+  sent: FieldTimes,
+  latest: FieldTimes,
+): FieldTimes {
+  const out: FieldTimes = { ...latest };
+  for (const [key, entry] of Object.entries(fields)) {
+    const k = key as keyof FieldTimes;
+    if (entry && latest[k] === sent[k]) out[k] = entry.updatedAt;
+  }
+  return out;
+}
+
 // ---------------------------------------------------------------------------
 // Device storage (every access guarded: storage may be unavailable).
 

@@ -23,6 +23,7 @@ import {
   NEVER_CHANGED,
   stampChangedFields,
   syncedValues,
+  timesAfterPush,
 } from './settings-sync';
 import {
   SPEECH_PITCH_MAX,
@@ -128,6 +129,18 @@ describe('settings sync merge rules', () => {
       eyeDwellMs: OLD,
       switchIntervalMs: NEW,
     });
+  });
+
+  it('after a push, keeps a local change made while it was in flight', () => {
+    const sent = { switchIntervalMs: OLD, eyeDwellMs: OLD };
+    const latest = { switchIntervalMs: OLD, eyeDwellMs: NEW }; // eyeDwellMs changed during the push
+    const serverTime = '2026-10-02T00:00:00.000Z';
+    const times = timesAfterPush(
+      { switchIntervalMs: { updatedAt: serverTime }, eyeDwellMs: { updatedAt: serverTime } },
+      sent,
+      latest,
+    );
+    assert.deepEqual(times, { switchIntervalMs: serverTime, eyeDwellMs: NEW });
   });
 
   it('leaves a stored value outside the shared rules on the device', () => {

@@ -13,10 +13,10 @@ import {
   readSyncState,
   readSyncUserState,
   saveSettingsSyncConsent,
+  timesAfterPush,
   SETTINGS_LOCAL_CHANGE_EVENT,
   writeSyncState,
   writeSyncUserState,
-  type FieldTimes,
 } from '@/lib/settings-sync';
 
 /**
@@ -48,14 +48,6 @@ interface Options {
   applyRemote: (patch: Partial<CommunicatorSettings>) => void;
   signedIn: boolean;
   userId: string;
-}
-
-function timesFromDocument(fields: Record<string, { updatedAt: string } | undefined>, base: FieldTimes): FieldTimes {
-  const out: FieldTimes = { ...base };
-  for (const [key, entry] of Object.entries(fields)) {
-    if (entry) out[key as keyof FieldTimes] = entry.updatedAt;
-  }
-  return out;
 }
 
 /**
@@ -131,7 +123,7 @@ export function useSettingsSync({ settings, loaded, applyRemote, signedIn, userI
             const latest = readSyncState();
             const changedMeanwhile = JSON.stringify(latest.fieldTimes) !== JSON.stringify(state.fieldTimes);
             writeSyncState({
-              fieldTimes: timesFromDocument(result.document.fields, latest.fieldTimes),
+              fieldTimes: timesAfterPush(result.document.fields, state.fieldTimes, latest.fieldTimes),
               dirty: changedMeanwhile,
             });
             writeSyncUserState(userRef.current, { enabled: true, version: result.document.version });
@@ -139,7 +131,9 @@ export function useSettingsSync({ settings, loaded, applyRemote, signedIn, userI
             continue;
           }
           if (result.kind === 'conflict') {
-            const merged = mergeSyncedSettings(settingsRef.current, state.fieldTimes, result.current);
+            // Merge with what this device holds now (it may have changed during the push).
+            const latest = readSyncState();
+            const merged = mergeSyncedSettings(settingsRef.current, latest.fieldTimes, result.current);
             if (!merged.valid) return setStatus('error');
             applyPatch(merged.patch);
             writeSyncState({ fieldTimes: merged.fieldTimes, dirty: merged.needsPush });
