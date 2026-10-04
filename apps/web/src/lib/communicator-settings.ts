@@ -11,6 +11,7 @@ import type { ArasaacSkinTone, BoardDisplayPreferences } from '@voxa/core';
 import type { ContentLocale, UiLocale } from '@voxa/i18n';
 import { CONTENT_LOCALE_BY_UI, DEFAULT_UI_LOCALE } from '@voxa/i18n';
 import type { CviTheme } from '@voxa/ui';
+import { DEFAULT_SPEECH_TUNING, normalizeSpeechTuning, normalizeVoiceChoices } from './speech-voices';
 
 export interface CommunicatorSettings {
   uiLocale: UiLocale;
@@ -60,6 +61,17 @@ export interface CommunicatorSettings {
    * offers the base form; this turns the suggestion off entirely.
    */
   spanishAgreement: boolean;
+  /**
+   * Voice chosen on this device for each speech locale (`es-MX` → voiceURI).
+   * Device voices differ per device, so this stays in local settings.
+   */
+  voiceURIByLocale: Record<string, string>;
+  /** Speech rate, pitch and volume for every utterance (Web Speech ranges, clamped). */
+  speechRate: number;
+  speechPitch: number;
+  speechVolume: number;
+  /** The chosen voice whose disappearance was already reported, so the notice shows once. */
+  voiceMissingNoticeFor: string;
 }
 
 export const DEFAULT_COMMUNICATOR_SETTINGS: CommunicatorSettings = {
@@ -90,6 +102,11 @@ export const DEFAULT_COMMUNICATOR_SETTINGS: CommunicatorSettings = {
   hideSymbols: false,
   hideLabels: false,
   spanishAgreement: true,
+  voiceURIByLocale: {},
+  speechRate: DEFAULT_SPEECH_TUNING.rate,
+  speechPitch: DEFAULT_SPEECH_TUNING.pitch,
+  speechVolume: DEFAULT_SPEECH_TUNING.volume,
+  voiceMissingNoticeFor: '',
 };
 
 const STORAGE_KEY = 'voxa-communicator-settings';
@@ -116,6 +133,12 @@ export function normalizeCommunicatorSettings(stored: unknown): CommunicatorSett
   merged.switchFirstItemHoldMs = clampMs(raw.switchFirstItemHoldMs, SCAN_FIRST_ITEM_HOLD_MAX_MS, 0);
   merged.switchAcceptanceMs = clampMs(raw.switchAcceptanceMs, SCAN_ACCEPTANCE_MAX_MS, 0);
   merged.switchPostSelectionPauseMs = clampMs(raw.switchPostSelectionPauseMs, SCAN_POST_SELECTION_PAUSE_MAX_MS, 0);
+  merged.voiceURIByLocale = normalizeVoiceChoices(raw.voiceURIByLocale);
+  const tuning = normalizeSpeechTuning({ rate: raw.speechRate, pitch: raw.speechPitch, volume: raw.speechVolume });
+  merged.speechRate = tuning.rate;
+  merged.speechPitch = tuning.pitch;
+  merged.speechVolume = tuning.volume;
+  merged.voiceMissingNoticeFor = typeof raw.voiceMissingNoticeFor === 'string' ? raw.voiceMissingNoticeFor : '';
   return merged;
 }
 

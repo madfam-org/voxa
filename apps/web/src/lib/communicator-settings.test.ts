@@ -34,6 +34,25 @@ describe('communicator settings', () => {
     assert.equal(s.switchPostSelectionPauseMs, 3000);
   });
 
+  it('keeps voice choices per locale and clamps speech tuning', () => {
+    const s = normalizeCommunicatorSettings({
+      voiceURIByLocale: { es_MX: 'uri:paulina', fr: 3 },
+      speechRate: 5,
+      speechPitch: 1.6,
+      speechVolume: 'loud',
+      voiceMissingNoticeFor: 7,
+    });
+    assert.deepEqual(s.voiceURIByLocale, { 'es-MX': 'uri:paulina' });
+    assert.equal(s.speechRate, 2);
+    assert.equal(s.speechPitch, 1.6);
+    assert.equal(s.speechVolume, 1);
+    assert.equal(s.voiceMissingNoticeFor, '');
+    // Settings stored before voices existed keep working.
+    const old = normalizeCommunicatorSettings({ cviTheme: 'classic-light' });
+    assert.deepEqual(old.voiceURIByLocale, {});
+    assert.equal(old.speechRate, 1);
+  });
+
   it('falls back to the defaults for garbage', () => {
     assert.deepEqual(normalizeCommunicatorSettings(null), DEFAULT_COMMUNICATOR_SETTINGS);
     assert.deepEqual(normalizeCommunicatorSettings('x'), DEFAULT_COMMUNICATOR_SETTINGS);

@@ -35,6 +35,8 @@ import {
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { PrivacySettingsSection } from '@/components/consent-choices';
 import { useAppDialog } from '@/components/app-dialog';
+import { VoiceSettingsSection } from '@/components/voice-settings-section';
+import type { DeviceVoices } from '@/hooks/use-device-voices';
 import { neutral, surface } from '@/lib/tokens';
 
 interface SettingsPanelProps {
@@ -46,6 +48,9 @@ interface SettingsPanelProps {
   onBoardDisplayChange?: (patch: Partial<BoardDisplayPreferences>) => void;
   /** Signed-in user's token: privacy choices are saved to their server record. */
   accessToken?: string;
+  /** The board's speech locale (the voice choice is stored per locale). */
+  speechLocale: string;
+  deviceVoices: DeviceVoices;
 }
 
 export function SettingsPanel({
@@ -56,6 +61,8 @@ export function SettingsPanel({
   boardDisplay,
   onBoardDisplayChange,
   accessToken,
+  speechLocale,
+  deviceVoices,
 }: SettingsPanelProps): React.ReactNode {
   const t = useTranslations('settings');
   const tc = useTranslations('common');
@@ -116,6 +123,13 @@ export function SettingsPanel({
           </select>
         </Field>
       </div>
+
+      <VoiceSettingsSection
+        settings={settings}
+        onChange={onChange}
+        speechLocale={speechLocale}
+        deviceVoices={deviceVoices}
+      />
 
       <Field label={t('visualTheme')}>
         <select

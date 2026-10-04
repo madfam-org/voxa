@@ -29,6 +29,17 @@ Users can disable decorative imagery, reduce grid chrome, and enlarge symbol-onl
 
 Each theme carries its own chrome colours (`CVI_THEMES[theme].chrome` in `@voxa/ui`: message bar, sync status, footer text and links), held to 4.5:1 for text against the theme background by `apps/web/src/lib/theme-contrast.test.ts`. The scan highlight is a **dual ring** (black inside white, `SCAN_RING`): whatever the button fill or background, one ring contrasts at least 4.5:1 with it, so the cursor meets the 3:1 non-text minimum on every theme. CI scans `/app` with axe in all four themes.
 
+## Speech output (device voices)
+
+Voxa speaks through the browser's speech synthesis, with the voices installed on the device; it ships no voice of its own. Natural child voices are pending (licensed or neural voices are an open decision).
+
+- **One speech path.** `apps/web/src/lib/play-button-speech.ts` builds every utterance: button speech, the message bar ("Speak"), prediction chips, the keyboard, scan cues, the spoken fallback for recorded media and the public demo. `lang` is always the board's speech locale.
+- **Voice choice.** Settings › Voice lists the device's voices for the board's language (exact locale such as es-MX first, then other variants of the language, then every other voice behind "show all"). Quality labels (Premium, Enhanced, Natural, Neural, Google, Online, needs a connection) come only from the voice's name and `localService`. The choice is kept per locale in this device's settings, because each device has different voices.
+- **Fallback.** Without a choice, or when the chosen voice is gone (another device, an OS update), Voxa uses the best ranked voice for the language and says so once. Voices that load late are awaited with a bounded retry, since some browsers never fire `voiceschanged`. Ranking and fallback: `apps/web/src/lib/speech-voices.ts`.
+- **Tuning.** Rate, pitch and volume sliders with visible values and keyboard steps, a preview phrase, and a "higher voice (approximation)" preset that raises pitch and rate. It is labelled as an approximation and is not a child voice.
+- **No matching voice.** The section shows short steps to install a voice on Android, iPhone/iPad and Windows, and Voxa keeps speaking with the best voice available.
+- Tested in `apps/web/src/lib/speech-voices.test.ts`, `apps/web/src/lib/play-button-speech.test.ts` and `e2e/specs/voice-choice.spec.ts` (stubbed speech synthesis; axe on the section).
+
 ## Alternative Access
 
 ### Switch Scanning
@@ -40,7 +51,7 @@ Each theme carries its own chrome colours (`CVI_THEMES[theme].chrome` in `@voxa/
 - Adjustable scan interval (300 ms – 5 s), **first-item hold** (extra time on the first item of each level), **acceptance time** (presses shorter than it are ignored) and **post-selection pause**
 - The state machine is pure and unit-tested: `packages/access/src/scan-machine.ts`
 - Auditory scan highlight optional (screen reader live region)
-- Optional spoken scan voice for each focused cell
+- Optional spoken scan voice for each focused cell (the chosen voice and tuning, slightly quieter)
 - **Scan-step beep** (880 Hz tone; 660 Hz for group scan) with optional spoken label
 - Scan pauses automatically while TTS or recorded speech plays (configurable)
 - **Hardware USB/BT switches (web):** `@voxa/access` `HardwareSwitchAdapter` — keyboard keys (Space/Enter/Tab/Arrow/F13) + Gamepad API buttons 0/1 during switch scan

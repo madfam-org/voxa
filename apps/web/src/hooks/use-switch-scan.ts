@@ -1,7 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
+import { contentLocaleForUi, DEFAULT_UI_LOCALE, isUiLocale } from '@voxa/i18n';
 import type { BoardButton } from '@voxa/core';
 import {
   applyScanInput,
@@ -77,6 +78,9 @@ export function useSwitchScan({
   getLabel,
 }: UseSwitchScanOptions) {
   const ts = useTranslations('scan');
+  // Group and "back" announcements are UI text: speak them in the UI's language.
+  const uiLocale = useLocale();
+  const announcementLocale = contentLocaleForUi(isUiLocale(uiLocale) ? uiLocale : DEFAULT_UI_LOCALE);
   const groupLabels = useMemo<GroupScanLabels>(
     () => ({
       row: (n) => ts('row', { n }),
@@ -185,9 +189,9 @@ export function useSwitchScan({
       announceScanLabel(getLabel(activeButton), activeButton.locale);
       return;
     }
-    announceScanLabel(scanAnnouncement);
+    announceScanLabel(scanAnnouncement, announcementLocale);
     // `state` re-announces when the scan lands on the same label again.
-  }, [enabled, auditoryVoice, scanAnnouncement, activeButton, getLabel, state]);
+  }, [enabled, auditoryVoice, scanAnnouncement, activeButton, getLabel, state, announcementLocale]);
 
   useEffect(() => {
     if (!enabled || paused || !auditoryBeep) return;

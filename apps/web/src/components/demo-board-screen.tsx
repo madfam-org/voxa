@@ -25,6 +25,7 @@ import { VisualScheduleView } from '@/components/visual-schedule-view';
 import { useSwitchScan } from '@/hooks/use-switch-scan';
 import { SymbolCredit } from '@/components/symbol-credit';
 import { composeMessage, speakWholeMessage } from '@/lib/utterance-speech';
+import { speakText } from '@/lib/play-button-speech';
 import { brand, classic, neutral, status, stone, surface } from '@/lib/tokens';
 
 const DEMO_SCENE_IDS: DemoSceneId[] = ['communicate', 'literacy', 'schedule', 'access'];
@@ -117,12 +118,7 @@ export function DemoBoardScreen(): React.ReactNode {
         setUtterance((prev) => [...prev, buttonSpeech(btn)]);
       }
 
-      const text = scheduleMode ? buttonSpeech(btn) : buttonSpeech(btn);
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        const u = new SpeechSynthesisUtterance(text);
-        u.lang = btn.locale;
-        window.speechSynthesis.speak(u);
-      }
+      speakText(buttonSpeech(btn), btn.locale);
 
       setTapCount((count) => {
         const next = count + 1;

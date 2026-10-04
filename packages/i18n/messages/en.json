@@ -123,6 +123,10 @@
         "title": "CVI & access modes",
         "body": "High-contrast themes, switch scanning, and pointer dwell selection mean the same board adapts to cortical visual impairment and different physical access."
       },
+      "voices": {
+        "title": "Device voices, tuned to you",
+        "body": "Choose among the voices installed on the phone, tablet or computer and adjust rate, pitch and volume. Natural child voices are pending."
+      },
       "ai": {
         "title": "Suggestions with consent",
         "body": "Optional word suggestions speed up multi-word messages; families decide whether to turn them on."
@@ -381,6 +385,48 @@
     "postSelectionPause": "Pause after a selection ({ms} ms)",
     "gazeBridge": "Gaze event bridge (voxa:gaze, for integrators)",
     "gazeHintBridge": "For integrators: send screen coordinates with window.__voxaInjectGaze(x, y) or a voxa:gaze CustomEvent; Voxa applies the same dwell. No eye-tracker driver ships with Voxa."
+  },
+  "voice": {
+    "title": "Voice",
+    "intro": "Voxa speaks with the voices installed on this device. Choose one for {language} and adjust rate, pitch and volume. Natural child voices are not available yet.",
+    "unsupported": "This browser cannot read aloud. Try another browser or device.",
+    "loading": "Looking for this device's voices…",
+    "voiceLabel": "Voice for {language}",
+    "automatic": "Automatic (the browser's default voice)",
+    "automaticWith": "Automatic: {name}",
+    "groupExact": "{language} voices",
+    "groupSameLanguage": "Other variants of the language",
+    "groupOther": "Other languages",
+    "voiceOption": "{name} ({lang})",
+    "voiceOptionTagged": "{name} ({lang}) · {tags}",
+    "hint": {
+      "premium": "Premium",
+      "enhanced": "Enhanced",
+      "natural": "Natural",
+      "neural": "Neural",
+      "google": "Google",
+      "online": "Online"
+    },
+    "needsNetwork": "needs a connection",
+    "qualityHint": "Labels come from each voice's name. A voice that needs a connection does not speak offline.",
+    "showAll": "Show voices in other languages ({count})",
+    "preview": "Play a sample",
+    "previewPhrase": "Hi, this is how I sound. Do you want to play with me?",
+    "installTitle": "This device has no {language} voice",
+    "installAndroid": "Android: in Settings, search for “Text-to-speech output”, open the speech engine's settings and install the {language} voice data.",
+    "installApple": "iPhone and iPad: Settings › Accessibility › Spoken Content › Voices; choose {language} and download a voice.",
+    "installWindows": "Windows: Settings › Time & language › Speech › Add voices, then choose {language}.",
+    "installMeanwhile": "Then reopen Voxa. Until then, Voxa speaks with the best voice available.",
+    "rate": "Rate: {value}",
+    "pitch": "Pitch: {value}",
+    "volume": "Volume: {percent}%",
+    "volumeValue": "{percent}%",
+    "higherPreset": "Higher voice (approximation)",
+    "higherPresetHint": "Raises the pitch and slightly speeds up the chosen voice. It is an approximation, not a child voice.",
+    "resetTuning": "Reset rate, pitch and volume",
+    "missingNotice": "The voice you chose is no longer on this device. Voxa now speaks with {fallback}. You can choose another in settings.",
+    "missingNoticeDefault": "The voice you chose is no longer on this device. Voxa now speaks with the browser's default voice. You can choose another in settings.",
+    "dismiss": "OK"
   },
   "legal": {
     "shared": {

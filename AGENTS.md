@@ -63,10 +63,15 @@ pnpm build
   with a file store and a test JWKS) and `pnpm test:e2e:access`
   (`e2e/specs/access-methods.spec.ts`, same local API: tap-only button moves
   in a `hasTouch` browser, keyboard move commands, the admin motor-plan
-  override, a refused 422 save leaving the queue). The axe job scans `/app`
+  override, a refused 422 save leaving the queue) and `pnpm test:e2e:voices`
+  (`e2e/specs/voice-choice.spec.ts`, no API: a stubbed `speechSynthesis`
+  proves a button press, "Speak" and a prediction chip speak with the chosen
+  `voiceURI`, rate, pitch, volume and the board's `lang`; axe on the Voice
+  settings section in a light and a dark theme). The axe job scans `/app`
   in all four board themes and fails on serious or critical violations.
 - Playwright: `pnpm test:e2e:smoke`, `pnpm test:e2e:a11y`,
-  `pnpm test:e2e:offline`, `pnpm test:e2e:access`, `pnpm test:e2e:staging`,
+  `pnpm test:e2e:offline`, `pnpm test:e2e:access`, `pnpm test:e2e:voices`,
+  `pnpm test:e2e:staging`,
   `pnpm test:e2e:staging:signed-in` (the five
   signed-in specs, one worker). Authenticated specs skip themselves without
   `JANUA_TEST_EMAIL`/`JANUA_TEST_PASSWORD` (or `VOXA_TEST_ACCESS_TOKEN`).
@@ -171,6 +176,20 @@ pnpm build
     `apps/api/src/store/board-import.test.ts` and the browser spec
     `e2e/specs/board-import.spec.ts` (`pnpm --filter @voxa/e2e test:import`,
     run in the CI a11y job like `test:offline`).
+12. **One speech path, device voices only.** Every utterance in the web app
+    (button speech, "Speak", prediction chips, the keyboard, scan cues, the
+    spoken fallback for recorded media, the public demo) is built by
+    `buildUtterance` in `apps/web/src/lib/play-button-speech.ts`: `lang` is
+    the board's speech locale, the voice is the device-local choice for that
+    locale (else the best ranked installed voice,
+    `apps/web/src/lib/speech-voices.ts`), and rate, pitch and volume come from
+    the communicator settings. Never call `speechSynthesis.speak` elsewhere.
+    Voice quality labels come only from the voice's name and `localService`;
+    the "higher voice" preset is an approximation, never called a child
+    voice. Licensed or cloud voices are an open owner decision. Tested in
+    `apps/web/src/lib/speech-voices.test.ts`,
+    `apps/web/src/lib/play-button-speech.test.ts` and
+    `e2e/specs/voice-choice.spec.ts`.
 
 ## Deploy
 

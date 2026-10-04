@@ -97,6 +97,13 @@ jobs:
       - run: pnpm test:e2e:a11y
         env:
           PLAYWRIGHT_BASE_URL: http://127.0.0.1:3000
+      - name: Voice choice and tuning (stubbed speech synthesis, axe on the Voice settings)
+        # e2e/specs/voice-choice.spec.ts: button, Speak and a prediction chip speak
+        # with the chosen voiceURI, rate/pitch/volume and lang = the board locale.
+        # No API: the board comes from the offline cache.
+        run: pnpm test:e2e:voices
+        env:
+          PLAYWRIGHT_BASE_URL: http://127.0.0.1:3000
       - name: Offline start, uploaded media, GLP video, spoken fallback
         # e2e/specs/offline-media.spec.ts: reload /app offline (service worker),
         # uploaded photo through the media proxy, visible GLP video, TTS when
