@@ -39,7 +39,7 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
-      - run: pnpm turbo typecheck --filter='!@voxa/mobile'
+      - run: pnpm turbo typecheck
       - run: pnpm test
         env:
           VOXA_TEST_DATABASE_URL: postgres://ci:ci@127.0.0.1:5432/voxa_test
@@ -54,6 +54,8 @@ jobs:
             exit 1
           fi
       - run: ./scripts/mobile/verify-eas-config.sh
+      - name: Mobile bundle check (Android JS export, no credentials)
+        run: pnpm --filter @voxa/mobile exec expo export --platform android --output-dir "${RUNNER_TEMP}/expo-export"
       - run: pnpm build
 
   a11y:

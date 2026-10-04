@@ -27,10 +27,7 @@
     "extra": {
       "apiUrl": "http://localhost:4000",
       "oidcIssuer": "https://auth.madfam.io",
-      "oidcClientId": "voxa",
-      "eas": {
-        "projectId": "REPLACE_WITH_EAS_PROJECT_ID"
-      }
+      "oidcClientId": "voxa"
     }
   }
 }

@@ -44,11 +44,12 @@
   },
   "packageManager": "pnpm@9.15.0",
   "//pnpm.overrides": {
-    "next>postcss": "GHSA-qx2v-qp2m-jg93, GHSA-6g55-p6wh-862q, GHSA-r28c-9q8g-f849, GHSA-fxqj-rqcc-2cmp: postcss bundled by next (web build). The Expo copy waits for the Expo SDK upgrade.",
+    "next>postcss": "GHSA-qx2v-qp2m-jg93, GHSA-6g55-p6wh-862q, GHSA-r28c-9q8g-f849, GHSA-fxqj-rqcc-2cmp: postcss bundled by next (web build). The Expo copy (@expo/metro-config) is already patched since Expo SDK 57.",
     "@esbuild-kit/core-utils>esbuild": "GHSA-67mh-4wv8-2f99: esbuild 0.18 pulled by drizzle-kit through @esbuild-kit (dev only).",
     "tsx>esbuild": "GHSA-g7r4-m6w7-qqqr: esbuild 0.28.0 pulled by tsx (dev only).",
     "body-parser@>=2.0.0 <2.3.0": "GHSA-v422-hmwv-36x6: body-parser 2.2 pulled by the shadcn CLI (root dev tool).",
-    "qs@>=6.14.2 <6.16.0": "GHSA-x5fp-wj9c-mxmx, GHSA-4mjr-xmp4-gh2g: qs 6.15 pulled by the shadcn CLI (root dev tool)."
+    "qs@>=6.14.2 <6.16.0": "GHSA-x5fp-wj9c-mxmx, GHSA-4mjr-xmp4-gh2g: qs 6.15 pulled by the shadcn CLI (root dev tool).",
+    "xcode>uuid": "GHSA-w5hq-g745-h8pq: uuid 7 pulled by xcode (Expo config plugins, build-time only); xcode only calls uuid.v4(), which uuid 11 still exports for require()."
   },
   "pnpm": {
     "overrides": {
@@ -57,7 +58,8 @@
       "@esbuild-kit/core-utils>esbuild": "^0.25.0",
       "tsx>esbuild": "^0.28.1",
       "body-parser@>=2.0.0 <2.3.0": "^2.3.0",
-      "qs@>=6.14.2 <6.16.0": "^6.16.0"
+      "qs@>=6.14.2 <6.16.0": "^6.16.0",
+      "xcode>uuid": "^11.1.1"
     }
   }
 }

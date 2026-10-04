@@ -63,7 +63,7 @@ Outcome: Approved with notes (see above)
 
 ## Mobile native (extend before M4 TestFlight)
 
-- [ ] Preview build on TestFlight / Play internal — pending `EXPO_TOKEN` + `eas init`
+- [ ] Preview build on TestFlight / Play internal — pending `EXPO_TOKEN` + `EAS_PROJECT_ID` (see MOBILE_GA.md)
 - [x] Janua OAuth deep link + offline sync — `apps/mobile` ✅ 2026-06-09
 - [x] Switch scan mode with auditory cues — mobile settings + `@voxa/access` ✅ 2026-06-09
 - [ ] Communicator tap → TTS on reference device — manual after first preview build

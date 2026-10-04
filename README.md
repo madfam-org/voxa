@@ -71,7 +71,7 @@ On web, tap **I** → **want** to see AI prediction chips. Switch to **Editor (S
 ### Tests
 
 ```bash
-pnpm turbo typecheck --filter='!@voxa/mobile'
+pnpm turbo typecheck
 pnpm test              # unit and route tests for every package (not e2e)
 pnpm test:e2e:smoke    # Playwright, needs a running web app
 ```

@@ -44,23 +44,27 @@ REQUIRE_LINKED="${REQUIRE_LINKED}" "${ROOT}/scripts/mobile/verify-eas-config.sh"
 echo ""
 
 check "Preview profile configured" grep -q '"preview"' "${MOBILE}/eas.json"
-check "Preview uses internal distribution" grep -A20 '"preview"' "${MOBILE}/eas.json" | grep -q '"distribution": "internal"'
+preview_is_internal() {
+  [[ "$(node -p "require('${MOBILE}/eas.json').build.preview.distribution")" == "internal" ]]
+}
+check "Preview uses internal distribution" preview_is_internal
 
-if grep -q 'REPLACE_WITH' "${MOBILE}/eas.json"; then
-  if [[ "${REQUIRE_SUBMIT}" == "1" ]]; then
-    check "Submit credentials (no REPLACE_WITH placeholders)" false
-  else
-    warn_if "Submit credentials configured (replace REPLACE_WITH in eas.json)" false
-  fi
+# Store submission ids and keys come from the environment (see
+# scripts/mobile/eas-submit-env.mjs); nothing is committed to eas.json.
+if [[ "${REQUIRE_SUBMIT}" == "1" ]]; then
+  check "Store submission settings present" node "${ROOT}/scripts/mobile/eas-submit-env.mjs" --check --platform all
 else
-  check "Submit credentials (no REPLACE_WITH placeholders)" true
+  warn_if "Store submission settings present (ASC_* and GOOGLE_PLAY_* variables)" \
+    node "${ROOT}/scripts/mobile/eas-submit-env.mjs" --check --platform all
 fi
-
-warn_if "Google Play service account JSON present" test -f "${MOBILE}/secrets/google-play-service-account.json"
 
 echo "---"
 if [[ "${fail}" -eq 0 ]]; then
-  echo "TestFlight readiness check passed${warn:+ (with warnings)}"
+  if [[ "${warn}" -eq 1 ]]; then
+    echo "TestFlight readiness check passed (with warnings)"
+  else
+    echo "TestFlight readiness check passed"
+  fi
   echo "Manual: cd apps/mobile && eas build --profile preview --platform ios"
   exit 0
 fi
