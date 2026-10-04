@@ -44,7 +44,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Log in to GHCR
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
@@ -77,6 +77,9 @@ jobs:
           provenance: false
           sbom: false
 
+      # Held at cosign-installer v3 (cosign v2): cosign v3 writes signatures as
+      # OCI referrers in the new bundle format, which the cluster's Kyverno
+      # (v1.11, verify-image-signatures) does not read. See .github/dependabot.yml.
       - name: Install cosign
         uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3.9.1
 
