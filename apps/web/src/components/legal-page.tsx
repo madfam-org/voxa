@@ -59,7 +59,7 @@ export function LegalPage({
         <p style={{ marginBottom: 32 }}>{intro}</p>
 
         <nav
-          aria-label="Table of contents"
+          aria-label={contentsLabel}
           style={{
             marginBottom: 32,
             padding: 16,

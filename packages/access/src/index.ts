@@ -119,6 +119,8 @@ export {
   buildRowScanGroups,
   cellKey,
   groupScanLabel,
+  ENGLISH_GROUP_SCAN_LABELS,
+  type GroupScanLabels,
   indexToCell,
   resolveScanGroups,
 } from './group-scan.js';

@@ -56,7 +56,8 @@ import {
 import { logButtonActivation } from '@/lib/log-activation';
 import { speakButton, speakText, subscribeSpeechActivity } from '@/lib/play-button-speech';
 import { presentBoardForDisplay } from '@/lib/board-presentation';
-import { speakWholeMessage, speechLocaleForBoard } from '@/lib/utterance-speech';
+import { composeMessage, speakWholeMessage, speechLocaleForBoard } from '@/lib/utterance-speech';
+import { useAppDialog } from '@/components/app-dialog';
 import { SymbolCredit } from '@/components/symbol-credit';
 import { PredictionStrip } from '@/components/prediction-strip';
 import { SymbolSearchPanel } from '@/components/symbol-search-panel';
@@ -98,10 +99,14 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
   const tc = useTranslations('common');
   const tcx = useTranslations('communicator');
   const tn = useTranslations('nav');
+  const tb = useTranslations('board');
+  const dialogs = useAppDialog();
   const uiLocale = useLocale();
   const remoteEditor = mode === 'remote-editor';
   const [role, setRole] = useState<TeamRole>(remoteEditor ? 'editor' : 'communicator');
   const [utterance, setUtterance] = useState<string[]>([]);
+  // Per-message choice to say the words exactly as tapped (no Spanish agreement).
+  const [keepBaseForm, setKeepBaseForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -354,9 +359,17 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
   const dwellProgressFor =
     settings.gazeSource === 'tobii-bridge' ? bridgeDwellProgress : pointerDwellProgress;
 
+  const agreementOn = settings.spanishAgreement && !keepBaseForm;
+  const composed = composeMessage(viewBoard, utterance, uiLocale, { agreement: settings.spanishAgreement });
+
   const speakAll = useCallback(() => {
-    speakWholeMessage(viewBoard, utterance, uiLocale);
-  }, [viewBoard, utterance, uiLocale]);
+    speakWholeMessage(viewBoard, utterance, uiLocale, { agreement: agreementOn });
+  }, [viewBoard, utterance, uiLocale, agreementOn]);
+
+  const reportFailure = useCallback(
+    (err: unknown) => dialogs.alert(tcx('actionFailed', { detail: (err as Error).message })),
+    [dialogs, tcx],
+  );
 
   const handleImport = useCallback(
     async (raw: string) => {
@@ -364,12 +377,12 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
       try {
         await importObf(raw);
       } catch (err) {
-        alert((err as Error).message);
+        void reportFailure(err);
       } finally {
         setBusy(false);
       }
     },
-    [importObf],
+    [importObf, reportFailure],
   );
 
   const handleImportObz = useCallback(
@@ -378,12 +391,12 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
       try {
         await importObz(archive);
       } catch (err) {
-        alert((err as Error).message);
+        void reportFailure(err);
       } finally {
         setBusy(false);
       }
     },
-    [importObz],
+    [importObz, reportFailure],
   );
 
   const handleImportGridset = useCallback(
@@ -392,12 +405,12 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
       try {
         await importGridset(archive);
       } catch (err) {
-        alert((err as Error).message);
+        void reportFailure(err);
       } finally {
         setBusy(false);
       }
     },
-    [importGridset],
+    [importGridset, reportFailure],
   );
 
   const handleImportSnap = useCallback(
@@ -406,12 +419,12 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
       try {
         await importSnap(archive);
       } catch (err) {
-        alert((err as Error).message);
+        void reportFailure(err);
       } finally {
         setBusy(false);
       }
     },
-    [importSnap],
+    [importSnap, reportFailure],
   );
 
   const handleImportTouchChat = useCallback(
@@ -420,12 +433,12 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
       try {
         await importTouchChat(archive);
       } catch (err) {
-        alert((err as Error).message);
+        void reportFailure(err);
       } finally {
         setBusy(false);
       }
     },
-    [importTouchChat],
+    [importTouchChat, reportFailure],
   );
 
   const { open: openObfImport, input: obfInput } = useObfFileInput(handleImport);
@@ -440,11 +453,11 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
       const archive = await exportObz();
       downloadBinaryFile(`${board.id as string}.obz`, archive, 'application/zip');
     } catch (err) {
-      alert((err as Error).message);
+      void reportFailure(err);
     } finally {
       setBusy(false);
     }
-  }, [exportObz, board.id]);
+  }, [exportObz, board.id, reportFailure]);
 
   const handleExport = useCallback(async () => {
     setBusy(true);
@@ -452,64 +465,64 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
       const json = await exportObf();
       downloadTextFile(`${board.id as string}.obf`, json);
     } catch (err) {
-      alert((err as Error).message);
+      void reportFailure(err);
     } finally {
       setBusy(false);
     }
-  }, [exportObf, board.id]);
+  }, [exportObf, board.id, reportFailure]);
 
   const handleCreateBoard = useCallback(async () => {
-    const name = window.prompt('Board name', 'My board');
+    const name = await dialogs.prompt(tcx('boardNamePrompt'), { defaultValue: tcx('defaultBoardName') });
     if (!name?.trim()) return;
     setBusy(true);
     try {
       await createBoard(name.trim(), newBoardTemplate || undefined, settings.contentLocale);
     } catch (err) {
-      alert((err as Error).message);
+      void reportFailure(err);
     } finally {
       setBusy(false);
     }
-  }, [createBoard, newBoardTemplate, settings.contentLocale]);
+  }, [createBoard, dialogs, newBoardTemplate, reportFailure, settings.contentLocale, tcx]);
 
   const handleRenameBoard = useCallback(async () => {
-    const name = window.prompt('Board name', board.name);
+    const name = await dialogs.prompt(tcx('boardNamePrompt'), { defaultValue: board.name });
     if (!name?.trim() || name.trim() === board.name) return;
     setBusy(true);
     try {
       await renameBoard(name.trim());
     } catch (err) {
-      alert((err as Error).message);
+      void reportFailure(err);
     } finally {
       setBusy(false);
     }
-  }, [board.name, renameBoard]);
+  }, [board.name, dialogs, renameBoard, reportFailure, tcx]);
 
   const handleDuplicateBoard = useCallback(async () => {
     setBusy(true);
     try {
       await duplicateBoard();
     } catch (err) {
-      alert((err as Error).message);
+      void reportFailure(err);
     } finally {
       setBusy(false);
     }
-  }, [duplicateBoard]);
+  }, [duplicateBoard, reportFailure]);
 
   const handleDeleteBoard = useCallback(async () => {
     if (boardId === DEMO_BOARD_ID) {
-      alert('The demo board cannot be deleted.');
+      await dialogs.alert(tcx('demoCannotDelete'));
       return;
     }
-    if (!window.confirm(`Delete board "${board.name}"? This cannot be undone.`)) return;
+    if (!(await dialogs.confirm(tcx('deleteConfirm', { name: board.name }), { confirmLabel: tcx('delete') }))) return;
     setBusy(true);
     try {
       await deleteBoard();
     } catch (err) {
-      alert((err as Error).message);
+      void reportFailure(err);
     } finally {
       setBusy(false);
     }
-  }, [board.name, boardId, deleteBoard]);
+  }, [board.name, boardId, deleteBoard, dialogs, reportFailure, tcx]);
 
   const handleApplyGrid = useCallback(
     (rows: number, columns: number) => {
@@ -524,18 +537,18 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
           },
         });
         if (result.warnings.length > 0) {
-          window.alert(result.warnings.join('\n'));
+          void dialogs.alert(result.warnings.join('\n'));
         }
         setGridOpen(false);
       } catch (err) {
-        alert((err as Error).message);
+        void reportFailure(err);
       }
     },
-    [board, setBoard],
+    [board, dialogs, reportFailure, setBoard],
   );
 
   const handleRoleChange = useCallback(
-    (nextRole: TeamRole) => {
+    async (nextRole: TeamRole) => {
       if (nextRole === 'communicator') {
         lockEditorSession();
         setRole('communicator');
@@ -552,17 +565,17 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
         return;
       }
 
-      const pin = window.prompt('Enter editor PIN to unlock vocabulary editing');
+      const pin = await dialogs.prompt(tcx('pinPrompt'), { secret: true });
       if (pin && unlockEditor(pin)) {
         setRole(nextRole);
         return;
       }
 
       if (pin) {
-        window.alert('Incorrect PIN. Editor mode stays locked.');
+        await dialogs.alert(tcx('pinIncorrect'));
       }
     },
-    [canEnterEditor, trustedEditorSession],
+    [canEnterEditor, dialogs, tcx, trustedEditorSession],
   );
 
   const handleSave = useCallback(async () => {
@@ -571,11 +584,11 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
       const result = await saveBoard();
       if (result && 'conflict' in result) return;
     } catch (err) {
-      alert((err as Error).message);
+      void reportFailure(err);
     } finally {
       setBusy(false);
     }
-  }, [saveBoard]);
+  }, [reportFailure, saveBoard]);
 
   const updateButton = (buttonId: string, patch: Partial<BoardButton>) => {
     setBoard({
@@ -607,7 +620,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
   );
 
   const handleGridDrop = useCallback(
-    (buttonId: string, row: number, column: number) => {
+    async (buttonId: string, row: number, column: number) => {
       try {
         const moving = board.grid.buttons.find((b) => (b.id as string) === buttonId);
         const target = board.grid.buttons.find(
@@ -617,11 +630,9 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
           moving?.locked || (target && target.locked && (target.id as string) !== buttonId),
         );
         const forceLocked =
-          needsOverride &&
-          role === 'admin' &&
-          window.confirm('Override motor-plan lock and move this slot?');
+          needsOverride && role === 'admin' && (await dialogs.confirm(tcx('overrideLockConfirm')));
         if (needsOverride && !forceLocked) {
-          window.alert('That slot is locked. Unlock it in the button editor or use Admin override.');
+          await dialogs.alert(tcx('slotLocked'));
           return;
         }
         const result = moveButtonToCell(board.grid.buttons, buttonId, row, column, {
@@ -629,24 +640,24 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
         });
         setBoard({ ...board, grid: { ...board.grid, buttons: result.buttons } });
       } catch (err) {
-        window.alert((err as Error).message);
+        void reportFailure(err);
       }
     },
-    [board, role, setBoard],
+    [board, dialogs, reportFailure, role, setBoard, tcx],
   );
 
   const handleAddButtonAt = useCallback(
-    (row: number, column: number) => {
-      const label = window.prompt('Button label');
+    async (row: number, column: number) => {
+      const label = await dialogs.prompt(tcx('buttonLabelPrompt'));
       if (!label?.trim()) return;
       try {
         const buttons = createButtonAtCell(board.grid.buttons, row, column, label.trim());
         setBoard({ ...board, grid: { ...board.grid, buttons } });
       } catch (err) {
-        window.alert((err as Error).message);
+        void reportFailure(err);
       }
     },
-    [board, setBoard],
+    [board, dialogs, reportFailure, setBoard, tcx],
   );
 
   const theme = settings.cviTheme;
@@ -654,11 +665,11 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
   const syncLabel =
     syncStatus === 'live'
       ? pendingSave
-        ? '● Live (save queued)'
-        : '● Live'
+        ? tcx('syncLiveQueued')
+        : tcx('syncLive')
       : syncStatus === 'connecting'
-        ? '… Connecting'
-        : '○ Offline';
+        ? tcx('syncConnecting')
+        : tcx('syncOffline');
 
   const handleButtonPress = (btn: BoardButton) => {
     if (isEditor) {
@@ -716,9 +727,9 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
         style={revealedHidden ? { opacity: 0.72, outline: `2px dashed ${status.warningBorder}` } : undefined}
         aria-label={
           isEditor && btn.locked
-            ? `${buttonLabel(btn)} (locked motor-plan slot)`
+            ? tb('buttonLocked', { label: buttonLabel(btn) })
             : revealedHidden
-              ? `${buttonLabel(btn)} (hidden, babble mode)`
+              ? tb('buttonHiddenBabble', { label: buttonLabel(btn) })
               : buttonLabel(btn)
         }
       >
@@ -792,6 +803,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
       {gridsetInput}
       {snapInput}
       {touchChatInput}
+      {dialogs.dialog}
       <div ref={liveRef} aria-live="polite" aria-atomic="true" style={visuallyHidden} />
 
       {remoteEditor ? (
@@ -806,26 +818,25 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
           }}
         >
           {!canEnterEditor ? (
-            <>The demo board is read-only. Create a board of your own to edit it here.</>
+            <>{tcx('remoteDemoReadOnly')}</>
           ) : ownBoard && !trustedEditorSession && !isEditor ? (
             <>
-              This is your board.{' '}
-              <button type="button" onClick={() => handleRoleChange('editor')} style={secondaryBtn}>
-                Edit my board
+              {tcx('remoteOwnBoard')}{' '}
+              <button type="button" onClick={() => void handleRoleChange('editor')} style={secondaryBtn}>
+                {tcx('editMyBoard')}
               </button>
             </>
           ) : accountCanEdit ? (
             <>
-              <strong>Remote SLP editor</strong> — edit vocabulary without the communicator device. Changes
-              sync to the cloud; the communicator app picks them up automatically.
+              <strong>{tcx('remoteEditorTitle')}</strong> {tcx('remoteEditorBody')}
             </>
           ) : isAuthenticated ? (
-            <>Your signed-in account does not have SLP editor permissions. Contact your organization admin.</>
+            <>{tcx('remoteNoPermission')}</>
           ) : (
             <>
-              Sign in with your clinician account to edit boards remotely.{' '}
+              {tcx('remoteSignInPrompt')}{' '}
               <a href="/auth/signin?redirect_to=%2Fapp%2Fedit" style={{ color: brand.link }}>
-                Sign in
+                {tcx('signIn')}
               </a>
             </>
           )}
@@ -855,7 +866,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
             value={boardId}
             onChange={(e) => setBoardId(e.target.value)}
             style={selectStyle}
-            aria-label="Board"
+            aria-label={tcx('boardSelect')}
           >
             {boardCatalog.map((item) => (
               <option key={item.id} value={item.id}>
@@ -870,35 +881,35 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
         {isAuthenticated && (isEditor || !canEnterEditor) && (
           <>
             <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: '0.8125rem' }}>
-              Template
+              {tcx('template')}
               <select
                 value={newBoardTemplate}
                 onChange={(e) => setNewBoardTemplate(e.target.value as '' | StarterTemplateId)}
                 style={{ background: surface.overlay, color: neutral.textSubtle, border: `1px solid ${neutral.border}`, borderRadius: 6 }}
               >
-                <option value="">Blank 4×4</option>
-                <option value="core-47">Core 47</option>
-                <option value="core-100">Core 100</option>
-                <option value="literacy-keyboard">Literacy Keyboard</option>
-                <option value="visual-schedule">Visual Schedule</option>
+                <option value="">{tcx('templateBlank')}</option>
+                <option value="core-47">{tcx('templateCore47')}</option>
+                <option value="core-100">{tcx('templateCore100')}</option>
+                <option value="literacy-keyboard">{tcx('templateLiteracyKeyboard')}</option>
+                <option value="visual-schedule">{tcx('templateVisualSchedule')}</option>
               </select>
             </label>
-            <button type="button" onClick={handleCreateBoard} disabled={busy} style={secondaryBtn}>
-              New board
+            <button type="button" onClick={() => void handleCreateBoard()} disabled={busy} style={secondaryBtn}>
+              {tcx('newBoard')}
             </button>
             {isEditor ? (
               <>
                 <button type="button" onClick={() => void handleRenameBoard()} disabled={busy} style={secondaryBtn}>
-                  Rename
+                  {tcx('rename')}
                 </button>
                 <button type="button" onClick={() => void handleDuplicateBoard()} disabled={busy} style={secondaryBtn}>
-                  Duplicate
+                  {tcx('duplicate')}
                 </button>
               </>
             ) : null}
             {isEditor && boardId !== DEMO_BOARD_ID ? (
               <button type="button" onClick={() => void handleDeleteBoard()} disabled={busy} style={secondaryBtn}>
-                Delete
+                {tcx('delete')}
               </button>
             ) : null}
           </>
@@ -915,19 +926,19 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
 
         <select
           value={role}
-          onChange={(e) => handleRoleChange(e.target.value as TeamRole)}
+          onChange={(e) => void handleRoleChange(e.target.value as TeamRole)}
           style={selectStyle}
-          aria-label="Team role"
+          aria-label={tcx('teamRole')}
           disabled={remoteEditor || !canEnterEditor}
-          title={canEnterEditor ? undefined : 'The demo board is read-only'}
+          title={canEnterEditor ? undefined : tcx('demoReadOnlyShort')}
         >
-          <option value="communicator">Communicator</option>
-          <option value="editor">Editor (SLP)</option>
-          <option value="admin">Admin</option>
+          <option value="communicator">{tcx('roleCommunicator')}</option>
+          <option value="editor">{tcx('roleEditor')}</option>
+          <option value="admin">{tcx('admin')}</option>
         </select>
 
         {remoteEditor ? (
-          <span style={{ fontSize: '0.75rem', opacity: 0.85 }}>Role from your account</span>
+          <span style={{ fontSize: '0.75rem', opacity: 0.85 }}>{tcx('roleFromAccount')}</span>
         ) : null}
 
         {!isEditor ? (
@@ -941,7 +952,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
             }}
             aria-pressed={babbleActive}
           >
-            Babble
+            {tcx('babble')}
           </button>
         ) : null}
 
@@ -967,7 +978,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
               }}
               style={secondaryBtn}
             >
-              Audit
+              {tcx('auditLog')}
             </button>
             <button
               type="button"
@@ -978,7 +989,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
               }}
               style={secondaryBtn}
             >
-              Usage
+              {tcx('usage')}
             </button>
           </>
         ) : null}
@@ -988,13 +999,13 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
             href={remoteEditor ? '/auth/signin?redirect_to=%2Fapp%2Fedit' : '/auth/signin?redirect_to=%2Fapp'}
             style={{ ...secondaryBtn, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}
           >
-            Sign in
+            {tcx('signIn')}
           </a>
         ) : null}
 
         {isAuthenticated && (
           <a href="/auth/signout" style={{ ...secondaryBtn, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
-            Sign out
+            {tcx('signOut')}
           </a>
         )}
 
@@ -1002,13 +1013,30 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
           {scheduleMode && !isEditor
             ? scheduleState.completed >= scheduleState.total && scheduleState.total > 0
               ? tcx('routineComplete')
-              : `Step ${Math.min(scheduleState.completed + 1, scheduleState.total)} of ${scheduleState.total}`
+              : tcx('scheduleStep', {
+                  current: Math.min(scheduleState.completed + 1, scheduleState.total),
+                  total: scheduleState.total,
+                })
             : literacyMode
-              ? formatKeyboardUtterance(utterance) || 'Type on the keyboard…'
+              ? formatKeyboardUtterance(utterance) || tcx('typeOnKeyboard')
               : utterance.length
-                ? utterance.join(' ')
-                : 'Tap buttons to build a message…'}
+                ? keepBaseForm
+                  ? composed.baseText
+                  : composed.text
+                : tcx('tapToBuild')}
         </div>
+
+        {composed.agreementApplied && !literacyMode && !scheduleMode ? (
+          <button
+            type="button"
+            onClick={() => setKeepBaseForm((value) => !value)}
+            style={secondaryBtn}
+            aria-pressed={keepBaseForm}
+            title={keepBaseForm ? composed.text : composed.baseText}
+          >
+            {tcx('keepBaseForm')}
+          </button>
+        ) : null}
 
         <button type="button" onClick={speakAll} style={headerBtn}>
           {tc('speak')}
@@ -1017,6 +1045,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
           type="button"
           onClick={() => {
             setUtterance([]);
+            setKeepBaseForm(false);
             setCompletedStepIds(new Set());
           }}
           style={headerBtn}
@@ -1035,28 +1064,28 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
               }}
               style={secondaryBtn}
             >
-              Grid
+              {tcx('gridSettings')}
             </button>
             <button type="button" onClick={openObfImport} disabled={busy} style={secondaryBtn}>
-              Import OBF
+              {tcx('importObf')}
             </button>
             <button type="button" onClick={openObzImport} disabled={busy} style={secondaryBtn}>
-              Import OBZ
+              {tcx('importObz')}
             </button>
             <button type="button" onClick={openGridsetImport} disabled={busy} style={secondaryBtn}>
-              Import Grid
+              {tcx('importGrid')}
             </button>
             <button type="button" onClick={openSnapImport} disabled={busy} style={secondaryBtn}>
-              Import Snap
+              {tcx('importSnap')}
             </button>
             <button type="button" onClick={openTouchChatImport} disabled={busy} style={secondaryBtn}>
-              Import TouchChat
+              {tcx('importTouchChat')}
             </button>
             <button type="button" onClick={handleExport} disabled={busy} style={secondaryBtn}>
-              Export OBF
+              {tcx('exportObf')}
             </button>
             <button type="button" onClick={() => void handleExportObz()} disabled={busy} style={secondaryBtn}>
-              Export OBZ
+              {tcx('exportObz')}
             </button>
             <button type="button" onClick={handleSave} disabled={busy} style={secondaryBtn}>
               {tc('save')}
@@ -1074,8 +1103,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
             fontSize: '0.8125rem',
           }}
         >
-          Babble mode — hidden vocabulary is visible for this session. Turn off Babble to restore the
-          motor plan.
+          {tcx('babbleBanner')}
         </div>
       ) : null}
 
@@ -1100,7 +1128,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
             fontSize: '0.8125rem',
           }}
         >
-          Drag unlocked buttons to move or swap. Drop on + cells to add vocabulary. Locked slots show 🔒.
+          {tcx('editorHint')}
         </div>
       ) : null}
 
@@ -1157,11 +1185,11 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
                       }
                       aria-label={
                         isEditor && btn.locked
-                          ? `${buttonLabel(btn)} (locked motor-plan slot)`
+                          ? tb('buttonLocked', { label: buttonLabel(btn) })
                           : state.completed
-                            ? `${buttonLabel(btn)} (completed)`
+                            ? tb('stepCompleted', { label: buttonLabel(btn) })
                             : state.current
-                              ? `${buttonLabel(btn)} (current step)`
+                              ? tb('stepCurrent', { label: buttonLabel(btn) })
                               : buttonLabel(btn)
                       }
                     >
@@ -1187,6 +1215,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
           ) : (
             <>
               <BoardGrid
+                ariaLabel={tb('gridLabel')}
                 rows={board.grid.rows}
                 columns={board.grid.columns}
                 theme={theme}
@@ -1306,6 +1335,7 @@ function EditorPanel({
   onClose: () => void;
   onChange: (patch: Partial<BoardButton>) => void;
 }) {
+  const te = useTranslations('editor');
   const label = button.kind === 'analytic' ? button.label : button.phrase;
   const speech = button.kind === 'analytic' ? button.speechText : button.phrase;
   const fieldsLocked = button.locked;
@@ -1321,7 +1351,7 @@ function EditorPanel({
         overflowY: 'auto',
       }}
     >
-      <h2 style={{ margin: '0 0 12px', fontSize: '1rem' }}>Edit button</h2>
+      <h2 style={{ margin: '0 0 12px', fontSize: '1rem' }}>{te('title')}</h2>
 
       <SymbolSearchPanel
         boardId={boardId}
@@ -1352,7 +1382,7 @@ function EditorPanel({
       />
 
       <label style={labelStyle}>
-        Link to board (OBF navigation)
+        {te('linkToBoard')}
         <select
           style={fieldStyle}
           value={(button.navigateToBoardId as string | undefined) ?? ''}
@@ -1365,7 +1395,7 @@ function EditorPanel({
             })
           }
         >
-          <option value="">None — speak only</option>
+          <option value="">{te('linkNone')}</option>
           {boardCatalog
             .filter((item) => item.id !== boardId)
             .map((item) => (
@@ -1378,12 +1408,12 @@ function EditorPanel({
 
       {fieldsLocked ? (
         <p style={{ fontSize: '0.8125rem', color: status.warningText, margin: '0 0 12px' }}>
-          Motor-plan slot locked — unlock below to change label, speech, or visibility.
+          {te('slotLockedHint')}
         </p>
       ) : null}
 
       <label style={labelStyle}>
-        Label
+        {te('label')}
         <input
           style={fieldStyle}
           value={label}
@@ -1398,7 +1428,7 @@ function EditorPanel({
 
       {button.kind === 'analytic' && (
         <label style={labelStyle}>
-          Speech
+          {te('speech')}
           <input
             style={fieldStyle}
             value={speech}
@@ -1413,7 +1443,7 @@ function EditorPanel({
       )}
 
       <label style={labelStyle}>
-        Part of speech
+        {te('partOfSpeech')}
         <select
           style={fieldStyle}
           value={button.partOfSpeech ?? 'noun'}
@@ -1422,7 +1452,7 @@ function EditorPanel({
         >
           {posOptions().map((pos) => (
             <option key={pos} value={pos}>
-              {pos} ({fitzgeraldColor(pos as PartOfSpeech)})
+              {te(`pos.${pos}`)} ({fitzgeraldColor(pos as PartOfSpeech)})
             </option>
           ))}
         </select>
@@ -1434,7 +1464,7 @@ function EditorPanel({
           checked={button.locked}
           onChange={(e) => onChange({ locked: e.target.checked })}
         />
-        Lock position (motor planning)
+        {te('lockPosition')}
       </label>
 
       <label style={{ ...labelStyle, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -1444,11 +1474,11 @@ function EditorPanel({
           disabled={fieldsLocked}
           onChange={(e) => onChange({ hidden: e.target.checked })}
         />
-        Hide from communicator view
+        {te('hideFromCommunicator')}
       </label>
 
       <button type="button" onClick={onClose} style={{ ...headerBtn, marginTop: 16, width: '100%' }}>
-        Done
+        {te('done')}
       </button>
     </aside>
   );

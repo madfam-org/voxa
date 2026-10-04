@@ -47,7 +47,7 @@ export function PredictionStrip({
           type="button"
           onClick={() => onApplyText(p.text)}
           style={chipStyle}
-          title={`Confidence ${Math.round(p.confidence * 100)}%`}
+          title={t('predictionConfidence', { percent: Math.round(p.confidence * 100) })}
         >
           {p.text}
         </button>
@@ -62,7 +62,7 @@ export function PredictionStrip({
             type="button"
             onClick={() => onSelectSymbol(btn)}
             style={{ ...chipStyle, borderColor: buttonBorderColor(btn) }}
-            title={`Symbol · ${Math.round(p.confidence * 100)}%`}
+            title={t('symbolConfidence', { percent: Math.round(p.confidence * 100) })}
           >
             ◻ {buttonLabel(btn)}
           </button>

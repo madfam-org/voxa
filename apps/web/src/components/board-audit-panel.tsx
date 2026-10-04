@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
 import type { SyncEvent } from '@voxa/core';
 import { neutral, status, surface } from '@/lib/tokens';
 
@@ -12,12 +13,14 @@ interface BoardAuditPanelProps {
   onClose: () => void;
 }
 
-function describeEvent(event: SyncEvent): string {
+type AuditMessageKey = 'eventCreated' | 'eventImportObf' | 'eventImportObz' | 'eventSaved';
+
+function describeEvent(event: SyncEvent): { key: AuditMessageKey; version: number } {
   const action = event.payload?.action;
-  if (event.type === 'board.created') return 'Board created';
-  if (action === 'import.obf') return 'Imported OBF vocabulary';
-  if (action === 'import.obz') return 'Imported OBZ bundle';
-  return `Saved vocabulary (v${event.version})`;
+  if (event.type === 'board.created') return { key: 'eventCreated', version: event.version };
+  if (action === 'import.obf') return { key: 'eventImportObf', version: event.version };
+  if (action === 'import.obz') return { key: 'eventImportObz', version: event.version };
+  return { key: 'eventSaved', version: event.version };
 }
 
 export function BoardAuditPanel({
@@ -25,13 +28,16 @@ export function BoardAuditPanel({
   accessToken,
   onClose,
 }: BoardAuditPanelProps): React.ReactNode {
+  const t = useTranslations('auditLog');
+  const tc = useTranslations('common');
+  const locale = useLocale();
   const [events, setEvents] = useState<SyncEvent[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!accessToken) {
-      setError('Sign in to view the edit audit log.');
+      setError(t('signIn'));
       return;
     }
     setBusy(true);
@@ -47,17 +53,17 @@ export function BoardAuditPanel({
       );
       if (!res.ok) {
         const body = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(body.error ?? `Audit load failed (${res.status})`);
+        throw new Error(body.error ?? String(res.status));
       }
       const body = (await res.json()) as { events: SyncEvent[] };
       setEvents(body.events);
     } catch (err) {
       setEvents([]);
-      setError((err as Error).message);
+      setError(t('loadFailed', { detail: (err as Error).message }));
     } finally {
       setBusy(false);
     }
-  }, [accessToken, boardId]);
+  }, [accessToken, boardId, t]);
 
   useEffect(() => {
     void load();
@@ -66,7 +72,7 @@ export function BoardAuditPanel({
   return (
     <aside
       role="dialog"
-      aria-label="Edit audit log"
+      aria-label={t('title')}
       style={{
         width: 320,
         background: surface.section,
@@ -77,24 +83,24 @@ export function BoardAuditPanel({
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <h2 style={{ margin: 0, fontSize: '1rem' }}>Edit audit</h2>
+        <h2 style={{ margin: 0, fontSize: '1rem' }}>{t('title')}</h2>
         <button type="button" onClick={onClose} style={btnStyle}>
-          Close
+          {tc('close')}
         </button>
       </div>
 
       <p style={{ margin: '0 0 12px', fontSize: '0.8125rem', color: neutral.muted, lineHeight: 1.5 }}>
-        Remote SLP edits are recorded when vocabulary is saved, created, or imported.
+        {t('description')}
       </p>
 
       <button type="button" onClick={() => void load()} disabled={busy} style={{ ...btnStyle, marginBottom: 12 }}>
-        {busy ? 'Loading…' : 'Refresh'}
+        {busy ? tc('loading') : t('refresh')}
       </button>
 
       {error ? <p style={{ color: status.danger, fontSize: '0.8125rem' }}>{error}</p> : null}
 
       {events.length === 0 && !busy && !error ? (
-        <p style={{ fontSize: '0.875rem', color: neutral.muted }}>No edit events yet.</p>
+        <p style={{ fontSize: '0.875rem', color: neutral.muted }}>{t('empty')}</p>
       ) : null}
 
       <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -108,9 +114,9 @@ export function BoardAuditPanel({
               background: surface.base,
             }}
           >
-            <div style={{ fontSize: '0.875rem', fontWeight: 600 }}>{describeEvent(event)}</div>
+            <div style={{ fontSize: '0.875rem', fontWeight: 600 }}>{(({ key, version }) => t(key, { version }))(describeEvent(event))}</div>
             <div style={{ fontSize: '0.75rem', color: neutral.muted, marginTop: 4 }}>
-              {new Date(event.timestamp).toLocaleString()} · {event.actorUserId}
+              {new Date(event.timestamp).toLocaleString(locale)} · {event.actorUserId}
             </div>
           </li>
         ))}

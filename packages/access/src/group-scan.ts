@@ -102,13 +102,36 @@ export function buildGroupCellPath(
   return path;
 }
 
-export function groupScanLabel(groupIndex: number, strategy: SwitchGroupStrategy, cells: GridCell[]): string {
+/** Words used to announce scan groups; apps pass their translated catalogue. */
+export interface GroupScanLabels {
+  /** "Row 2" for 1-based row `n`. */
+  row: (n: number) => string;
+  /** Quadrant names: top left, top right, bottom left, bottom right. */
+  regions: readonly [string, string, string, string];
+  /** Fallback for a region beyond the four quadrants (1-based). */
+  region: (n: number) => string;
+  /** Custom group `n` (1-based). */
+  group: (n: number) => string;
+}
+
+export const ENGLISH_GROUP_SCAN_LABELS: GroupScanLabels = {
+  row: (n) => `Row ${n}`,
+  regions: ['Top left', 'Top right', 'Bottom left', 'Bottom right'],
+  region: (n) => `Region ${n}`,
+  group: (n) => `Group ${n}`,
+};
+
+export function groupScanLabel(
+  groupIndex: number,
+  strategy: SwitchGroupStrategy,
+  cells: GridCell[],
+  labels: GroupScanLabels = ENGLISH_GROUP_SCAN_LABELS,
+): string {
   if (strategy === 'rows') {
-    return `Row ${(cells[0]?.row ?? groupIndex) + 1}`;
+    return labels.row((cells[0]?.row ?? groupIndex) + 1);
   }
   if (strategy === 'regions') {
-    const labels = ['Top left', 'Top right', 'Bottom left', 'Bottom right'];
-    return labels[groupIndex] ?? `Region ${groupIndex + 1}`;
+    return labels.regions[groupIndex] ?? labels.region(groupIndex + 1);
   }
-  return `Group ${groupIndex + 1}`;
+  return labels.group(groupIndex + 1);
 }

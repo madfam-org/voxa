@@ -62,6 +62,22 @@ describe('switch scanning', () => {
     assert.ok(groups);
     assert.equal(groupScanLabel(1, 'rows', groups[1]!), 'Row 2');
   });
+
+  it('announces scan groups with the labels the app passes in', () => {
+    const labels = {
+      row: (n: number) => `Fila ${n}`,
+      regions: ['Arriba a la izquierda', 'Arriba a la derecha', 'Abajo a la izquierda', 'Abajo a la derecha'] as const,
+      region: (n: number) => `Región ${n}`,
+      group: (n: number) => `Grupo ${n}`,
+    };
+    const rows = resolveScanGroups(2, 2, 'rows');
+    assert.ok(rows);
+    assert.equal(groupScanLabel(1, 'rows', rows[1]!, labels), 'Fila 2');
+    const regions = resolveScanGroups(4, 4, 'regions');
+    assert.ok(regions);
+    assert.equal(groupScanLabel(3, 'regions', regions[3]!, labels), 'Abajo a la derecha');
+    assert.equal(groupScanLabel(0, 'none', [], labels), 'Grupo 1');
+  });
 });
 
 describe('hardware switch input', () => {

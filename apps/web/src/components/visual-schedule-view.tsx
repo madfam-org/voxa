@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import type { BoardButton } from '@voxa/core';
 import { AacButton } from '@voxa/ui';
 import { buttonLabel } from '@/lib/board-utils';
@@ -30,6 +31,7 @@ export function VisualScheduleView({
   dwellProgressFor,
   renderStepButton,
 }: VisualScheduleViewProps): React.ReactNode {
+  const t = useTranslations('board');
   return (
     <div
       style={{
@@ -40,7 +42,7 @@ export function VisualScheduleView({
       }}
     >
       <ol
-        aria-label="Visual schedule"
+        aria-label={t('visualSchedule')}
         style={{
           listStyle: 'none',
           margin: 0,
@@ -126,9 +128,9 @@ export function VisualScheduleView({
                     }
                     aria-label={
                       completed
-                        ? `${buttonLabel(btn)} (completed)`
+                        ? t('stepCompleted', { label: buttonLabel(btn) })
                         : current
-                          ? `${buttonLabel(btn)} (current step)`
+                          ? t('stepCurrent', { label: buttonLabel(btn) })
                           : buttonLabel(btn)
                     }
                   />

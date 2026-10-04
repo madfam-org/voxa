@@ -31,6 +31,12 @@ export interface CommunicatorSettings {
   whisperMode: boolean;
   hideSymbols: boolean;
   hideLabels: boolean;
+  /**
+   * Spanish boards: conjugate the verb after a subject pronoun when the
+   * message is built ("yo querer" → "yo quiero"). The message bar always
+   * offers the base form; this turns the suggestion off entirely.
+   */
+  spanishAgreement: boolean;
 }
 
 export const DEFAULT_COMMUNICATOR_SETTINGS: CommunicatorSettings = {
@@ -55,6 +61,7 @@ export const DEFAULT_COMMUNICATOR_SETTINGS: CommunicatorSettings = {
   whisperMode: false,
   hideSymbols: false,
   hideLabels: false,
+  spanishAgreement: true,
 };
 
 const STORAGE_KEY = 'voxa-communicator-settings';

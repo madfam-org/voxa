@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import {
   createBoardId,
   createButtonId,
@@ -60,6 +61,10 @@ function loadSelectedBoardId(): string {
 export type SaveBoardResult = BoardUpdateResult | { conflict: true };
 
 export function useSyncedBoard(role: TeamRole) {
+  // Read through a ref so translated messages never re-run the sync effects.
+  const t = useTranslations('sync');
+  const tRef = useRef(t);
+  tRef.current = t;
   const [boardId, setBoardIdState] = useState<string>(DEMO_BOARD_ID);
   const [boardCatalog, setBoardCatalog] = useState<BoardSummary[]>([]);
   const [board, setBoardState] = useState<Board>(() => createDemoBoard());
@@ -170,12 +175,10 @@ export function useSyncedBoard(role: TeamRole) {
         setConflictRefreshed(true);
         setSyncError(null);
       } else {
-        setSyncError(
-          'Another editor saved changes first — your board was refreshed to the latest version.',
-        );
+        setSyncError(tRef.current('refreshedByOtherEditor'));
       }
     } catch {
-      setSyncError('Version conflict — reload the page and try again.');
+      setSyncError(tRef.current('versionConflictReload'));
     }
   }, [boardId, client, setBoard]);
 
@@ -225,7 +228,7 @@ export function useSyncedBoard(role: TeamRole) {
       const cached = loadCachedBoard(boardId);
       setBoard(cached ?? createDemoBoard());
       setSyncStatus('offline');
-      setError(cached ? 'Offline — using cached board' : 'API unreachable — using local demo board');
+      setError(cached ? tRef.current('offlineCached') : tRef.current('apiUnreachable'));
       await refreshPendingFlag();
     }
   }, [boardId, client, flushPendingSave, refreshPendingFlag, setBoard]);
@@ -247,9 +250,7 @@ export function useSyncedBoard(role: TeamRole) {
         const cached = loadCachedBoard(boardId);
         setBoard(cached ?? createDemoBoard());
         setSyncStatus('offline');
-        setError(
-          cached ? 'Offline — using cached board' : 'API unreachable — using local demo board',
-        );
+        setError(cached ? tRef.current('offlineCached') : tRef.current('apiUnreachable'));
         await refreshPendingFlag();
         return;
       }
@@ -329,7 +330,7 @@ export function useSyncedBoard(role: TeamRole) {
       await queuePendingBoardSave(boardId, boardRef.current);
       setPendingSave(true);
       void registerBackgroundSync();
-      throw new Error('Save queued — will sync when back online');
+      throw new Error(tRef.current('saveQueued'));
     }
   }, [applyVersionConflict, boardId, client, setBoard]);
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import type { BoardButton, MediaAsset, RecordedSpeech } from '@voxa/core';
 import { uploadBoardMedia } from '@/lib/upload-media';
 import { neutral, status, surface } from '@/lib/tokens';
@@ -24,6 +25,7 @@ export function RecordedMediaPanel({
   onAudioChange,
   onVideoChange,
 }: RecordedMediaPanelProps): React.ReactNode {
+  const t = useTranslations('recordedMedia');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [recording, setRecording] = useState(false);
@@ -37,7 +39,7 @@ export function RecordedMediaPanel({
   const uploadFile = useCallback(
     async (file: File, onSuccess: (url: string, mimeType: string) => void) => {
       if (!accessToken) {
-        setError('Sign in to upload recordings.');
+        setError(t('signInToUpload'));
         return;
       }
       setBusy(true);
@@ -51,16 +53,16 @@ export function RecordedMediaPanel({
         setBusy(false);
       }
     },
-    [accessToken, boardId],
+    [accessToken, boardId, t],
   );
 
   const startRecording = useCallback(async () => {
     if (!accessToken) {
-      setError('Sign in to record speech.');
+      setError(t('signInToRecord'));
       return;
     }
     if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
-      setError('Microphone not available in this browser.');
+      setError(t('noMicrophone'));
       return;
     }
 
@@ -89,7 +91,7 @@ export function RecordedMediaPanel({
     } catch (err) {
       setError((err as Error).message);
     }
-  }, [accessToken, onAudioChange, recordedBy, uploadFile]);
+  }, [accessToken, onAudioChange, recordedBy, t, uploadFile]);
 
   const stopRecording = useCallback(() => {
     recorderRef.current?.stop();
@@ -98,29 +100,29 @@ export function RecordedMediaPanel({
 
   return (
     <section style={{ marginBottom: 16 }}>
-      <h3 style={{ margin: '0 0 8px', fontSize: '0.875rem' }}>Recorded speech</h3>
+      <h3 style={{ margin: '0 0 8px', fontSize: '0.875rem' }}>{t('title')}</h3>
       <p style={{ margin: '0 0 8px', fontSize: '0.75rem', color: neutral.muted, lineHeight: 1.4 }}>
-        Caregiver recordings play instead of TTS — essential for GLP intonation.
+        {t('hint')}
       </p>
 
       {audio?.url ? (
         <p style={{ fontSize: '0.8125rem', color: status.success, margin: '0 0 8px' }}>
-          Audio attached
+          {t('audioAttached')}
         </p>
       ) : null}
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 8 }}>
         {!recording ? (
           <button type="button" disabled={disabled || busy} onClick={() => void startRecording()} style={btnStyle}>
-            Record
+            {t('record')}
           </button>
         ) : (
           <button type="button" onClick={stopRecording} style={{ ...btnStyle, background: status.dangerStrong }}>
-            Stop
+            {t('stop')}
           </button>
         )}
         <label style={{ ...btnStyle, cursor: disabled || busy ? 'not-allowed' : 'pointer' }}>
-          Upload audio
+          {t('uploadAudio')}
           <input
             type="file"
             accept="audio/*"
@@ -141,22 +143,22 @@ export function RecordedMediaPanel({
             onClick={() => onAudioChange(undefined)}
             style={btnStyle}
           >
-            Remove audio
+            {t('removeAudio')}
           </button>
         ) : null}
       </div>
 
       {isGlp ? (
         <>
-          <h3 style={{ margin: '12px 0 8px', fontSize: '0.875rem' }}>GLP video (optional)</h3>
+          <h3 style={{ margin: '12px 0 8px', fontSize: '0.875rem' }}>{t('videoTitle')}</h3>
           {video?.url ? (
             <p style={{ fontSize: '0.8125rem', color: status.success, margin: '0 0 8px' }}>
-              Video attached
+              {t('videoAttached')}
             </p>
           ) : null}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             <label style={{ ...btnStyle, cursor: disabled || busy ? 'not-allowed' : 'pointer' }}>
-              Upload video
+              {t('uploadVideo')}
               <input
                 type="file"
                 accept="video/*"
@@ -177,7 +179,7 @@ export function RecordedMediaPanel({
                 onClick={() => onVideoChange(undefined)}
                 style={btnStyle}
               >
-                Remove video
+                {t('removeVideo')}
               </button>
             ) : null}
           </div>
