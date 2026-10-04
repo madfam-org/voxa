@@ -13,6 +13,6 @@ describe('local-obf-export', () => {
     const json = exportBoardObfJson(board);
     assert.match(json, /demo-core/);
     assert.match(json, /snack time/);
-    assert.match(json, /open-board-format/);
+    assert.match(json, /"format": "open-board-0.1"/);
   });
 });

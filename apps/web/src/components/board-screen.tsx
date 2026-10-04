@@ -42,6 +42,7 @@ import { useSwitchScan } from '@/hooks/use-switch-scan';
 import { ScanBackTarget } from '@/components/scan-back-target';
 import { ButtonMoveControls, MoveModeBanner } from '@/components/editor-move-controls';
 import { useSyncedBoard, type BoardSummary } from '@/hooks/use-synced-board';
+import { BETA_IMPORT_FORMATS, contentLocaleForUi, type BoardImportFormat } from '@/lib/board-import';
 import {
   editorPinIsConfigured,
   isEditorUnlocked,
@@ -146,12 +147,8 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
     retryPendingSave,
     saveBoard,
     markMotorPlanningOverride,
-    importObf,
+    importBoards,
     exportObf,
-    importObz,
-    importGridset,
-    importSnap,
-    importTouchChat,
     exportObz,
     isEditor,
     isAuthenticated,
@@ -392,75 +389,33 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
     [dialogs, tcx],
   );
 
-  const handleImport = useCallback(
-    async (raw: string) => {
+  // Imports always create a new board and open it; the board on screen is never replaced.
+  const runImport = useCallback(
+    async (format: BoardImportFormat, payload: string | ArrayBuffer) => {
+      const beta = BETA_IMPORT_FORMATS.has(format);
+      const confirmed = await dialogs.confirm(
+        beta ? `${tcx('importBetaNotice')} ${tcx('importConfirm')}` : tcx('importConfirm'),
+        { confirmLabel: tcx('importConfirmAction') },
+      );
+      if (!confirmed) return;
       setBusy(true);
       try {
-        await importObf(raw);
+        const result = await importBoards(format, payload, contentLocaleForUi(uiLocale));
+        const skipped = result.skipped.images + result.skipped.sounds;
+        if (skipped > 0) void dialogs.alert(tcx('importSkippedMedia', { count: skipped }));
       } catch (err) {
         void reportFailure(err);
       } finally {
         setBusy(false);
       }
     },
-    [importObf, reportFailure],
+    [dialogs, importBoards, reportFailure, tcx, uiLocale],
   );
-
-  const handleImportObz = useCallback(
-    async (archive: ArrayBuffer) => {
-      setBusy(true);
-      try {
-        await importObz(archive);
-      } catch (err) {
-        void reportFailure(err);
-      } finally {
-        setBusy(false);
-      }
-    },
-    [importObz, reportFailure],
-  );
-
-  const handleImportGridset = useCallback(
-    async (archive: ArrayBuffer) => {
-      setBusy(true);
-      try {
-        await importGridset(archive);
-      } catch (err) {
-        void reportFailure(err);
-      } finally {
-        setBusy(false);
-      }
-    },
-    [importGridset, reportFailure],
-  );
-
-  const handleImportSnap = useCallback(
-    async (archive: ArrayBuffer) => {
-      setBusy(true);
-      try {
-        await importSnap(archive);
-      } catch (err) {
-        void reportFailure(err);
-      } finally {
-        setBusy(false);
-      }
-    },
-    [importSnap, reportFailure],
-  );
-
-  const handleImportTouchChat = useCallback(
-    async (archive: ArrayBuffer) => {
-      setBusy(true);
-      try {
-        await importTouchChat(archive);
-      } catch (err) {
-        void reportFailure(err);
-      } finally {
-        setBusy(false);
-      }
-    },
-    [importTouchChat, reportFailure],
-  );
+  const handleImport = useCallback((raw: string) => runImport('obf', raw), [runImport]);
+  const handleImportObz = useCallback((archive: ArrayBuffer) => runImport('obz', archive), [runImport]);
+  const handleImportGridset = useCallback((archive: ArrayBuffer) => runImport('gridset', archive), [runImport]);
+  const handleImportSnap = useCallback((archive: ArrayBuffer) => runImport('snap', archive), [runImport]);
+  const handleImportTouchChat = useCallback((archive: ArrayBuffer) => runImport('touchchat', archive), [runImport]);
 
   const { open: openObfImport, input: obfInput } = useObfFileInput(handleImport);
   const { open: openObzImport, input: obzInput } = useObzFileInput(handleImportObz);
@@ -1138,13 +1093,13 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
             <button type="button" onClick={openObzImport} disabled={busy} style={secondaryBtn}>
               {tcx('importObz')}
             </button>
-            <button type="button" onClick={openGridsetImport} disabled={busy} style={secondaryBtn}>
+            <button type="button" onClick={openGridsetImport} disabled={busy} style={secondaryBtn} title={tcx('importBetaNotice')}>
               {tcx('importGrid')}
             </button>
-            <button type="button" onClick={openSnapImport} disabled={busy} style={secondaryBtn}>
+            <button type="button" onClick={openSnapImport} disabled={busy} style={secondaryBtn} title={tcx('importBetaNotice')}>
               {tcx('importSnap')}
             </button>
-            <button type="button" onClick={openTouchChatImport} disabled={busy} style={secondaryBtn}>
+            <button type="button" onClick={openTouchChatImport} disabled={busy} style={secondaryBtn} title={tcx('importBetaNotice')}>
               {tcx('importTouchChat')}
             </button>
             <button type="button" onClick={handleExport} disabled={busy} style={secondaryBtn}>

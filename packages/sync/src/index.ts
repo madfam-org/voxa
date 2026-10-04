@@ -12,8 +12,16 @@ export interface VoxaClientOptions {
   accessToken?: string;
 }
 
-export interface ObfImportResult extends BoardUpdateResult {
+/** File formats `importBoards` accepts. Grid 3, Snap and TouchChat are beta (one page, words only). */
+export type BoardImportFormat = 'obf' | 'obz' | 'gridset' | 'snap' | 'touchchat';
+
+/** Answer of `POST /v1/boards/import/:format`: the NEW boards the file became. */
+export interface BoardImportResult {
+  boards: Board[];
+  rootBoardId: string;
   warnings: string[];
+  skipped: { images: number; sounds: number; links: number; buttons: number };
+  beta: boolean;
 }
 
 export type SyncMessage =
@@ -110,18 +118,27 @@ export class VoxaClient {
     return res.json() as Promise<BoardUpdateResult>;
   }
 
-  async importObf(boardId: string, obfJson: string): Promise<ObfImportResult> {
-    const headers = { ...teamHeaders(this.options), 'Content-Type': 'text/plain' };
-    const res = await fetch(this.url(`/v1/boards/${boardId}/import/obf`), {
+  /**
+   * Import a board file as NEW boards (never into an existing one). `locale`
+   * (es-MX, en-US, fr-FR) is used for files that carry no locale.
+   */
+  async importBoards(
+    format: BoardImportFormat,
+    body: string | ArrayBuffer,
+    options: { locale?: string } = {},
+  ): Promise<BoardImportResult> {
+    const query = options.locale ? `?locale=${encodeURIComponent(options.locale)}` : '';
+    const contentType =
+      format === 'obf' ? 'application/json' : format === 'obz' ? 'application/zip' : 'application/octet-stream';
+    const res = await fetch(this.url(`/v1/boards/import/${format}${query}`), {
       method: 'POST',
-      headers,
-      body: obfJson,
+      headers: { ...teamHeaders(this.options), 'Content-Type': contentType },
+      body,
     });
     if (!res.ok) {
-      const err = (await res.json().catch(() => ({}))) as { error?: string };
-      throw new Error(err.error ?? `Import failed: ${res.status}`);
+      await throwApiError(res, 'Import failed');
     }
-    return res.json() as Promise<ObfImportResult>;
+    return res.json() as Promise<BoardImportResult>;
   }
 
   async exportObf(boardId: string): Promise<string> {
@@ -132,61 +149,9 @@ export class VoxaClient {
     return res.text();
   }
 
-  async importObz(boardId: string, archive: ArrayBuffer): Promise<ObfImportResult> {
-    const headers = { ...teamHeaders(this.options), 'Content-Type': 'application/zip' };
-    const res = await fetch(this.url(`/v1/boards/${boardId}/import/obz`), {
-      method: 'POST',
-      headers,
-      body: archive,
-    });
-    if (!res.ok) {
-      const err = (await res.json().catch(() => ({}))) as { error?: string };
-      throw new Error(err.error ?? `Import failed: ${res.status}`);
-    }
-    return res.json() as Promise<ObfImportResult>;
-  }
 
-  async importGridset(boardId: string, archive: ArrayBuffer): Promise<ObfImportResult> {
-    const headers = { ...teamHeaders(this.options), 'Content-Type': 'application/octet-stream' };
-    const res = await fetch(this.url(`/v1/boards/${boardId}/import/gridset`), {
-      method: 'POST',
-      headers,
-      body: archive,
-    });
-    if (!res.ok) {
-      const err = (await res.json().catch(() => ({}))) as { error?: string };
-      throw new Error(err.error ?? `Import failed: ${res.status}`);
-    }
-    return res.json() as Promise<ObfImportResult>;
-  }
 
-  async importSnap(boardId: string, archive: ArrayBuffer): Promise<ObfImportResult> {
-    const headers = { ...teamHeaders(this.options), 'Content-Type': 'application/octet-stream' };
-    const res = await fetch(this.url(`/v1/boards/${boardId}/import/snap`), {
-      method: 'POST',
-      headers,
-      body: archive,
-    });
-    if (!res.ok) {
-      const err = (await res.json().catch(() => ({}))) as { error?: string };
-      throw new Error(err.error ?? `Import failed: ${res.status}`);
-    }
-    return res.json() as Promise<ObfImportResult>;
-  }
 
-  async importTouchChat(boardId: string, archive: ArrayBuffer): Promise<ObfImportResult> {
-    const headers = { ...teamHeaders(this.options), 'Content-Type': 'application/octet-stream' };
-    const res = await fetch(this.url(`/v1/boards/${boardId}/import/touchchat`), {
-      method: 'POST',
-      headers,
-      body: archive,
-    });
-    if (!res.ok) {
-      const err = (await res.json().catch(() => ({}))) as { error?: string };
-      throw new Error(err.error ?? `Import failed: ${res.status}`);
-    }
-    return res.json() as Promise<ObfImportResult>;
-  }
 
   async listStarterTemplates(): Promise<Array<{ id: string; name: string; description: string }>> {
     const res = await fetch(this.url('/v1/boards/templates/list'), {

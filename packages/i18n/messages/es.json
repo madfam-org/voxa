@@ -189,7 +189,7 @@
       },
       "templates": {
         "title": "Cuatro plantillas iniciales en la app completa",
-        "body": "Núcleo 47, Núcleo 100, teclado de alfabetización y agendas visuales son plantillas editables — más importación OBF/Gridset/Snap/TouchChat en el editor clínico."
+        "body": "Núcleo 47, Núcleo 100, teclado de alfabetización y agendas visuales son plantillas editables — más importación OBF/OBZ en el editor clínico, y de Grid 3, Snap y TouchChat (beta — importa las palabras de una página)."
       },
       "access": {
         "title": "Modos clínicos de acceso integrados",
@@ -281,9 +281,13 @@
     "tapToBuild": "Toca los botones para formar un mensaje…",
     "keepBaseForm": "Forma base",
     "importObz": "Importar OBZ",
-    "importGrid": "Importar Grid",
-    "importSnap": "Importar Snap",
-    "importTouchChat": "Importar TouchChat",
+    "importGrid": "Importar Grid 3 (beta)",
+    "importSnap": "Importar Snap (beta)",
+    "importTouchChat": "Importar TouchChat (beta)",
+    "importBetaNotice": "Beta — importa las palabras de una página: sin imágenes ni enlaces a otras páginas.",
+    "importConfirm": "La importación crea un tablero nuevo con el contenido del archivo y lo abre. El tablero que estás viendo no cambia.",
+    "importConfirmAction": "Importar",
+    "importSkippedMedia": "{count, plural, one {No se importó # imagen o sonido} other {No se importaron # imágenes o sonidos}}: Voxa no descarga imágenes de otros sitios y solo acepta PNG, JPEG, GIF y WebP (imágenes) y MP3, WAV, Ogg, WebM y MP4 (sonido). Puedes añadirlos desde el editor.",
     "exportObz": "Exportar OBZ",
     "editorHint": "Selecciona un botón, pulsa Mover y toca la celda de destino (o arrástralo con el ratón) para moverlo o intercambiarlo. Toca una celda + para añadir vocabulario. Las posiciones bloqueadas muestran 🔒.",
     "predictionConfidence": "Confianza {percent} %",

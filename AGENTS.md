@@ -154,6 +154,21 @@ pnpm build
     `/api/media/:id`, which adds no access rule of its own (the API's
     `canAccessBoard` decides). Tested in `apps/web/src/service-worker.test.ts`,
     `apps/web/src/lib/media-proxy.test.ts` and `apps/api/src/routes/media-access.routes.test.ts`.
+11. **Imports create new boards; OBF is the spec.** `POST /v1/boards/import/:format`
+    turns a file into NEW boards owned by the caller (counted against the plan
+    limit) and never writes into an existing board; the old
+    `POST /v1/boards/:id/import/*` answers 410. Do not reintroduce an import that
+    replaces a board or passes `forceMotorPlanning`. `@voxa/obf` writes spec
+    OBF 0.1 (`open-board-0.1`, 2-D `grid.order`, `images[]`/`sounds[]`,
+    `load_board{}`, `rgb()` colours) with Voxa-only data as `ext_voxa_*`; it
+    reads spec files and the old Voxa dialect. Archives go through `safeUnzip`
+    (zip-slip, symlinks, entry count, sizes, compression ratio → 400). Embedded
+    media is stored through the media store for the new board; remote picture
+    URLs are never fetched (only the vendored Mulberry set is kept). Grid 3,
+    Snap and TouchChat imports are beta (one page, words only) and say so in
+    the UI and public copy. Tested in `packages/obf/src/*.test.ts` (schemas in
+    `packages/obf/schema/`), `apps/api/src/routes/import.routes.test.ts` and
+    `apps/api/src/store/board-import.test.ts`.
 
 ## Deploy
 

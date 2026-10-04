@@ -188,7 +188,7 @@
       },
       "templates": {
         "title": "Four starter templates in the full app",
-        "body": "Core 47, Core 100, literacy keyboard, and visual schedules ship as editable templates — plus OBF/Gridset/Snap/TouchChat import in the SLP editor."
+        "body": "Core 47, Core 100, literacy keyboard, and visual schedules ship as editable templates — plus OBF/OBZ import in the SLP editor, and Grid 3, Snap and TouchChat import (beta — imports the words of one page)."
       },
       "access": {
         "title": "Clinical access modes built in",
@@ -280,9 +280,13 @@
     "tapToBuild": "Tap buttons to build a message…",
     "keepBaseForm": "Base form",
     "importObz": "Import OBZ",
-    "importGrid": "Import Grid",
-    "importSnap": "Import Snap",
-    "importTouchChat": "Import TouchChat",
+    "importGrid": "Import Grid 3 (beta)",
+    "importSnap": "Import Snap (beta)",
+    "importTouchChat": "Import TouchChat (beta)",
+    "importBetaNotice": "Beta — imports the words of one page: no pictures and no links to other pages.",
+    "importConfirm": "Importing creates a new board from the file and opens it. The board you are viewing stays as it is.",
+    "importConfirmAction": "Import",
+    "importSkippedMedia": "{count, plural, one {# picture or sound was not imported} other {# pictures or sounds were not imported}}: Voxa does not download pictures from other sites and accepts only PNG, JPEG, GIF and WebP pictures and MP3, WAV, Ogg, WebM and MP4 sound. You can add them in the editor.",
     "exportObz": "Export OBZ",
     "editorHint": "Select a button, then Move and tap the destination cell (or drag it with a mouse) to move or swap it. Tap a + cell to add vocabulary. Locked slots show 🔒.",
     "predictionConfidence": "Confidence {percent}%",
