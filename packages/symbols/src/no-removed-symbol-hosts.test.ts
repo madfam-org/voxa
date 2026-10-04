@@ -8,9 +8,8 @@ import { fileURLToPath } from 'node:url';
  * Guard: no product source may reach the removed, non-commercial symbol
  * library. Scans every file under apps/<app>/src and packages/<pkg>/src.
  *
- * Exempt: tests (*.test.* / *.spec.*), the legacy-render shim
- * (packages/symbols/src/legacy.ts), and the files listed in PENDING_REMOVAL —
- * each entry names the change that removes it; delete the entry when it lands.
+ * Exempt: tests (*.test.* / *.spec.*) and the legacy-render shim
+ * (packages/symbols/src/legacy.ts). PENDING_REMOVAL is empty.
  */
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 
@@ -18,11 +17,9 @@ const FORBIDDEN = ['static.arasaac.org', 'api.arasaac.org'];
 
 const SHIM = new Set(['packages/symbols/src/legacy.ts']);
 
-const PENDING_REMOVAL = new Set([
-  // Demo/core board content moves to Mulberry + label-only in the content PR
-  // (core symbol allow-map). Remove this entry once that change is on main.
-  'packages/core/src/demo-experience.ts',
-]);
+// Files allowed to keep a removed-library host until the change that removes
+// it lands. Keep empty; add an entry only with the PR that will delete it.
+const PENDING_REMOVAL = new Set<string>([]);
 
 const SOURCE_EXT = /\.(c|m)?(t|j)sx?$/;
 const TEST_FILE = /\.(test|spec)\.(c|m)?(t|j)sx?$/;
