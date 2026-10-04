@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import type { BoardButton } from '@voxa/core';
 import type { SymbolPrediction, TextPrediction } from '@voxa/ai';
 import { buttonBorderColor, buttonLabel } from '@/lib/board-utils';
@@ -20,12 +21,15 @@ export function PredictionStrip({
   onApplyText,
   onSelectSymbol,
 }: PredictionStripProps): React.ReactNode {
+  // Suggestions come from the local rule-based predictor, so the label says
+  // "basic suggestions" rather than implying a language model.
+  const t = useTranslations('communicator');
   if (textPredictions.length === 0 && symbolPredictions.length === 0) return null;
 
   return (
     <div
       role="region"
-      aria-label="AI predictions"
+      aria-label={t('suggestionsAria')}
       style={{
         display: 'flex',
         flexWrap: 'wrap',
@@ -35,7 +39,7 @@ export function PredictionStrip({
         borderBottom: `1px solid ${neutral.borderSubtle}`,
       }}
     >
-      <span style={{ color: neutral.muted, fontSize: '0.75rem', alignSelf: 'center' }}>Suggest:</span>
+      <span style={{ color: neutral.muted, fontSize: '0.75rem', alignSelf: 'center' }}>{t('suggestionsLabel')}</span>
 
       {textPredictions.map((p) => (
         <button

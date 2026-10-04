@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
+import { DISCOVERY_CALL_URL } from '@/lib/pricing';
 import { brand, neutral, status, surface } from '@/lib/tokens';
 
 export type ConversionGateVariant = 'parent' | 'institution' | 'feature';
@@ -48,9 +49,6 @@ export function ConversionGate({
   const t = useTranslations('gate');
 
   if (!open) return null;
-
-  const institutionHref =
-    'mailto:hello@madfam.io?subject=Voxa%20institutional%20plan&body=Organization%20name%3A%0AExpected%20communicators%3A%0A';
 
   const eyebrow =
     variant === 'institution'
@@ -104,7 +102,7 @@ export function ConversionGate({
         <p style={{ margin: '0 0 20px', color: neutral.muted, lineHeight: 1.6 }}>{body}</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {variant === 'institution' ? (
-            <a href={institutionHref} style={btnPrimary}>
+            <a href={DISCOVERY_CALL_URL} rel="noopener" style={btnPrimary}>
               {t('requestDemo')}
             </a>
           ) : (

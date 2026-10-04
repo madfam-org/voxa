@@ -27,7 +27,7 @@ export const DEMO_SCENE_META: DemoSceneMeta[] = [
   {
     id: 'literacy',
     name: 'Literacy keyboard',
-    description: 'QWERTY typing for literate AAC users with AI word suggestions in the full app',
+    description: 'QWERTY typing for literate AAC users with word suggestions in the full app',
   },
   {
     id: 'schedule',
