@@ -30,7 +30,7 @@ spec:
   template:
     metadata:
       annotations:
-        kubectl.kubernetes.io/restartedAt: "2026-10-04T22:48:13Z"
+        kubectl.kubernetes.io/restartedAt: "2026-10-04T23:02:38Z"
         reloader.stakater.com/match: "true"
         secret.reloader.stakater.com/reload: "voxa-secrets"
       labels:
@@ -60,7 +60,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: web
-          image: ghcr.io/madfam-org/voxa/voxa-web@sha256:7f5db2a03e39f9a4dc8ebd4a4df0f997458910b5b4746623c6e09b8d22c8da97
+          image: ghcr.io/madfam-org/voxa/voxa-web@sha256:bcc24a80172a364ea56360e6e0312e1851f17ce26a839eee0ab9af60b1ad2c01
           ports:
             - name: http
               containerPort: 3000
