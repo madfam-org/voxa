@@ -37,8 +37,8 @@ export function resetSpeechActivityForTests(): void {
 export interface SpeakButtonOptions {
   /** The text the button speaks; also the text-to-speech fallback for recorded media. */
   speechText?: string;
-  /** Accessible name of the button that closes a GLP video ("Close"), translated. */
-  closeLabel?: string;
+  /** Accessible name of the button that closes a GLP video: the catalog's `common.close`. */
+  closeLabel: string;
 }
 
 interface ActiveVideo {
@@ -222,15 +222,15 @@ function speakWithTts(text: string, locale: string): void {
  * media cannot be fetched or played (offline, expired session, unsupported
  * format) the button's speech text is spoken instead: a tap never stays silent.
  */
-export async function speakButton(btn: BoardButton, options?: SpeakButtonOptions): Promise<void> {
+export async function speakButton(btn: BoardButton, options: SpeakButtonOptions): Promise<void> {
   stopActiveVideo();
-  const text = options?.speechText ?? resolveButtonSpeech(btn);
+  const text = options.speechText ?? resolveButtonSpeech(btn);
 
   const video = buttonMediaVideo(btn);
   if (video?.url) {
     try {
       const blob = await fetchMediaBlob(video.url);
-      await playVisibleVideo(blob, text, options?.closeLabel ?? 'Close');
+      await playVisibleVideo(blob, text, options.closeLabel);
     } catch {
       speakWithTts(text, btn.locale);
     }
