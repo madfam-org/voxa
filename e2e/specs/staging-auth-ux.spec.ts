@@ -5,7 +5,6 @@ test.describe('Staging authenticated UX soak', () => {
   test('sign-out clears session and API returns 401', async ({ page, request }) => {
     test.skip(!hasJanuaTestCredentials(), 'Requires JANUA_TEST_EMAIL/PASSWORD');
 
-    await page.addInitScript(() => localStorage.setItem('voxa-ai-consent', 'granted'));
     await signInViaJanua(page);
 
     const sessionBefore = await page.request.get('/api/auth/session');

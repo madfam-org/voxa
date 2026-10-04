@@ -25,6 +25,7 @@ import {
   setEditorPin,
 } from '@/lib/editor-pin';
 import { LanguageSwitcher } from '@/components/language-switcher';
+import { PrivacySettingsSection } from '@/components/consent-choices';
 import { neutral, surface } from '@/lib/tokens';
 
 interface SettingsPanelProps {
@@ -34,6 +35,8 @@ interface SettingsPanelProps {
   showEditorPinSettings?: boolean;
   boardDisplay?: BoardDisplayPreferences;
   onBoardDisplayChange?: (patch: Partial<BoardDisplayPreferences>) => void;
+  /** Signed-in user's token: privacy choices are saved to their server record. */
+  accessToken?: string;
 }
 
 export function SettingsPanel({
@@ -43,6 +46,7 @@ export function SettingsPanel({
   showEditorPinSettings = false,
   boardDisplay,
   onBoardDisplayChange,
+  accessToken,
 }: SettingsPanelProps): React.ReactNode {
   const t = useTranslations('settings');
   const tc = useTranslations('common');
@@ -364,6 +368,8 @@ export function SettingsPanel({
           </Field>
         </section>
       ) : null}
+
+      <PrivacySettingsSection accessToken={accessToken} />
 
       {showEditorPinSettings ? (
         <section style={{ borderTop: `1px solid ${neutral.borderSubtle}`, paddingTop: 12, marginTop: 8 }}>

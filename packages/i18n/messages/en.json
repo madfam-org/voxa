@@ -36,10 +36,18 @@
   },
   "consent": {
     "ariaLabel": "Privacy choices",
-    "body": "Voxa can use recent utterances to offer word suggestions. This is optional and stays on MADFAM infrastructure. See our",
+    "title": "Your privacy choices",
+    "intro": "Voxa works without either of these. Choose what you allow; you can change it any time in Settings. See our",
     "privacyLink": "Privacy Policy",
-    "allow": "Allow predictions",
-    "essential": "Essential only"
+    "aiLabel": "Word suggestions",
+    "aiHelp": "While you build a message, its words are sent to the Voxa server, which suggests next words and keeps nothing. No outside AI service is used.",
+    "usageLabel": "Usage counts",
+    "usageHelp": "Voxa records which button was pressed and when, so the board's owner and their therapist can see counts. It does not record what was said.",
+    "save": "Save choices",
+    "essential": "Essential only",
+    "saveError": "Your choices could not be saved. Check your connection and try again.",
+    "settingsTitle": "Privacy",
+    "signedOutNote": "Not signed in: these choices are kept on this device only."
   },
   "auth": {
     "title": "Sign in to Voxa",

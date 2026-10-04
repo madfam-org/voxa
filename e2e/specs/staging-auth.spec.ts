@@ -21,34 +21,20 @@ test.describe('Staging authenticated API soak', () => {
     expect(body.entitlement?.tier).toBeTruthy();
   });
 
-  test('AI routes require consent header', async ({ request }) => {
-    const blocked = await request.post(`${apiBase}/v1/ai/predict/text`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      data: {
-        profileId: 'soak',
-        recentUtterances: [],
-        partialText: 'I want',
-        locale: 'en-US',
-      },
-    });
-    expect(blocked.status()).toBe(403);
+  test('AI routes follow the server-side ai_processing record, not a header', async ({ request }) => {
+    const auth = { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' };
+    const predict = (extra: Record<string, string> = {}) =>
+      request.post(`${apiBase}/v1/ai/predict/text`, {
+        headers: { ...auth, ...extra },
+        data: { profileId: 'soak', recentUtterances: [], partialText: 'I want', locale: 'en-US' },
+      });
+    const setConsent = (granted: boolean) =>
+      request.put(`${apiBase}/v1/consents`, { headers: auth, data: { consents: { ai_processing: granted } } });
 
-    const allowed = await request.post(`${apiBase}/v1/ai/predict/text`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-        'X-Voxa-AI-Consent': 'true',
-      },
-      data: {
-        profileId: 'soak',
-        recentUtterances: [],
-        partialText: 'I want',
-        locale: 'en-US',
-      },
-    });
-    expect([200, 402]).toContain(allowed.status());
+    expect((await setConsent(false)).status()).toBe(200);
+    expect((await predict({ 'X-Voxa-AI-Consent': 'true' })).status()).toBe(403);
+
+    expect((await setConsent(true)).status()).toBe(200);
+    expect([200, 402]).toContain((await predict()).status());
   });
 });

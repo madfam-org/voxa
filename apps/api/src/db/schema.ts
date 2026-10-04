@@ -1,4 +1,14 @@
-import { index, integer, jsonb, pgTable, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  index,
+  integer,
+  jsonb,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  uniqueIndex,
+} from 'drizzle-orm/pg-core';
 
 export const boards = pgTable('boards', {
   id: text('id').primaryKey(),
@@ -54,9 +64,47 @@ export const activationEvents = pgTable(
     buttonId: text('button_id').notNull(),
     userId: text('user_id').notNull(),
     speechText: text('speech_text'),
+    // True only when speech_text was written under an `utterance_text` consent
+    // from a user whose organization is on the DPA allow-list. Rows written
+    // before server-side consent existed keep false; the retention purge only
+    // ever touches rows where this is true.
+    speechTextConsented: boolean('speech_text_consented').notNull().default(false),
     recordedAt: timestamp('recorded_at', { withTimezone: true, mode: 'string' }).notNull(),
   },
   (table) => [index('activation_events_board_recorded_idx').on(table.boardId, table.recordedAt)],
+);
+
+/**
+ * Current consent decision per user and purpose (see src/lib/consents.ts for
+ * the purposes). One row per (user, purpose); every change is also appended to
+ * consent_events.
+ */
+export const consents = pgTable(
+  'consents',
+  {
+    userId: text('user_id').notNull(),
+    purpose: text('purpose').notNull(),
+    granted: boolean('granted').notNull(),
+    policyVersion: text('policy_version').notNull(),
+    grantedAt: timestamp('granted_at', { withTimezone: true, mode: 'string' }),
+    revokedAt: timestamp('revoked_at', { withTimezone: true, mode: 'string' }),
+    updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'string' }).notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.purpose] })],
+);
+
+/** Append-only audit trail of consent changes (who, which purpose, what, when). */
+export const consentEvents = pgTable(
+  'consent_events',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id').notNull(),
+    purpose: text('purpose').notNull(),
+    granted: boolean('granted').notNull(),
+    policyVersion: text('policy_version').notNull(),
+    recordedAt: timestamp('recorded_at', { withTimezone: true, mode: 'string' }).notNull(),
+  },
+  (table) => [index('consent_events_user_recorded_idx').on(table.userId, table.recordedAt)],
 );
 
 export const mediaAssets = pgTable(

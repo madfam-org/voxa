@@ -36,10 +36,18 @@
   },
   "consent": {
     "ariaLabel": "Opciones de privacidad",
-    "body": "Voxa puede usar tus frases recientes para ofrecer sugerencias de palabras. Es opcional y permanece en la infraestructura MADFAM. Consulta nuestra",
+    "title": "Tus opciones de privacidad",
+    "intro": "Voxa funciona sin ninguna de estas opciones. Elige qué permites; puedes cambiarlo cuando quieras en Ajustes. Consulta nuestra",
     "privacyLink": "Política de privacidad",
-    "allow": "Permitir predicciones",
-    "essential": "Solo esencial"
+    "aiLabel": "Sugerencias de palabras",
+    "aiHelp": "Mientras armas un mensaje, sus palabras se envían al servidor de Voxa, que sugiere las siguientes y no guarda nada. No se usa ningún servicio de IA externo.",
+    "usageLabel": "Conteo de uso",
+    "usageHelp": "Voxa registra qué botón se pulsó y cuándo, para que la persona dueña del tablero y su terapeuta vean los conteos. No registra lo que se dijo.",
+    "save": "Guardar opciones",
+    "essential": "Solo esencial",
+    "saveError": "No se pudieron guardar tus opciones. Revisa tu conexión e inténtalo de nuevo.",
+    "settingsTitle": "Privacidad",
+    "signedOutNote": "Sin iniciar sesión: estas opciones se guardan solo en este dispositivo."
   },
   "auth": {
     "title": "Inicia sesión en Voxa",

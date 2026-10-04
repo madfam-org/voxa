@@ -3,6 +3,7 @@ import app, { injectWebSocket } from './app.js';
 import { closeSharedDb } from './db/client.js';
 import { unwrapDbError } from './lib/db-errors.js';
 import { initObservability } from './lib/observability.js';
+import { startUtteranceRetentionTimer } from './lib/utterance-retention.js';
 import { initStore } from './store/index.js';
 import { initSyncHub, shutdownSyncHub } from './ws/sync-hub.js';
 
@@ -11,8 +12,14 @@ const hostname = process.env.LISTEN_HOST ?? '0.0.0.0';
 
 async function main(): Promise<void> {
   initObservability();
-  await initStore();
+  const driver = await initStore();
   await initSyncHub();
+  // Clears opted-in utterance text past its retention period (PostgreSQL only;
+  // one replica at a time via an advisory lock).
+  const stopRetention =
+    driver === 'postgres' && process.env.DATABASE_URL
+      ? startUtteranceRetentionTimer(process.env.DATABASE_URL.trim())
+      : () => {};
 
   const server = serve({ fetch: app.fetch, port, hostname }, () => {
     console.log(`Voxa API listening on http://${hostname}:${port}`);
@@ -21,6 +28,7 @@ async function main(): Promise<void> {
   injectWebSocket(server);
 
   const shutdown = async () => {
+    stopRetention();
     await shutdownSyncHub();
     server.close();
     try {

@@ -50,7 +50,7 @@ Record daily results in [SOAK_LOG.md](./SOAK_LOG.md) (auto-appended with `--log`
 - [x] Janua sign-in → session → authenticated board list/create (automated via `soak-scenarios.sh --with-auth`)
 - [x] Sign out and confirm protected routes return 401 (GET `/auth/signout` fixed; manual Playwright `staging-auth-ux` on staging)
 - [x] Dhanam billing test mode: entitlement API returns expected tier/limit (automated auth soak)
-- [x] AI consent banner: predictions blocked without `X-Voxa-AI-Consent` (automated auth soak)
+- [x] AI consent: predictions blocked without the user's server-side `ai_processing` record (`PUT /v1/consents`; automated auth soak)
 - [x] Legal pages load (`/legal/privacy`, `/legal/terms`, `/legal/accessibility`)
 - [x] OBF import/export smoke — automated auth soak (`soak-scenarios.sh --with-auth`)
 - [x] CVI theme + switch scanning modes — settings panel + `use-switch-scan` (manual UX spec on staging)

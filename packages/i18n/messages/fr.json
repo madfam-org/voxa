@@ -36,10 +36,18 @@
   },
   "consent": {
     "ariaLabel": "Choix de confidentialité",
-    "body": "Voxa peut utiliser les énoncés récents pour proposer des suggestions de mots. C'est optionnel et reste sur l'infrastructure MADFAM. Consultez notre",
+    "title": "Vos choix de confidentialité",
+    "intro": "Voxa fonctionne sans aucune de ces options. Choisissez ce que vous autorisez ; vous pouvez le modifier à tout moment dans les Réglages. Consultez notre",
     "privacyLink": "Politique de confidentialité",
-    "allow": "Autoriser les prédictions",
-    "essential": "Essentiel uniquement"
+    "aiLabel": "Suggestions de mots",
+    "aiHelp": "Pendant que vous composez un message, ses mots sont envoyés au serveur Voxa, qui propose les mots suivants et ne conserve rien. Aucun service d'IA externe n'est utilisé.",
+    "usageLabel": "Comptage d'utilisation",
+    "usageHelp": "Voxa enregistre quel bouton a été pressé et quand, pour que le propriétaire du tableau et son thérapeute voient les comptages. Il n'enregistre pas ce qui a été dit.",
+    "save": "Enregistrer mes choix",
+    "essential": "Essentiel uniquement",
+    "saveError": "Vos choix n'ont pas pu être enregistrés. Vérifiez votre connexion et réessayez.",
+    "settingsTitle": "Confidentialité",
+    "signedOutNote": "Non connecté : ces choix sont conservés sur cet appareil uniquement."
   },
   "auth": {
     "title": "Connectez-vous à Voxa",

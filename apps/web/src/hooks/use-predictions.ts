@@ -1,12 +1,47 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getAiConsent } from '@/components/consent-banner';
+import {
+  CONSENT_CHANGE_EVENT,
+  fetchAccessToken,
+  getAiConsent,
+  readConsentCache,
+  writeConsentCache,
+} from '@/lib/consent';
 import type { Board, BoardButton } from '@voxa/core';
 import { localAiService, type SymbolPrediction, type TextPrediction } from '@voxa/ai';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
 
+function localPredictions(
+  board: Board,
+  partialText: string,
+  recentButtonIds: string[],
+  contentLocale: string,
+): Promise<[TextPrediction[], SymbolPrediction[]]> {
+  return Promise.all([
+    localAiService.predictText({
+      profileId: board.profileId as string,
+      recentUtterances: [],
+      partialText,
+      locale: contentLocale,
+      maxSuggestions: 3,
+    }),
+    localAiService.predictSymbols({
+      profileId: board.profileId as string,
+      recentSymbolIds: recentButtonIds,
+      boardButtons: board.grid.buttons,
+      maxSuggestions: 3,
+    }),
+  ]);
+}
+
+/**
+ * Suggestions for the message being built. Signed out, they are computed in
+ * the browser and nothing is sent. Signed in, the API computes them under the
+ * user's server-side `ai_processing` record; a 403 means the record says no,
+ * so the cached choice is corrected and no suggestions are shown.
+ */
 async function fetchPredictions(
   board: Board,
   partialText: string,
@@ -14,16 +49,15 @@ async function fetchPredictions(
   contentLocale: string,
   accessToken?: string,
 ): Promise<{ text: TextPrediction[]; symbols: SymbolPrediction[] }> {
+  if (!accessToken) {
+    const [text, symbols] = await localPredictions(board, partialText, recentButtonIds, contentLocale);
+    return { text, symbols };
+  }
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    'X-Voxa-AI-Consent': 'true',
+    Authorization: `Bearer ${accessToken}`,
   };
-  if (accessToken) {
-    headers.Authorization = `Bearer ${accessToken}`;
-  } else {
-    headers['X-Voxa-User-Id'] = 'web-user';
-    headers['X-Voxa-Role'] = 'communicator';
-  }
 
   const [textRes, symbolRes] = await Promise.all([
     fetch(`${API_URL}/v1/ai/predict/text`, {
@@ -55,21 +89,15 @@ async function fetchPredictions(
     return { text: textBody.predictions, symbols: symbolBody.predictions };
   }
 
-  const [text, symbols] = await Promise.all([
-    localAiService.predictText({
-      profileId: board.profileId as string,
-      recentUtterances: [],
-      partialText,
-      locale: contentLocale,
-      maxSuggestions: 3,
-    }),
-    localAiService.predictSymbols({
-      profileId: board.profileId as string,
-      recentSymbolIds: recentButtonIds,
-      boardButtons: board.grid.buttons,
-      maxSuggestions: 3,
-    }),
-  ]);
+  if (textRes.status === 403 || symbolRes.status === 403) {
+    const cached = readConsentCache();
+    if (cached?.choices.aiProcessing) {
+      writeConsentCache({ ...cached, choices: { ...cached.choices, aiProcessing: false } });
+    }
+    return { text: [], symbols: [] };
+  }
+
+  const [text, symbols] = await localPredictions(board, partialText, recentButtonIds, contentLocale);
   return { text, symbols };
 }
 
@@ -83,6 +111,13 @@ export function usePredictions(
   const [symbolPredictions, setSymbolPredictions] = useState<SymbolPrediction[]>([]);
 
   const partialText = utterance.join(' ');
+  const [consentRevision, setConsentRevision] = useState(0);
+
+  useEffect(() => {
+    const bump = () => setConsentRevision((n) => n + 1);
+    window.addEventListener(CONSENT_CHANGE_EVENT, bump);
+    return () => window.removeEventListener(CONSENT_CHANGE_EVENT, bump);
+  }, []);
 
   useEffect(() => {
     if (!getAiConsent()) {
@@ -94,16 +129,7 @@ export function usePredictions(
     let cancelled = false;
 
     (async () => {
-      let accessToken: string | undefined;
-      try {
-        const sessionRes = await fetch('/api/auth/session');
-        if (sessionRes.ok) {
-          const session = (await sessionRes.json()) as { accessToken?: string };
-          accessToken = session.accessToken;
-        }
-      } catch {
-        /* offline or unauthenticated */
-      }
+      const accessToken = await fetchAccessToken();
 
       const { text, symbols } = await fetchPredictions(
         board,
@@ -122,7 +148,7 @@ export function usePredictions(
     return () => {
       cancelled = true;
     };
-  }, [board.profileId, board.grid.buttons, partialText, recentButtonIds, contentLocale]);
+  }, [board.profileId, board.grid.buttons, partialText, recentButtonIds, contentLocale, consentRevision]);
 
   return { textPredictions, symbolPredictions };
 }

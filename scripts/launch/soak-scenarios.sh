@@ -105,18 +105,34 @@ if [[ "${WITH_AUTH}" == true ]]; then
       -H "Authorization: Bearer ${token}")"
     check "GET /v1/billing/entitlement has tier" grep -q '"tier"' <<<"${entitlement_body}"
 
+    # Consent is a server-side record per user and purpose (PUT /v1/consents);
+    # no request header grants it.
+    put_consent() {
+      curl -sS -o /dev/null -w '%{http_code}' -X PUT "${API_BASE}/v1/consents" \
+        -H "Authorization: Bearer ${token}" \
+        -H 'Content-Type: application/json' \
+        -d "{\"consents\":$1}"
+    }
+    check "PUT /v1/consents ai_processing=false → 200" test "$(put_consent '{"ai_processing":false}')" = "200"
     ai_no_consent="$(curl -sS -o /dev/null -w '%{http_code}' -X POST "${API_BASE}/v1/ai/predict/text" \
       -H "Authorization: Bearer ${token}" \
       -H 'Content-Type: application/json' \
       -d '{"profileId":"soak","recentUtterances":[],"partialText":"I want","locale":"en-US"}')"
     check "POST /v1/ai/predict/text without consent → 403" test "${ai_no_consent}" = "403"
 
+    check "PUT /v1/consents ai_processing=true → 200" test "$(put_consent '{"ai_processing":true}')" = "200"
     ai_with_consent="$(curl -sS -o /dev/null -w '%{http_code}' -X POST "${API_BASE}/v1/ai/predict/text" \
       -H "Authorization: Bearer ${token}" \
       -H 'Content-Type: application/json' \
-      -H 'X-Voxa-AI-Consent: true' \
       -d '{"profileId":"soak","recentUtterances":[],"partialText":"I want","locale":"en-US"}')"
     check "POST /v1/ai/predict/text with consent → 200/402" test "${ai_with_consent}" = "200" -o "${ai_with_consent}" = "402"
+
+    check "PUT /v1/consents usage_analytics=true → 200" test "$(put_consent '{"usage_analytics":true}')" = "200"
+    demo_activation_code="$(curl -sS -o /dev/null -w '%{http_code}' -X POST "${API_BASE}/v1/events/activations" \
+      -H "Authorization: Bearer ${token}" \
+      -H 'Content-Type: application/json' \
+      -d '{"boardId":"demo-core","buttonId":"want"}')"
+    check "POST /v1/events/activations on demo-core → 403" test "${demo_activation_code}" = "403"
 
     echo "== Demo board is read-only =="
     demo_put_code="$(curl -sS -o /dev/null -w '%{http_code}' -X PUT "${API_BASE}/v1/boards/demo-core" \
@@ -158,14 +174,18 @@ EOF
       activation_code="$(curl -sS -o /dev/null -w '%{http_code}' -X POST "${API_BASE}/v1/events/activations" \
         -H "Authorization: Bearer ${token}" \
         -H 'Content-Type: application/json' \
-        -H 'X-Voxa-AI-Consent: true' \
-        -d "{\"boardId\":\"${soak_board_id}\",\"buttonId\":\"want\",\"speechText\":\"want\"}")"
-      check "POST /v1/events/activations with consent → 201" test "${activation_code}" = "201"
+        -d "{\"boardId\":\"${soak_board_id}\",\"buttonId\":\"want\"}")"
+      check "POST /v1/events/activations with usage_analytics → 201" test "${activation_code}" = "201"
 
       summary_code="$(curl -sS -o /dev/null -w '%{http_code}' \
         "${API_BASE}/v1/events/activations/summary?boardId=${soak_board_id}&days=7" \
         -H "Authorization: Bearer ${token}")"
       check "GET /v1/events/activations/summary (owner) → 200" test "${summary_code}" = "200"
+
+      delete_history_code="$(curl -sS -o /dev/null -w '%{http_code}' -X DELETE \
+        "${API_BASE}/v1/events/activations?boardId=${soak_board_id}" \
+        -H "Authorization: Bearer ${token}")"
+      check "DELETE /v1/events/activations (owner) → 200" test "${delete_history_code}" = "200"
 
       echo "== Authenticated OBF round-trip =="
       import_code="$(curl -sS -o /dev/null -w '%{http_code}' \

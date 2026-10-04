@@ -31,7 +31,8 @@ export function isAllowedOrigin(origin: string): boolean {
   return false;
 }
 
-const BASE_HEADERS = ['Authorization', 'Content-Type', 'X-Voxa-AI-Consent'];
+// Consent is a server-side record (`/v1/consents`), not a request header.
+const BASE_HEADERS = ['Authorization', 'Content-Type'];
 
 /**
  * The development identity headers are allowed cross-origin only outside
