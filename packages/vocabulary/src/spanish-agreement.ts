@@ -3,7 +3,7 @@
  *
  * LINGUISTIC REVIEW: pending review by a credentialed SLP (ruling R89).
  *
- * The rule (documented in docs/spanish-morphology.md):
+ * The rule (documented in docs/linguistic-framework.md, "Spanish morphology"):
  *
  * 1. A subject pronoun (yo, tú, usted, él, ella, nosotros, nosotras, ustedes,
  *    ellos, ellas) opens a clause and sets person, gender and number.

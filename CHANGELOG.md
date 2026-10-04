@@ -8,6 +8,12 @@ All notable changes to Voxa are documented here.
 
 - API: text predictions can come from Selva, the ecosystem model gateway, when `SELVA_ENABLED=true` (default `false`). Requests carry `X-Sensitivity: restricted` and only the current partial utterance, authenticate with a cached Janua `client_credentials` token, and fall back to the local predictor on any failure (`source: "local"`; `source: "selva"` when Selva answered). The `ai_processing` consent check still runs first. Symbol predictions stay local.
 - Local predictor: a Spanish (es-MX) core-vocabulary continuation table, chosen by the board locale, so Spanish boards get Spanish suggestions instead of English "please"/"now". Pending review by a credentialed speech-language pathologist. Languages without a table (French) get no text suggestions rather than English ones.
+- Spanish agreement (es-MX): on Spanish boards the message bar conjugates the verb after a subject pronoun in the present tense ("yo querer beber" → "yo quiero beber", "tú ir" → "tú vas", "nosotros jugar" → "nosotros jugamos"), handles reflexive verbs and *gustar* ("yo gustar jugar" → "me gusta jugar"), and makes descriptors after *ser/estar* agree in gender and number. It is a suggestion: a **Base form** toggle on the message bar keeps the words as tapped, and a setting turns it off. Rule and scope in `docs/linguistic-framework.md`; tables pending review by a credentialed SLP (ruling R89).
+- Web: an accessible in-app dialog replaces `window.prompt`, `alert` and `confirm` (board name, editor PIN, delete and lock-override confirmations, errors). The PIN field is masked.
+
+### Fixed
+
+- Web (WCAG 3.1.2): the communicator, editor and panels no longer show English on Spanish and French pages. Board, editor, word-forms, recorded-speech, grid, usage and audit panels, sync messages, scan-group announcements and the board grid's accessible name come from the es/en/fr catalogues. A guard test fails on new hardcoded text in JSX or native dialogs, and a parity test keeps the three catalogues' keys aligned.
 
 ### Changed
 

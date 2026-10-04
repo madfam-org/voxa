@@ -52,8 +52,8 @@ function wordsTagged(board: Pick<Board, 'grid'>, pos: 'verb' | 'adjective'): Set
 
 /**
  * Compose the message bar for `board`: on Spanish boards the words agree with
- * their subject pronoun ("yo querer beber" → "yo quiero beber", see
- * docs/spanish-morphology.md); other locales and keyboard boards keep the
+ * their subject pronoun ("yo querer beber" → "yo quiero beber"; rule in
+ * docs/linguistic-framework.md, "Spanish morphology"); other locales and keyboard boards keep the
  * words as tapped. Pure: no speech, no state.
  */
 export function composeMessage(
