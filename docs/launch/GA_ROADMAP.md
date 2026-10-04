@@ -1,5 +1,7 @@
 # Voxa commercial GA roadmap
 
+> **Historical record (June 2026).** This file records the June 2026 launch plan and is kept for history; it is not the current status. What ships today: [capabilities.md](../capabilities.md). Pending engineering work: [AGENTS.md](../../AGENTS.md#pending-work-and-known-gaps). The June "SLP sign-off" is **withdrawn**: no credentialed speech-language pathologist has reviewed Voxa yet ([SLP_SIGNOFF.md](./SLP_SIGNOFF.md), ruling R89).
+
 Target: **full commercial general availability** for the Voxa AAC platform at [voxa.madfam.io](https://voxa.madfam.io).
 
 Track checkbox progress in [GA_CHECKLIST.md](./GA_CHECKLIST.md).
@@ -48,10 +50,10 @@ gantt
 | 7-day staging soak | Ops | 2026-06-08 → **2026-06-15** | [STAGING_SOAK.md](./STAGING_SOAK.md) |
 | Daily automated health checks | CI + script | Daily during soak | `scripts/launch/soak-daily-check.sh` |
 | Manual AAC scenarios (Janua, OBF, CVI, switch) | Product / QA | Once during soak | [STAGING_SOAK.md](./STAGING_SOAK.md) |
-| SLP accessibility sign-off | Clinical | ✅ 2026-06-08 (owner-authorized) | [SLP_SIGNOFF.md](./SLP_SIGNOFF.md) |
+| Clinical review | Clinical | Withdrawn (R89): the June record was not a clinical review; pending a credentialed reviewer | [SLP_SIGNOFF.md](./SLP_SIGNOFF.md) |
 | Merge `staging` → `main` | Engineering | After sign-off | Enclii deploy workflows |
 
-**Exit criteria:** No S1/S2 on staging; Argo `voxa-staging-services` Synced/Healthy; SLP sign-off recorded; soak log complete.
+**Exit criteria:** No S1/S2 on staging; Argo `voxa-staging-services` Synced/Healthy; clinical review recorded (pending); soak log complete.
 
 ### Phase 2 — Platform hygiene
 
@@ -60,7 +62,7 @@ gantt
 | Work item | Owner | Target | Notes |
 |-----------|-------|--------|-------|
 | GHCR packages public (`voxa-api`, `voxa-web`) | Org admin | ✅ 2026-06-08 | Org-admin procedure (private) |
-| Remove `k8s/*/signature-policyexception.yaml` | Engineering | ✅ 2026-06-08 | — |
+| Remove `k8s/*/signature-policyexception.yaml` | Engineering | Not done: restored on 2026-06-08 and still in `k8s/*/` (see [ENCLII.md](../deploy/ENCLII.md#kyverno-blocks-sync-verify-image-signatures-ghcr-denied)) | — |
 | PgBouncer entries for the Voxa databases | Platform | Non-blocking | Direct Postgres OK today |
 | Cluster CPU headroom | Platform | Ongoing | Prevents stalled platform rollouts |
 
@@ -93,13 +95,13 @@ Web GA does **not** block on mobile store listings; mobile is tracked as **Phase
 |-----------|------|-------|
 | `REDIS_URL` for WebSocket fan-out | After multi-replica API | Horizontal real-time sync |
 | `SENTRY_DSN` in prod | When DSN provisioned | Hook already in API |
-| Symbol generation / PictoBERT | Product roadmap | [ai-roadmap.md](../ai-roadmap.md) |
+| Symbol generation, next-symbol prediction | Product roadmap (not built) | [ai-roadmap.md](../ai-roadmap.md) |
 
 ### Phase 6 — Feature roadmap
 
 **Goal:** Close the remaining AAC feature gaps after web GA. The competitive research, parity tracker and scorecard behind this phase are private commercial material.
 
-**Not a single-release gate:** web GA (M3) required the P0 rows and SLP sign-off; platform GA (M5) adds mobile store presence.
+**Not a single-release gate:** web GA (M3) required the P0 rows and a clinical review (pending); platform GA (M5) adds mobile store presence.
 
 | Work stream | Priority | Target |
 |-------------|----------|--------|
@@ -110,8 +112,8 @@ Web GA does **not** block on mobile store listings; mobile is tracked as **Phase
 | Usage logs + SLP reporting UI | P1 | Q3 2026 |
 | Grid/TouchChat/Snap import (AACProcessors) | P2 | Q4 2026 |
 | Hardware switch + eye-gaze adapters | P2 | Q4 2026 |
-| Neural bilingual TTS | P2 | Q4 2026 |
-| PictoBERT + symbol generation GA | P3 | 2026 H2 |
+| Natural and bilingual voices (not built) | P2 | — |
+| Next-symbol prediction and symbol generation (not built) | P3 | — |
 
 ## Milestones
 
@@ -120,7 +122,7 @@ Web GA does **not** block on mobile store listings; mobile is tracked as **Phase
 | **M0 — Controlled launch** | 2026-06-07 | Prod live, auth enforced, legal pages, deploy hooks |
 | **M1 — Webhook verified** | 2026-06-08 | GitHub → Enclii ping → 200 |
 | **M2 — Soak complete** | 2026-06-15 | 7-day log green, manual scenarios checked |
-| **M3 — Full web GA** | 2026-06-15 | Soak complete + [GA_DECLARATION.md](./GA_DECLARATION.md) signed |
+| **M3 — Full web GA** | 2026-06-15 | Soak complete + [GA_DECLARATION.md](./GA_DECLARATION.md) signed (never signed) |
 | **M4 — Mobile beta** | 2026-07-06 | EAS builds in TestFlight / Play internal |
 | **M5 — Full platform GA** | 2026-07-20 | Web + mobile store listings live |
 | **M6 — Feature roadmap baseline** | 2026-09-30 | P1 feature rows shipped (tracked privately) |
@@ -141,7 +143,7 @@ Platform operator passes and org-admin steps run from MADFAM's private operation
 
 - [GA_CHECKLIST.md](./GA_CHECKLIST.md) — checkbox tracker
 - [STAGING_SOAK.md](./STAGING_SOAK.md) — soak procedures and log
-- [SLP_SIGNOFF.md](./SLP_SIGNOFF.md) — clinical accessibility gate
+- [SLP_SIGNOFF.md](./SLP_SIGNOFF.md) — clinical review (pending)
 - [MOBILE_GA.md](./MOBILE_GA.md) — Expo / EAS store path
 - [../accessibility.md](../accessibility.md) — WCAG 2.2 standards
 - [../ai-roadmap.md](../ai-roadmap.md) — AI features post-GA

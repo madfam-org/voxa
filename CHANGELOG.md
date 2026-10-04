@@ -1,76 +1,96 @@
 # Changelog
 
-All notable changes to Voxa are documented here.
+All notable changes to Voxa are documented here. What ships today, per
+capability: [docs/capabilities.md](./docs/capabilities.md).
 
 ## [Unreleased]
 
+### Documentation
+
+- Public docs match what ships: a capabilities page with status and evidence per row ([docs/capabilities.md](./docs/capabilities.md)), a rewritten README and architecture, the accessibility statement updated for switch scanning, voices and the first-run setup, `AGENTS.md` with its invariants numbered once and a "How a change ships" section, a `CLAUDE.md` pointer, and the served `llms.txt` plus a new `llms-full.txt` on the landing host. The June 2026 "SLP sign-off" is withdrawn: it was an internal product check, not a clinical review (ruling R89); launch records are marked historical.
+
+## 2026-10-04 — Stabilization and compliance wave
+
+Pull requests [#8](https://github.com/madfam-org/voxa/pull/8)–[#41](https://github.com/madfam-org/voxa/pull/41), merged 2026-10-01 to 2026-10-04 (UTC). Every change below is on `main` and deployed to production (staging pins land too, and roll out once the staging Argo CD app tracks `main`).
+
+### Honest product and copy
+
+- Public copy (es/en/fr) says only what the code backs: no SLA, priority sync, "full AI", per-user dashboards, care-team invites, "offline-ready", eye-tracker integrations or release review by speech therapists; a stop-list test keeps them out. Contact mailbox `hola@madfam.io`. Paid-plan buttons go to a discovery call (`kalya.app/madfam`) until a checkout exists; prices stay visible ([#20](https://github.com/madfam-org/voxa/pull/20), [#36](https://github.com/madfam-org/voxa/pull/36)).
+- Eye gaze: the app and statement describe what ships — dwell for devices that move the pointer and the `voxa:gaze` event bridge for integrators ([#36](https://github.com/madfam-org/voxa/pull/36)).
+- Commercial research and operator-only material moved to MADFAM's private operations repository; deploy, on-call, backup and auth docs generalized for a public repository ([#15](https://github.com/madfam-org/voxa/pull/15)).
+
+### Symbols and licensing
+
+- The full Mulberry Symbols set (3,436 SVG, CC BY-SA 4.0) replaces the non-commercial library on every surface: offline es/en/fr search (Spanish keywords for 450 symbols, pending clinical review), credits page `/legal/symbols`, `NOTICE`, OBF `license` objects on exported images; old references render label-only ([#17](https://github.com/madfam-org/voxa/pull/17), [#18](https://github.com/madfam-org/voxa/pull/18), [#19](https://github.com/madfam-org/voxa/pull/19)).
+- Core words get a Mulberry symbol only where the picture matches the word in es-MX, en-US and fr-FR; otherwise the label shows ([#17](https://github.com/madfam-org/voxa/pull/17)).
+
+### Spanish first
+
+- Spanish starter content (Core 47, Core 100, literacy keyboard with Spanish letters, visual schedule) and speech in the board's language ([#17](https://github.com/madfam-org/voxa/pull/17)).
+- Spanish agreement as the message is built ("yo querer beber" → "yo quiero beber"), with a Base form toggle and a setting; a fully translated communicator and editor with an in-app dialog instead of browser prompts, guarded against hard-coded text ([#29](https://github.com/madfam-org/voxa/pull/29)).
+- Spanish word suggestions in the local predictor; French gets none rather than English ([#28](https://github.com/madfam-org/voxa/pull/28)).
+
+### Boards, access methods and voices
+
+- Core boards in 24, 36 and 60 cells with one motor plan, and a first-run setup that builds the first board ([#41](https://github.com/madfam-org/voxa/pull/41)).
+- Switch scanning that never traps (Back position, automatic return), auto and step scan, first-item hold, acceptance time, post-selection pause; a scan highlight visible on every theme; light themes at AA contrast; moving buttons in the editor by tap or arrow keys ([#36](https://github.com/madfam-org/voxa/pull/36)).
+- Voice choice per language with rate, pitch and volume, install guidance, and one speech path for every utterance ([#38](https://github.com/madfam-org/voxa/pull/38)).
+- Offline start of `/app` (a working service worker), uploaded media through a same-origin proxy, GLP video in a visible dialog, and a spoken fallback for recordings ([#32](https://github.com/madfam-org/voxa/pull/32)).
+
+### Open Board Format
+
+- Spec OBF 0.1 and OBZ export and import; imports create new boards and never overwrite; safe unzip; embedded media kept, remote pictures never fetched; beta one-page imports from three other AAC formats, labelled as such; a plan-limit notice instead of a generic error ([#35](https://github.com/madfam-org/voxa/pull/35)).
+
+### Identity, roles and plans
+
+- Roles only from namespaced Janua application roles (`voxa:admin`, `voxa:editor`, `voxa:slp`), scoped to the token's organization; owners edit their own boards; the demo board is read-only; development headers never work in production ([#16](https://github.com/madfam-org/voxa/pull/16)).
+- Plan limits from the Janua `voxa_tier` claim instead of a per-request billing call; a missing or unknown claim resolves to `free` ([#23](https://github.com/madfam-org/voxa/pull/23)).
+
+### Privacy and consent
+
+- Consent as a server-side record per person and purpose; usage logging stores counts only; spoken text only for an allow-listed organization with a separate opt-in, cleared after 90 days; owners can delete a board's usage history ([#24](https://github.com/madfam-org/voxa/pull/24)).
+- Text stored before server-side consent was cleared by migration `0005` ([#25](https://github.com/madfam-org/voxa/pull/25)).
+
+### Word suggestions
+
+- No third-party LLM call: suggestions come from the local predictor ([#20](https://github.com/madfam-org/voxa/pull/20)); an optional path through Selva, MADFAM's model gateway (`X-Sensitivity: restricted`, partial utterance only), is built and off by default ([#28](https://github.com/madfam-org/voxa/pull/28)).
+
+### API robustness and sync
+
+- Rate limits that never throttle signed-in users by address, body limits, compare-and-set board writes (409 on a lost race), scoped SQL for lists and plan counts, fail-closed file store in production, media type and quota checks, admin-only motor-plan override on the server, board `layout` and `display` persisted (they were dropped by the PostgreSQL store), and a Redis sync hub that degrades loudly ([#37](https://github.com/madfam-org/voxa/pull/37)).
+- Migrations journaled and drift-checked, one database pool per process, atomic file store, startup connection retry ([#10](https://github.com/madfam-org/voxa/pull/10), [#11](https://github.com/madfam-org/voxa/pull/11), [#12](https://github.com/madfam-org/voxa/pull/12)).
+
+### Security and edge
+
+- Host-aware `robots.txt`, `sitemap.xml` and `llms.txt` (only the landing host is indexable); nonce CSP, HSTS and the static header set on web; secure headers and an exact CORS allow-list on the API ([#21](https://github.com/madfam-org/voxa/pull/21)).
+- Next image optimizer off and smoke-checked ([#13](https://github.com/madfam-org/voxa/pull/13)); dependency advisories cleared outside the mobile tree ([#8](https://github.com/madfam-org/voxa/pull/8), [#27](https://github.com/madfam-org/voxa/pull/27)) and in it with Expo SDK 57 ([#31](https://github.com/madfam-org/voxa/pull/31)).
+
+### Mobile
+
+- Expo SDK 57, EAS configuration from the environment (no committed identifiers), symbols on the mobile communicator, and a credential-free bundle check in CI ([#31](https://github.com/madfam-org/voxa/pull/31)).
+
+### Delivery and CI
+
+- Images on Node 22 pinned by digest with no package manager at runtime; deploys wait until `/health` serves the commit's `build`; an image smoke on pull requests ([#33](https://github.com/madfam-org/voxa/pull/33)).
+- Staging rebuilds from `main` beside production, signed like production, and hosts the signed-in specs; it never gates production ([#30](https://github.com/madfam-org/voxa/pull/30)).
+- No admin credential in any deploy; one concurrency group per deploy workflow; a read-only daily smoke ([#22](https://github.com/madfam-org/voxa/pull/22)). Surge-first rollouts, two web replicas, PodDisruptionBudgets and a real web readiness probe ([#26](https://github.com/madfam-org/voxa/pull/26)). GitHub-hosted runners pinned to `ubuntu-24.04` ([#9](https://github.com/madfam-org/voxa/pull/9)).
+- Unit tests discovered instead of listed; axe on the Spanish pages; licence, LLM-egress and public-repo hygiene guards ([#40](https://github.com/madfam-org/voxa/pull/40)). `AGENTS.md` and its pending-work list ([#12](https://github.com/madfam-org/voxa/pull/12), [#14](https://github.com/madfam-org/voxa/pull/14)).
+
+### Changes for API clients
+
+- `GET /v1/billing/entitlement` answers `{ tier, features, source: "janua" }` (was `{ entitlement: { … } }`) ([#23](https://github.com/madfam-org/voxa/pull/23)).
+- `POST /v1/boards/import/:format` creates new boards; the old `POST /v1/boards/:id/import/*` answers 410 ([#35](https://github.com/madfam-org/voxa/pull/35)).
+- The `X-Voxa-AI-Consent` header grants nothing; use `PUT /v1/consents` ([#24](https://github.com/madfam-org/voxa/pull/24)). `/v1/sync/events` is removed ([#16](https://github.com/madfam-org/voxa/pull/16)).
+- New error codes: 409 `VERSION_CONFLICT`, 403 `MOTOR_PLANNING_OVERRIDE_FORBIDDEN`, 413 `PAYLOAD_TOO_LARGE`, `MEDIA_TOO_LARGE` (was 400) and `MEDIA_QUOTA_EXCEEDED`, 415 `MEDIA_TYPE_MISMATCH`, 429 `RATE_LIMITED` ([#37](https://github.com/madfam-org/voxa/pull/37)); `POST /v1/boards` answers 400 for an unknown `templateId` ([#41](https://github.com/madfam-org/voxa/pull/41)).
+
+### Known gaps after this wave
+
+Live updates between devices do not connect in browsers yet, Redis is not bound in production, paid tiers cannot be granted yet, the mobile app has no store build, and the clinical review is pending. The prioritized list is in [AGENTS.md](./AGENTS.md#pending-work-and-known-gaps).
+
+## 2026-06 — GA preparation (previously listed under Unreleased)
+
 ### Added
 
-- Switch scanning: auto scan (one switch) or step scan (switch 1 moves, switch 2 selects), first-item hold, acceptance time (shorter presses are ignored) and a pause after each selection, set in Settings (es/en/fr). The scan runs on a tested state machine in `@voxa/access` (`createScanMachine`).
-- Editor: a single-pointer way to move buttons (WCAG 2.2 2.5.7). **Move** selects a button, a tap or click on the destination cell moves it (swapping with a button already there), and ↑ ↓ ← → move it one cell; this works on touch screens, where drag and drop does not fire. Drag and drop stays for mouse users.
-- API: text predictions can come from Selva, the ecosystem model gateway, when `SELVA_ENABLED=true` (default `false`). Requests carry `X-Sensitivity: restricted` and only the current partial utterance, authenticate with a cached Janua `client_credentials` token, and fall back to the local predictor on any failure (`source: "local"`; `source: "selva"` when Selva answered). The `ai_processing` consent check still runs first. Symbol predictions stay local.
-- Local predictor: a Spanish (es-MX) core-vocabulary continuation table, chosen by the board locale, so Spanish boards get Spanish suggestions instead of English "please"/"now". Pending review by a credentialed speech-language pathologist. Languages without a table (French) get no text suggestions rather than English ones.
-- Spanish agreement (es-MX): on Spanish boards the message bar conjugates the verb after a subject pronoun in the present tense ("yo querer beber" → "yo quiero beber", "tú ir" → "tú vas", "nosotros jugar" → "nosotros jugamos"), handles reflexive verbs and *gustar* ("yo gustar jugar" → "me gusta jugar"), and makes descriptors after *ser/estar* agree in gender and number. It is a suggestion: a **Base form** toggle on the message bar keeps the words as tapped, and a setting turns it off. Rule and scope in `docs/linguistic-framework.md`; tables pending review by a credentialed SLP (ruling R89).
-- Web: an accessible in-app dialog replaces `window.prompt`, `alert` and `confirm` (board name, editor PIN, delete and lock-override confirmations, errors). The PIN field is masked.
-
-### Changed
-
-- Eye gaze: the app, landing and accessibility statement now say what ships — dwell selection for devices that move the pointer (head pointers, eye trackers whose own software drives the pointer) and the `voxa:gaze` event bridge for integrators. No Tobii or IrisBond integration is claimed. The stored setting value `tobii-bridge` is read as `event-bridge`; the `voxa:gaze` event and `window.__voxaInjectGaze` are unchanged.
-- Scan highlight: a dual ring (black inside white) with an amber border, visible on every theme and button fill (3:1 non-text).
-- Interoperability: imports always create NEW boards owned by the importer and open them after a confirmation; the board on screen and the shared demo board are never changed (`POST /v1/boards/import/:format`; the old in-place `POST /v1/boards/:id/import/*` answers 410). An `.obz` creates every board of its manifest with links remapped. Imports count against the plan's board limit.
-- Open Board Format: export writes spec OBF 0.1 (`open-board-0.1`, 2-D `grid.order`, `images[]`, `sounds[]`, `load_board`, `rgb()` colours, `locale`) and `.obz` packages with `manifest.json`; Voxa-only data travels as `ext_voxa_*`. Import reads spec files and files exported by earlier Voxa versions. Embedded pictures and sounds become media of the new board; pictures at other web addresses are not downloaded and the number skipped is shown. Archives with unsafe paths, links, too many entries or too much data are rejected.
-- Import over the plan's board limit (402) shows a notice that says how many boards the plan allows and offers to export the board on screen (OBF/OBZ) or delete a board, instead of a generic error. The 402 answer carries `code: "BOARD_LIMIT"` and `limit`. Plan limits are unchanged.
-- Public copy: the sign-in pitch now describes the Mulberry symbol search Voxa ships, no longer the removed non-commercial library.
-- Grid 3 import uses the home grid of the gridset (not the alphabetically first grid) and its locale when present. Grid 3, Snap and TouchChat imports are labelled beta: they import the words of one page.
-- Mobile: Expo SDK 57. Audio moves from `expo-av` (removed in SDK 55) to `expo-audio`; Metro uses Expo's default config, which detects the pnpm workspace (the old custom config turned off hierarchical lookup, so the app could not bundle under pnpm); relative imports drop the `.js` extension Metro cannot map to `.ts`. CI now typechecks the mobile app and bundles it with `expo export --platform android`. `expo-doctor` passes all checks (splash via the `expo-splash-screen` plugin, required peers installed; TypeScript stays on the workspace's 5.x through `expo.install.exclude`).
-- Mobile: the communicator shows each button's symbol above its label, resolved like the web board (Mulberry SVGs from the web host's public `/symbols/mulberry/`, `EXPO_PUBLIC_WEB_URL`). Buttons without a symbol, literacy keyboards, boards set to hide symbols and images that fail to load stay label-only. The CC BY-SA 4.0 attribution shows while Mulberry symbols are on screen.
-- Mobile: no EAS or store identifier is committed. `app.config.js` reads `EAS_PROJECT_ID` and refuses to resolve without it in the mobile workflows (`VOXA_REQUIRE_EAS_PROJECT=1`) and on EAS Build workers; `eas.json` reads the App Store Connect and Google Play keys from the environment, and `scripts/mobile/eas-submit-env.mjs` checks and applies the rest. The `REPLACE_WITH_*` placeholders are gone. Names: `docs/launch/MOBILE_GA.md`.
-- Consent is a server-side record per user and purpose (`GET/PUT /v1/consents`, tables `consents` and `consent_events`), replacing the client-supplied `X-Voxa-AI-Consent` header, which no longer grants anything. Prediction routes need `ai_processing`; activations need `usage_analytics` and store counts only. Spoken text is kept only under a separate `utterance_text` consent for organizations on the `VOXA_UTTERANCE_TEXT_DPA_ORG_IDS` allow-list (empty by default), and opted-in text is cleared after 90 days. The web banner and Settings show two separate choices (word suggestions, usage counts) and save them to the server; `localStorage` is an offline cache.
-- Activations on the shared `demo-core` board answer 403. A board owner can delete the board's activation history (`DELETE /v1/events/activations?boardId=`).
-- Startup migrations hold a PostgreSQL advisory lock, so processes that start together do not race.
-- API: plan entitlements come from the `voxa_tier` claim of the verified Janua access token (`free`, `family`, `clinic`) instead of a per-request call to the billing API, which answered for no user, so everyone silently got the free tier. A missing, malformed or unknown claim still resolves to `free` and is logged. `GET /v1/billing/entitlement` now answers `{ tier, features, source: "janua" }` (previously `{ entitlement: { … } }`). `DHANAM_API_URL` and `DHANAM_API_TOKEN` are no longer read.
-- Migration `0005_purge_legacy_utterance_text` clears `activation_events.speech_text` on rows recorded before server-side consent existed (irreversible; count rows stay). Count-only dry run: `apps/api/scripts/legacy-utterance-text-dry-run.sql`.
-
-### Security
-
-- Mobile: Expo SDK 52 → 57 (React Native 0.86, React 19.2) clears the advisories in the Expo tree: `tar` (12, including the critical GHSA-23hp-3jrh-7fpw; the SDK 57 CLI no longer uses `tar`), `image-size` (2), `postcss` under `@expo/metro-config` (4) and `uuid` under `xcode` (override to uuid 11, build-time only). `pnpm audit` for the whole workspace goes from 1 critical, 14 high, 8 moderate to 0 critical, 2 high, 1 moderate. Left without a compatible fix: `node-forge` and `braces` (no patched release) and `decode-uri-component` 0.2 under `expo-router` (the fix is ESM-only); see AGENTS.md.
-- Dependencies: cleared the advisories outside the mobile app. API: `@sentry/node` 8 → 10, which moves `@opentelemetry/core` to 2.x (GHSA-8988-4f7v-96qf; Sentry 8 and 9 have no fixed release). Dev tooling: `drizzle-kit` 0.30 → 0.31 and esbuild overrides for `@esbuild-kit/core-utils` and `tsx` (GHSA-67mh-4wv8-2f99, GHSA-g7r4-m6w7-qqqr). Web build: `postcss` used by `next` → 8.5.28 (GHSA-qx2v-qp2m-jg93, GHSA-6g55-p6wh-862q, GHSA-r28c-9q8g-f849, GHSA-fxqj-rqcc-2cmp). Root dev tool: `body-parser` 2.3.0 and `qs` 6.16.0 under the shadcn CLI (GHSA-v422-hmwv-36x6, GHSA-x5fp-wj9c-mxmx, GHSA-4mjr-xmp4-gh2g). Each override is noted in `package.json` under `//pnpm.overrides`. The mobile app's Expo tree is unchanged and waits for the Expo SDK upgrade.
-
-### Removed
-
-- CI: the production web deploy no longer logs in to the identity provider with an admin account to sync Argo CD and restart pods; Argo CD auto-syncs the digest pin, which already bumps the pod template's `restartedAt`. The three scripts that step used (`scripts/deploy/*`) and the June GA soak-window tools (`soak-window-progress.sh`, `soak-status.sh`, `verify-soak-window.sh`, `setup-staging-soak-secrets.sh`) moved to MADFAM's private operations repository.
-- CI: the daily smoke no longer appends to `docs/launch/SOAK_LOG.md` or pushes to `main`; its permissions are read-only.
-- Commercial research (pricing strategy, competitor benchmark, feature-parity scorecard, survey payloads), the GA status record with platform identifiers, the GHCR org-admin procedure and the operator-only scripts under `scripts/deploy/` and `scripts/launch/` that no workflow runs. They moved to MADFAM's private operations repository; the deploy, on-call, backup and auth docs were generalized for a public repo. `scripts/deploy/restart-voxa-web.sh` now reads the Enclii service id from `VOXA_WEB_SERVICE_ID` / `VOXA_STAGING_WEB_SERVICE_ID` and fails closed when it is unset.
-
-### Fixed
-
-- Group scanning (rows or quadrants) no longer traps the user inside a group: a **Back** position follows the last cell, and after two full rounds without a selection (configurable) the scan returns to the groups. Empty cells and empty groups are skipped.
-- Light themes (Classic light, Default) pass WCAG 2.2 AA contrast: the message bar (was 1.01:1 in Classic light), the sync status (1.4:1), the footer links (1.72:1) and the scan highlight (1.24:1). CI now scans `/app` in all four themes with axe.
-- Motor-plan locks: the admin override now sends `forceMotorPlanning`, so the save succeeds; unlocking and moving a button in one save is accepted; a save the server refuses (422 and other non-retryable answers) is shown as a translated error and removed from the offline queue instead of being retried forever.
-- The sync badge no longer reads offline because a replaced WebSocket closed after its successor opened.
-- Web (WCAG 3.1.2): the communicator, editor and panels no longer show English on Spanish and French pages. Board, editor, word-forms, recorded-speech, grid, usage and audit panels, sync messages, scan-group announcements and the board grid's accessible name come from the es/en/fr catalogues. A guard test fails on new hardcoded text in JSX or native dialogs, and a parity test keeps the three catalogues' keys aligned.
-- Local predictor: a continuation is appended to the whole message ("I want" → "I want more") instead of replacing its last word ("i more").
-- CI: staging rebuilds from `main`. The `staging` branch was deleted, so the staging deploy workflows never ran and staging stayed on a June build. They now run on every push to `main` that touches their app (the same paths as production), cosign-sign the image like production and pin its digest in `k8s/staging/`, with their own concurrency groups and build-cache scope, so they never block or change a production deploy. The staging Argo CD app must be pointed at `main` by a platform operator (see `docs/deploy/ENCLII.md`).
-- CI: the daily smoke runs the signed-in specs (`staging-auth`, `clinical-workflow`, `editor-workflow`, `media-workflow`, `offline-sync`) against staging in a separate job, and skips with a notice when the `VOXA_STAGING_*` secrets are absent. The production read-only job is unchanged.
-- E2E: helpers and signed-in specs match catalog-backed labels in every locale (`e2e/helpers/i18n.ts`), since `/app` renders in Spanish by default; `saveBoardAndWait` clicked an English "Save" that does not exist there. The accessibility-settings helper waits for the panel's real name, and the e2e package now type-checks.
-- CI: each deploy workflow has its own concurrency group. The shared web+API group let one workflow's pending run displace the other's, so a merge could leave production web without the change while its API deploy succeeded.
-- CI: the daily smoke (`e2e-smoke.yml`, now "Daily smoke") runs only checks that mean something today: production GA gate, production demo, Redis readiness (warning), and Playwright smoke plus axe on production public pages.
-- Web: paid-plan calls to action (Family, Institutional, demo gate) go to a discovery call at `https://kalya.app/madfam` until a checkout exists; the `/app?upgrade=family` dead end and the unused checkout URL builder are removed. Prices stay visible.
-- API: predictions come only from the in-process local predictor (`source: "local"`); the optional third-party LLM backend is removed. The suggestion strip is labelled as basic suggestions.
-- Copy (es/en/fr): removed or reworded claims with nothing behind them (SLA, priority sync, full AI and GLP workflows, per-end-user dashboards, care-team invites and team roles, offline-ready, eye-dwell, centrally enforced AI policy, release review by speech therapists). Contact mailbox is `hola@madfam.io`. A stop-list test guards the catalogs.
-- Web: the institutional total applies IVA to the whole net total and rounds up to the peso; the per-seat line shows the net parts.
-- API: migration `0003_media_assets` is now listed in the drizzle journal (it was never applied by the startup migrator, so `media_assets` was missing on migrator-built databases); it is idempotent for databases that already have the table. Drizzle snapshots added so `db:generate` diffs against the real schema; CI fails on migration/journal/snapshot drift.
-- API: the media store (`POST/GET /v1/media`) and activation events opened a new PostgreSQL pool on every request and never closed it. The API now uses one process-wide pool (default 5 connections, `DATABASE_POOL_MAX`), shared with the board store and closed on shutdown.
-- API: the JSON file store (used when `DATABASE_URL` is unset) rewrote `boards.json` in place, so a concurrent reader or a restart after a crash mid-write could see a truncated file. Writes are now atomic (temp file, `fsync`, `rename`). The directory is configurable with `VOXA_DATA_DIR`, and the API test suite gives every parallel test process its own directory, which removes the intermittent `Unexpected end of JSON input` test failures.
-- API: a transient connection refusal at startup no longer exits the process on the first attempt. Startup migrations retry connection-level errors with backoff for up to `DATABASE_STARTUP_RETRY_MS` (default 30 s); SQL and migration errors still fail immediately.
-- API: `db:migrate` scrubs query parameters from its error output, like the server does.
-
-### Added
-
-- Web: `robots.txt`, `sitemap.xml` and `llms.txt` are public and host-aware. Only hosts in `VOXA_INDEXABLE_HOSTS` (production: the landing host) are crawlable, with the named AI crawlers allowed on the public pages and `/app`, `/auth`, `/api` disallowed; every other host answers `Disallow: /`. The API answers `Disallow: /`.
-- Web: per-request nonce Content-Security-Policy (no third-party origins), HSTS, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy` (camera and microphone for this origin only), `X-Frame-Options: DENY`, no `X-Powered-By`. Pages render per request so the nonce reaches Next.js scripts.
-- API: secure headers (nosniff, frame deny, referrer, HSTS, deny-all CSP, same-site CORP) and an exact CORS allow-list from `CORS_ALLOWED_ORIGINS` (no subdomain wildcard).
-- `AGENTS.md` and `llms.txt`; CI runs the PostgreSQL-backed API test against a `postgres:16` service container.
 - Full GA remediation plan: `docs/launch/REMEDIATION_PLAN.md` (W1–W4 waves)
 - Customer migration guide: `docs/launch/MIGRATION.md` (OBF import path)
 - Multi-board library: web board picker, **New board**, `VoxaClient.createBoard()`

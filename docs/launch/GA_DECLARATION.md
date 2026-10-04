@@ -1,5 +1,7 @@
 # Voxa commercial general availability declaration
 
+> **Historical record (June 2026).** This file records the June 2026 launch plan and is kept for history; it is not the current status. What ships today: [capabilities.md](../capabilities.md). Pending engineering work: [AGENTS.md](../../AGENTS.md#pending-work-and-known-gaps). The June "SLP sign-off" is **withdrawn**: no credentialed speech-language pathologist has reviewed Voxa yet ([SLP_SIGNOFF.md](./SLP_SIGNOFF.md), ruling R89).
+
 **Product:** Voxa AAC platform  
 **Production URL:** https://voxa.madfam.io  
 **Target declaration date:** 2026-06-19 (after 7-day staging soak from 2026-06-12)
@@ -11,10 +13,10 @@
 | Production live (API + web) | ✅ |
 | Janua SSO + API auth enforced | ✅ |
 | Legal / privacy / accessibility | ✅ |
-| SLP accessibility sign-off | ✅ 2026-06-08 ([SLP_SIGNOFF.md](./SLP_SIGNOFF.md)) |
+| Clinical review | Withdrawn (R89); pending a credentialed reviewer ([SLP_SIGNOFF.md](./SLP_SIGNOFF.md)) |
 | Commercial landing + visitor demo | ✅ 2026-06-08 |
-| Staging soak (7 consecutive green days) | **In progress** → 2026-06-19 ([SOAK_LOG.md](./SOAK_LOG.md); window restarted 2026-06-12 after prod i18n incident) |
-| GHCR public (Kyverno PolicyException removed) | ✅ 2026-06-08 — anonymous pull verified |
+| Staging soak (7 consecutive green days) | Never completed ([SOAK_LOG.md](./SOAK_LOG.md); window restarted 2026-06-12, soak tooling retired 2026-10-03) |
+| GHCR public | ✅ 2026-06-08 — anonymous pull verified (the Kyverno PolicyException was restored the same day and is still in `k8s/*/`) |
 
 ## Pre-declaration verification (run on declaration day)
 
@@ -39,7 +41,7 @@ gh workflow run e2e-smoke.yml --repo madfam-org/voxa
 We declare **Voxa web commercially generally available** at `voxa.madfam.io` for:
 
 - **Individual parents and caregivers** — free tier with cloud sync, OBF, CVI access modes, and starter AI.
-- **Institutional customers** — paid clinic/school plans with team roles and aggregate usage insight.
+- **Institutional customers** — paid clinic/school plans with team roles and aggregate usage insight. (Not grantable yet: paid tiers wait on the plan claim being written; see AGENTS.md.)
 
 | Role | Name | Date | Signature |
 |------|------|------|-----------|

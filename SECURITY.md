@@ -4,8 +4,8 @@
 
 | Version | Supported |
 |---------|-----------|
-| 0.5.x   | Yes |
-| < 0.5   | No |
+| The version deployed from `main` (voxa.madfam.io) | Yes |
+| Anything older | No |
 
 ## Reporting a vulnerability
 

@@ -5,8 +5,11 @@
 > **Repository boundary:** operational detail (platform identifiers, operator procedures, break-glass steps) and commercial research (pricing, competitor benchmarks, outreach) live in MADFAM's private operations repository; this public repo holds only public-safe context, per MADFAM's repo-boundary contract.
 
 Canonical instructions for any LLM agent (Claude, Codex, Cursor, …) working in
-this repository. Human overview: [README.md](./README.md). Compact index for
-LLMs: [llms.txt](./llms.txt).
+this repository; `CLAUDE.md` is only a pointer here. Human overview:
+[README.md](./README.md). What ships today, with status and evidence:
+[docs/capabilities.md](./docs/capabilities.md). Accessibility statement:
+[docs/accessibility.md](./docs/accessibility.md). Compact index for LLMs:
+[llms.txt](./llms.txt).
 
 Voxa is an open AAC (Augmentative and Alternative Communication) platform:
 a Next.js board app, an Expo mobile app and a Hono sync/AI API, in one pnpm +
@@ -22,7 +25,9 @@ fixtures free of real names and health information.
 | `apps/web`                      | `@voxa/web` — Next.js 15 board UI, editor and settings (standalone output).                                                         |
 | `apps/mobile`                   | `@voxa/mobile` — Expo SDK 57 communicator app (EAS builds).                                                                         |
 | `packages/*`                    | `core` (domain model), `obf` (Open Board Format), `import-adapters`, `vocabulary`, `symbols`, `sync`, `access`, `ai`, `i18n`, `ui`. |
-| `e2e`                           | Playwright smoke, accessibility (axe) and staging specs.                                                                            |
+| `e2e`                           | Playwright smoke, accessibility (axe), browser workflow and staging specs.                                                          |
+| `scripts/`                      | `run-unit-tests.mjs` (test discovery), `guards/` (repository guards), `launch/` (deploy smokes), `mobile/` (EAS checks).             |
+| `fixtures/`                     | Synthetic OBF/OBZ files and soak fixtures (no real names or health data).                                                           |
 | `apps/api/drizzle/migrations`   | SQL migrations, `meta/_journal.json` and their snapshots (`0000`–`0007`).                                                           |
 | `k8s/production`, `k8s/staging` | Kustomize manifests (digest-pinned images).                                                                                         |
 | `enclii.yaml`                   | Enclii network and status declarations.                                                                                             |
@@ -30,11 +35,14 @@ fixtures free of real names and health information.
 
 ## Commands
 
+Node 22 (`engines.node >= 22`) and pnpm 9 through Corepack.
+
 ```bash
-corepack enable && pnpm install
+corepack enable && pnpm install --frozen-lockfile
 pnpm dev:api                                   # API on :4000 (file store unless DATABASE_URL is set)
 pnpm dev:web                                   # web on :3000
-pnpm turbo typecheck                           # what CI runs (mobile included)
+pnpm guards && pnpm test:guards                # repository guards and their tests (CI runs them first)
+pnpm turbo typecheck                           # what CI runs (mobile and e2e included)
 pnpm test                                      # every package except e2e (turbo builds deps first)
 pnpm --filter @voxa/api test                   # API suite only (build the workspace packages first)
 pnpm build
@@ -220,7 +228,6 @@ pnpm build
     `apps/web/src/lib/speech-voices.test.ts`,
     `apps/web/src/lib/play-button-speech.test.ts` and
     `e2e/specs/voice-choice.spec.ts`.
-
 13. **Board writes are compare-and-set; reads are scoped.** The PostgreSQL
     store reads one board by id, applies the change, and updates the row only
     `WHERE id = $1 AND version = $2`, with the sync event in the same
@@ -271,7 +278,7 @@ pnpm build
     down, it serves locally, keeps reconnecting, and `/health/ready` stays 200
     with a `syncHubWarning`; Redis never blocks startup or readiness. Tested in
     `src/ws/sync-hub.test.ts` and `src/ws/sync-hub.redis.test.ts`.
-15. **Core sizes keep one motor plan.** The `core-24` (4×6), `core-36` (6×6)
+16. **Core sizes keep one motor plan.** The `core-24` (4×6), `core-36` (6×6)
     and `core-60` (6×10) templates come from ONE ordered core list per
     locale (`packages/core/src/core-grid-sizes.ts`) laid along a fixed growth
     order, and each size is the top-left block of the next: a smaller board
@@ -299,22 +306,57 @@ rather than passing (each one asserts how much it read).
 
 | Guard | What it fails on | Where it lives | Where it runs | Added |
 | ----- | ---------------- | -------------- | ------------- | ----- |
-| Test discovery | a tracked `*.test.*` the unit job does not run; a package test script that names files by hand; a test the old lists ran that is no longer discovered | `scripts/run-unit-tests.mjs`, `scripts/guards/test-discovery.mjs` | CI build job (`pnpm guards`, `pnpm test:guards`) | this guard set |
-| Licence (ruling R86) | the removed non-commercial symbol library's name or hosts (case-insensitive) in any tracked file outside a short allowlist (history, legacy-data shim, guards, tests); a vendored symbol set (`apps/*/{public,assets}/symbols/<set>/`) without a licence file at its root or a `NOTICE` entry | `scripts/guards/licence.mjs`; also `packages/symbols/src/no-removed-symbol-hosts.test.ts` (hosts in source), `apps/web/src/symbol-credits-messages.test.ts` (credits copy) | CI build job; unit job | voxa#18, voxa#35 (OBF licence objects), this guard set |
-| No direct LLM egress (ruling R88) | model-vendor API hosts and SDK imports or dependencies in `apps/` or `packages/` (the Selva client `apps/api/src/lib/selva.ts` may import an OpenAI-compatible SDK); vendor API-key variables (`OPENAI_API_KEY` style) in code, manifests or workflows anywhere | `scripts/guards/llm-egress.mjs` | CI build job | this guard set |
-| Public-repo hygiene | RFC 1918 addresses (outside test fixtures and SVG path data), `*.svc.cluster.local` names, the operator SSH host pattern, Cloudflare tunnel ids, `@madfam.io` addresses other than role mailboxes. Real client names are checked by MADFAM's private estate scan, not in this repository. | `scripts/guards/hygiene.mjs` (per-rule allowlist by file) | CI build job | this guard set |
-| Claims stop-list | public copy claims with nothing behind them, the retired mailbox, the upgrade dead end | `apps/web/src/lib/claims-stoplist.test.ts` | unit job | voxa#20 |
-| Crawling and security headers | robots, sitemap and `llms.txt` per host; CSP, HSTS and the static header set | `apps/web/src/lib/crawling.test.ts`, `apps/web/src/lib/security-headers.test.ts`, `apps/web/src/next-config.test.ts`, `apps/api/src/middleware/security-headers.test.ts` | unit job | voxa#21 |
+| Test discovery | a tracked `*.test.*` the unit job does not run; a package test script that names files by hand; a test the old lists ran that is no longer discovered | `scripts/run-unit-tests.mjs`, `scripts/guards/test-discovery.mjs` | CI build job (`pnpm guards`, `pnpm test:guards`) | voxa#40 |
+| Licence (ruling R86) | the removed non-commercial symbol library's name or hosts (case-insensitive) in any tracked file outside a short allowlist (history, legacy-data shim, guards, tests); a vendored symbol set (`apps/*/{public,assets}/symbols/<set>/`) without a licence file at its root or a `NOTICE` entry | `scripts/guards/licence.mjs`; also `packages/symbols/src/no-removed-symbol-hosts.test.ts` (hosts in source), `apps/web/src/symbol-credits-messages.test.ts` (credits copy) | CI build job; unit job | voxa#18, voxa#35 (OBF licence objects), voxa#40 |
+| No direct LLM egress (ruling R88) | model-vendor API hosts and SDK imports or dependencies in `apps/` or `packages/` (the Selva client `apps/api/src/lib/selva.ts` may import an OpenAI-compatible SDK); vendor API-key variables (`OPENAI_API_KEY` style) in code, manifests or workflows anywhere | `scripts/guards/llm-egress.mjs` | CI build job | voxa#40 |
+| Public-repo hygiene | RFC 1918 addresses (outside test fixtures and SVG path data), `*.svc.cluster.local` names, the operator SSH host pattern, Cloudflare tunnel ids, `@madfam.io` addresses other than role mailboxes. Real client names are checked by MADFAM's private estate scan, not in this repository. | `scripts/guards/hygiene.mjs` (per-rule allowlist by file) | CI build job | voxa#40 |
+| Claims stop-list | public copy claims with nothing behind them (SLA, offline-ready, eye-tracker integrations, release review by speech therapists …), the retired mailbox, the upgrade dead end | `apps/web/src/lib/claims-stoplist.test.ts` | unit job | voxa#20, voxa#36 |
+| Crawling and security headers | robots, sitemap, `llms.txt` and `llms-full.txt` per host (landing host only, no claim the product cannot back); CSP, HSTS and the static header set | `apps/web/src/lib/crawling.test.ts`, `apps/web/src/lib/security-headers.test.ts`, `apps/web/src/next-config.test.ts`, `apps/api/src/middleware/security-headers.test.ts` | unit job | voxa#21 |
 | Authorization regressions | namespaced app roles, org scope, read-only demo board, fail-closed dev auth | `apps/api/src/routes/authz.routes.test.ts`, `apps/api/src/lib/board-access.test.ts` | unit job | voxa#16 |
 | Hardcoded UI text | user-facing literals outside the es/en/fr catalogs | `apps/web/src/hardcoded-ui-text.test.ts` | unit job | voxa#29 |
 | Service worker | `sw.js` must parse as plain JavaScript and never cache `/api/*` or other origins | `apps/web/src/service-worker.test.ts` | unit job | voxa#32 |
 | Image optimizer off | `/_next/image` must answer 404 | `apps/web/src/next-config.test.ts`; `scripts/launch/verify-prod-image-optimizer.sh` | unit job; axe job; after each production web deploy | voxa#13 |
 | Image smoke and build identity | images on Node 22 without package managers, health 200 under the Deployment's securityContext; deploys wait until `/health` serves the commit's `build` | `.github/workflows/image-smoke.yml`, `apps/*/src/lib/build-info.test.ts`, `scripts/launch/wait-for-build.sh` | image-smoke workflow (Dockerfile, lockfile or `package.json` changes); deploy workflows | voxa#33 |
-| Accessibility (axe) | serious or critical WCAG 2.2 AA violations on public pages, the editor panels, `/app` in four themes and the Spanish landing, `/demo`, `/app` and settings | `e2e/specs/a11y.spec.ts` | axe job | voxa#4, voxa#36, this guard set (Spanish) |
+| Accessibility (axe) | serious or critical WCAG 2.2 AA violations on public pages, the editor panels, `/app` in four themes and the Spanish landing, `/demo`, `/app` and settings | `e2e/specs/a11y.spec.ts` (also the axe steps in `voice-choice`, `offline-media` and `first-run`) | axe job | voxa#4, voxa#36, voxa#40 (Spanish) |
 
 Guard output is `file:line rule`, never the matched text, because CI logs of
 a public repository are public. To allowlist a file, add its path (not a
 wildcard over the repo) to the guard's list with the reason, in the same PR.
+
+Public text follows the same rule as the stop-list: say only what `main` does.
+A capability is "shipped" in the README, `docs/capabilities.md`, the landing or
+`llms.txt` only when it is merged and tested; anything built but switched off,
+beta or pending review says so; and nothing claims a clinical (SLP) review
+until a credentialed reviewer has done one (ruling R89).
+
+## How a change ships
+
+1. **Pull request.** CI (`ci.yml`) runs two jobs. `build`: the guards,
+   typecheck (mobile and e2e included), `pnpm test` with PostgreSQL 16 and
+   Redis 7 service containers, the Drizzle drift step, the EAS config check,
+   the mobile bundle export and `pnpm build`. `a11y`: the built standalone web
+   server and API, the image-optimizer check, axe, and the browser specs
+   (`offline`, `access`, `voices`, `import`, `first-run`). A change to a
+   Dockerfile, the lockfile, a `package.json` or the build-identity helpers
+   also runs `image-smoke.yml`.
+2. **Merge to `main`.** The deploy workflows whose path filters match
+   (`apps/web/**` or `apps/api/**`, `packages/**`, the Dockerfile) start for
+   production and staging at the same time. A change that touches only root
+   docs, `docs/**` or other non-app paths deploys nothing; a change under
+   `k8s/` is applied by Argo CD directly.
+3. **Build, sign, pin.** Each workflow builds the image with `GIT_SHA`,
+   cosign-signs it and commits its digest to `k8s/production` or
+   `k8s/staging`. Argo CD auto-syncs the pin; nothing restarts pods by hand.
+4. **Wait for the build.** The smoke step runs
+   `scripts/launch/wait-for-build.sh` until `/health` (API) or `/api/health`
+   (web) serves this commit's `build` (up to 12 minutes). The production web
+   workflow then checks `/demo` and that `/_next/image` answers 404.
+5. **Staging alongside.** Staging rebuilds from the same merge and never
+   gates production; its signed-in specs run in the daily smoke. Until the
+   staging Argo CD app tracks `main` (see Pending work), staging pins land
+   but do not roll out.
+6. **Daily smoke** (`e2e-smoke.yml`): read-only production checks, and the
+   signed-in specs against staging.
 
 ## Deploy
 
@@ -349,15 +391,16 @@ which polls for up to 12 minutes (Argo CD polls git about every 3 minutes,
 then the surge rollout) until `build` equals the commit, so a green deploy run
 proves the new image is serving, not just that an old pod answers 200.
 
-## Pending work and known gaps (as of 2026-10-03)
+## Pending work and known gaps
 
-This is the single pending-work list for the repository; `llms.txt` points
-here. Product and launch phases live in
+As of 2026-10-04. This is the single pending-work list for the repository;
+`llms.txt` and [docs/capabilities.md](./docs/capabilities.md) point here. Product and launch phases live in
 [docs/launch/GA_ROADMAP.md](./docs/launch/GA_ROADMAP.md). Priorities: **P0**
 blocks production use, **P1** next, **P2** planned, **P3** cleanup.
 
 | Item                                                                                                                                                                                                                         | Why it matters                                                                                                                                                                          | Priority | Kind                                                                            | Tracking |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------- | -------- |
+| **Clinical review of record is pending (ruling R89).** No credentialed speech-language pathologist has reviewed the es-MX core vocabulary, the core-size order, the Spanish symbol keywords, the Spanish predictor table or the agreement rules. The June 2026 "SLP sign-off" was an internal product check and is withdrawn (`docs/launch/SLP_SIGNOFF.md`). | Clinical accuracy for real communicators; public copy must keep saying "pending clinical review". | P1 | Owner (engage a reviewer of record) | R89 |
 | **Mobile store builds are not set up.** The app is on Expo SDK 57, shows symbols and bundles in CI, but the EAS project, the App Store Connect and Google Play listings and the repository variables and secrets the mobile workflows read do not exist yet. | No preview or store build has ever been produced; the workflows stop with a message naming each missing variable. | P1 | Owner setup (names and commands in `docs/launch/MOBILE_GA.md`) | — |
 | **Three mobile build-tool advisories have no compatible fix.** `node-forge` (Expo CLI code signing; no patched release), `braces` (Metro file watcher and the shadcn CLI; no patched release) and `decode-uri-component` 0.2 under `expo-router`'s `query-string` 7 (the fix, 0.5, is ESM-only and `query-string` 7 loads it with `require`). | Dev and build tooling, except `decode-uri-component`, which ships in the app and only parses the app's own deep links. | P3 | Upstream (re-check on each Expo SDK release) | — |
 | **Staging's Argo CD app still tracks the deleted `staging` branch.** The staging workflows now pin `k8s/staging` on `main`, but `voxa-staging-services` reads branch `staging`, which no longer exists, so it cannot compare (ComparisonError) and staging keeps a June build. | Until the app tracks `main`, staging does not move and the daily signed-in specs test an old build. | P1 | Platform operator (point the app's source revision at `main`); then confirm the `VOXA_STAGING_*` test account still signs in and holds `voxa:slp` | — |

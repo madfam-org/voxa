@@ -1,6 +1,6 @@
 # Voxa data model
 
-Voxa stores communication boards and sync events. PostgreSQL is the production store. When `DATABASE_URL` is unset (local development, tests) the API falls back to a JSON file, `boards.json` under `VOXA_DATA_DIR` (default `./data` in the API's working directory), which it replaces atomically (temp file, `fsync`, `rename`). Media and activation events are kept in memory in that mode.
+Voxa stores communication boards and sync events. PostgreSQL is the production store. When `DATABASE_URL` is unset (local development, tests) the API falls back to a JSON file, `boards.json` under `VOXA_DATA_DIR` (default `./data` in the API's working directory), which it replaces atomically (temp file, `fsync`, `rename`). Media and activation events are kept in memory in that mode, and consents in `consents.json` beside `boards.json`. With `NODE_ENV=production` the API refuses to start without `DATABASE_URL`.
 
 ## Tables
 
@@ -14,10 +14,12 @@ Voxa stores communication boards and sync events. PostgreSQL is the production s
 | `owner_user_id` | `text` | Janua user id that owns the board (null for shared demo) |
 | `org_id` | `text` | Organization tenant (optional) |
 | `grid` | `jsonb` | Full `@voxa/core` grid document (buttons, rows, columns) |
-| `version` | `integer` | Optimistic concurrency counter |
+| `layout` | `text` | Optional board kind (`grid`, `literacy-keyboard`, `visual-schedule`); migration 0007 |
+| `display` | `jsonb` | Optional per-board display preferences (hide labels or symbols …); migration 0007 |
+| `version` | `integer` | Compare-and-set counter: an update applies only `WHERE id = $1 AND version = $2` |
 | `updated_at` | `timestamptz` | Last mutation time (ISO string in API) |
 
-The `grid` JSON matches the `Board` type in `@voxa/core`, including motor-planning `locked` slots and GLP phrase buttons.
+The `grid` JSON matches the `Board` type in `@voxa/core`, including motor-planning `locked` slots and GLP phrase buttons. Indexes on `owner_user_id` and `org_id` (migration 0006) serve the scoped board list and the plan's board count.
 
 ### `sync_events`
 
@@ -106,7 +108,7 @@ One row per user and purpose in `consents` (`user_id`, `purpose`, `granted`, `po
 
 ### `media_assets`
 
-Button recordings and GLP video clips (base64 in Postgres for MVP).
+Uploaded photos, button recordings and GLP video clips (base64 in PostgreSQL; moving the bytes to object storage is an open decision, see AGENTS.md). Uploads must match their declared type by magic bytes and count against a per-user quota (`MEDIA_QUOTA_BYTES_PER_USER`, default 500 MB). Index on `owner_user_id` (migration 0006).
 
 | Column | Type | Description |
 |--------|------|-------------|
@@ -118,13 +120,13 @@ Button recordings and GLP video clips (base64 in Postgres for MVP).
 | `data` | `text` | Base64-encoded bytes |
 | `created_at` | `timestamptz` | Upload time |
 
-Upload: `POST /v1/media` (multipart `boardId` + `file`, editor role). Serve: `GET /v1/media/:id` (board access). Button JSON stores the returned URL in `RecordedSpeech.url` or `GlpButton.video.url`. Media elements cannot send a bearer token, so the web app loads these URLs through its same-origin proxy `GET /api/media/:id` (`apps/web/src/app/api/media/[id]/route.ts`), which forwards the signed-in session's token from the server and passes the API's 401/403/404 through; the read rule stays in the API. Board JSON keeps the API URL.
+Upload: `POST /v1/media` (multipart `boardId` + `file`; the board's owner, or an editor or admin of its organization; never `demo-core`). Serve: `GET /v1/media/:id` (board access). Button JSON stores the returned URL in `RecordedSpeech.url` or `GlpButton.video.url`. Media elements cannot send a bearer token, so the web app loads these URLs through its same-origin proxy `GET /api/media/:id` (`apps/web/src/app/api/media/[id]/route.ts`), which forwards the signed-in session's token from the server and passes the API's 401/403/404 through; the read rule stays in the API. Board JSON keeps the API URL.
 
 ## Future tables
 
 | Table | Purpose |
 |-------|---------|
-| `organizations` | Tenant boundary for teams |
-| `user_profiles` | Communicator settings (CVI theme, dwell, locales) |
+| `organizations` | Tenant boundary for teams (today the organization comes from the Janua token's `org_id`) |
+| `user_profiles` | Communicator settings (CVI theme, dwell, locales, voice); today they live on each device |
 
-See [architecture.md](./architecture.md) and [GA_CHECKLIST.md](./launch/GA_CHECKLIST.md).
+See [architecture.md](./architecture.md) and [capabilities.md](./capabilities.md).
