@@ -284,7 +284,7 @@
     "importSnap": "Import Snap",
     "importTouchChat": "Import TouchChat",
     "exportObz": "Export OBZ",
-    "editorHint": "Drag unlocked buttons to move or swap. Drop on + cells to add vocabulary. Locked slots show 🔒.",
+    "editorHint": "Select a button, then Move and tap the destination cell (or drag it with a mouse) to move or swap it. Tap a + cell to add vocabulary. Locked slots show 🔒.",
     "predictionConfidence": "Confidence {percent}%",
     "symbolConfidence": "Symbol · {percent}%"
   },
@@ -621,7 +621,7 @@
     "lockPosition": "Lock position (motor planning)",
     "hideFromCommunicator": "Hide from communicator view",
     "done": "Done",
-    "emptyCell": "Empty grid cell row {row} column {column}. Drop a button here or click to add.",
+    "emptyCell": "Empty grid cell row {row} column {column}. Tap or click to add a button, or to move the selected button here.",
     "moveSection": "Move this button",
     "moveStart": "Move: then tap the destination",
     "moveCancel": "Cancel move",

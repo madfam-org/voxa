@@ -83,6 +83,9 @@ export function useSyncedBoard(role: TeamRole) {
   // Set when an admin confirms moving a locked (motor-plan) button; the next
   // save of this board then asks the server to accept that move.
   const motorPlanOverrideRef = useRef(false);
+  // A refused save's message stays up until a save succeeds (a later empty
+  // queue flush must not hide why the change was not applied).
+  const rejectionShownRef = useRef(false);
 
   useEffect(() => {
     setBoardIdState(loadSelectedBoardId());
@@ -222,6 +225,7 @@ export function useSyncedBoard(role: TeamRole) {
         }
       }
       setSyncError(message);
+      rejectionShownRef.current = true;
       return message;
     },
     [boardId, client, setBoard],
@@ -242,7 +246,7 @@ export function useSyncedBoard(role: TeamRole) {
     const pending = await loadPendingBoardSave(boardId);
     if (!pending) {
       setPendingSave(false);
-      setSyncError(null);
+      if (!rejectionShownRef.current) setSyncError(null);
       return;
     }
 
@@ -254,6 +258,7 @@ export function useSyncedBoard(role: TeamRole) {
       setSyncError(null);
       setError(null);
       motorPlanOverrideRef.current = false;
+      rejectionShownRef.current = false;
     } catch (err) {
       if (isVersionConflictError(err)) {
         await applyVersionConflict();
@@ -309,7 +314,7 @@ export function useSyncedBoard(role: TeamRole) {
       disconnect = client.connectBoardSync(
         boardId,
         async (event: SyncEvent) => {
-          if (event.actorUserId === sessionUserId) return;
+          if (cancelled || event.actorUserId === sessionUserId) return;
           if (event.type === 'board.updated' || event.type === 'board.created') {
             try {
               const fresh = await client.getBoard(boardId);
@@ -320,6 +325,10 @@ export function useSyncedBoard(role: TeamRole) {
           }
         },
         (status) => {
+          // A socket from an earlier client (before the session loaded, or for
+          // another board) closes after its replacement opened: ignore it, or
+          // the badge would read offline while the current socket is live.
+          if (cancelled) return;
           const live = status === 'connected';
           setSyncStatus(live ? 'live' : 'offline');
           if (live) void flushPendingSave();
@@ -373,6 +382,7 @@ export function useSyncedBoard(role: TeamRole) {
       setSyncError(null);
       setConflictRefreshed(false);
       motorPlanOverrideRef.current = false;
+      rejectionShownRef.current = false;
       return result;
     } catch (err) {
       if (isVersionConflictError(err)) {

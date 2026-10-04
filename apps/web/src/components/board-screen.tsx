@@ -1068,6 +1068,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
         )}
 
         <div
+          data-voxa-message-bar=""
           style={{
             ...utteranceBarStyle,
             background: chrome.messageBarBackground,
@@ -1364,8 +1365,11 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
             moveControls={
               <ButtonMoveControls
                 moving={movingId === editingId}
-                canMove={!sorted.find((b) => (b.id as string) === editingId)?.locked || role === 'admin'}
-                onStartMove={() => setMovingId(editingId)}
+                onStartMove={() => {
+                  const locked = sorted.find((b) => (b.id as string) === editingId)?.locked;
+                  if (locked && role !== 'admin') void dialogs.alert(tcx('slotLocked'));
+                  else setMovingId(editingId);
+                }}
                 onCancelMove={() => setMovingId(null)}
                 onMoveBy={(rows, columns) => moveBy(editingId, rows, columns)}
               />

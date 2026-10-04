@@ -284,7 +284,7 @@
     "importSnap": "Importer Snap",
     "importTouchChat": "Importer TouchChat",
     "exportObz": "Exporter OBZ",
-    "editorHint": "Faites glisser les boutons déverrouillés pour les déplacer ou les échanger. Déposez sur les cases + pour ajouter du vocabulaire. Les emplacements verrouillés affichent 🔒.",
+    "editorHint": "Sélectionnez un bouton, puis Déplacer et touchez la case de destination (ou faites-le glisser à la souris) pour le déplacer ou l’échanger. Touchez une case + pour ajouter du vocabulaire. Les emplacements verrouillés affichent 🔒.",
     "predictionConfidence": "Confiance {percent} %",
     "symbolConfidence": "Pictogramme · {percent} %"
   },
@@ -621,7 +621,7 @@
     "lockPosition": "Verrouiller la position (plan moteur)",
     "hideFromCommunicator": "Masquer dans la vue de la personne qui communique",
     "done": "Terminé",
-    "emptyCell": "Case vide, ligne {row}, colonne {column}. Déposez un bouton ici ou cliquez pour en ajouter un.",
+    "emptyCell": "Case vide, ligne {row}, colonne {column}. Touchez ou cliquez pour ajouter un bouton, ou pour déplacer ici le bouton sélectionné.",
     "moveSection": "Déplacer ce bouton",
     "moveStart": "Déplacer : puis touchez la destination",
     "moveCancel": "Annuler le déplacement",

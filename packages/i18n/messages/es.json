@@ -285,7 +285,7 @@
     "importSnap": "Importar Snap",
     "importTouchChat": "Importar TouchChat",
     "exportObz": "Exportar OBZ",
-    "editorHint": "Arrastra los botones desbloqueados para moverlos o intercambiarlos. Suelta en las celdas + para añadir vocabulario. Las posiciones bloqueadas muestran 🔒.",
+    "editorHint": "Selecciona un botón, pulsa Mover y toca la celda de destino (o arrástralo con el ratón) para moverlo o intercambiarlo. Toca una celda + para añadir vocabulario. Las posiciones bloqueadas muestran 🔒.",
     "predictionConfidence": "Confianza {percent} %",
     "symbolConfidence": "Pictograma · {percent} %"
   },
@@ -622,7 +622,7 @@
     "lockPosition": "Bloquear posición (plan motor)",
     "hideFromCommunicator": "Ocultar en la vista de la persona comunicadora",
     "done": "Listo",
-    "emptyCell": "Celda vacía, fila {row}, columna {column}. Suelta un botón aquí o haz clic para añadir uno.",
+    "emptyCell": "Celda vacía, fila {row}, columna {column}. Toca o haz clic para añadir un botón, o para mover aquí el botón seleccionado.",
     "moveSection": "Mover este botón",
     "moveStart": "Mover: luego toca el destino",
     "moveCancel": "Cancelar movimiento",

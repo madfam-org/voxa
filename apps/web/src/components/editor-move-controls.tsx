@@ -13,13 +13,11 @@ import { brand, neutral, surface } from '@/lib/tokens';
  */
 export function ButtonMoveControls({
   moving,
-  canMove,
   onStartMove,
   onCancelMove,
   onMoveBy,
 }: {
   moving: boolean;
-  canMove: boolean;
   onStartMove: () => void;
   onCancelMove: () => void;
   onMoveBy: (rows: number, columns: number) => void;
@@ -30,23 +28,22 @@ export function ButtonMoveControls({
       <button
         type="button"
         onClick={moving ? onCancelMove : onStartMove}
-        disabled={!canMove}
         aria-pressed={moving}
         style={{ ...moveBtn, width: '100%', marginBottom: 8, background: moving ? brand.primary : surface.overlay }}
       >
         {moving ? t('moveCancel') : t('moveStart')}
       </button>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
-        <button type="button" style={moveBtn} disabled={!canMove} onClick={() => onMoveBy(-1, 0)} aria-label={t('moveUp')}>
+        <button type="button" style={moveBtn} onClick={() => onMoveBy(-1, 0)} aria-label={t('moveUp')}>
           ↑
         </button>
-        <button type="button" style={moveBtn} disabled={!canMove} onClick={() => onMoveBy(1, 0)} aria-label={t('moveDown')}>
+        <button type="button" style={moveBtn} onClick={() => onMoveBy(1, 0)} aria-label={t('moveDown')}>
           ↓
         </button>
-        <button type="button" style={moveBtn} disabled={!canMove} onClick={() => onMoveBy(0, -1)} aria-label={t('moveLeft')}>
+        <button type="button" style={moveBtn} onClick={() => onMoveBy(0, -1)} aria-label={t('moveLeft')}>
           ←
         </button>
-        <button type="button" style={moveBtn} disabled={!canMove} onClick={() => onMoveBy(0, 1)} aria-label={t('moveRight')}>
+        <button type="button" style={moveBtn} onClick={() => onMoveBy(0, 1)} aria-label={t('moveRight')}>
           →
         </button>
       </div>
