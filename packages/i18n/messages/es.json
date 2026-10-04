@@ -11,7 +11,8 @@
     "save": "Guardar",
     "settings": "Ajustes",
     "loading": "Cargando…",
-    "trySaying": "Prueba decir"
+    "trySaying": "Prueba decir",
+    "symbolCredit": "Pictogramas: <symbols>Mulberry Symbols</symbols> © Steve Lee (mulberrysymbols.org), licencia <license>CC BY-SA 4.0</license>."
   },
   "language": {
     "label": "Idioma de la interfaz",
@@ -160,7 +161,7 @@
     "scenes": {
       "communicate": {
         "name": "Vocabulario núcleo",
-        "description": "Cuadrícula CAA clásica — pictogramas ARASAAC, colores Fitzgerald, barra de frases"
+        "description": "Cuadrícula CAA clásica — pictogramas Mulberry, colores Fitzgerald, barra de frases"
       },
       "literacy": {
         "name": "Teclado de alfabetización",

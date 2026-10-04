@@ -6,10 +6,29 @@ import {
   type BoardButton,
   type PartOfSpeechTag,
 } from './index.js';
+import { coreSymbolFields } from './core-symbols.js';
+import { localizeBoardContent, type StarterContentLocale } from './demo-locale.js';
 import { createLiteracyKeyboardBoard } from './literacy-keyboard.js';
 import { createVisualScheduleBoard } from './visual-schedule.js';
 
 export type StarterTemplateId = 'core-47' | 'core-100' | 'literacy-keyboard' | 'visual-schedule';
+
+export {
+  isStarterContentLocale,
+  STARTER_CONTENT_LOCALES,
+  type StarterContentLocale,
+} from './demo-locale.js';
+
+export interface StarterBoardOptions {
+  boardId?: string;
+  name?: string;
+  profileId?: string;
+  /**
+   * Content locale the template is produced in: labels, speech text and each
+   * button's `locale`. Defaults to `en-US` (the source vocabulary).
+   */
+  locale?: StarterContentLocale;
+}
 
 export interface StarterTemplateMeta {
   id: StarterTemplateId;
@@ -38,9 +57,9 @@ const CORE_47_WORDS: StarterWord[] = [
   { id: 'help', label: 'help', speech: 'help me', pos: 'verb', locked: true },
   { id: 'eat', label: 'eat', speech: 'eat', pos: 'verb', locked: true },
   { id: 'drink', label: 'drink', speech: 'drink', pos: 'verb', locked: true },
-  { id: 'yes', label: 'yes', speech: 'yes', pos: 'preposition', locked: true },
-  { id: 'no', label: 'no', speech: 'no', pos: 'preposition', locked: true },
-  { id: 'please', label: 'please', speech: 'please', pos: 'preposition', locked: true },
+  { id: 'yes', label: 'yes', speech: 'yes', pos: 'social', locked: true },
+  { id: 'no', label: 'no', speech: 'no', pos: 'social', locked: true },
+  { id: 'please', label: 'please', speech: 'please', pos: 'social', locked: true },
   { id: 'like', label: 'like', speech: 'like', pos: 'verb' },
   { id: 'dont', label: "don't", speech: "don't", pos: 'verb' },
   { id: 'different', label: 'different', speech: 'different', pos: 'adjective' },
@@ -59,8 +78,8 @@ const CORE_47_WORDS: StarterWord[] = [
   { id: 'feel', label: 'feel', speech: 'feel', pos: 'verb' },
   { id: 'good', label: 'good', speech: 'good', pos: 'adjective' },
   { id: 'bad', label: 'bad', speech: 'bad', pos: 'adjective' },
-  { id: 'sorry', label: 'sorry', speech: 'sorry', pos: 'adjective' },
-  { id: 'thank-you', label: 'thank you', speech: 'thank you', pos: 'preposition' },
+  { id: 'sorry', label: 'sorry', speech: 'sorry', pos: 'social' },
+  { id: 'thank-you', label: 'thank you', speech: 'thank you', pos: 'social' },
   { id: 'me', label: 'me', speech: 'me', pos: 'pronoun' },
   { id: 'my', label: 'my', speech: 'my', pos: 'pronoun' },
   { id: 'it', label: 'it', speech: 'it', pos: 'pronoun' },
@@ -184,6 +203,7 @@ function wordToButton(word: StarterWord, row: number, column: number): BoardButt
     id: createButtonId(word.id),
     label: word.label,
     speechText: word.speech ?? word.label,
+    ...coreSymbolFields(word.id),
     locale: 'en-US',
     position: { row, column },
     locked: word.locked ?? false,
@@ -200,16 +220,25 @@ function layoutStarterWords(words: StarterWord[], rows: number, columns: number)
 
 export function createStarterBoard(
   templateId: StarterTemplateId,
-  options?: { boardId?: string; name?: string; profileId?: string },
+  options?: StarterBoardOptions,
 ): Board {
+  const locale = options?.locale ?? 'en-US';
   if (templateId === 'literacy-keyboard') {
-    return createLiteracyKeyboardBoard(options);
+    return createLiteracyKeyboardBoard({ ...options, locale });
   }
   if (templateId === 'visual-schedule') {
-    return createVisualScheduleBoard(options);
+    return localizeBoardContent(createVisualScheduleBoard(options), locale);
   }
 
   const layout = TEMPLATE_LAYOUT[templateId];
+  return localizeBoardContent(createCoreBoard(templateId, layout, options), locale);
+}
+
+function createCoreBoard(
+  templateId: Extract<StarterTemplateId, 'core-47' | 'core-100'>,
+  layout: { rows: number; columns: number; words: StarterWord[] },
+  options?: StarterBoardOptions,
+): Board {
   return {
     id: createBoardId(options?.boardId ?? `starter-${templateId}`),
     name: options?.name ?? (templateId === 'core-47' ? 'Core 47 Starter' : 'Core 100 Starter'),

@@ -6,6 +6,7 @@ const FITZGERALD_HEX: Record<PartOfSpeechTag, string> = {
   pronoun: '#eab308',
   noun: '#ea580c',
   preposition: '#db2777',
+  social: '#db2777',
   conjunction: '#ffffff',
 };
 
@@ -44,6 +45,11 @@ const LABEL_POS: Record<string, PartOfSpeechTag> = {
   with: 'preposition',
   to: 'preposition',
   for: 'preposition',
+  yes: 'social',
+  no: 'social',
+  please: 'social',
+  thanks: 'social',
+  sorry: 'social',
   and: 'conjunction',
   or: 'conjunction',
   but: 'conjunction',

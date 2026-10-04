@@ -117,5 +117,5 @@ function downloadBlobFile(filename: string, blob: Blob) {
 }
 
 export function posOptions(): PartOfSpeechTag[] {
-  return ['pronoun', 'verb', 'noun', 'adjective', 'preposition', 'conjunction'];
+  return ['pronoun', 'verb', 'noun', 'adjective', 'preposition', 'social', 'conjunction'];
 }

@@ -16,17 +16,23 @@ describe('demo experience boards', () => {
     );
   });
 
-  it('adds ARASAAC symbols to core demo words', () => {
+  it('adds allow-mapped Mulberry symbols to core demo words and leaves the rest label-only', () => {
     const board = createDemoCoreBoard();
     assert.equal(board.grid.rows, 6);
     const want = board.grid.buttons.find((button) => button.kind === 'analytic' && button.id === 'want');
-    assert.ok(want && 'symbolUrl' in want && want.symbolUrl?.includes('5441'));
-    const help = board.grid.buttons.find((button) => button.kind === 'analytic' && button.id === 'help');
-    assert.ok(help && 'symbolUrl' in help && help.symbolUrl?.includes('4570'));
-    const withSymbols = board.grid.buttons.filter(
-      (button) => button.kind === 'analytic' && 'symbolUrl' in button && button.symbolUrl,
-    );
-    assert.equal(withSymbols.length, 47);
+    assert.equal(want?.symbolUrl, '/symbols/mulberry/want.svg');
+    assert.deepEqual(want?.symbolRef, { provider: 'mulberry', slug: 'want' });
+    const i = board.grid.buttons.find((button) => button.kind === 'analytic' && button.id === 'i');
+    assert.ok(i && !i.symbolUrl && !i.symbolRef);
+    const withSymbols = board.grid.buttons.filter((button) => button.symbolUrl);
+    assert.equal(withSymbols.length, 23);
+  });
+
+  it('localizes the core demo board for es (Spanish labels, es-MX locale)', () => {
+    const board = boardForDemoScene('communicate', 'es');
+    assert.ok(board.grid.buttons.every((button) => button.locale === 'es-MX'));
+    const i = board.grid.buttons.find((button) => button.id === 'i');
+    assert.equal(i?.kind === 'analytic' ? i.label : undefined, 'yo');
   });
 
   it('builds compact access preview grid', () => {

@@ -1,7 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import type { BoardButton, BoardDisplayPreferences, PartOfSpeechTag, StarterTemplateId, TeamRole } from '@voxa/core';
 import {
@@ -47,6 +47,9 @@ import {
 } from '@/lib/editor-pin';
 import { logButtonActivation } from '@/lib/log-activation';
 import { speakButton, speakText, subscribeSpeechActivity } from '@/lib/play-button-speech';
+import { presentBoardForDisplay } from '@/lib/board-presentation';
+import { speakWholeMessage, speechLocaleForBoard } from '@/lib/utterance-speech';
+import { SymbolCredit } from '@/components/symbol-credit';
 import { PredictionStrip } from '@/components/prediction-strip';
 import { SymbolSearchPanel } from '@/components/symbol-search-panel';
 import { SettingsPanel } from '@/components/settings-panel';
@@ -87,6 +90,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
   const tc = useTranslations('common');
   const tcx = useTranslations('communicator');
   const tn = useTranslations('nav');
+  const uiLocale = useLocale();
   const remoteEditor = mode === 'remote-editor';
   const [role, setRole] = useState<TeamRole>(remoteEditor ? 'editor' : 'communicator');
   const [utterance, setUtterance] = useState<string[]>([]);
@@ -155,7 +159,13 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
     setCompletedStepIds(new Set());
   }, [boardId]);
 
-  const sorted = [...board.grid.buttons].sort(
+  const viewBoard = useMemo(
+    () => presentBoardForDisplay(board, { boardId, isEditor, uiLocale }),
+    [board, boardId, isEditor, uiLocale],
+  );
+  const speechLocale = speechLocaleForBoard(viewBoard, uiLocale);
+
+  const sorted = [...viewBoard.grid.buttons].sort(
     (a, b) => a.position.row - b.position.row || a.position.column - b.position.column,
   );
 
@@ -216,7 +226,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
       if (literacyMode && btn.kind === 'analytic' && btn.keyboardRole) {
         if (isKeyboardSpeakButton(btn)) {
           const text = formatKeyboardUtterance(utterance);
-          if (text && !settings.whisperMode) speakText(text);
+          if (text && !settings.whisperMode) speakText(text, speechLocale);
           return;
         }
         const result = applyKeyboardActivation(utterance, btn);
@@ -261,6 +271,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
       resolveActivationSpeech,
       setBoardId,
       settings.whisperMode,
+      speechLocale,
     ],
   );
 
@@ -268,9 +279,9 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
     (text: string) => {
       const words = text.trim() ? text.trim().split(/\s+/).filter(Boolean) : [];
       setUtterance(words);
-      if (!settings.whisperMode) speakText(text);
+      if (!settings.whisperMode) speakText(text, speechLocale);
     },
-    [settings.whisperMode],
+    [settings.whisperMode, speechLocale],
   );
 
   const switchScanEnabled = settings.accessMode === 'switch' && !isEditor;
@@ -315,10 +326,8 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
     settings.gazeSource === 'tobii-bridge' ? bridgeDwellProgress : pointerDwellProgress;
 
   const speakAll = useCallback(() => {
-    const text = literacyMode ? formatKeyboardUtterance(utterance) : utterance.join(' ');
-    if (!text) return;
-    speakText(text);
-  }, [literacyMode, utterance]);
+    speakWholeMessage(viewBoard, utterance, uiLocale);
+  }, [viewBoard, utterance, uiLocale]);
 
   const handleImport = useCallback(
     async (raw: string) => {
@@ -425,13 +434,13 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
     if (!name?.trim()) return;
     setBusy(true);
     try {
-      await createBoard(name.trim(), newBoardTemplate || undefined);
+      await createBoard(name.trim(), newBoardTemplate || undefined, settings.contentLocale);
     } catch (err) {
       alert((err as Error).message);
     } finally {
       setBusy(false);
     }
-  }, [createBoard, newBoardTemplate]);
+  }, [createBoard, newBoardTemplate, settings.contentLocale]);
 
   const handleRenameBoard = useCallback(async () => {
     const name = window.prompt('Board name', board.name);
@@ -1224,6 +1233,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
         <Link href="/legal/accessibility" style={{ color: brand.link }}>
           {tn('accessibility')}
         </Link>
+        <SymbolCredit buttons={visibleButtons} hidden={literacyDisplay.hideSymbols} />
       </footer>
     </div>
   );

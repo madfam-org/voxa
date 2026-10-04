@@ -64,11 +64,21 @@ export class VoxaClient {
     return body.boards;
   }
 
-  async createBoard(board: Board, templateId?: StarterTemplateId): Promise<BoardUpdateResult> {
+  /**
+   * Create a board. With `templateId` the server builds the starter template
+   * in `contentLocale` (es-MX, en-US or fr-FR; the server defaults to es-MX).
+   */
+  async createBoard(
+    board: Board,
+    templateId?: StarterTemplateId,
+    contentLocale?: string,
+  ): Promise<BoardUpdateResult> {
     const res = await fetch(this.url('/v1/boards'), {
       method: 'POST',
       headers: teamHeaders(this.options),
-      body: JSON.stringify(templateId ? { ...board, templateId } : board),
+      body: JSON.stringify(
+        templateId ? { ...board, templateId, ...(contentLocale ? { contentLocale } : {}) } : board,
+      ),
     });
     if (!res.ok) {
       await throwApiError(res, 'Create failed');

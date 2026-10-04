@@ -23,6 +23,8 @@ import { SiteFooter, SiteNav } from '@/components/site-chrome';
 import { TouchGuardOverlay } from '@/components/touch-guard-overlay';
 import { VisualScheduleView } from '@/components/visual-schedule-view';
 import { useSwitchScan } from '@/hooks/use-switch-scan';
+import { SymbolCredit } from '@/components/symbol-credit';
+import { speakWholeMessage } from '@/lib/utterance-speech';
 import { brand, classic, neutral, status, stone, surface } from '@/lib/tokens';
 
 const DEMO_SCENE_IDS: DemoSceneId[] = ['communicate', 'literacy', 'schedule', 'access'];
@@ -152,9 +154,7 @@ export function DemoBoardScreen(): React.ReactNode {
   );
 
   const speakAll = () => {
-    const text = literacyMode ? formatKeyboardUtterance(utterance) : utterance.join(' ');
-    if (!text || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-    window.speechSynthesis.speak(new SpeechSynthesisUtterance(text));
+    speakWholeMessage(board, utterance, locale);
   };
 
   const themeKey = scene === 'communicate' ? 'classic-light' : 'cvi-dark';
@@ -403,6 +403,16 @@ export function DemoBoardScreen(): React.ReactNode {
             )}
           </div>
         </main>
+        <SymbolCredit
+          buttons={sorted}
+          block
+          style={{
+            margin: 0,
+            padding: '6px 16px',
+            fontSize: '0.75rem',
+            color: classicScene ? classic.textMutedStrong : neutral.muted,
+          }}
+        />
       </div>
 
       <section style={ctaSectionStyle}>

@@ -5,13 +5,18 @@ export type ProfileId = string & { readonly __brand: 'ProfileId' };
 
 export type LocaleCode = string;
 
-/** Modified Fitzgerald Key part-of-speech tag for button styling */
+/**
+ * Modified Fitzgerald Key part-of-speech tag for button styling. `social`
+ * covers social words and interjections (yes, no, please, thank you, sorry);
+ * it shares the pink of the key's "Preposition / Social" row.
+ */
 export type PartOfSpeechTag =
   | 'adjective'
   | 'verb'
   | 'pronoun'
   | 'noun'
   | 'preposition'
+  | 'social'
   | 'conjunction';
 
 /** Team roles for collaborative board editing */
@@ -217,7 +222,24 @@ export {
   type DemoSceneId,
   type DemoSceneMeta,
 } from './demo-experience.js';
-export type { DemoUiLocale } from './demo-locale.js';
+export {
+  boardContentLocale,
+  demoContentLocale,
+  isStarterContentLocale,
+  localizeBoardContent,
+  localizeDemoBoard,
+  STARTER_CONTENT_LOCALES,
+  type DemoUiLocale,
+  type StarterContentLocale,
+} from './demo-locale.js';
+export {
+  applyCoreSymbols,
+  CORE_SYMBOL_ALLOW_MAP,
+  coreSymbolFields,
+  MULBERRY_SYMBOL_BASE,
+  mulberrySymbolUrl,
+  type CoreSymbolEntry,
+} from './core-symbols.js';
 export type {
   ArasaacHairColor,
   ArasaacSkinTone,
@@ -229,6 +251,7 @@ export type {
 export {
   createStarterBoard,
   listStarterTemplates,
+  type StarterBoardOptions,
   type StarterTemplateId,
   type StarterTemplateMeta,
 } from './starter-boards.js';

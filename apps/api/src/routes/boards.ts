@@ -1,5 +1,12 @@
 import { Hono } from 'hono';
-import { createBoardId, createStarterBoard, listStarterTemplates, type Board, type StarterTemplateId } from '@voxa/core';
+import {
+  createBoardId,
+  createStarterBoard,
+  isStarterContentLocale,
+  listStarterTemplates,
+  type Board,
+  type StarterTemplateId,
+} from '@voxa/core';
 import { canAccessBoard, canEditBoard } from '../lib/board-access.js';
 import { maxBoardCount, resolveEntitlement } from '../lib/dhanam.js';
 import { requireEditor } from '../middleware/team-auth.js';
@@ -62,8 +69,13 @@ boardRoutes.post('/', async (c) => {
     return c.json({ error: 'Editor role required' }, 403);
   }
 
-  const body = (await c.req.json()) as Board & { templateId?: StarterTemplateId };
+  const body = (await c.req.json()) as Board & { templateId?: StarterTemplateId; contentLocale?: unknown };
   const { userId, orgId } = c.get('team');
+  if (body.templateId && body.contentLocale !== undefined && !isStarterContentLocale(body.contentLocale)) {
+    return c.json({ error: 'contentLocale must be one of es-MX, en-US, fr-FR' }, 400);
+  }
+  // Spanish-first: a template request without a locale is built in es-MX.
+  const contentLocale = isStarterContentLocale(body.contentLocale) ? body.contentLocale : 'es-MX';
 
   const entitlement = await resolveEntitlement(userId);
   const owned = (await getStore().listBoards()).filter(
@@ -79,6 +91,7 @@ boardRoutes.post('/', async (c) => {
           boardId: body.id as string,
           name: body.name,
           profileId: body.profileId as string,
+          locale: contentLocale,
         }),
         ownerUserId: userId,
         orgId: orgId ?? body.orgId,
