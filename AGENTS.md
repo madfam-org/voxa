@@ -200,7 +200,7 @@ pnpm build
     `apps/web/src/lib/play-button-speech.test.ts` and
     `e2e/specs/voice-choice.spec.ts`.
 
-11. **Board writes are compare-and-set; reads are scoped.** The PostgreSQL
+12. **Board writes are compare-and-set; reads are scoped.** The PostgreSQL
     store reads one board by id, applies the change, and updates the row only
     `WHERE id = $1 AND version = $2`, with the sync event in the same
     transaction: of two writers on one version exactly one wins and the other
@@ -220,12 +220,13 @@ pnpm build
     `WHERE`) on a request path. Tested in `src/store/pg-board-store.pg.test.ts`
     (a test-only SQL observer in `src/db/client.ts` sees query text, never
     parameters).
-12. **Request limits and media checks.** On `/v1/*`: a per-address limit
+13. **Request limits and media checks.** On `/v1/*`: a per-address limit
     (`CF-Connecting-IP`, else the socket peer; never `X-Forwarded-For`) runs
     before `teamAuth`, a per-user limit after it, both in memory per replica
     with pruned, bounded buckets; body ceilings (`src/middleware/body-limit.ts`:
-    1 MB JSON, media and archive imports at their maxima plus 1 MB, OBF 10 MB)
-    answer 413 `PAYLOAD_TOO_LARGE` without buffering past the limit. Uploads
+    1 MB JSON, media uploads at their maximum plus 1 MB, an outer 51 MB
+    ceiling on `POST /v1/boards/import/:format`, whose own 30 MB limit answers
+    400 `ARCHIVE_TOO_LARGE`) answer 413 `PAYLOAD_TOO_LARGE` without buffering past the limit. Uploads
     must match their declared type by magic bytes (`src/lib/media-sniff.ts`,
     415 `MEDIA_TYPE_MISMATCH`), count against `MEDIA_QUOTA_BYTES_PER_USER`
     (default 500 MB, 413 `MEDIA_QUOTA_EXCEEDED`, summed from `size_bytes`
@@ -233,7 +234,7 @@ pnpm build
     `Content-Disposition: inline`. Tested in `src/middleware/rate-limit.test.ts`,
     `src/middleware/body-limit.test.ts` and
     `src/routes/media-hardening.routes.test.ts`.
-13. **Co-editing across replicas needs Redis, and degrades loudly.** With
+14. **Co-editing across replicas needs Redis, and degrades loudly.** With
     `REDIS_URL` reachable the sync hub relays board events between replicas and
     counts presence globally (`syncHub: "redis"`). Without it, or with Redis
     down, it serves locally, keeps reconnecting, and `/health/ready` stays 200

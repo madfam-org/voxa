@@ -194,7 +194,7 @@ Production runs two API replicas. WebSocket clients connect to either, so board 
 | `RATE_LIMIT_PER_MINUTE` | `120` | Per verified user id, counted after authentication. |
 | `MEDIA_QUOTA_BYTES_PER_USER` | `524288000` (500 MB) | Total uploaded media per user; summed from stored sizes, 413 `MEDIA_QUOTA_EXCEEDED` past it. |
 
-Both rate limits are in memory and per replica (two replicas allow up to twice the rate); they are abuse ceilings, not quotas. Body ceilings (413 `PAYLOAD_TOO_LARGE`, checked from `Content-Length` before reading, or cut off at the limit for chunked bodies): 1 MB for JSON; 51 MB for `POST /v1/media` (largest type, video, 50 MB); 51 MB for archive imports (`obz`, `gridset`, `snap`, `touchchat`); 10 MB for `import/obf`. Uploads must match their declared type by magic bytes (415 `MEDIA_TYPE_MISMATCH`), and media is served with `X-Content-Type-Options: nosniff` and `Content-Disposition: inline`.
+Both rate limits are in memory and per replica (two replicas allow up to twice the rate); they are abuse ceilings, not quotas. Body ceilings (413 `PAYLOAD_TOO_LARGE`, checked from `Content-Length` before reading, or cut off at the limit for chunked bodies): 1 MB for JSON; 51 MB for `POST /v1/media` (largest type, video, 50 MB); an outer 51 MB for `POST /v1/boards/import/:format` (the route itself refuses more than 30 MB with 400 `ARCHIVE_TOO_LARGE`). Uploads must match their declared type by magic bytes (415 `MEDIA_TYPE_MISMATCH`), and media is served with `X-Content-Type-Options: nosniff` and `Content-Disposition: inline`.
 
 ### How the API reaches Postgres
 
