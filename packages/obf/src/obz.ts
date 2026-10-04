@@ -1,142 +1,95 @@
-import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate';
-import type { Board, BoardButton } from '@voxa/core';
+import { strFromU8, strToU8, zipSync } from 'fflate';
+import type { Board } from '@voxa/core';
+import { voxaBoardToObfWithSources, serializeObf, type ExportSoundSource, type ObfExportOptions } from './export.js';
 import { extensionForContentType, type ExportImageSource } from './images.js';
-import {
-  obfToVoxaButtons,
-  parseObfJson,
-  serializeObf,
-  voxaBoardToObfWithSources,
-  type ObfBoard,
-  type ObfExportOptions,
-} from './index.js';
+import { parseObfJson, type ObfBoardSet, type ObfSetBoard } from './import.js';
+import { decodeBase64 } from './media-bytes.js';
+import { OBF_FORMAT, ObfImportError, type ObzManifest } from './spec.js';
+import { referencedArchivePath, safeUnzip, type ZipLimits } from './zip.js';
 
-const BOARD_ENTRY = 'board.json';
+const MANIFEST = 'manifest.json';
+/** Entry name used by .obz files of earlier Voxa versions (no manifest). */
+const LEGACY_BOARD_ENTRY = 'board.json';
 
-export interface ObzUnpackResult {
-  board: ObfBoard;
-  images: Map<string, Uint8Array>;
-  warnings: string[];
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-function normalizeZipPath(path: string): string {
-  return path.replace(/^\/+/, '').replace(/\\/g, '/');
-}
-
-function mimeFromPath(path: string): string {
-  const lower = path.toLowerCase();
-  if (lower.endsWith('.png')) return 'image/png';
-  if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg';
-  if (lower.endsWith('.gif')) return 'image/gif';
-  if (lower.endsWith('.webp')) return 'image/webp';
-  if (lower.endsWith('.svg')) return 'image/svg+xml';
-  return 'application/octet-stream';
-}
-
-function uint8ToBase64(bytes: Uint8Array): string {
-  if (typeof Buffer !== 'undefined') return Buffer.from(bytes).toString('base64');
-  let binary = '';
-  const chunk = 0x8000;
-  for (let i = 0; i < bytes.length; i += chunk) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+function stringMap(value: unknown): Record<string, string> | undefined {
+  if (!isRecord(value)) return undefined;
+  const out: Record<string, string> = {};
+  for (const [key, path] of Object.entries(value)) {
+    if (typeof path === 'string') out[key] = path;
   }
-  return btoa(binary);
+  return out;
 }
 
-function bytesToDataUrl(path: string, bytes: Uint8Array): string {
-  return `data:${mimeFromPath(path)};base64,${uint8ToBase64(bytes)}`;
-}
-
-function decodeDataUrl(url: string): Uint8Array | null {
-  const match = /^data:([^;]+);base64,(.+)$/.exec(url);
-  if (!match?.[2]) return null;
-  const base64 = match[2];
-  if (typeof Buffer !== 'undefined') {
-    return new Uint8Array(Buffer.from(base64, 'base64'));
+function readJsonFile(files: Map<string, Uint8Array>, path: string): string {
+  const safe = referencedArchivePath(path);
+  const bytes = safe ? files.get(safe) : undefined;
+  if (!bytes) {
+    throw new ObfImportError(`Invalid OBZ archive: ${path.slice(0, 80)} is listed but not in the package.`, 'INVALID_OBZ');
   }
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
-  return bytes;
+  return strFromU8(bytes);
 }
 
-export function packObz(boardJson: string, images: Record<string, Uint8Array>): Uint8Array {
-  const files: Record<string, Uint8Array> = {
-    [BOARD_ENTRY]: strToU8(boardJson),
-  };
-  for (const [path, bytes] of Object.entries(images)) {
-    files[normalizeZipPath(path)] = bytes;
-  }
-  return zipSync(files);
-}
-
-export function unpackObz(bytes: Uint8Array): ObzUnpackResult {
+/**
+ * Read an .obz package: `manifest.json` (`format`, `root`, `paths.boards`,
+ * `paths.images`, `paths.sounds`) and every board it lists, with the package
+ * files so images and sounds referenced by `path` can be resolved. Packages
+ * from earlier Voxa versions (a single `board.json`, no manifest) are still
+ * accepted. Unsafe archives are rejected by {@link safeUnzip}.
+ */
+export function unpackObz(bytes: Uint8Array, limits: Partial<ZipLimits> = {}): ObfBoardSet {
+  const files = safeUnzip(bytes, limits);
   const warnings: string[] = [];
-  const entries = unzipSync(bytes);
-  const normalized = new Map<string, Uint8Array>();
-  for (const [path, data] of Object.entries(entries)) {
-    normalized.set(normalizeZipPath(path), data);
-  }
 
-  let boardJson: string | undefined;
-  if (normalized.has(BOARD_ENTRY)) {
-    boardJson = strFromU8(normalized.get(BOARD_ENTRY)!);
-  } else {
-    const jsonPath = [...normalized.keys()].find((path) => path.endsWith('.json') && !path.includes('/'));
-    if (jsonPath) {
-      boardJson = strFromU8(normalized.get(jsonPath)!);
-      warnings.push(`Using ${jsonPath} as board manifest (expected ${BOARD_ENTRY}).`);
+  if (files.has(MANIFEST)) {
+    let manifest: unknown;
+    try {
+      manifest = JSON.parse(strFromU8(files.get(MANIFEST)!).replace(/^﻿/, ''));
+    } catch {
+      throw new ObfImportError('Invalid OBZ archive: manifest.json is not valid JSON.', 'INVALID_OBZ');
     }
-  }
-
-  if (!boardJson) {
-    throw new Error('Invalid OBZ archive: missing board.json');
-  }
-
-  const { board, warnings: parseWarnings } = parseObfJson(boardJson);
-  warnings.push(...parseWarnings);
-
-  const images = new Map<string, Uint8Array>();
-  for (const [path, data] of normalized.entries()) {
-    if (path === BOARD_ENTRY || path.endsWith('.json')) continue;
-    images.set(path, data);
-  }
-
-  return { board, images, warnings };
-}
-
-export function resolveObfImageUrl(
-  imageId: string | undefined,
-  images: Map<string, Uint8Array>,
-): string | undefined {
-  if (!imageId) return undefined;
-  if (imageId.startsWith('http://') || imageId.startsWith('https://') || imageId.startsWith('data:')) {
-    return imageId;
-  }
-
-  const path = normalizeZipPath(imageId);
-  const bytes = images.get(path) ?? images.get(`images/${path}`);
-  if (!bytes) return imageId;
-  return bytesToDataUrl(path, bytes);
-}
-
-export function obfToVoxaButtonsWithImages(obf: ObfBoard, images: Map<string, Uint8Array>): BoardButton[] {
-  const buttons = obfToVoxaButtons(obf);
-  return buttons.map((btn, index) => {
-    const obfBtn = obf.buttons[index];
-    const entry = obfBtn?.image_id ? obf.images?.find((image) => image.id === obfBtn.image_id) : undefined;
-    let symbolUrl: string | undefined;
-    if (entry) {
-      const fromArchive = entry.path ? resolveObfImageUrl(entry.path, images) : undefined;
-      symbolUrl =
-        fromArchive && fromArchive !== entry.path ? fromArchive : (entry.data ?? entry.url ?? fromArchive);
-    } else {
-      symbolUrl = resolveObfImageUrl(obfBtn?.image_id, images);
+    if (!isRecord(manifest) || typeof manifest.root !== 'string' || !isRecord(manifest.paths)) {
+      throw new ObfImportError('Invalid OBZ archive: manifest.json needs root and paths.', 'INVALID_OBZ');
     }
-    return symbolUrl ? { ...btn, symbolUrl } : btn;
-  });
+    const boardPaths = stringMap(manifest.paths.boards) ?? {};
+    const root = referencedArchivePath(manifest.root);
+    if (!root) throw new ObfImportError('Invalid OBZ archive: manifest root is not a safe path.', 'ZIP_SLIP');
+
+    const paths = [...new Set([root, ...Object.values(boardPaths).map((path) => referencedArchivePath(path) ?? path)])];
+    const boards: ObfSetBoard[] = [];
+    let rootId: string | undefined;
+    for (const path of paths) {
+      const parsed = parseObfJson(readJsonFile(files, path));
+      warnings.push(...parsed.warnings.map((warning) => `${path}: ${warning}`));
+      boards.push({ board: parsed.board, legacy: parsed.legacy, path });
+      if (path === root) rootId = parsed.board.id;
+    }
+    return {
+      boards,
+      rootId: rootId ?? boards[0]!.board.id,
+      files,
+      imagePaths: stringMap(manifest.paths.images),
+      soundPaths: stringMap(manifest.paths.sounds),
+      warnings,
+    };
+  }
+
+  // Earlier Voxa packages: board.json (or a single top-level .json/.obf) plus images/.
+  const legacyPath =
+    (files.has(LEGACY_BOARD_ENTRY) ? LEGACY_BOARD_ENTRY : undefined) ??
+    [...files.keys()].find((path) => /\.(json|obf)$/i.test(path) && !path.includes('/'));
+  if (!legacyPath) {
+    throw new ObfImportError('Invalid OBZ archive: missing manifest.json.', 'INVALID_OBZ');
+  }
+  const parsed = parseObfJson(strFromU8(files.get(legacyPath)!));
+  warnings.push(...parsed.warnings);
+  return { boards: [{ board: parsed.board, legacy: parsed.legacy, path: legacyPath }], rootId: parsed.board.id, files, warnings };
 }
 
-/** Bytes for an image the archive should embed. */
+/** Bytes of a picture or sound the package should embed. */
 export interface ObzLoadedImage {
   bytes: Uint8Array;
   contentType: string;
@@ -148,44 +101,121 @@ export interface ObzLoadedImage {
  * Voxa never fetches arbitrary third-party URLs while exporting.
  */
 export type ObzImageLoader = (source: ExportImageSource) => Promise<ObzLoadedImage | null>;
+/** Loads the bytes of a recording uploaded to this API, or `null`. */
+export type ObzSoundLoader = (source: ExportSoundSource) => Promise<ObzLoadedImage | null>;
 
 export interface ObzExportOptions extends ObfExportOptions {
   loadImage?: ObzImageLoader;
+  loadSound?: ObzSoundLoader;
+}
+
+function decodeDataUrl(url: string): { bytes: Uint8Array; contentType: string } | null {
+  const match = /^data:([^;,]+);base64,(.+)$/s.exec(url);
+  if (!match) return null;
+  const bytes = decodeBase64(match[2]!);
+  return bytes ? { bytes, contentType: match[1]!.toLowerCase() } : null;
+}
+
+function soundExtension(contentType: string): string {
+  const subtype = contentType.split('/')[1] ?? 'bin';
+  return subtype === 'mpeg' ? 'mp3' : subtype.replace(/[^a-z0-9]/gi, '').slice(0, 8) || 'bin';
+}
+
+function safeFileStem(id: string, index: number): string {
+  const stem = id.replace(/[^A-Za-z0-9_-]/g, '_').slice(0, 80);
+  return stem || `board-${index + 1}`;
 }
 
 /**
- * Build an .obz archive. Embeds only Mulberry SVGs and user-supplied images
- * (inline data: URLs, or uploads via `loadImage`), each as an `images[]` entry
- * with a `path`; Mulberry entries carry their OBF `license`. Other URLs are
- * referenced, not fetched.
+ * Build a spec .obz package of one or more boards: `manifest.json`,
+ * `boards/<id>.obf` (spec OBF 0.1, links between included boards carry
+ * `load_board.path`), and embedded media under `images/` and `sounds/`.
+ * Embeds only Mulberry SVGs (with their CC BY-SA licence object) and media the
+ * user supplied (inline `data:` URLs, or uploads read through the loaders);
+ * any other URL stays a reference and is never fetched.
  */
-export async function voxaBoardToObz(board: Board, options: ObzExportOptions = {}): Promise<Uint8Array> {
-  const { board: obf, sources } = voxaBoardToObfWithSources(board, options);
+export async function voxaBoardsToObz(
+  boards: Board[],
+  rootBoardId: string,
+  options: ObzExportOptions = {},
+): Promise<Uint8Array> {
   const files: Record<string, Uint8Array> = {};
+  const boardPaths = new Map<string, string>();
+  const boardNames = new Map<string, string>();
+  boards.forEach((board, index) => {
+    boardPaths.set(board.id as string, `boards/${safeFileStem(board.id as string, index)}.obf`);
+    boardNames.set(board.id as string, board.name);
+  });
+  const manifest: ObzManifest = {
+    format: OBF_FORMAT,
+    root: boardPaths.get(rootBoardId) ?? boardPaths.get(boards[0]!.id as string)!,
+    paths: { boards: {}, images: {}, sounds: {} },
+  };
 
-  for (const image of obf.images ?? []) {
-    const source = sources.get(image.id);
-    if (!source) continue;
+  let mediaCounter = 0;
+  for (const board of boards) {
+    const { board: obf, sources, soundSources } = voxaBoardToObfWithSources(board, {
+      ...options,
+      boardPaths,
+      boardNames: new Map([...boardNames, ...(options.boardNames ?? [])]),
+    });
 
-    let loaded: ObzLoadedImage | null = null;
-    if (source.kind === 'data') {
-      const bytes = decodeDataUrl(source.url);
-      loaded = bytes ? { bytes, contentType: source.contentType ?? 'image/png' } : null;
-    } else if ((source.kind === 'mulberry' || source.kind === 'media') && options.loadImage) {
-      loaded = await options.loadImage(source);
+    // Image and sound ids are global in manifest.paths: make them unique per package.
+    const imageIdMap = new Map<string, string>();
+    for (const image of obf.images) {
+      mediaCounter += 1;
+      const globalId = boards.length > 1 ? `${mediaCounter}-${image.id}` : image.id;
+      imageIdMap.set(image.id, globalId);
+      const source = sources.get(image.id);
+      image.id = globalId;
+      if (!source) continue;
+      let loaded: ObzLoadedImage | null = null;
+      if (source.kind === 'data') loaded = decodeDataUrl(source.url);
+      else if ((source.kind === 'mulberry' || source.kind === 'media') && options.loadImage) loaded = await options.loadImage(source);
+      if (!loaded) continue;
+      const path = `images/${globalId}.${extensionForContentType(loaded.contentType)}`;
+      files[path] = loaded.bytes;
+      image.path = path;
+      image.content_type = loaded.contentType;
+      delete image.data;
+      manifest.paths.images![globalId] = path;
     }
-    if (!loaded) continue;
 
-    const path = `images/${image.id}.${extensionForContentType(loaded.contentType)}`;
-    files[path] = loaded.bytes;
-    image.path = path;
-    image.content_type = loaded.contentType;
-    delete image.data;
+    const soundIdMap = new Map<string, string>();
+    for (const sound of obf.sounds) {
+      mediaCounter += 1;
+      const globalId = boards.length > 1 ? `${mediaCounter}-${sound.id}` : sound.id;
+      soundIdMap.set(sound.id, globalId);
+      const source = soundSources.get(sound.id);
+      sound.id = globalId;
+      if (!source) continue;
+      let loaded: ObzLoadedImage | null = null;
+      if (source.kind === 'data') loaded = decodeDataUrl(source.url);
+      else if (source.kind === 'media' && options.loadSound) loaded = await options.loadSound(source);
+      if (!loaded) continue;
+      const path = `sounds/${globalId}.${soundExtension(loaded.contentType)}`;
+      files[path] = loaded.bytes;
+      sound.path = path;
+      sound.content_type = loaded.contentType;
+      delete sound.data;
+      manifest.paths.sounds![globalId] = path;
+    }
+
+    for (const button of obf.buttons) {
+      if (button.image_id) button.image_id = imageIdMap.get(button.image_id) ?? button.image_id;
+      if (button.sound_id) button.sound_id = soundIdMap.get(button.sound_id) ?? button.sound_id;
+    }
+
+    const path = boardPaths.get(board.id as string)!;
+    manifest.paths.boards[obf.id] = path;
+    files[path] = strToU8(serializeObf(obf));
   }
 
-  return packObz(serializeObf(obf), files);
+  files[MANIFEST] = strToU8(JSON.stringify(manifest, null, 2));
+  return zipSync(files);
 }
 
-export function obzToVoxaButtons(result: ObzUnpackResult): BoardButton[] {
-  return obfToVoxaButtonsWithImages(result.board, result.images);
+/** .obz package of a single board. */
+export async function voxaBoardToObz(board: Board, options: ObzExportOptions = {}): Promise<Uint8Array> {
+  return voxaBoardsToObz([board], board.id as string, options);
 }

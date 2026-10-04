@@ -93,11 +93,12 @@ describe('OBF/OBZ export images', () => {
     };
 
     const files = unzipSync(await voxaBoardToObz(board, { loadImage, assetBaseUrl: 'https://voxa.example' }));
-    const obf = JSON.parse(strFromU8(files['board.json']!)) as ObfBoard;
+    const boardEntry = 'boards/demo-core.obf';
+    const obf = JSON.parse(strFromU8(files[boardEntry]!)) as ObfBoard;
 
     assert.deepEqual(fetched, []);
     assert.deepEqual(requested.sort(), ['media:photo-1', 'mulberry:EN/water.svg']);
-    assert.equal(strFromU8(files['board.json']!).includes('arasaac'), false);
+    assert.equal(strFromU8(files[boardEntry]!).includes('arasaac'), false);
 
     const mulberry = obf.images!.filter((image) => image.license);
     assert.equal(mulberry.length, 1, 'two buttons share one Mulberry image entry');
@@ -115,16 +116,24 @@ describe('OBF/OBZ export images', () => {
     assert.equal(external.path, undefined);
   });
 
-  it('OBZ round-trip restores embedded images on import', async () => {
-    const { unpackObz, obzToVoxaButtons } = await import('./index.js');
+  it('OBZ round-trip: Mulberry pictures come back as the local vendored path, never as uploads', async () => {
+    const { unpackObz, obfSetToVoxaBoards } = await import('./index.js');
     const board = boardWith({ symbolUrl: '/symbols/mulberry/EN/water.svg' });
     const archive = await voxaBoardToObz(board, {
+      assetBaseUrl: 'https://voxa.example',
       loadImage: async () => ({ bytes: SVG, contentType: 'image/svg+xml' }),
     });
-    const buttons = obzToVoxaButtons(unpackObz(archive));
-    const withImage = buttons.filter((btn) => btn.kind === 'analytic' && btn.symbolUrl);
+    const stored: string[] = [];
+    const { boards } = await obfSetToVoxaBoards(unpackObz(archive), {
+      newBoardId: () => 'copy',
+      storeMedia: async (media) => {
+        stored.push(media.contentType);
+        return undefined;
+      },
+    });
+    const withImage = boards[0]!.grid.buttons.filter((btn) => btn.symbolUrl);
     assert.equal(withImage.length, 1);
-    const first = withImage[0]!;
-    assert.match(first.kind === 'analytic' ? (first.symbolUrl ?? '') : '', /^data:image\/svg\+xml;base64,/);
+    assert.equal(withImage[0]!.symbolUrl, '/symbols/mulberry/EN/water.svg');
+    assert.deepEqual(stored, []);
   });
 });

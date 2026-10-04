@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/madfam-org/voxa/packages/obf/schema/obz-manifest-0.1.schema.json",
+  "title": "Open Board Format 0.1 package manifest (.obz manifest.json)",
+  "type": "object",
+  "required": [
+    "format",
+    "root",
+    "paths"
+  ],
+  "properties": {
+    "format": {
+      "type": "string",
+      "const": "open-board-0.1"
+    },
+    "root": {
+      "type": "string",
+      "minLength": 1
+    },
+    "paths": {
+      "type": "object",
+      "required": [
+        "boards"
+      ],
+      "properties": {
+        "boards": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "images": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "sounds": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "patternProperties": {
+        "^ext_": {}
+      },
+      "additionalProperties": false
+    }
+  },
+  "patternProperties": {
+    "^ext_": {}
+  },
+  "additionalProperties": false
+}

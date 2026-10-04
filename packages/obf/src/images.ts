@@ -8,32 +8,15 @@ import {
   resolveButtonSymbolUrl,
 } from '@voxa/symbols';
 
-/** OBF 3.x image licence object. */
-export interface ObfLicense {
-  type: string;
-  copyright_notice_url?: string;
-  source_url?: string;
-  author_name?: string;
-  author_url?: string;
-}
+import type { ObfImage, ObfLicense } from './spec.js';
 
-/** OBF 3.x image entry (`board.images[]`, referenced by `button.image_id`). */
-export interface ObfImage {
-  id: string;
-  url?: string;
-  data?: string;
-  path?: string;
-  content_type?: string;
-  width?: number;
-  height?: number;
-  license?: ObfLicense;
-}
+export type { ObfImage, ObfLicense };
 
 /**
  * Where a button's picture comes from, for export:
  * - `mulberry`: a vendored Mulberry SVG (CC BY-SA 4.0, carries a licence)
  * - `data`: an inline image the user supplied (data: URL)
- * - `media`: a photo the user uploaded to the Voxa API (`/v1/media/<id>`)
+ * - `media`: a photo or recording the user uploaded to the Voxa API (`/v1/media/<id>`)
  * - `external`: any other http(s) URL (e.g. from an imported board); referenced, never fetched
  */
 export type ExportImageKind = 'mulberry' | 'data' | 'media' | 'external';
