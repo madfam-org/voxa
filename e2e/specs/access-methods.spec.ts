@@ -303,7 +303,8 @@ test.describe('motor-plan locks', () => {
           sessionStorage.setItem('e2e-poison-seeded', '1');
         }
       },
-      { key: `${PENDING_SAVE_KEY}:${boardId}`, value: JSON.stringify(poisoned) },
+      // Queued saves carry the account that made them (sent only for that account).
+      { key: `${PENDING_SAVE_KEY}:${boardId}`, value: JSON.stringify({ ownerUserId: owner.userId, board: poisoned }) },
     );
     const puts: number[] = [];
     page.on('response', (r) => {

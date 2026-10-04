@@ -12,7 +12,7 @@ import {
   openAccessibilitySettings,
   prepareAuthenticatedApp,
 } from '../helpers/app-session';
-import { openAuthenticatedEditor, seedLocalState } from '../helpers/test-session';
+import { openAuthenticatedEditor, seedLocalState, seedTestSession } from '../helpers/test-session';
 
 const PUBLIC_PAGES = [
   { name: 'home', path: '/' },
@@ -137,7 +137,13 @@ test.describe('Voxa accessibility (axe) — /app in every board theme', () => {
   test.use({ locale: 'en-US' });
 
   for (const theme of BOARD_THEMES) {
-    test(`/app in the ${theme} theme has no serious or critical WCAG 2.2 AA violations`, async ({ page }) => {
+    test(`/app in the ${theme} theme has no serious or critical WCAG 2.2 AA violations`, async ({
+      page,
+      context,
+      baseURL,
+    }) => {
+      // /app is gated on a valid session (the CI server has sign-in configured).
+      await seedTestSession(context, baseURL!, { role: 'communicator' });
       await seedLocalState(page);
       await page.addInitScript((cviTheme) => {
         localStorage.setItem('voxa-communicator-settings', JSON.stringify({ cviTheme }));
