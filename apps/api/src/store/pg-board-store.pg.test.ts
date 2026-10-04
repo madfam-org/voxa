@@ -162,7 +162,18 @@ describe('PostgreSQL board store', { skip }, () => {
     const refused = await put(boardId, owner, moved);
     assert.equal(refused.status, 422);
     assert.equal(((await refused.json()) as { code: string }).code, 'MOTOR_PLANNING_VIOLATION');
-    assert.equal((await put(boardId, owner, { ...moved, forceMotorPlanning: true })).status, 200);
+    // The override is for organization admins only (routes test); the owner
+    // unlocks and moves in one save instead.
+    const override = await put(boardId, owner, { ...moved, forceMotorPlanning: true });
+    assert.equal(override.status, 403);
+    const unlocked = {
+      ...moved,
+      grid: {
+        ...moved.grid,
+        buttons: moved.grid.buttons.map((b) => ({ ...b, locked: false })),
+      },
+    };
+    assert.equal((await put(boardId, owner, unlocked)).status, 200);
   });
 
   it('listing and the plan limit run scoped SQL, never a full boards scan', async () => {

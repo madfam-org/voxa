@@ -206,7 +206,12 @@ pnpm build
     transaction: of two writers on one version exactly one wins and the other
     gets 409 `VERSION_CONFLICT` with `currentVersion` (a PUT without
     `expectedVersion` retries up to three times). The motor-planning 422 is
-    unchanged. Every content field of a `Board` is persisted, including
+    unchanged, and the server enforces the override: `forceMotorPlanning: true`
+    is honoured only for a `voxa:admin` of the board's organization
+    (`canOverrideMotorPlanning`); anyone else gets 403
+    `MOTOR_PLANNING_OVERRIDE_FORBIDDEN` and nothing is saved, while an explicit
+    `locked: false` in the same save still unlocks and moves
+    (`src/routes/motor-planning-override.routes.test.ts`). Every content field of a `Board` is persisted, including
     `layout` and `display` (columns since migration 0007; before it the
     PostgreSQL store dropped them while the file store kept them).
     `listBoardsForActor` filters in SQL with the `canAccessBoard`
@@ -285,7 +290,6 @@ blocks production use, **P1** next, **P2** planned, **P3** cleanup.
 | **Prettier is not enforced.** `pnpm format` exists but CI does not check it, and several files predate it.                                                                                                                   | Formatting drifts and creates noise in unrelated PRs.                                                                                                                                   | P3       | Engineering work (one reformat, then a CI check)                                | —        |
 | **Selva predictions are off.** `SELVA_ENABLED` defaults to `false`, so every text suggestion comes from the local predictor. Turning it on needs a Janua service client for this edge, its id and secret delivered to the API, and a local model behind Selva for `restricted` requests. | Until then suggestions are rule-based only. Turning it on early is safe (every failure falls back to local) but pointless. | P2 | Ecosystem and operator work; no Voxa code change is needed | — |
 | **Real-time board sync never connects for a signed-in user.** The API's `teamAuth()` runs on `/v1/*` and answers the `/v1/ws` upgrade with 401, because a browser WebSocket cannot send the bearer header and the token travels as `?accessToken=` (which only `src/lib/ws-auth.ts` reads, after the middleware). | The sync badge reads offline for every signed-in user, an editor's edits are queued locally instead of saved live, and changes from another device arrive only on reload. Found by `e2e/specs/access-methods.spec.ts`. | P1 | Engineering work (exempt `/v1/ws` from `teamAuth`, which `resolveWsTeam` already authenticates; or a short-lived WS ticket) | — |
-| **The API accepts `forceMotorPlanning` from any editor of the board.** `PUT /v1/boards/:id` passes the flag through for anyone `canEditBoard` allows; only the web client limits the override to admins. | An editor (or a script with an editor token) can move locked motor-plan buttons. | P2 | Engineering work (accept the flag only for `voxa:admin`) | — |
 | **Two internal literals left in deploy-functional or app files.** The Kubernetes web deployments still carry the OAuth client id as a literal, and a code comment in `apps/web/src/lib/pricing.ts` points at a pricing document that is now private. | The operational and commercial docs moved out on 2026-10-03; these two need a deploy-touching change, so they were left for a separate PR. | P2       | Engineering work (read the client id from configuration; reword the comment)    | —        |
 
 The Next image optimizer gap listed here before 2026-10-02 is closed (#13,

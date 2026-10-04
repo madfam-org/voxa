@@ -52,6 +52,22 @@ jobs:
     name: Image smoke (${{ matrix.app }})
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    # The API refuses to start in production without DATABASE_URL (it never
+    # runs on its file store there), so its smoke gets a throwaway PostgreSQL.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: smoke
+          POSTGRES_PASSWORD: smoke
+          POSTGRES_DB: voxa_smoke
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U smoke -d voxa_smoke"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     strategy:
       fail-fast: false
       matrix:
@@ -117,13 +133,19 @@ jobs:
           WRITABLE: ${{ matrix.writable }}
         run: |
           set -euo pipefail
-          # No DATABASE_URL, Redis or identity settings: the API boots on its
-          # file store in ${WRITABLE}, the web app with OIDC unconfigured.
+          # No Redis or identity settings. The API gets the job's throwaway
+          # PostgreSQL (host network, so 127.0.0.1:5432 reaches the service);
+          # the web app runs with OIDC unconfigured.
+          if [ "${{ matrix.app }}" = "api" ]; then
+            net=(--network host -e DATABASE_URL=postgres://smoke:smoke@127.0.0.1:5432/voxa_smoke)
+          else
+            net=(-p "127.0.0.1:${PORT}:${PORT}")
+          fi
           docker run -d --name "smoke-${{ matrix.app }}" \
             --user 1001:1001 --read-only --cap-drop ALL \
             --security-opt no-new-privileges \
             --tmpfs "${WRITABLE}:rw,uid=1001,gid=1001,mode=0755" \
-            -p "127.0.0.1:${PORT}:${PORT}" \
+            "${net[@]}" \
             "$IMAGE"
           code=000
           for _ in $(seq 1 30); do
@@ -145,3 +167,19 @@ jobs:
           fi
           echo "build identity OK: ${build}"
           docker rm -f "smoke-${{ matrix.app }}" >/dev/null
+
+      - name: API refuses to start in production without DATABASE_URL
+        if: matrix.app == 'api'
+        env:
+          IMAGE: voxa-api:smoke
+        run: |
+          set -uo pipefail
+          out="$(timeout 60 docker run --rm --user 1001:1001 --read-only --cap-drop ALL \
+            --tmpfs "/app/data:rw,uid=1001,gid=1001,mode=0755" "$IMAGE" 2>&1)"
+          code=$?
+          echo "$out" | tail -n 5
+          if [ "$code" != "1" ] || ! grep -q "DATABASE_URL is required" <<<"$out"; then
+            echo "::error::expected exit 1 naming DATABASE_URL, got exit ${code}"
+            exit 1
+          fi
+          echo "fail-closed OK: exit 1 without DATABASE_URL"

@@ -46,3 +46,18 @@ export function canEditBoard(
   if ((role === 'editor' || role === 'admin') && sameOrg(boardOrgId, actorOrgId)) return true;
   return false;
 }
+
+/**
+ * Motor-plan override (`forceMotorPlanning`): moving a locked button without
+ * unlocking it. Only a `voxa:admin` of the board's own organization may do it
+ * (both org ids present and equal, as for every org-scoped right). Everyone
+ * else, the owner included, unlocks the button first (`locked: false` in the
+ * same save is accepted) or gets the motor-planning 422.
+ */
+export function canOverrideMotorPlanning(
+  role: TeamRole,
+  boardOrgId?: string,
+  actorOrgId?: string,
+): boolean {
+  return role === 'admin' && sameOrg(boardOrgId, actorOrgId);
+}
