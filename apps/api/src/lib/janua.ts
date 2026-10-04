@@ -33,6 +33,8 @@ export interface JanuaClaims extends JWTPayload {
   roles?: string[];
   org_id?: string;
   organization_id?: string;
+  /** Voxa plan tier written by Janua (ADR-006); resolved in `src/lib/entitlement.ts`. */
+  voxa_tier?: unknown;
 }
 
 export function mapJanuaRole(claims: JanuaClaims | Record<string, unknown>): TeamRole {

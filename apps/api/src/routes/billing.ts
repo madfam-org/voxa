@@ -1,10 +1,9 @@
 import { Hono } from 'hono';
-import { resolveEntitlement } from '../lib/dhanam.js';
+import { resolveEntitlement } from '../lib/entitlement.js';
 
 export const billingRoutes = new Hono();
 
-billingRoutes.get('/entitlement', async (c) => {
-  const { userId } = c.get('team');
-  const entitlement = await resolveEntitlement(userId);
-  return c.json({ entitlement });
+/** `{ tier, features, source: 'janua' }` from the caller's verified access token. */
+billingRoutes.get('/entitlement', (c) => {
+  return c.json(resolveEntitlement(c.get('team')));
 });

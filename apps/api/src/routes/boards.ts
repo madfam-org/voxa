@@ -8,7 +8,7 @@ import {
   type StarterTemplateId,
 } from '@voxa/core';
 import { canAccessBoard, canEditBoard } from '../lib/board-access.js';
-import { maxBoardCount, resolveEntitlement } from '../lib/dhanam.js';
+import { maxBoardCount, resolveEntitlement } from '../lib/entitlement.js';
 import { getStore } from '../store/index.js';
 import { broadcastBoardEvent } from '../ws/sync-hub.js';
 import { errorMessage, unwrapDbError } from '../lib/db-errors.js';
@@ -64,14 +64,15 @@ boardRoutes.post('/', async (c) => {
   // Any signed-in user may create a board they own, within their plan's board
   // limit. Owner and organization come from the token only, never from the body.
   const body = (await c.req.json()) as Board & { templateId?: StarterTemplateId; contentLocale?: unknown };
-  const { userId, orgId } = c.get('team');
+  const team = c.get('team');
+  const { userId, orgId } = team;
   if (body.templateId && body.contentLocale !== undefined && !isStarterContentLocale(body.contentLocale)) {
     return c.json({ error: 'contentLocale must be one of es-MX, en-US, fr-FR' }, 400);
   }
   // Spanish-first: a template request without a locale is built in es-MX.
   const contentLocale = isStarterContentLocale(body.contentLocale) ? body.contentLocale : 'es-MX';
 
-  const entitlement = await resolveEntitlement(userId);
+  const entitlement = resolveEntitlement(team);
   const owned = (await getStore().listBoards()).filter(
     (board) => board.ownerUserId === userId,
   );

@@ -116,7 +116,7 @@ Progress is tracked in the feature roadmap ([GA_ROADMAP.md](./GA_ROADMAP.md), Ph
 
 ## Multi-board accounts
 
-After sign-in, use the **Board** selector in the header to switch boards. Editors can **New board** to create an empty grid owned by their account. Board limits follow your Dhanam plan tier.
+After sign-in, use the **Board** selector in the header to switch boards. Editors can **New board** to create an empty grid owned by their account. Board limits follow your plan tier.
 
 ## Staging validation
 

@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { createAiService, PREDICTION_SOURCE } from '@voxa/ai';
 import type { PredictionRequest, SymbolPredictionRequest } from '@voxa/ai';
 import { hasConsent } from '../lib/consents.js';
-import { hasFeature, resolveEntitlement } from '../lib/dhanam.js';
+import { hasFeature, resolveEntitlement } from '../lib/entitlement.js';
 
 export const aiRoutes = new Hono();
 
@@ -20,7 +20,7 @@ aiRoutes.post('/predict/text', async (c) => {
     return c.json(AI_CONSENT_REQUIRED, 403);
   }
 
-  const entitlement = await resolveEntitlement(userId);
+  const entitlement = resolveEntitlement(c.get('team'));
   if (!hasFeature(entitlement, 'ai:basic') && !hasFeature(entitlement, 'ai:full')) {
     return c.json({ error: 'AI not included in your plan', tier: entitlement.tier }, 402);
   }
@@ -36,7 +36,7 @@ aiRoutes.post('/predict/symbols', async (c) => {
     return c.json(AI_CONSENT_REQUIRED, 403);
   }
 
-  const entitlement = await resolveEntitlement(userId);
+  const entitlement = resolveEntitlement(c.get('team'));
   if (!hasFeature(entitlement, 'ai:basic') && !hasFeature(entitlement, 'ai:full')) {
     return c.json({ error: 'AI not included in your plan', tier: entitlement.tier }, 402);
   }
