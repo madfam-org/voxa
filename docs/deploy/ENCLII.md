@@ -11,7 +11,7 @@ Voxa deploys to **madfam.io** via Enclii using the [zero-touch contract](https:/
 ```
 GitHub (madfam-org/voxa)
   ├── push main     → deploy-voxa-{web,api}.yml build, sign, digest commit → k8s/production
-  ├── push staging  → deploy-voxa-{web,api}-staging.yml build, digest commit → k8s/staging
+  ├── push main     → deploy-voxa-{web,api}-staging.yml build, sign, digest commit → k8s/staging
   └── lifecycle callback → api.enclii.dev
 
 Enclii (ArgoCD + Cloudflare Tunnel)
@@ -61,25 +61,25 @@ Routing uses Cloudflare Tunnel routes (Enclii junctions) to the `voxa-web` and `
      --secrets-file ./deploy/secrets.env.example
    ```
 
-5. **Staging** — `voxa-staging-services` ArgoCD app tracks branch `staging` and `k8s/staging/` (registered at runtime via `POST /v1/admin/onboard/ensure`, not via Enclii `infra/argocd/projects/` entries).
+5. **Staging** — `voxa-staging-services` ArgoCD app must track branch `main` and `k8s/staging/` (registered at runtime, not via Enclii `infra/argocd/projects/` entries). The `staging` branch was deleted; an app still pointed at it shows a ComparisonError and never syncs. A platform operator points the app's source revision at `main`. Do not re-run `onboard/ensure` for the staging project to do it: that endpoint keys the onboarding record by repository, so a staging call would rewrite the production record's desired state.
 
 ## Day-to-day deploys
 
-Four workflows build and pin images. Each runs on `workflow_dispatch` and on a push to its branch that touches its app, `packages/**` or its Dockerfile:
+Four workflows build, sign and pin images. Each runs on `workflow_dispatch` and on a push to `main` that touches its app, `packages/**` or its Dockerfile (the staging workflows also run when their own workflow file changes). Staging rebuilds beside production on every such merge and never gates it:
 
 | Workflow | Branch | Paths | Signs (cosign) | Pins digests in |
 |----------|--------|-------|----------------|-----------------|
 | `deploy-voxa-api.yml` | `main` | `apps/api/**`, `packages/**` | yes | `k8s/production/` |
 | `deploy-voxa-web.yml` | `main` | `apps/web/**`, `packages/**` | yes | `k8s/production/` |
-| `deploy-voxa-api-staging.yml` | `staging` | `apps/api/**`, `packages/**` | no | `k8s/staging/` |
-| `deploy-voxa-web-staging.yml` | `staging` | `apps/web/**`, `packages/**` | no | `k8s/staging/` |
+| `deploy-voxa-api-staging.yml` | `main` | `apps/api/**`, `packages/**` | yes | `k8s/staging/` |
+| `deploy-voxa-web-staging.yml` | `main` | `apps/web/**`, `packages/**` | yes | `k8s/staging/` |
 
-Each workflow has its own concurrency group (`voxa-web-production`, `voxa-api-production`, `voxa-web-staging`, `voxa-api-staging`): GitHub keeps only the newest pending run per group, so a shared web+API group let one workflow's pending run displace the other's. The pin step retries up to 3 times (fetch, reset to `origin/main`, re-apply the digest), so the two workflows cannot clobber each other's pin. They then smoke the public health URL and fail loudly if an image was pushed but never pinned. A docs-only change (root `*.md`, `docs/**`) deploys nothing. All GitHub-hosted jobs are pinned to `ubuntu-24.04`.
+Each workflow has its own concurrency group (`voxa-web-production`, `voxa-api-production`, `voxa-web-staging`, `voxa-api-staging`): GitHub keeps only the newest pending run per group, so a shared web+API group let one workflow's pending run displace the other's. The pin step retries (3 times in production, 5 with jitter in staging: fetch, reset to `origin/main`, re-apply the digest), so the workflows cannot clobber each other's pin. Staging images are tagged `staging-<sha>` and `staging`, and the staging builds read the production build cache without writing to it. They then smoke the public health URL and fail loudly if an image was pushed but never pinned. A docs-only change (root `*.md`, `docs/**`) deploys nothing. All GitHub-hosted jobs are pinned to `ubuntu-24.04`.
 
 | Environment | Branch | Manifests | Domains |
 |-------------|--------|-----------|---------|
 | Production | `main` | `k8s/production/` | `voxa.madfam.io`, `voxa-app.madfam.io`, `voxa-api.madfam.io` |
-| Staging | `staging` | `k8s/staging/` | `voxa-staging.madfam.io`, `voxa-app-staging.madfam.io`, `voxa-api-staging.madfam.io` |
+| Staging | `main` | `k8s/staging/` | `voxa-staging.madfam.io`, `voxa-app-staging.madfam.io`, `voxa-api-staging.madfam.io` |
 
 ArgoCD auto-syncs after digest commits (automated sync with self-heal); the web pin also bumps the pod template's `restartedAt`. No workflow calls Argo or restarts pods. Check status at [app.enclii.dev](https://app.enclii.dev) and the Enclii status page entries declared in `enclii.yaml`.
 
