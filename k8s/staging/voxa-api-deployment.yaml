@@ -12,6 +12,13 @@ metadata:
     enclii.dev/environment: staging
 spec:
   replicas: 1
+  # Surge-first rollouts: never drop below the desired ready count.
+  minReadySeconds: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
       app: voxa-api
@@ -27,6 +34,14 @@ spec:
       annotations:
         kubectl.kubernetes.io/restartedAt: "2026-06-07T10:05:00Z"
     spec:
+      terminationGracePeriodSeconds: 30
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: voxa-api
       imagePullSecrets:
         - name: ghcr-credentials
       securityContext:
@@ -92,6 +107,11 @@ spec:
               port: http
             failureThreshold: 12
             periodSeconds: 5
+          # Let the endpoint removal propagate before SIGTERM (see voxa-web).
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sleep", "5"]
           volumeMounts:
             - name: data
               mountPath: /app/data

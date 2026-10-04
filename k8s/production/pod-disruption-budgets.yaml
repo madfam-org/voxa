@@ -1,0 +1,34 @@
+# Keep at least one web and one API pod serving through voluntary disruptions
+# (node drains, k3s upgrades). Both Deployments run 2 replicas.
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: voxa-web
+  labels:
+    app: voxa-web
+    app.kubernetes.io/name: voxa-web
+    app.kubernetes.io/component: web
+    app.kubernetes.io/part-of: voxa
+    enclii.dev/managed-by: switchyard
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: voxa-web
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: voxa-api
+  labels:
+    app: voxa-api
+    app.kubernetes.io/name: voxa-api
+    app.kubernetes.io/component: api
+    app.kubernetes.io/part-of: voxa
+    enclii.dev/managed-by: switchyard
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: voxa-api

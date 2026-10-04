@@ -37,6 +37,8 @@ spec:
           app.kubernetes.io/name: voxa-api
         port: 8080
         direction: both
+  # API entries probe readiness (/health/ready: 503 when the store is
+  # unreachable), not liveness (/health), so a database outage shows as down.
   status:
     enabled: true
     entries:
@@ -53,7 +55,7 @@ spec:
         family: AAC Platform
         description: AAC communicator web app
       - name: Voxa API
-        url: https://voxa-api.madfam.io/health
+        url: https://voxa-api.madfam.io/health/ready
         href: https://voxa-api.madfam.io
         group: Voxa
         family: AAC Platform
@@ -65,7 +67,7 @@ spec:
         family: AAC Platform
         description: Staging web (AAC communicator)
       - name: Voxa API Staging
-        url: https://voxa-api-staging.madfam.io/health
+        url: https://voxa-api-staging.madfam.io/health/ready
         href: https://voxa-api-staging.madfam.io
         group: Voxa
         family: AAC Platform

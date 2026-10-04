@@ -71,10 +71,10 @@ push main    → CI → ghcr.io/madfam-org/voxa/* → digest commit → k8s/prod
 push staging → CI → digest commit → k8s/staging
 ```
 
-| Surface | Health probe |
-|---------|--------------|
-| Web | `GET /api/health` |
-| API | `GET /health` |
+| Surface | Liveness | Readiness |
+|---------|----------|-----------|
+| Web | `GET /api/health` | `GET /api/health/ready` |
+| API | `GET /health` | `GET /health/ready` |
 
 Full runbook: [docs/deploy/ENCLII.md](./deploy/ENCLII.md)
 

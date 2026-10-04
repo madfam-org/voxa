@@ -1,0 +1,37 @@
+# Staging runs a single replica of each Deployment. A minAvailable: 1 budget
+# would block every node drain, so staging allows one voluntary disruption
+# at a time; production (2 replicas) keeps minAvailable: 1.
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: voxa-web
+  labels:
+    app: voxa-web
+    app.kubernetes.io/name: voxa-web
+    app.kubernetes.io/component: web
+    app.kubernetes.io/part-of: voxa
+    enclii.dev/managed-by: switchyard
+    enclii.dev/environment: staging
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: voxa-web
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: voxa-api
+  labels:
+    app: voxa-api
+    app.kubernetes.io/name: voxa-api
+    app.kubernetes.io/component: api
+    app.kubernetes.io/part-of: voxa
+    enclii.dev/managed-by: switchyard
+    enclii.dev/environment: staging
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: voxa-api
