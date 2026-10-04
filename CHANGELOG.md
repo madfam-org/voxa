@@ -13,6 +13,12 @@ capability: [docs/capabilities.md](./docs/capabilities.md).
 
 - Copy (es/en/fr): the classic light theme is described by what it is, without a competitor's product name; the Spanish catalog says "terapeutas de lenguaje" (Mexican Spanish) instead of Spain's "logopedas". The claims stop-list now rejects both. A code comment with commercial pricing research is reworded.
 - `LICENSE`: the copyright holder is Innovaciones MADFAM S.A.S. de C.V., as in `NOTICE`.
+- Copy (es/en/fr): the landing hero says what ships — direct touch, switch scanning or pointer dwell, and dwell works with an eye tracker only when its own software moves the pointer — instead of listing gaze as an input; the dwell access mode in Settings says the same. The claims stop-list now rejects gaze listed as an input of its own.
+- The landing host's `llms.txt` and `llms-full.txt` open with the product one-liner, word for word as in the README, `AGENTS.md`, the repository `llms.txt` and the package descriptions; a test fails when they drift apart. Host rules are unchanged (landing host only).
+
+### Fixed
+
+- Switch scanning no longer stays paused when a recorded clip or GLP video stalls: the scan pause ends on `ended`, `error` or `abort`, after 4 s without progress, or at the clip's length plus 2 s (60 s when the length is unknown). A clip that fails or stalls is stopped and the button's text is spoken instead.
 
 ### Operations
 

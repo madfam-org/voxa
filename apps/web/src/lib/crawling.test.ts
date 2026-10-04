@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { describe, it } from 'node:test';
 import {
   ALLOWED_AI_CRAWLERS,
+  PRODUCT_ONE_LINER,
   PUBLIC_PAGES,
   buildLlmsFullTxt,
   buildLlmsTxt,
@@ -101,6 +103,31 @@ const UNBACKED_CLAIMS = [
   /\$|MXN|precio|price/i,
   /reviewed by|SLP sign-off|clinically (reviewed|validated)/i,
 ];
+
+const repoFile = (path: string) => readFileSync(new URL(`../../../../${path}`, import.meta.url), 'utf8');
+
+describe('product one-liner', () => {
+  it('is word for word the description of the root and web package.json', () => {
+    assert.equal((JSON.parse(repoFile('package.json')) as { description: string }).description, PRODUCT_ONE_LINER);
+    assert.equal((JSON.parse(repoFile('apps/web/package.json')) as { description: string }).description, PRODUCT_ONE_LINER);
+  });
+
+  it('leads README.md, AGENTS.md and the repository llms.txt', () => {
+    const [tagline, ...valueProposition] = PRODUCT_ONE_LINER.split('. ');
+    const bold = `**${tagline}.** ${valueProposition.join('. ')}`;
+    assert.ok(repoFile('README.md').includes(bold), 'README.md');
+    assert.ok(repoFile('AGENTS.md').includes(bold), 'AGENTS.md');
+    assert.ok(repoFile('llms.txt').includes(`> ${PRODUCT_ONE_LINER}`), 'llms.txt');
+  });
+
+  it('opens the served llms.txt and llms-full.txt, which keep their landing-only rules', () => {
+    for (const body of [buildLlmsTxt(LANDING), buildLlmsFullTxt(LANDING)]) {
+      const summary = body.split('\n')[2]!;
+      assert.ok(summary.startsWith(`> ${PRODUCT_ONE_LINER} `), summary);
+      assert.match(summary, /open source \(Apache-2\.0\); its interface is also in English and French\. Built by MADFAM\.$/);
+    }
+  });
+});
 
 describe('llms.txt', () => {
   const body = buildLlmsTxt(LANDING);

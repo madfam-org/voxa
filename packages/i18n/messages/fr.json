@@ -68,7 +68,7 @@
   "landing": {
     "heroEyebrow": "Communication augmentative et alternative",
     "heroTitle": "Chaque personne mérite une voix qui suit sa vie.",
-    "heroBody": "Les applications CAA transforment les touches, interrupteurs ou le regard en langage parlé — à la maison, en thérapie et en classe. Voxa est un tableau de communication moderne avec planification motrice, thèmes adaptés au CVI, suggestions de mots, balayage par interrupteur, plannings visuels et synchronisation cloud sécurisée — conçu pour que les familles commencent gratuitement et les institutions évoluent en confiance.",
+    "heroBody": "Voxa est un tableau de communication pensé d'abord pour l'espagnol, qui transforme le toucher direct, le balayage par interrupteur ou le maintien du pointeur en parole, avec la voix de l'appareil de votre choix — à la maison, en thérapie et en classe. Le maintien fonctionne avec une souris, un pointeur de tête ou un oculomètre dont le propre logiciel déplace le pointeur. Les tableaux de base de 24, 36 et 60 cases gardent un même plan moteur, avec thèmes adaptés au CVI, plannings visuels, suggestions de mots que vous choisissez d'activer et synchronisation cloud — conçu pour que les familles commencent gratuitement et les institutions évoluent en confiance.",
     "tryDemo": "Essayer la démo en direct",
     "signInFree": "Connexion gratuite (parents)",
     "whyChangingTitle": "Pourquoi la CAA change des vies",
@@ -317,7 +317,7 @@
     "accessMethod": "Méthode d'accès",
     "accessTouch": "Tactile",
     "accessSwitch": "Balayage par interrupteur",
-    "accessEye": "Sélection par maintien (regard, pointeur de tête)",
+    "accessEye": "Maintien du pointeur (souris, pointeur de tête ou oculomètre qui déplace le pointeur)",
     "scanSpeed": "Vitesse de balayage ({ms} ms)",
     "scanOrder": "Ordre de balayage",
     "scanRow": "Ligne par ligne",

@@ -35,7 +35,7 @@ export function subscribeSpeechActivity(listener: SpeechActivityListener): () =>
   return () => listeners.delete(listener);
 }
 
-/** Utterances whose activity is still held, so a test reset can stop their timers. */
+/** Utterances and media whose activity is still held, so a test reset can stop their timers. */
 const heldUtterances = new Set<() => void>();
 
 /** @internal test helper */
@@ -69,19 +69,155 @@ async function fetchMediaBlob(url: string): Promise<Blob> {
   return res.blob();
 }
 
-async function playBlobAudio(blob: Blob): Promise<void> {
+/**
+ * Recorded speech and GLP video hold the scan pause only while they really
+ * play. A clip that stalls (decoder hang, a `stalled` or `waiting` that never
+ * recovers, a `play()` that never settles) would otherwise keep switch
+ * scanning paused for good.
+ */
+/** Media whose position has not advanced for this long has stalled: it is stopped and the speech text is spoken instead. */
+export const MEDIA_STALL_MS = 4000;
+/** Added to the media's own length (at its playback rate) for the scan-pause bound. */
+export const MEDIA_PAUSE_MARGIN_MS = 2000;
+/**
+ * Bound when the file does not state its length: `duration` is NaN or
+ * Infinity, as for many in-browser recordings (WebM from MediaRecorder).
+ */
+export const MEDIA_PAUSE_CAP_MS = 60000;
+/** How often a playing clip is checked for progress, its end and its bound. */
+export const MEDIA_POLL_MS = 250;
+/** A clip within this many seconds of its stated length counts as played to the end. */
+const MEDIA_END_TOLERANCE_S = 0.25;
+/** At the bound, a clip that advanced within this window is still playing (stopped, not replaced by speech). */
+const MEDIA_RECENT_PROGRESS_MS = 1000;
+
+/**
+ * Scan-pause bound, in ms, for media of `durationSeconds` played at `rate`:
+ * its length plus a margin, or `MEDIA_PAUSE_CAP_MS` when the length is
+ * unknown (NaN, Infinity, zero or negative).
+ */
+export function mediaPauseBoundMs(durationSeconds: number, rate = 1): number {
+  if (!Number.isFinite(durationSeconds) || durationSeconds <= 0) return MEDIA_PAUSE_CAP_MS;
+  const safeRate = Number.isFinite(rate) && rate > 0 ? rate : 1;
+  return Math.round((durationSeconds * 1000) / safeRate + MEDIA_PAUSE_MARGIN_MS);
+}
+
+/** The part of an audio or video element the scan-pause bound reads (a fake in unit tests). */
+export interface PlaybackMedia {
+  readonly currentTime: number;
+  readonly duration: number;
+  readonly ended: boolean;
+  readonly playbackRate?: number;
+  play(): Promise<void> | void;
+  pause(): void;
+  addEventListener(type: string, listener: () => void): void;
+  removeEventListener(type: string, listener: () => void): void;
+}
+
+/** How a held playback ended: on its own, at the bound while still playing, or closed by the user. */
+type PlaybackEnd = 'ended' | 'bound' | 'cancelled';
+
+interface HeldPlayback {
+  /** Resolves when playback is over; rejects when it failed (error, abort, stall, `play()` refused). */
+  outcome: Promise<PlaybackEnd>;
+  /** Fails the playback (its `play()` was refused). No effect once it is over. */
+  fail: (err: unknown) => void;
+  /** Ends the hold without a failure (the user closed the video). No effect once it is over. */
+  cancel: () => void;
+}
+
+/**
+ * Holds speech activity (and so the scan pause) while `media` plays, and
+ * starts it. The hold ends at the first of: `ended`; `error` or `abort`;
+ * `play()` refusing; no progress for `MEDIA_STALL_MS` (from the start, so a
+ * clip that never starts counts too); or the bound from `mediaPauseBoundMs`,
+ * counted from the first progress. Errors, aborts and stalls reject, so the
+ * caller speaks the button's text instead; at the bound a clip at its end
+ * counts as ended, one that advanced in the last second is stopped (it was
+ * heard; the text is not repeated) and one that did not counts as stalled.
+ */
+function playWithBoundedHold(media: PlaybackMedia): HeldPlayback {
   beginSpeechActivity();
+  const heldAt = Date.now();
+  let lastTime = media.currentTime;
+  let lastProgressAt = heldAt;
+  let firstProgressAt: number | null = null;
+  let over = false;
+  let resolveOutcome: (end: PlaybackEnd) => void = () => undefined;
+  let rejectOutcome: (err: unknown) => void = () => undefined;
+  const outcome = new Promise<PlaybackEnd>((resolve, reject) => {
+    resolveOutcome = resolve;
+    rejectOutcome = reject;
+  });
+
+  const onEnded = () => settle('ended');
+  const onError = () => settle(new Error('Media playback failed'));
+  const onAbort = () => settle(new Error('Media playback aborted'));
+
+  function settle(end: PlaybackEnd | Error): void {
+    if (over) return;
+    over = true;
+    clearInterval(poll);
+    media.removeEventListener('ended', onEnded);
+    media.removeEventListener('error', onError);
+    media.removeEventListener('abort', onAbort);
+    heldUtterances.delete(cancel);
+    endSpeechActivity();
+    if (end !== 'ended' && end !== 'cancelled') {
+      try {
+        media.pause();
+      } catch {
+        // Already gone: nothing left to stop.
+      }
+    }
+    if (end instanceof Error) rejectOutcome(end);
+    else resolveOutcome(end);
+  }
+
+  function cancel(): void {
+    settle('cancelled');
+  }
+
+  function check(): void {
+    if (media.ended) return settle('ended');
+    const now = Date.now();
+    const position = media.currentTime;
+    if (Number.isFinite(position) && position !== lastTime) {
+      lastTime = position;
+      lastProgressAt = now;
+      firstProgressAt ??= now;
+    }
+    const stillFor = now - lastProgressAt;
+    if (stillFor >= MEDIA_STALL_MS) return settle(new Error('Media playback stalled'));
+    const bound = mediaPauseBoundMs(media.duration, media.playbackRate);
+    if (now - (firstProgressAt ?? heldAt) < bound) return;
+    if (Number.isFinite(media.duration) && position >= media.duration - MEDIA_END_TOLERANCE_S) return settle('ended');
+    if (stillFor >= MEDIA_RECENT_PROGRESS_MS) return settle(new Error('Media playback stalled'));
+    settle('bound');
+  }
+
+  media.addEventListener('ended', onEnded);
+  media.addEventListener('error', onError);
+  media.addEventListener('abort', onAbort);
+  heldUtterances.add(cancel);
+  const poll = setInterval(check, MEDIA_POLL_MS);
+
+  const fail = (err: unknown) => settle(err instanceof Error ? err : new Error(String(err)));
+  try {
+    const started = media.play();
+    if (started && typeof started.then === 'function') started.then(undefined, fail);
+  } catch (err) {
+    fail(err);
+  }
+  return { outcome, fail, cancel };
+}
+
+async function playBlobAudio(blob: Blob): Promise<void> {
   const blobUrl = URL.createObjectURL(blob);
   try {
-    const audio = new Audio(blobUrl);
-    await audio.play();
-    await new Promise<void>((resolve, reject) => {
-      audio.onended = () => resolve();
-      audio.onerror = () => reject(new Error('Audio playback failed'));
-    });
+    await playWithBoundedHold(new Audio(blobUrl)).outcome;
   } finally {
     URL.revokeObjectURL(blobUrl);
-    endSpeechActivity();
   }
 }
 
@@ -94,7 +230,9 @@ export function stopActiveVideo(): void {
  * Shows a GLP video in a visible dialog with the phrase as its caption. The
  * close button takes focus; any key (keyboards and key-emulating switches),
  * a tap on the backdrop or the close button, or the next button activation
- * dismisses it, and focus returns where it was. It closes itself at the end.
+ * dismisses it, and focus returns where it was. It closes itself at the end,
+ * and when the video fails or stalls (`playWithBoundedHold`); then it throws,
+ * so the caller speaks the phrase instead.
  */
 async function playVisibleVideo(blob: Blob, caption: string, closeLabel: string): Promise<void> {
   stopActiveVideo();
@@ -164,8 +302,9 @@ async function playVisibleVideo(blob: Blob, caption: string, closeLabel: string)
   figure.append(video, figcaption);
   overlay.append(figure, closeButton);
 
-  beginSpeechActivity();
   let closed = false;
+  let playback: HeldPlayback | null = null;
+  let failure: unknown = null;
   let resolveDone: () => void = () => undefined;
   const done = new Promise<void>((resolve) => {
     resolveDone = resolve;
@@ -187,11 +326,11 @@ async function playVisibleVideo(blob: Blob, caption: string, closeLabel: string)
     if (closed) return;
     closed = true;
     window.removeEventListener('keydown', onKeyDown, true);
+    playback?.cancel();
     video.pause();
     overlay.remove();
     URL.revokeObjectURL(blobUrl);
     if (activeVideo === handle) activeVideo = null;
-    endSpeechActivity();
     previousFocus?.focus();
     resolveDone();
   }
@@ -203,21 +342,21 @@ async function playVisibleVideo(blob: Blob, caption: string, closeLabel: string)
   overlay.addEventListener('click', (event) => {
     if (event.target === overlay) close();
   });
-  video.addEventListener('ended', close);
   window.addEventListener('keydown', onKeyDown, true);
 
   document.body.appendChild(overlay);
   closeButton.focus();
 
-  try {
-    await video.play();
-  } catch (err) {
-    // Dismissed before playback started: nothing more to say.
-    if (closed) return;
+  // Ends with the video, or closes it when it fails or stalls; dismissed
+  // before playback started, `play()` rejects after the hold is cancelled and
+  // nothing more is said.
+  playback = playWithBoundedHold(video);
+  playback.outcome.then(close, (err: unknown) => {
+    failure = err;
     close();
-    throw err;
-  }
+  });
   await done;
+  if (failure) throw failure;
 }
 
 /**
