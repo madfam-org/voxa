@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { createDemoBoard, createStarterBoard } from '@voxa/core';
+import { localAiService } from '@voxa/ai';
 import { presentBoardForDisplay } from './board-presentation';
 import { composeMessage, speakWholeMessage, speechLocaleForBoard } from './utterance-speech';
 
@@ -111,5 +112,24 @@ describe('composeMessage (Spanish agreement on the message bar)', () => {
     const composed = composeMessage(es, ['más', 'agua'], 'es');
     assert.equal(composed.text, 'más agua');
     assert.equal(composed.agreementApplied, false);
+  });
+});
+
+describe('composeMessage on a tapped suggestion', () => {
+  it('agrees a Spanish suggestion the same way as tapped buttons', async () => {
+    const es = createStarterBoard('core-47', { locale: 'es-MX' });
+    const suggestions = await localAiService.predictText({
+      profileId: 'p',
+      recentUtterances: [],
+      partialText: 'yo querer',
+      locale: 'es-MX',
+      maxSuggestions: 3,
+    });
+    const first = suggestions[0]?.text ?? '';
+    assert.match(first, /^yo querer \S/);
+    const words = first.split(/\s+/);
+    const composed = composeMessage(es, words, 'es');
+    assert.equal(composed.text, ['yo', 'quiero', ...words.slice(2)].join(' '));
+    assert.equal(composed.baseText, first);
   });
 });

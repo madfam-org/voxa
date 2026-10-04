@@ -309,13 +309,24 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
     ],
   );
 
+  // A tapped suggestion becomes the message's words (base forms), so it gets the
+  // same Spanish agreement as tapped buttons when it is shown and spoken.
+  const agreementOn = settings.spanishAgreement && !keepBaseForm;
+  const formatSuggestion = useCallback(
+    (text: string) => {
+      const words = text.trim() ? text.trim().split(/\s+/).filter(Boolean) : [];
+      return composeMessage(viewBoard, words, uiLocale, { agreement: agreementOn }).text || text;
+    },
+    [viewBoard, uiLocale, agreementOn],
+  );
+
   const applyPrediction = useCallback(
     (text: string) => {
       const words = text.trim() ? text.trim().split(/\s+/).filter(Boolean) : [];
       setUtterance(words);
-      if (!settings.whisperMode) speakText(text, speechLocale);
+      if (!settings.whisperMode) speakText(formatSuggestion(text), speechLocale);
     },
-    [settings.whisperMode, speechLocale],
+    [formatSuggestion, settings.whisperMode, speechLocale],
   );
 
   const switchScanEnabled = settings.accessMode === 'switch' && !isEditor;
@@ -359,7 +370,6 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
   const dwellProgressFor =
     settings.gazeSource === 'tobii-bridge' ? bridgeDwellProgress : pointerDwellProgress;
 
-  const agreementOn = settings.spanishAgreement && !keepBaseForm;
   const composed = composeMessage(viewBoard, utterance, uiLocale, { agreement: settings.spanishAgreement });
 
   const speakAll = useCallback(() => {
@@ -1138,6 +1148,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
           symbolPredictions={symbolPredictions}
           buttons={sorted}
           onApplyText={applyPrediction}
+          formatText={formatSuggestion}
           onSelectSymbol={activate}
         />
       )}

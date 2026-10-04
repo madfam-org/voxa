@@ -12,6 +12,8 @@ interface PredictionStripProps {
   buttons: BoardButton[];
   onApplyText: (text: string) => void;
   onSelectSymbol: (button: BoardButton) => void;
+  /** How a suggestion reads once applied (Spanish agreement); defaults to the text itself. */
+  formatText?: (text: string) => string;
 }
 
 export function PredictionStrip({
@@ -20,6 +22,7 @@ export function PredictionStrip({
   buttons,
   onApplyText,
   onSelectSymbol,
+  formatText = (text) => text,
 }: PredictionStripProps): React.ReactNode {
   // Suggestions come from the local rule-based predictor, so the label says
   // "basic suggestions" rather than implying a language model.
@@ -49,7 +52,7 @@ export function PredictionStrip({
           style={chipStyle}
           title={t('predictionConfidence', { percent: Math.round(p.confidence * 100) })}
         >
-          {p.text}
+          {formatText(p.text)}
         </button>
       ))}
 

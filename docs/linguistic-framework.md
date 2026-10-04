@@ -87,7 +87,8 @@ The rule (`applySpanishAgreement`, `packages/vocabulary/src/spanish-agreement.ts
 **The communicator keeps control.** The agreed form is a suggestion applied when
 the message is built. The message bar shows a **Base form** toggle whenever the
 suggestion changed a word; pressing it shows and speaks the words exactly as
-tapped. **Settings → Spanish agreement** turns the suggestion off. Single button
+tapped. **Settings → Spanish agreement** turns the suggestion off. A tapped word suggestion becomes the message's words and gets the same
+agreement, in its chip and when spoken. Single button
 taps still speak the button's own text, and English and French boards keep
 their existing word forms (`speechForms`).
 
