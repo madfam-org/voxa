@@ -35,6 +35,15 @@ function put(boardId: string, userId: string, body: Record<string, unknown>) {
   });
 }
 
+/**
+ * A board's content fields. Timestamps come back in PostgreSQL's text form and
+ * an absent org as `undefined`, both unrelated to what this file checks.
+ */
+function content(board: Record<string, unknown> | undefined) {
+  const { id: boardId, name, profileId, grid, layout, display, version, ownerUserId } = board ?? {};
+  return { id: boardId, name, profileId, grid, layout, display, version, ownerUserId };
+}
+
 /** SQL text of the queries run while `fn` runs (never their parameters). */
 async function captureQueries(fn: () => Promise<unknown>): Promise<string[]> {
   const seen: string[] = [];
@@ -262,6 +271,59 @@ describe('PostgreSQL board store', { skip }, () => {
       orgId: orgA,
     });
     assert.ok(!communicator.some((b) => b.id === id('org-board')));
+  });
+
+  it('layout and display survive create, read, update and list unchanged', async () => {
+    const owner = id('owner-layout');
+    const boardId = id('layout');
+    const original = {
+      id: boardId,
+      name: 'Keyboard',
+      profileId: 'default',
+      version: 1,
+      updatedAt: new Date().toISOString(),
+      layout: 'literacy-keyboard',
+      display: { hideSymbols: true, hideLabels: false },
+      grid: { rows: 1, columns: 1, buttons: [] },
+    };
+    const created = await app.request('/v1/boards', {
+      method: 'POST',
+      headers: { ...devHeaders(owner), 'Content-Type': 'application/json' },
+      body: JSON.stringify(original),
+    });
+    assert.equal(created.status, 201, await created.clone().text());
+    const createdBoard = ((await created.json()) as { board: BoardBody }).board;
+
+    // Read back through the store and the API: identical to what was saved.
+    const stored = await getStore().getBoard(boardId);
+    assert.deepEqual(content(stored as never), content(createdBoard));
+    const read = await readBoard(boardId, owner);
+    assert.equal(read.layout, 'literacy-keyboard');
+    assert.deepEqual(read.display, { hideSymbols: true, hideLabels: false });
+    assert.deepEqual(content(read), content(createdBoard));
+    assert.equal(createdBoard.layout, original.layout);
+    assert.deepEqual(createdBoard.display, original.display);
+
+    // An update that changes them is stored, and a list returns them.
+    const res = await put(boardId, owner, {
+      ...read,
+      layout: 'visual-schedule',
+      display: { hideLabels: true },
+      expectedVersion: read.version,
+    });
+    assert.equal(res.status, 200);
+    const updated = ((await res.json()) as { board: BoardBody }).board;
+    assert.deepEqual(content(await readBoard(boardId, owner)), content(updated));
+    assert.equal(updated.layout, 'visual-schedule');
+    assert.deepEqual(updated.display, { hideLabels: true });
+    const listed = await getStore().listBoardsForActor({ userId: owner, role: 'communicator' });
+    assert.deepEqual(content(listed.find((b) => b.id === boardId) as never), content(updated));
+
+    // A board saved without them reads back without them (no nulls).
+    const plain = await createOwnedBoard(app, id('owner-plain'), id('plain'));
+    const plainBoard = await readBoard(plain, id('owner-plain'));
+    assert.ok(!('layout' in plainBoard));
+    assert.ok(!('display' in plainBoard));
   });
 
   it(`refuses a sync-event batch over ${MAX_SYNC_EVENTS_PER_BATCH} before writing`, async () => {

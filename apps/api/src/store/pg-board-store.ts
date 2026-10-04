@@ -23,7 +23,7 @@ import {
 import type { BoardActor, BoardStore } from './types.js';
 
 function rowToBoard(row: typeof boards.$inferSelect): Board {
-  return {
+  const board: Board = {
     id: row.id as Board['id'],
     name: row.name,
     profileId: row.profileId as Board['profileId'],
@@ -32,6 +32,23 @@ function rowToBoard(row: typeof boards.$inferSelect): Board {
     updatedAt: row.updatedAt,
     ownerUserId: row.ownerUserId ?? undefined,
     orgId: row.orgId ?? undefined,
+  };
+  // Absent stays absent (as in the file store), so a round trip is identical.
+  if (row.layout !== null) board.layout = row.layout as Board['layout'];
+  if (row.display !== null) board.display = row.display as Board['display'];
+  return board;
+}
+
+/** Columns written for a board's content (everything but id, owner and org). */
+function contentColumns(board: Board) {
+  return {
+    name: board.name,
+    profileId: board.profileId as string,
+    grid: board.grid,
+    layout: board.layout ?? null,
+    display: board.display ?? null,
+    version: board.version,
+    updatedAt: board.updatedAt,
   };
 }
 
@@ -100,13 +117,7 @@ export function createPgBoardStore(databaseUrl: string): BoardStore {
     await db.transaction(async (tx) => {
       const updated = await tx
         .update(boards)
-        .set({
-          name: board.name,
-          profileId: board.profileId as string,
-          grid: board.grid,
-          version: board.version,
-          updatedAt: board.updatedAt,
-        })
+        .set(contentColumns(board))
         .where(and(eq(boards.id, board.id as string), eq(boards.version, previousVersion)))
         .returning({ id: boards.id });
       if (updated.length === 0) {
@@ -184,13 +195,9 @@ export function createPgBoardStore(databaseUrl: string): BoardStore {
           .insert(boards)
           .values({
             id: stored.id as string,
-            name: stored.name,
-            profileId: stored.profileId as string,
             ownerUserId: stored.ownerUserId ?? null,
             orgId: stored.orgId ?? null,
-            grid: stored.grid,
-            version: stored.version,
-            updatedAt: stored.updatedAt,
+            ...contentColumns(stored),
           })
           .onConflictDoNothing({ target: boards.id })
           .returning({ id: boards.id });
@@ -268,13 +275,9 @@ export function createPgBoardStore(databaseUrl: string): BoardStore {
         .insert(boards)
         .values({
           id: demo.id as string,
-          name: demo.name,
-          profileId: demo.profileId as string,
           ownerUserId: demo.ownerUserId ?? null,
           orgId: demo.orgId ?? null,
-          grid: demo.grid,
-          version: demo.version,
-          updatedAt: demo.updatedAt,
+          ...contentColumns(demo),
         })
         .onConflictDoNothing({ target: boards.id });
     },

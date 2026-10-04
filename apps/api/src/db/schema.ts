@@ -19,6 +19,10 @@ export const boards = pgTable(
     ownerUserId: text('owner_user_id'),
     orgId: text('org_id'),
     grid: jsonb('grid').notNull(),
+    // Optional board kind ('grid' | 'literacy-keyboard' | 'visual-schedule').
+    layout: text('layout'),
+    // Optional per-board display preferences (BoardDisplayPreferences).
+    display: jsonb('display'),
     version: integer('version').notNull().default(1),
     updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'string' }).notNull(),
   },

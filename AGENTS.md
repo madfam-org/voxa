@@ -23,7 +23,7 @@ fixtures free of real names and health information.
 | `apps/mobile`                   | `@voxa/mobile` — Expo SDK 57 communicator app (EAS builds).                                                                         |
 | `packages/*`                    | `core` (domain model), `obf` (Open Board Format), `import-adapters`, `vocabulary`, `symbols`, `sync`, `access`, `ai`, `i18n`, `ui`. |
 | `e2e`                           | Playwright smoke, accessibility (axe) and staging specs.                                                                            |
-| `apps/api/drizzle/migrations`   | SQL migrations, `meta/_journal.json` and their snapshots (`0000`–`0006`).                                                           |
+| `apps/api/drizzle/migrations`   | SQL migrations, `meta/_journal.json` and their snapshots (`0000`–`0007`).                                                           |
 | `k8s/production`, `k8s/staging` | Kustomize manifests (digest-pinned images).                                                                                         |
 | `enclii.yaml`                   | Enclii network and status declarations.                                                                                             |
 | `docs/`                         | Architecture, data model, auth, deploy, ops, launch and legal docs.                                                                 |
@@ -206,7 +206,10 @@ pnpm build
     transaction: of two writers on one version exactly one wins and the other
     gets 409 `VERSION_CONFLICT` with `currentVersion` (a PUT without
     `expectedVersion` retries up to three times). The motor-planning 422 is
-    unchanged. `listBoardsForActor` filters in SQL with the `canAccessBoard`
+    unchanged. Every content field of a `Board` is persisted, including
+    `layout` and `display` (columns since migration 0007; before it the
+    PostgreSQL store dropped them while the file store kept them).
+    `listBoardsForActor` filters in SQL with the `canAccessBoard`
     rule, `countBoardsOwnedBy` uses `count(*)`, events are trimmed per board in
     one statement. Never load every board (`select … from boards` without a
     `WHERE`) on a request path. Tested in `src/store/pg-board-store.pg.test.ts`
