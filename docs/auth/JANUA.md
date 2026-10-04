@@ -80,7 +80,8 @@ AUTH_SECRET=<generated server-side; never the Janua client secret>
 AUTH_JANUA_ISSUER=https://auth.madfam.io
 AUTH_JANUA_CLIENT_ID=<Janua client id>
 AUTH_JANUA_CLIENT_SECRET=<Janua client secret>
-# AUTH_URL=<origin>   # optional pin; unset in the deployments (see below)
+AUTH_PUBLIC_HOSTS=voxa.madfam.io,voxa-app.madfam.io   # hosts sign-in may run on (see below)
+# AUTH_URL=<origin>   # break-glass pin for every host; unset in the deployments
 NEXT_PUBLIC_API_URL=https://voxa-api.madfam.io
 ```
 
@@ -96,10 +97,44 @@ types or sees it.
 
 One web deployment serves two hosts per environment: the landing host
 (`voxa.madfam.io`) and the app host (`voxa-app.madfam.io`; `voxa-staging…` and
-`voxa-app-staging…` on staging). `AUTH_URL` is therefore left unset: Auth.js
-builds the callback from the host the browser used (`trustHost`), so the
-PKCE, state and nonce cookies and the session cookie stay on that host.
-Sign-out returns to that host's sign-in page.
+`voxa-app-staging…` on staging). The PKCE, state and nonce cookies and the
+session cookie are host-scoped, so sign-in must stay on the host the browser
+used, and `AUTH_URL` (one origin for every host) is left unset.
+
+Behind the tunnel the Next.js standalone server hands route handlers a
+request URL on its bind address (`HOSTNAME=0.0.0.0`, `PORT=3000`), and
+Auth.js builds its callback, error and sign-out URLs from that URL's origin
+(`trustHost` only skips Auth.js's own host check). Left alone, every Janua
+callback redirects to `https://0.0.0.0:3000/auth/signin?error=Configuration`.
+So the exported Auth.js handlers (`src/auth.ts`, used by the
+`[...nextauth]` route, the middleware session read and the API proxy) first
+rebuild the request URL (`src/lib/public-origin.ts`):
+
+- host: the first `X-Forwarded-Host` value, else `Host`;
+- scheme: `X-Forwarded-Proto` (`http` or `https`), else `https` (`http` for
+  a loopback host);
+- only when the host is in `AUTH_PUBLIC_HOSTS` (comma-separated; an entry
+  without a port matches any port). Without the variable the list is the
+  host of `NEXT_PUBLIC_BASE_URL` and of `AUTH_URL` plus `localhost`,
+  `127.0.0.1` and `[::1]` (development and tests).
+
+A host outside the list is never used: Auth.js answers 400 (or uses
+`AUTH_URL` when it is set), sign-out answers 400, the same-origin check
+refuses, and the sign-in server actions go to the sign-in page with
+`error=Configuration`. A malformed entry makes `/api/health/ready` answer 503
+with `invalid: ["AUTH_PUBLIC_HOSTS"]`. Sign-out returns to the sign-in page of
+the allow-listed host the browser used.
+
+The k8s web manifests set `AUTH_PUBLIC_HOSTS` to the landing and app host of
+their environment. After each web deploy,
+`scripts/launch/verify-auth-public-origin.sh` checks both hosts anonymously:
+`/api/auth/providers` must report `callbackUrl` =
+`https://<host>/api/auth/callback/janua`, and an anonymous
+`/api/auth/callback/janua?code=probe&state=probe` must redirect to
+`https://<host>/…`. The CI axe job runs the same script and
+`e2e/specs/auth-public-origin.spec.ts` against the standalone server bound to
+`0.0.0.0`. Adding a web host means adding it to `AUTH_PUBLIC_HOSTS`, to the
+deploy smoke and to the Janua client (next paragraph) together.
 
 Janua client registration, for **each of the four hosts**: redirect URI
 `https://<host>/api/auth/callback/janua` (exact match) and post-logout redirect

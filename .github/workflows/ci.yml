@@ -124,7 +124,17 @@ jobs:
         working-directory: e2e
       - name: Start web for axe scans
         working-directory: apps/web/.next/standalone
-        run: node apps/web/server.js &
+        # AUTH_PUBLIC_HOSTS: the loopback names Playwright uses plus every host
+        # the k8s web manifests allow-list, so e2e/specs/auth-public-origin.spec.ts
+        # and the deploy smoke below can prove sign-in stays on each of them.
+        run: |
+          manifest_hosts="$(sed -n '/name: AUTH_PUBLIC_HOSTS/{n;s/.*value: *"\(.*\)".*/\1/p;}' "${GITHUB_WORKSPACE}/k8s/production/voxa-web-deployment.yaml" "${GITHUB_WORKSPACE}/k8s/staging/voxa-web-deployment.yaml" | paste -sd, -)"
+          if [ -z "${manifest_hosts}" ]; then
+            echo "::error::AUTH_PUBLIC_HOSTS not found in the k8s web manifests" >&2
+            exit 1
+          fi
+          echo "VOXA_E2E_PUBLIC_HOSTS=${manifest_hosts}" >> "${GITHUB_ENV}"
+          AUTH_PUBLIC_HOSTS="127.0.0.1,localhost,${manifest_hosts}" node apps/web/server.js &
         env:
           PORT: 3000
           # Same bind as production (apps/web/Dockerfile, k8s). With a specific
@@ -143,6 +153,10 @@ jobs:
       - name: Image optimizer is off (/_next/image -> 404)
         # GHSA-2xp9-vwfh-vxw4: apps/web/next.config.ts sets images.unoptimized.
         run: VOXA_PROD_WEB_URL=http://127.0.0.1:3000 VOXA_IMAGE_VERIFY_ATTEMPTS=1 ./scripts/launch/verify-prod-image-optimizer.sh
+      - name: Sign-in stays on every public host (deploy smoke against the 0.0.0.0-bound server)
+        # scripts/launch/verify-auth-public-origin.sh, the same check the web
+        # deploy workflows run against production and staging.
+        run: VOXA_AUTH_CONNECT_URL=http://127.0.0.1:3000 VOXA_AUTH_VERIFY_ATTEMPTS=1 ./scripts/launch/verify-auth-public-origin.sh ${VOXA_E2E_PUBLIC_HOSTS//,/ }
       - run: pnpm test:e2e:a11y
         env:
           PLAYWRIGHT_BASE_URL: http://127.0.0.1:3000

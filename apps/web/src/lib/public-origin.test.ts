@@ -188,7 +188,7 @@ describe('resolvePublicOrigin', () => {
   });
 
   it('refuses malformed hosts', () => {
-    for (const host of ['voxa.madfam.io/evil', 'user@voxa.madfam.io', 'voxa.madfam.io:99999', '', ' ']) {
+    for (const host of [`${LANDING}/evil`, `user@${LANDING}`, `${LANDING}:99999`, '', ' ']) {
       const result = resolvePublicOrigin(headers({ 'X-Forwarded-Host': host, Host: 'nope.example' }), env);
       assert.equal(result.ok, false, host);
     }

@@ -5,7 +5,7 @@
   "scripts": {
     "test": "playwright test -c playwright.config.ts",
     "test:smoke": "playwright test -c playwright.config.ts specs/smoke.spec.ts",
-    "test:a11y": "playwright test -c playwright.config.ts specs/a11y.spec.ts specs/demo-cta.spec.ts",
+    "test:a11y": "playwright test -c playwright.config.ts specs/a11y.spec.ts specs/demo-cta.spec.ts specs/auth-public-origin.spec.ts",
     "test:offline": "playwright test -c playwright.config.ts --workers=1 specs/offline-media.spec.ts",
     "test:access": "playwright test -c playwright.config.ts --workers=1 specs/access-methods.spec.ts",
     "test:import": "playwright test -c playwright.config.ts --workers=1 specs/board-import.spec.ts",

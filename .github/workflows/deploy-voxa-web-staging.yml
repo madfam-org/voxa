@@ -212,6 +212,10 @@ jobs:
         if: success()
         run: |
           ./scripts/launch/wait-for-build.sh https://voxa-staging.madfam.io/api/health "${GITHUB_SHA}"
+          # Sign-in stays on each host this web serves (anonymous GETs): the
+          # Auth.js callback URL and the callback's error redirect must name
+          # that host, never the 0.0.0.0 bind address (2026-10-04 incident).
+          ./scripts/launch/verify-auth-public-origin.sh voxa-staging.madfam.io voxa-app-staging.madfam.io
           for i in 1 2 3; do
             p="$(curl -sS -o /dev/null -w '%{http_code}' https://voxa-staging.madfam.io/legal/privacy || true)"
             if [ "$p" = "200" ]; then exit 0; fi
