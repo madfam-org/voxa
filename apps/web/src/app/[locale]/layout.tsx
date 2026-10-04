@@ -7,9 +7,10 @@ import { ServiceWorkerRegistration } from '@/components/service-worker-registrat
 import { routing } from '@/i18n/routing';
 import { surface } from '@/lib/tokens';
 
-export function generateStaticParams(): Array<{ locale: string }> {
-  return routing.locales.map((locale) => ({ locale }));
-}
+// Pages render per request: the Content-Security-Policy carries a fresh nonce
+// (src/middleware.ts) that Next.js stamps on its scripts, which a prerendered
+// page cannot carry. A nonce CSP is preferred over edge-caching the landing.
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({
   params,

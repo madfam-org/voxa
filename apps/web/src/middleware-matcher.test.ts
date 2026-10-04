@@ -20,3 +20,11 @@ describe('middleware matcher', () => {
     assert.equal(matches('/en/legal/symbols'), true);
   });
 });
+
+describe('middleware matcher: crawling files', () => {
+  it('leaves robots.txt, sitemap.xml and llms.txt to their route handlers', () => {
+    assert.equal(matches('/robots.txt'), false);
+    assert.equal(matches('/sitemap.xml'), false);
+    assert.equal(matches('/llms.txt'), false);
+  });
+});

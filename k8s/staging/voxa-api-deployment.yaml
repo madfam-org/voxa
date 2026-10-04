@@ -54,6 +54,8 @@ spec:
               value: staging
             - name: VOXA_JANUA_AUTH_REQUIRED
               value: "true"
+            - name: CORS_ALLOWED_ORIGINS
+              value: "https://voxa-staging.madfam.io,https://voxa-app-staging.madfam.io"
           envFrom:
             - secretRef:
                 name: voxa-secrets

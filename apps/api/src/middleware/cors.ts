@@ -2,6 +2,13 @@ import type { MiddlewareHandler } from 'hono';
 import { cors as honoCors } from 'hono/cors';
 import { DEV_AUTH_HEADERS } from '../lib/dev-auth.js';
 
+/**
+ * Exact browser origins allowed to call the API (A-030). `CORS_ALLOWED_ORIGINS`
+ * (comma-separated, set per deployment in k8s/) is the list when present;
+ * otherwise the four public Voxa web hosts. No wildcard: a sibling subdomain is
+ * not trusted just for sharing the parent domain. Outside production, local
+ * development origins are allowed as well.
+ */
 const DEFAULT_ORIGINS = [
   'https://voxa.madfam.io',
   'https://voxa-app.madfam.io',
@@ -9,17 +16,19 @@ const DEFAULT_ORIGINS = [
   'https://voxa-app-staging.madfam.io',
 ];
 
-function allowedOrigins(): string[] {
-  const extra = process.env.CORS_ALLOWED_ORIGINS?.split(',').map((s) => s.trim()).filter(Boolean);
-  return [...DEFAULT_ORIGINS, ...(extra ?? [])];
+export function allowedOrigins(): string[] {
+  const configured = process.env.CORS_ALLOWED_ORIGINS?.split(',')
+    .map((s) => s.trim().replace(/\/$/, ''))
+    .filter(Boolean);
+  return configured && configured.length > 0 ? configured : [...DEFAULT_ORIGINS];
 }
 
-function isAllowedOrigin(origin: string): boolean {
+export function isAllowedOrigin(origin: string): boolean {
   if (allowedOrigins().includes(origin)) return true;
   if (process.env.NODE_ENV !== 'production') {
-    return origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:');
+    return /^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin);
   }
-  return /^https:\/\/[a-z0-9-]+\.madfam\.io$/.test(origin);
+  return false;
 }
 
 const BASE_HEADERS = ['Authorization', 'Content-Type', 'X-Voxa-AI-Consent'];

@@ -47,3 +47,24 @@ describe('next.config images posture', () => {
     );
   });
 });
+
+describe('next.config security headers', () => {
+  it('does not advertise the framework', () => {
+    assert.equal(nextConfig.poweredByHeader, false);
+  });
+
+  it('sends HSTS, nosniff, referrer, frame and permissions headers on every path', async () => {
+    const rules = await nextConfig.headers!();
+    const all = rules.find((rule) => rule.source === '/:path*');
+    assert.ok(all, 'a rule for /:path* exists');
+    const headers = new Map(all.headers.map((h) => [h.key.toLowerCase(), h.value]));
+    assert.equal(headers.get('strict-transport-security'), 'max-age=31536000; includeSubDomains');
+    assert.equal(headers.get('x-content-type-options'), 'nosniff');
+    assert.equal(headers.get('referrer-policy'), 'strict-origin-when-cross-origin');
+    assert.equal(headers.get('x-frame-options'), 'DENY');
+    const permissions = headers.get('permissions-policy') ?? '';
+    assert.match(permissions, /(^|, )camera=\(self\)(,|$)/);
+    assert.match(permissions, /(^|, )microphone=\(self\)(,|$)/);
+    assert.match(permissions, /(^|, )geolocation=\(\)(,|$)/);
+  });
+});
