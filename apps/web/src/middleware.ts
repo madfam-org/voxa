@@ -1,9 +1,10 @@
 import createMiddleware from 'next-intl/middleware';
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/auth';
+import { handlers } from '@/auth';
 import { routing } from '@/i18n/routing';
 import { isAuthConfigured } from '@/lib/auth-env';
-import { bypassesIntl, gateDecision, stripLocalePrefix } from '@/lib/route-gate';
+import { bypassesIntl, gateDecision, isPublicPath, stripLocalePrefix } from '@/lib/route-gate';
+import { readServerSession } from '@/lib/server-session';
 import { buildContentSecurityPolicy, generateNonce } from '@/lib/security-headers';
 
 const intlMiddleware = createMiddleware(routing);
@@ -27,12 +28,14 @@ function withCsp(response: NextResponse, csp: string): NextResponse {
 }
 
 /**
- * Locale routing, the nonce CSP and the sign-in gate. `auth()` wraps it: it
- * decrypts the session cookie, runs the refresh when the access token is due
- * and writes the rotated session back on this response; `request.auth` is
- * null for a missing, expired or unrefreshable session.
+ * Locale routing, the nonce CSP and the sign-in gate.
+ *
+ * Pages that need a session are gated on a VALID one: Auth.js's own session
+ * endpoint decrypts the cookie and runs the `jwt` callback (refresh when the
+ * access token is due, sign-out when it cannot be refreshed). A rotated
+ * session is written back on this response. Public pages never read it.
  */
-export default auth((request) => {
+export default async function middleware(request: NextRequest): Promise<NextResponse> {
   const pathname = stripLocalePrefix(request.nextUrl.pathname, routing.locales);
   if (bypassesIntl(pathname)) return NextResponse.next();
 
@@ -44,12 +47,17 @@ export default auth((request) => {
   requestHeaders.set('x-nonce', nonce);
   requestHeaders.set('Content-Security-Policy', csp);
 
-  const decision = gateDecision({
-    pathname,
-    authConfigured: isAuthConfigured(),
-    hasValidSession: Boolean(request.auth),
-  });
-  if (decision === 'signin') {
+  const authConfigured = isAuthConfigured();
+  let hasValidSession = false;
+  let setCookies: string[] = [];
+  if (authConfigured && !isPublicPath(pathname)) {
+    const session = await readServerSession(request, { sessionHandler: handlers.GET });
+    hasValidSession = Boolean(session.token);
+    setCookies = session.setCookies;
+  }
+
+  let response: NextResponse;
+  if (gateDecision({ pathname, authConfigured, hasValidSession }) === 'signin') {
     const url = request.nextUrl.clone();
     const localePrefix =
       routing.locales.find(
@@ -59,11 +67,13 @@ export default auth((request) => {
     url.pathname = localePrefix === routing.defaultLocale ? '/auth/signin' : `/${localePrefix}/auth/signin`;
     url.search = '';
     url.searchParams.set('redirect_to', pathname);
-    return withCsp(NextResponse.redirect(url), csp);
+    response = withCsp(NextResponse.redirect(url), csp);
+  } else {
+    response = withCsp(intlMiddleware(new NextRequest(request, { headers: requestHeaders })), csp);
   }
-
-  return withCsp(intlMiddleware(new NextRequest(request, { headers: requestHeaders })), csp);
-});
+  for (const line of setCookies) response.headers.append('Set-Cookie', line);
+  return response;
+}
 
 export const config = {
   matcher: [

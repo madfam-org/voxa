@@ -103,7 +103,7 @@ The API accepts:
 2. **A single-use ticket** on the WebSocket (`GET /v1/ws?boardId=…&ticket=…`,
    minted by `POST /v1/ws-ticket` with a bearer; valid 30 s; consumed on
    upgrade). Access tokens are never read from the URL.
-3. **`X-Voxa-User-Id` / `X-Voxa-Role`** (and `?userId=&role=` on the WebSocket) —
+3. **`X-Voxa-User-Id` / `X-Voxa-Role`** (HTTP only; the WebSocket takes nothing but a ticket, which these headers can mint in development) —
    a local-development shortcut, honoured **only** when `NODE_ENV` is not
    `production` **and** `VOXA_DEV_AUTH=true` (and neither `VOXA_JANUA_AUTH_REQUIRED`
    nor `JANUA_AUTH_REQUIRED` is `true`). Otherwise a request without a bearer

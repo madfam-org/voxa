@@ -113,49 +113,33 @@ describe('closeAtTokenExpiry', () => {
   });
 });
 
-describe('resolveWsTeam development shortcut', () => {
+describe('the WebSocket accepts only tickets', () => {
   const saved = { NODE_ENV: process.env.NODE_ENV, VOXA_DEV_AUTH: process.env.VOXA_DEV_AUTH };
 
   afterEach(() => {
-    delete process.env.VOXA_JANUA_AUTH_REQUIRED;
-    delete process.env.JANUA_AUTH_REQUIRED;
     for (const [key, value] of Object.entries(saved)) {
       if (value === undefined) delete process.env[key];
       else process.env[key] = value;
     }
   });
 
-  function app() {
-    const hono = new Hono();
-    hono.get('/ws', async (c) => c.json(await resolveWsTeam(c)));
-    return hono;
-  }
-
-  it('returns the dev team with VOXA_DEV_AUTH=true outside production and no ticket', async () => {
+  it('ignores ?userId=&role= even with VOXA_DEV_AUTH=true outside production', async () => {
+    process.env.NODE_ENV = 'test';
     process.env.VOXA_DEV_AUTH = 'true';
-    const res = await app().request('/ws?boardId=demo-core&userId=dev-a&role=editor');
-    const team = (await res.json()) as { userId: string; role: string };
-    assert.equal(team.userId, 'dev-a');
-    assert.equal(team.role, 'editor');
+    const res = await gatedApp().request('/ws?boardId=demo-core&userId=dev-a&role=editor');
+    assert.equal(res.status, 401);
   });
 
-  it('returns null when auth is required and no ticket is present', async () => {
-    process.env.VOXA_DEV_AUTH = 'true';
-    process.env.VOXA_JANUA_AUTH_REQUIRED = 'true';
-    const res = await app().request('/ws?boardId=demo-core');
-    assert.equal(await res.json(), null);
+  it('ignores an Authorization header on the upgrade', async () => {
+    const res = await gatedApp().request('/ws?boardId=demo-core', {
+      headers: { Authorization: 'Bearer eyJhbGciOiJSUzI1NiJ9.e30.sig' },
+    });
+    assert.equal(res.status, 401);
   });
 
-  it('ignores ?userId=&role= in production even with VOXA_DEV_AUTH=true', async () => {
-    process.env.NODE_ENV = 'production';
-    process.env.VOXA_DEV_AUTH = 'true';
-    const res = await app().request('/ws?boardId=demo-core&userId=dev-a&role=admin');
-    assert.equal(await res.json(), null);
-  });
-
-  it('ignores ?userId=&role= without VOXA_DEV_AUTH', async () => {
-    delete process.env.VOXA_DEV_AUTH;
-    const res = await app().request('/ws?boardId=demo-core&userId=dev-a&role=admin');
-    assert.equal(await res.json(), null);
+  it('resolveWsTeam returns null without a ticket', async () => {
+    const app = new Hono();
+    app.get('/ws', async (c) => c.json(await resolveWsTeam(c)));
+    assert.equal(await (await app.request('/ws?boardId=demo-core')).json(), null);
   });
 });

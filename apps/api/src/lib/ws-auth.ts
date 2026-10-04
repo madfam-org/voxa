@@ -1,6 +1,5 @@
 import type { Context, MiddlewareHandler } from 'hono';
-import { devAuthEnabled, parseDevRole } from './dev-auth.js';
-import { consumeWsTicket, sourceTokenExpiry, type WsTicketGrant } from './ws-tickets.js';
+import { consumeWsTicket, type WsTicketGrant } from './ws-tickets.js';
 
 declare module 'hono' {
   interface ContextVariableMap {
@@ -10,25 +9,14 @@ declare module 'hono' {
 
 /**
  * Resolves the WebSocket caller from a single-use ticket (`?ticket=`, minted by
- * `POST /v1/ws-ticket`; see `ws-tickets.ts`). Access tokens are never read from
- * the URL. Without a valid ticket it returns null, unless the local-development
- * shortcut (`?userId=&role=`) is enabled; see `devAuthEnabled()`, never in
- * production.
+ * `POST /v1/ws-ticket`; see `ws-tickets.ts`). That is the only way in: an
+ * access token in the URL, an `Authorization` header and the development
+ * identity shortcut are all ignored here. (Local development without Janua
+ * still works: the ticket is minted through the development headers, which
+ * `teamAuth` honours on `POST /v1/ws-ticket` when `devAuthEnabled()`.)
  */
 export async function resolveWsTeam(c: Context): Promise<WsTicketGrant | null> {
-  const ticket = c.req.query('ticket');
-  if (ticket) {
-    return consumeWsTicket(ticket, { databaseUrl: process.env.DATABASE_URL });
-  }
-
-  if (!devAuthEnabled()) return null;
-
-  const now = Date.now();
-  return {
-    userId: c.req.query('userId') ?? 'dev-user',
-    role: parseDevRole(c.req.query('role')),
-    tokenExpiresAt: sourceTokenExpiry({ userId: 'dev-user', role: 'communicator' }, now),
-  };
+  return consumeWsTicket(c.req.query('ticket'), { databaseUrl: process.env.DATABASE_URL });
 }
 
 /**

@@ -99,7 +99,8 @@ test('signed in, /app renders the board and page scripts never see a token', asy
   expect(session.text).not.toContain('eyJ');
   expect(JSON.parse(session.text).user.id).toBe('e2e-user-a');
 
-  const cookies = await context.cookies();
+  // The helper seeds both loopback host names; this origin's cookie is the one that counts.
+  const cookies = await context.cookies(BASE_URL);
   const sessionCookie = cookies.find((c) => c.name.startsWith(sessionCookieNameFor(BASE_URL)));
   expect(sessionCookie?.httpOnly).toBe(true);
   expect(sessionCookie?.value).not.toContain('eyJ');
@@ -158,7 +159,8 @@ test('sign-out purges this account’s local data, then ends the Janua session',
   expect(left).toEqual([]);
   const shells = await page.evaluate(async () => (await caches.keys()).filter((n) => n.startsWith('voxa-shell-')));
   expect(shells).toEqual([]);
-  const cookies = await context.cookies();
+  // The helper seeds both loopback host names; this origin's cookie is the one that counts.
+  const cookies = await context.cookies(BASE_URL);
   expect(cookies.some((c) => c.name.startsWith(sessionCookieNameFor(BASE_URL)))).toBe(false);
   expect(await (await page.request.get('/api/auth/session')).json()).toBeNull();
   expect((await page.request.get('/api/v1/boards')).status()).toBe(401);
@@ -178,7 +180,8 @@ test('«Entrar como otra persona» on the signed-in surface purges, signs out an
   await page.waitForURL((url) => url.href.startsWith(`${ISSUER}/api/v1/oauth/authorize`), { timeout: 30_000 });
   expect(authorizeRequests.at(-1)!.searchParams.get('prompt')).toBe('login');
 
-  const cookies = await context.cookies();
+  // The helper seeds both loopback host names; this origin's cookie is the one that counts.
+  const cookies = await context.cookies(BASE_URL);
   expect(cookies.some((c) => c.name.startsWith(sessionCookieNameFor(BASE_URL)))).toBe(false);
   await page.goto(`${BASE_URL}/auth/signin`);
   expect(await page.evaluate((key) => localStorage.getItem(`${key}:family-board`), BOARD_CACHE_KEY)).toBeNull();

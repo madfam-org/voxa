@@ -51,7 +51,11 @@ export async function readServerSession(
   } catch {
     return NO_SESSION;
   }
-  const setCookies = response.headers.getSetCookie();
+  // Only the session cookie itself (a rotation or a deletion) goes back to the
+  // browser; Auth.js's CSRF and callback cookies belong to its own endpoints.
+  const setCookies = response.headers
+    .getSetCookie()
+    .filter((line) => line.startsWith(`${cookieName}=`) || line.startsWith(`${cookieName}.`));
   const body = (await response.json().catch(() => null)) as unknown;
   if (!response.ok || !body) return { token: null, setCookies };
 

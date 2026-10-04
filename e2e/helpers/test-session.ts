@@ -159,8 +159,11 @@ export async function openAuthenticatedEditor(
   const userId = 'a11y-test-user';
   await seedTestSession(context, baseURL, { role: 'editor', userId });
   await seedLocalState(page);
+  // Not 'networkidle': same-origin /api calls made while the service worker
+  // takes control are never reported finished to Playwright, so the page
+  // never looks idle. The waits below target what the scan needs instead.
   await page.goto('/app/edit');
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('load');
 
   const demoCacheKey = `${BOARD_CACHE_KEY}:${DEMO_BOARD_ID}`;
   await page.waitForFunction((key) => localStorage.getItem(key) !== null, demoCacheKey, {
@@ -183,7 +186,7 @@ export async function openAuthenticatedEditor(
   );
 
   await page.reload();
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('load');
   // The editor-only chrome renders after /api/auth/session resolves (identity and role only).
   await page.getByRole('button', { name: 'Audit' }).waitFor({ timeout: 20_000 });
 }

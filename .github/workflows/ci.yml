@@ -191,3 +191,11 @@ jobs:
         run: pnpm test:e2e:session
         env:
           PLAYWRIGHT_BASE_URL: http://127.0.0.1:3000
+      - name: Live sync over a ticketed WebSocket
+        # e2e/specs/live-sync.spec.ts: two signed-in sessions go Live, an edit
+        # saved through one reaches the other's socket; reused tickets and
+        # ?accessToken= are refused. Starts the built API itself.
+        run: pnpm test:e2e:live
+        env:
+          PLAYWRIGHT_BASE_URL: http://127.0.0.1:3000
+          VOXA_E2E_API_URL: http://localhost:4000
