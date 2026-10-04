@@ -76,21 +76,31 @@ spec:
               value: "1"
             - name: NEXT_PUBLIC_API_URL
               value: "https://voxa-api-staging.madfam.io"
-            - name: NEXT_PUBLIC_OIDC_ISSUER
-              value: "https://auth.madfam.io"
-            - name: OIDC_ISSUER
-              value: "https://auth.madfam.io"
-            - name: NEXT_PUBLIC_OIDC_CLIENT_ID
-              value: "jnc_4qRWyI-ul_GL28hrSxrX7AvIyotFMBuB"
-            - name: OIDC_CLIENT_ID
-              value: "jnc_4qRWyI-ul_GL28hrSxrX7AvIyotFMBuB"
             - name: NEXT_PUBLIC_BASE_URL
               value: "https://voxa-staging.madfam.io"
-            - name: OIDC_CLIENT_SECRET
+            # Sign-in (Auth.js + Janua; docs/auth/JANUA.md). The Janua client is the
+            # one the web always used; its secret keeps its Secret key name.
+            - name: AUTH_URL
+              value: "https://voxa-staging.madfam.io"
+            - name: AUTH_JANUA_ISSUER
+              value: "https://auth.madfam.io"
+            - name: AUTH_JANUA_CLIENT_ID
+              value: "jnc_4qRWyI-ul_GL28hrSxrX7AvIyotFMBuB"
+            - name: AUTH_JANUA_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
                   name: voxa-secrets
                   key: OIDC_CLIENT_SECRET
+                  optional: true
+            # Encrypts the session cookie: this app's own secret, never the Janua
+            # client secret (R42). Optional here so a missing key shows up as
+            # /api/health/ready 503 (missing: AUTH_SECRET) and the rollout stalls on
+            # the previous pods (maxUnavailable: 0).
+            - name: AUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: voxa-secrets
+                  key: AUTH_SECRET
                   optional: true
           resources:
             requests:

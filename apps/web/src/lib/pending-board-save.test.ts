@@ -92,4 +92,12 @@ describe('pending-board-save', () => {
     assert.deepEqual(await loadPendingBoardSave('family-board', 'user-b'), { status: 'dropped' });
     assert.equal(localBacking[`${PENDING_SAVE_KEY}:family-board`], undefined);
   });
+
+  it('keeps a queued write while it cannot tell who is signed in (offline)', async () => {
+    const { loadPendingBoardSave, queuePendingBoardSave } = await import('./pending-board-save.js');
+    await queuePendingBoardSave('family-board', createDemoBoard(), 'user-a');
+    assert.deepEqual(await loadPendingBoardSave('family-board', undefined), { status: 'held' });
+    const later = await loadPendingBoardSave('family-board', 'user-a');
+    assert.equal(later.status, 'ready');
+  });
 });

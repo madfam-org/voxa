@@ -43,11 +43,10 @@ test.describe('Voxa accessibility (axe) — public pages', () => {
  * muted gray measured 3.19:1. Nothing caught it, because the only authed lane
  * needed JANUA_TEST_* secrets and therefore skipped on every CI run.
  *
- * This lane runs everywhere the public lane does. It works because Voxa's
- * session cookie is unsigned JSON that `getSession()` reads with JSON.parse,
- * and because the CI a11y job runs the standalone server with no OIDC env at
- * all — see helpers/test-session.ts for the full argument. No auth code was
- * weakened to make this possible.
+ * This lane runs everywhere the public lane does. The CI a11y job starts the
+ * web server with a test-only AUTH_SECRET, and helpers/test-session.ts
+ * encrypts a real Auth.js session with it; see that file for why this
+ * weakens nothing.
  */
 test.describe('Voxa accessibility (axe) — authenticated surfaces (mock session)', () => {
   test('/app/edit editor grid has no WCAG 2.2 AA violations', async ({ page, context, baseURL }) => {

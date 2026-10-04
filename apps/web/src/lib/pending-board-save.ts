@@ -20,6 +20,8 @@ interface PendingEnvelope {
 export type PendingBoardSave =
   | { status: 'none' }
   | { status: 'ready'; board: Board }
+  /** A save exists but who is signed in is not known yet (offline): kept, not sent. */
+  | { status: 'held' }
   | { status: 'dropped' };
 
 function legacyKey(boardId: string): string {
@@ -93,14 +95,17 @@ function parseEnvelope(raw: string): PendingEnvelope | null {
 /**
  * The queued save for this board, if it belongs to `currentUserId`. A save
  * owned by anyone else, or by no recorded account, is deleted here and
- * reported as `dropped`; it is never returned for sending.
+ * reported as `dropped`; it is never returned for sending. `currentUserId`
+ * `null` means signed out; `undefined` means not known yet (offline), and the
+ * save is kept (`held`).
  */
 export async function loadPendingBoardSave(
   boardId: string,
-  currentUserId: string | null,
+  currentUserId: string | null | undefined,
 ): Promise<PendingBoardSave> {
   const raw = await readRaw(boardId);
   if (!raw) return { status: 'none' };
+  if (currentUserId === undefined) return { status: 'held' };
   const pending = parseEnvelope(raw);
   if (!pending || !currentUserId || pending.ownerUserId !== currentUserId) {
     await clearPendingBoardSave(boardId);
@@ -123,7 +128,8 @@ export async function clearPendingBoardSave(boardId: string): Promise<void> {
 /** Whether a save for this account is waiting (others' saves are dropped, not counted). */
 export async function hasPendingBoardSave(
   boardId: string,
-  currentUserId: string | null,
+  currentUserId: string | null | undefined,
 ): Promise<boolean> {
-  return (await loadPendingBoardSave(boardId, currentUserId)).status === 'ready';
+  const { status } = await loadPendingBoardSave(boardId, currentUserId);
+  return status === 'ready' || status === 'held';
 }

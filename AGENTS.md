@@ -238,6 +238,24 @@ pnpm build
     `apps/web/src/lib/speech-voices.test.ts`,
     `apps/web/src/lib/play-button-speech.test.ts` and
     `e2e/specs/voice-choice.spec.ts`.
+13. **No token in page JavaScript.** The web signs in with Auth.js and the
+    Janua OIDC provider (`apps/web/src/auth.ts`); the session is an encrypted
+    httpOnly cookie (`AUTH_SECRET`, never the Janua client secret) holding
+    Janua's tokens. `GET /api/auth/session` returns identity and role only.
+    Browser code calls the API only through the same-origin proxy
+    `/api/v1/*` (`src/lib/api-proxy.ts`: plain `/v1/` paths, same-origin writes,
+    no cookie forwarded) or `/api/media/:id`; never `NEXT_PUBLIC_API_URL`
+    directly with a bearer. The WebSocket opens with a single-use ticket
+    (`POST /v1/ws-ticket`, `ws_tickets` table; never `?accessToken=`) and closes
+    at the token's `exp`. Sign-out is `POST /auth/signout` with RP-initiated
+    logout; account switching uses `prompt=select_account` / `prompt=login`;
+    both purge the account's local data, and queued offline saves are sent
+    only for the account that made them. Tested in
+    `apps/web/src/lib/auth-session.test.ts`, `api-proxy.test.ts`,
+    `sign-out.test.ts`, `account-switch.test.ts`, `account-data.test.ts`,
+    `pending-board-save.test.ts`, `apps/api/src/lib/ws-auth.test.ts` and
+    `apps/api/src/routes/ws-ticket.routes.test.ts` / `ws-ticket.pg.test.ts`.
+
 13. **Board writes are compare-and-set; reads are scoped.** The PostgreSQL
     store reads one board by id, applies the change, and updates the row only
     `WHERE id = $1 AND version = $2`, with the sync event in the same
@@ -428,7 +446,7 @@ blocks production use, **P1** next, **P2** planned, **P3** cleanup.
 | **Media bytes live in the shared PostgreSQL.** Uploads are size-capped, type-checked and quota-bound per user, but the bytes are stored in `media_assets.data`. | Large media grows the shared database, its backups and WAL. | P2 | Owner ruling (object storage behind signed URLs) | — |
 | **Prettier is not enforced.** `pnpm format` exists but CI does not check it, and several files predate it.                                                                                                                   | Formatting drifts and creates noise in unrelated PRs.                                                                                                                                   | P3       | Engineering work (one reformat, then a CI check)                                | —        |
 | **Selva predictions are off.** `SELVA_ENABLED` defaults to `false`, so every text suggestion comes from the local predictor. Turning it on needs a Janua service client for this edge, its id and secret delivered to the API, and a local model behind Selva for `restricted` requests. | Until then suggestions are rule-based only. Turning it on early is safe (every failure falls back to local) but pointless. | P2 | Ecosystem and operator work; no Voxa code change is needed | — |
-| **Real-time board sync never connects for a signed-in user.** The API's `teamAuth()` runs on `/v1/*` and answers the `/v1/ws` upgrade with 401, because a browser WebSocket cannot send the bearer header and the token travels as `?accessToken=` (which only `src/lib/ws-auth.ts` reads, after the middleware). | The sync badge reads offline for every signed-in user, an editor's edits are queued locally instead of saved live, and changes from another device arrive only on reload. Found by `e2e/specs/access-methods.spec.ts`. | P1 | Engineering work (exempt `/v1/ws` from `teamAuth`, which `resolveWsTeam` already authenticates; or a short-lived WS ticket) | — |
+| **Web sign-in needs `AUTH_SECRET` and the new Janua redirect URIs.** The web moved to Auth.js: `voxa-secrets` needs an `AUTH_SECRET` key (minted server-side) and the Janua client needs `https://<host>/api/auth/callback/janua` and `https://<host>/auth/signin` (post-logout) for production and staging. | Until both exist, `/api/health/ready` answers 503 on new web pods, so the rollout stalls on the previous version (safe, but the new sign-in is not live). | P0 | Owner setup (commands in the PR that introduced invariant 13) | — |
 | **One internal literal left in deploy-functional files.** The Kubernetes web deployments still carry the OAuth client id as a literal. (The `apps/web/src/lib/pricing.ts` comment that pointed at a now-private pricing document was reworded on 2026-10-04.) | The operational and commercial docs moved out on 2026-10-03; this needs a deploy-touching change. | P2 | Engineering work (read the client id from configuration) | — |
 
 The Next image optimizer gap listed here before 2026-10-02 is closed (#13,
@@ -445,7 +463,9 @@ invariant 6).
   admins act only inside their own `org_id`, owners edit their own boards and
   `demo-core` is read-only (`src/lib/board-access.ts`). Development headers
   (`X-Voxa-User-Id`/`X-Voxa-Role`) need `VOXA_DEV_AUTH=true` and never work in
-  production. Contract:
+  production. The web signs in through Auth.js with the Janua OIDC provider
+  (`AUTH_SECRET`, `AUTH_JANUA_ISSUER`, `AUTH_JANUA_CLIENT_ID`,
+  `AUTH_JANUA_CLIENT_SECRET`; invariant 13). Contract:
   [Janua ecosystem integration guide](https://github.com/madfam-org/janua/blob/main/docs/guides/ECOSYSTEM_INTEGRATION.md).
   Voxa setup: [docs/auth/JANUA.md](./docs/auth/JANUA.md).
 - **Entitlements (Janua claim, ADR-006).** The plan tier is a claim on the
