@@ -22,6 +22,11 @@ export interface CommunicatorSettings {
   touchActivation: TouchActivationMode;
   touchGuardEnabled: boolean;
   touchGuardMask: TouchGuardMask;
+  /**
+   * @deprecated No effect: Mulberry Symbols have no skin-tone variants and the
+   * picker was removed. Kept so stored settings keep parsing; remove together
+   * with its last reader in board-screen.tsx.
+   */
   defaultSymbolSkinTone: ArasaacSkinTone;
   whisperMode: boolean;
   hideSymbols: boolean;

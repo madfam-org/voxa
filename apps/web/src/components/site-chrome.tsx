@@ -110,6 +110,9 @@ export function SiteFooter(): React.ReactNode {
         <Link href="/legal/accessibility" style={{ color: brand.link }}>
           {t('accessibility')}
         </Link>
+        <Link href="/legal/symbols" style={{ color: brand.link }}>
+          {t('symbolCredits')}
+        </Link>
       </div>
     </footer>
   );

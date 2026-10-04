@@ -1,18 +1,23 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
-import type { ArasaacSkinTone, SymbolRef } from '@voxa/core';
-import { ARASAAC_SKIN_TONE_OPTIONS, isPersonPictogram } from '@voxa/symbols';
+import { useTranslations } from 'next-intl';
+import type { SymbolRef } from '@voxa/core';
+import { MULBERRY_LICENSE_URL, MULBERRY_SITE_URL } from '@voxa/symbols';
+import { Link } from '@/i18n/navigation';
 import { uploadBoardMedia } from '@/lib/upload-media';
 import { brand, neutral, status, surface } from '@/lib/tokens';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
 
+/** One hit from `GET /v1/symbols/search` (vendored Mulberry Symbols, CC BY-SA 4.0). */
 export interface SymbolHit {
-  id: number;
+  id: string;
   keyword: string;
   imageUrl: string;
-  source: 'arasaac';
+  source: 'mulberry';
+  file: string;
+  category: string;
   tags: string[];
 }
 
@@ -26,7 +31,8 @@ interface SymbolSearchPanelProps {
   accessToken?: string;
   contentLocale?: string;
   currentUrl?: string;
-  defaultSkinTone?: ArasaacSkinTone;
+  /** The button had a symbol Voxa no longer shows; ask for a replacement. */
+  symbolUnavailable?: boolean;
   disabled?: boolean;
   onSelect: (selection: SymbolSelection) => void;
   onClear: () => void;
@@ -37,29 +43,25 @@ export function SymbolSearchPanel({
   accessToken,
   contentLocale = 'es-MX',
   currentUrl,
-  defaultSkinTone = 'white',
+  symbolUnavailable = false,
   disabled,
   onSelect,
   onClear,
 }: SymbolSearchPanelProps): React.ReactNode {
+  const t = useTranslations('symbols');
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SymbolHit[]>([]);
-  const [attribution, setAttribution] = useState<string | null>(null);
+  const [searched, setSearched] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [pendingHit, setPendingHit] = useState<SymbolHit | null>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
 
   const applyHit = useCallback(
-    (hit: SymbolHit, skinTone?: ArasaacSkinTone) => {
-      const symbolRef: SymbolRef = {
-        provider: 'arasaac',
-        pictogramId: hit.id,
-        ...(skinTone ? { skinTone } : {}),
-      };
+    (hit: SymbolHit) => {
+      const symbolRef: SymbolRef = { provider: 'mulberry', slug: hit.id, file: hit.file };
       onSelect({ imageUrl: hit.imageUrl, symbolRef });
-      setPendingHit(null);
       setResults([]);
+      setSearched(false);
     },
     [onSelect],
   );
@@ -68,36 +70,36 @@ export function SymbolSearchPanel({
     if (query.trim().length < 2) return;
     setBusy(true);
     setError(null);
-    setPendingHit(null);
     try {
       // Signed in: the bearer token alone. Development identity headers are
       // only for local API runs (VOXA_DEV_AUTH) and are not CORS-allowed in production.
       const headers: Record<string, string> = accessToken
         ? { Authorization: `Bearer ${accessToken}` }
         : { 'X-Voxa-Role': 'editor' };
+      const language = contentLocale.split('-')[0] ?? 'es';
       const res = await fetch(
-        `${API_URL.replace(/\/$/, '')}/v1/symbols/search?q=${encodeURIComponent(query.trim())}&locale=${encodeURIComponent(contentLocale.split('-')[0] ?? 'es')}`,
+        `${API_URL.replace(/\/$/, '')}/v1/symbols/search?q=${encodeURIComponent(query.trim())}&locale=${encodeURIComponent(language)}&limit=18`,
         { headers },
       );
       if (!res.ok) {
         const body = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(body.error ?? `Search failed (${res.status})`);
+        throw new Error(body.error ?? t('searchFailed', { status: res.status }));
       }
-      const body = (await res.json()) as { symbols: SymbolHit[]; attribution?: string };
+      const body = (await res.json()) as { symbols: SymbolHit[] };
       setResults(body.symbols);
-      setAttribution(body.attribution ?? null);
+      setSearched(true);
     } catch (err) {
       setResults([]);
       setError((err as Error).message);
     } finally {
       setBusy(false);
     }
-  }, [accessToken, contentLocale, query]);
+  }, [accessToken, contentLocale, query, t]);
 
   const uploadPhoto = useCallback(
     async (file: File) => {
       if (!accessToken) {
-        setError('Sign in to upload a custom photo.');
+        setError(t('signInToUpload'));
         return;
       }
       setBusy(true);
@@ -111,28 +113,46 @@ export function SymbolSearchPanel({
         setBusy(false);
       }
     },
-    [accessToken, boardId, onSelect],
+    [accessToken, boardId, onSelect, t],
   );
+
+  const creditLink = { color: 'inherit', textDecoration: 'underline' } as const;
 
   return (
     <div style={{ marginBottom: 16 }}>
-      <p style={{ margin: '0 0 8px', fontSize: '0.875rem', fontWeight: 600 }}>Symbol</p>
+      <p style={{ margin: '0 0 8px', fontSize: '0.875rem', fontWeight: 600 }}>{t('heading')}</p>
+
+      {symbolUnavailable && !currentUrl ? (
+        <p
+          role="status"
+          data-voxa-symbol-unavailable
+          style={{
+            margin: '0 0 8px',
+            padding: '6px 8px',
+            border: `1px solid ${status.danger}`,
+            borderRadius: 6,
+            fontSize: '0.8125rem',
+          }}
+        >
+          {t('unavailable')}
+        </p>
+      ) : null}
 
       {currentUrl ? (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
           <img
             src={currentUrl}
             alt=""
-            style={{ width: 48, height: 48, objectFit: 'contain', background: surface.base, borderRadius: 6 }}
+            style={{ width: 48, height: 48, objectFit: 'contain', background: surface.white, borderRadius: 6 }}
           />
           <button type="button" onClick={onClear} disabled={disabled} style={smallBtn}>
-            Remove symbol
+            {t('remove')}
           </button>
         </div>
       ) : null}
 
       <div style={{ marginBottom: 12 }}>
-        <p style={{ margin: '0 0 6px', fontSize: '0.8125rem', color: neutral.muted }}>Custom photo</p>
+        <p style={{ margin: '0 0 6px', fontSize: '0.8125rem', color: neutral.muted }}>{t('customPhoto')}</p>
         <input
           ref={photoInputRef}
           type="file"
@@ -151,17 +171,18 @@ export function SymbolSearchPanel({
           style={{ ...smallBtn, width: '100%' }}
           onClick={() => photoInputRef.current?.click()}
         >
-          {busy ? 'Uploading…' : 'Upload photo (JPEG, PNG, WebP)'}
+          {busy ? t('uploading') : t('upload')}
         </button>
       </div>
 
-      <p style={{ margin: '0 0 6px', fontSize: '0.8125rem', color: neutral.muted }}>ARASAAC library</p>
+      <p style={{ margin: '0 0 6px', fontSize: '0.8125rem', color: neutral.muted }}>{t('library')}</p>
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
         <input
-          style={{ ...fieldStyle, flex: 1 }}
+          style={{ ...fieldStyle, flex: 1, minWidth: 0 }}
           value={query}
-          placeholder="Search symbols…"
+          placeholder={t('searchPlaceholder')}
+          aria-label={t('searchPlaceholder')}
           disabled={disabled}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => {
@@ -169,51 +190,24 @@ export function SymbolSearchPanel({
           }}
         />
         <button type="button" onClick={() => void search()} disabled={busy || disabled} style={smallBtn}>
-          {busy ? '…' : 'Search'}
+          {busy ? '…' : t('search')}
         </button>
       </div>
 
       {error ? <p style={{ color: status.danger, fontSize: '0.8125rem' }}>{error}</p> : null}
 
-      {pendingHit ? (
-        <div style={{ marginBottom: 12, padding: 10, border: `1px solid ${neutral.border}`, borderRadius: 8 }}>
-          <p style={{ margin: '0 0 8px', fontSize: '0.8125rem', color: neutral.textSecondary }}>
-            Choose skin tone for <strong>{pendingHit.keyword}</strong>
-          </p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {ARASAAC_SKIN_TONE_OPTIONS.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                disabled={disabled}
-                onClick={() => applyHit(pendingHit, option.value)}
-                style={smallBtn}
-              >
-                {option.label}
-              </button>
-            ))}
-            <button
-              type="button"
-              disabled={disabled}
-              onClick={() => applyHit(pendingHit, defaultSkinTone)}
-              style={{ ...smallBtn, borderColor: brand.primary }}
-            >
-              Profile default
-            </button>
-            <button type="button" disabled={disabled} onClick={() => setPendingHit(null)} style={smallBtn}>
-              Cancel
-            </button>
-          </div>
-        </div>
+      {searched && results.length === 0 && !error ? (
+        <p style={{ fontSize: '0.8125rem', color: neutral.muted }}>{t('noResults')}</p>
       ) : null}
 
       {results.length > 0 ? (
         <div
+          data-voxa-symbol-results
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(3, 1fr)',
             gap: 8,
-            maxHeight: 180,
+            maxHeight: 220,
             overflowY: 'auto',
           }}
         >
@@ -223,36 +217,44 @@ export function SymbolSearchPanel({
               type="button"
               title={hit.keyword}
               disabled={disabled}
-              onClick={() => {
-                if (isPersonPictogram(hit.tags)) {
-                  setPendingHit(hit);
-                  return;
-                }
-                applyHit(hit);
-              }}
+              onClick={() => applyHit(hit)}
               style={{
                 border: `1px solid ${neutral.border}`,
                 borderRadius: 6,
-                background: surface.base,
+                background: surface.white,
                 padding: 4,
                 cursor: disabled ? 'not-allowed' : 'pointer',
               }}
             >
-              <img
-                src={hit.imageUrl}
-                alt={hit.keyword}
-                style={{ width: '100%', height: 56, objectFit: 'contain' }}
-              />
+              <img src={hit.imageUrl} alt={hit.keyword} style={{ width: '100%', height: 56, objectFit: 'contain' }} />
+              <span style={{ display: 'block', fontSize: '0.6875rem', color: surface.base }}>{hit.keyword}</span>
             </button>
           ))}
         </div>
       ) : null}
 
-      {attribution ? (
-        <p style={{ margin: '8px 0 0', fontSize: '0.6875rem', color: neutral.muted, lineHeight: 1.4 }}>
-          {attribution}
-        </p>
-      ) : null}
+      <p
+        data-voxa-symbol-credit="mulberry"
+        style={{ margin: '8px 0 0', fontSize: '0.6875rem', color: neutral.muted, lineHeight: 1.4 }}
+      >
+        {t.rich('credit', {
+          symbols: (chunks) => (
+            <a href={MULBERRY_SITE_URL} target="_blank" rel="noopener noreferrer" style={creditLink}>
+              {chunks}
+            </a>
+          ),
+          license: (chunks) => (
+            <a href={MULBERRY_LICENSE_URL} target="_blank" rel="noopener noreferrer license" style={creditLink}>
+              {chunks}
+            </a>
+          ),
+          credits: (chunks) => (
+            <Link href="/legal/symbols" style={{ ...creditLink, color: brand.link }}>
+              {chunks}
+            </Link>
+          ),
+        })}
+      </p>
     </div>
   );
 }

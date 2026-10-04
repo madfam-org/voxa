@@ -1,26 +1,31 @@
 import { Hono } from 'hono';
-import { searchArasaac } from '@voxa/symbols';
+import { MULBERRY_ATTRIBUTION, MULBERRY_LICENSE_URL, MULBERRY_SITE_URL } from '@voxa/symbols';
+import { searchLanguage, searchMulberryIndex } from '@voxa/symbols/search';
 
 export const symbolRoutes = new Hono();
 
-// Any signed-in caller may search: board owners edit their own boards whatever
-// their role, and teamAuth() has already rejected unauthenticated requests.
-symbolRoutes.get('/search', async (c) => {
+/**
+ * Symbol search over the vendored Mulberry Symbols set (CC BY-SA 4.0).
+ * Offline: the index ships with `@voxa/symbols`, so this route makes no
+ * outbound request. `imageUrl` is a path on the web origin.
+ *
+ * Any signed-in caller may search: board owners edit their own boards whatever
+ * their role, and teamAuth() has already rejected unauthenticated requests.
+ */
+symbolRoutes.get('/search', (c) => {
   const query = c.req.query('q') ?? '';
-  const locale = c.req.query('locale') ?? 'en';
+  const locale = searchLanguage(c.req.query('locale'));
   const limit = Number(c.req.query('limit') ?? '12');
 
-  if (query.trim().length < 2) {
-    return c.json({ symbols: [], attribution: ARASAAC_ATTRIBUTION });
-  }
+  const symbols = searchMulberryIndex(query, {
+    locale,
+    limit: Number.isFinite(limit) ? limit : 12,
+  });
 
-  try {
-    const symbols = await searchArasaac(query, { locale, limit });
-    return c.json({ symbols, attribution: ARASAAC_ATTRIBUTION });
-  } catch (err) {
-    return c.json({ error: (err as Error).message }, 502);
-  }
+  return c.json({
+    symbols,
+    locale,
+    attribution: MULBERRY_ATTRIBUTION,
+    license: { name: 'CC BY-SA 4.0', url: MULBERRY_LICENSE_URL, source: MULBERRY_SITE_URL },
+  });
 });
-
-const ARASAAC_ATTRIBUTION =
-  'Pictograms by Sergio Palao / ARASAAC (CC BY-NC-SA). https://arasaac.org';

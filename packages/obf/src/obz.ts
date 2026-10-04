@@ -1,6 +1,14 @@
 import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate';
 import type { Board, BoardButton } from '@voxa/core';
-import { obfToVoxaButtons, parseObfJson, serializeObf, voxaBoardToObf, type ObfBoard } from './index.js';
+import { extensionForContentType, type ExportImageSource } from './images.js';
+import {
+  obfToVoxaButtons,
+  parseObfJson,
+  serializeObf,
+  voxaBoardToObfWithSources,
+  type ObfBoard,
+  type ObfExportOptions,
+} from './index.js';
 
 const BOARD_ENTRY = 'board.json';
 
@@ -49,18 +57,6 @@ function decodeDataUrl(url: string): Uint8Array | null {
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
   return bytes;
-}
-
-export async function fetchSymbolBytes(url: string): Promise<Uint8Array | null> {
-  if (url.startsWith('data:')) return decodeDataUrl(url);
-  if (!url.startsWith('http://') && !url.startsWith('https://')) return null;
-  try {
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    return new Uint8Array(await res.arrayBuffer());
-  } catch {
-    return null;
-  }
 }
 
 export function packObz(boardJson: string, images: Record<string, Uint8Array>): Uint8Array {
@@ -127,33 +123,67 @@ export function obfToVoxaButtonsWithImages(obf: ObfBoard, images: Map<string, Ui
   const buttons = obfToVoxaButtons(obf);
   return buttons.map((btn, index) => {
     const obfBtn = obf.buttons[index];
-    const symbolUrl = resolveObfImageUrl(obfBtn?.image_id, images);
+    const entry = obfBtn?.image_id ? obf.images?.find((image) => image.id === obfBtn.image_id) : undefined;
+    let symbolUrl: string | undefined;
+    if (entry) {
+      const fromArchive = entry.path ? resolveObfImageUrl(entry.path, images) : undefined;
+      symbolUrl =
+        fromArchive && fromArchive !== entry.path ? fromArchive : (entry.data ?? entry.url ?? fromArchive);
+    } else {
+      symbolUrl = resolveObfImageUrl(obfBtn?.image_id, images);
+    }
     return symbolUrl ? { ...btn, symbolUrl } : btn;
   });
 }
 
-export async function voxaBoardToObz(board: Board): Promise<Uint8Array> {
-  const obf = voxaBoardToObf(board);
-  const sorted = [...board.grid.buttons].sort(
-    (a, b) => a.position.row - b.position.row || a.position.column - b.position.column,
-  );
-  const images: Record<string, Uint8Array> = {};
+/** Bytes for an image the archive should embed. */
+export interface ObzLoadedImage {
+  bytes: Uint8Array;
+  contentType: string;
+}
 
-  for (let index = 0; index < obf.buttons.length; index += 1) {
-    const obfBtn = obf.buttons[index];
-    const voxaBtn = sorted[index];
-    if (!obfBtn || !voxaBtn?.symbolUrl) continue;
+/**
+ * Loads the bytes of a Mulberry SVG or a user-uploaded photo for embedding.
+ * Return `null` when unavailable: the image entry then keeps its URL only.
+ * Voxa never fetches arbitrary third-party URLs while exporting.
+ */
+export type ObzImageLoader = (source: ExportImageSource) => Promise<ObzLoadedImage | null>;
 
-    const bytes = await fetchSymbolBytes(voxaBtn.symbolUrl);
-    if (!bytes) continue;
+export interface ObzExportOptions extends ObfExportOptions {
+  loadImage?: ObzImageLoader;
+}
 
-    const ext = voxaBtn.symbolUrl.includes('image/jpeg') ? 'jpg' : 'png';
-    const path = `images/${obfBtn.id}.${ext}`;
-    images[path] = bytes;
-    obfBtn.image_id = path;
+/**
+ * Build an .obz archive. Embeds only Mulberry SVGs and user-supplied images
+ * (inline data: URLs, or uploads via `loadImage`), each as an `images[]` entry
+ * with a `path`; Mulberry entries carry their OBF `license`. Other URLs are
+ * referenced, not fetched.
+ */
+export async function voxaBoardToObz(board: Board, options: ObzExportOptions = {}): Promise<Uint8Array> {
+  const { board: obf, sources } = voxaBoardToObfWithSources(board, options);
+  const files: Record<string, Uint8Array> = {};
+
+  for (const image of obf.images ?? []) {
+    const source = sources.get(image.id);
+    if (!source) continue;
+
+    let loaded: ObzLoadedImage | null = null;
+    if (source.kind === 'data') {
+      const bytes = decodeDataUrl(source.url);
+      loaded = bytes ? { bytes, contentType: source.contentType ?? 'image/png' } : null;
+    } else if ((source.kind === 'mulberry' || source.kind === 'media') && options.loadImage) {
+      loaded = await options.loadImage(source);
+    }
+    if (!loaded) continue;
+
+    const path = `images/${image.id}.${extensionForContentType(loaded.contentType)}`;
+    files[path] = loaded.bytes;
+    image.path = path;
+    image.content_type = loaded.contentType;
+    delete image.data;
   }
 
-  return packObz(serializeObf(obf), images);
+  return packObz(serializeObf(obf), files);
 }
 
 export function obzToVoxaButtons(result: ObzUnpackResult): BoardButton[] {

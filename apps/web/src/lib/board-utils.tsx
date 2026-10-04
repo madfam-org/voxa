@@ -3,7 +3,7 @@
 import { useRef } from 'react';
 import type { BoardButton, PartOfSpeechTag, SymbolDisplayDefaults } from '@voxa/core';
 import { resolveButtonSpeech } from '@voxa/core';
-import { resolveButtonSymbolUrl } from '@voxa/symbols';
+import { isSymbolUnavailable, resolveButtonSymbolUrl } from '@voxa/symbols';
 import { fitzgeraldColor, resolvePartOfSpeech, type PartOfSpeech } from '@voxa/vocabulary';
 
 export function buttonLabel(btn: BoardButton): string {
@@ -24,6 +24,16 @@ export function buttonSymbolUrl(
     symbolRef,
     defaults,
   );
+}
+
+/**
+ * True when the button had a symbol Voxa no longer shows (removed
+ * non-commercial library): it renders label-only and the editor asks for a
+ * replacement.
+ */
+export function buttonSymbolUnavailable(btn: BoardButton): boolean {
+  if (btn.kind !== 'analytic' && btn.kind !== 'glp') return false;
+  return isSymbolUnavailable(btn.symbolUrl, btn.symbolRef);
 }
 
 export function buttonBorderColor(btn: BoardButton): string {

@@ -5,6 +5,8 @@ export interface LegalSection {
   title: string;
   content: string;
   subsections?: { title: string; content: string }[];
+  /** External references shown under the section (licences, sources). */
+  links?: { label: string; href: string }[];
 }
 
 interface LegalPageProps {
@@ -84,6 +86,17 @@ export function LegalPage({
               {index + 1}. {section.title}
             </h2>
             <p style={{ marginBottom: 12 }}>{section.content}</p>
+            {section.links?.length ? (
+              <ul style={{ marginTop: 0, marginBottom: 12, paddingLeft: 20 }}>
+                {section.links.map((link) => (
+                  <li key={link.href}>
+                    <a href={link.href} target="_blank" rel="noopener noreferrer" style={linkStyle}>
+                      {link.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
             {section.subsections?.map((sub) => (
               <div key={sub.title} style={{ marginLeft: 16, marginBottom: 16 }}>
                 <h3 style={{ fontSize: '1.05rem', marginBottom: 8 }}>{sub.title}</h3>

@@ -292,6 +292,9 @@ importers:
       '@voxa/core':
         specifier: workspace:*
         version: link:../core
+      '@voxa/symbols':
+        specifier: workspace:*
+        version: link:../symbols
       '@voxa/vocabulary':
         specifier: workspace:*
         version: link:../vocabulary

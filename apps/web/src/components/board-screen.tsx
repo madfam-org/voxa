@@ -21,6 +21,7 @@ import {
   buttonBorderColor,
   buttonLabel,
   buttonSpeech,
+  buttonSymbolUnavailable,
   buttonSymbolUrl,
   downloadTextFile,
   downloadBinaryFile,
@@ -1326,7 +1327,7 @@ function EditorPanel({
         accessToken={accessToken}
         contentLocale={contentLocale}
         currentUrl={buttonSymbolUrl(button, { skinTone: defaultSymbolSkinTone })}
-        defaultSkinTone={defaultSymbolSkinTone}
+        symbolUnavailable={buttonSymbolUnavailable(button)}
         disabled={fieldsLocked}
         onSelect={(selection) =>
           onChange({

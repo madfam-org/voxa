@@ -10,6 +10,7 @@ import { findMotorPlanningViolations } from '@voxa/vocabulary';
 import { gridsetArchiveToBoardUpdate, snapArchiveToBoardUpdate, touchChatArchiveToBoardUpdate } from '@voxa/import-adapters';
 import { obfToVoxaButtons, obzToVoxaButtons, parseObfJson, unpackObz, voxaBoardToObf, voxaBoardToObz } from '@voxa/obf';
 import type { ImportObfResult } from './types.js';
+import { obzExportOptions, webBaseUrl } from '../lib/symbol-assets.js';
 
 export function createSyncEvent(
   type: SyncEvent['type'],
@@ -260,7 +261,7 @@ export async function exportBoardObz(boards: Record<string, Board>, boardId: str
   if (!board) {
     throw new Error(`Board not found: ${boardId}`);
   }
-  return voxaBoardToObz(board);
+  return voxaBoardToObz(board, obzExportOptions(boardId));
 }
 
 export function exportBoardObf(boards: Record<string, Board>, boardId: string): string {
@@ -268,7 +269,7 @@ export function exportBoardObf(boards: Record<string, Board>, boardId: string): 
   if (!board) {
     throw new Error(`Board not found: ${boardId}`);
   }
-  return JSON.stringify(voxaBoardToObf(board), null, 2);
+  return JSON.stringify(voxaBoardToObf(board, { assetBaseUrl: webBaseUrl() }), null, 2);
 }
 
 /** Sync/audit events kept per board; older ones are trimmed on write. */

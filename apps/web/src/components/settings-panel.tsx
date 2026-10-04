@@ -301,25 +301,6 @@ export function SettingsPanel({
         </>
       )}
 
-      <Field label={t('symbolDiversity')}>
-        <select
-          value={settings.defaultSymbolSkinTone}
-          onChange={(e) =>
-            onChange({
-              defaultSymbolSkinTone: e.target.value as CommunicatorSettings['defaultSymbolSkinTone'],
-            })
-          }
-          style={fieldStyle}
-        >
-          <option value="white">{t('skinWhite')}</option>
-          <option value="asian">{t('skinAsian')}</option>
-          <option value="mulatto">{t('skinMulatto')}</option>
-          <option value="aztec">{t('skinAztec')}</option>
-          <option value="black">{t('skinBlack')}</option>
-        </select>
-        <p style={hintStyle}>{t('symbolDiversityHint')}</p>
-      </Field>
-
       <Field label={t('whisperMode')}>
         <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <input

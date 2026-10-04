@@ -15,25 +15,44 @@ const FIXTURES = path.join(process.cwd(), 'fixtures');
 const SYMBOL_FIXTURE = path.join(FIXTURES, 'test-symbol.png');
 const AUDIO_FIXTURE = path.join(FIXTURES, 'test-recording.wav');
 
+// The symbol panel follows the UI language (es default, en, fr).
+const SEARCH_PLACEHOLDER = /Buscar símbolos|Search symbols|Rechercher des symboles/;
+const SEARCH_BUTTON = /^(Buscar|Search|Rechercher)$/;
+const REMOVE_SYMBOL = /Quitar símbolo|Remove symbol|Retirer le symbole/;
+const UPLOAD_PHOTO = /Subir foto|Upload photo|Importer une photo/;
+
 test.describe('Media workflow (W2 Epic C)', () => {
-  test('editor attaches ARASAAC symbol from search', async ({ page }) => {
+  test('editor attaches a Mulberry symbol from search', async ({ page }) => {
     test.skip(!hasJanuaTestCredentials(), 'Requires JANUA_TEST_EMAIL/PASSWORD');
 
     await prepareAuthenticatedApp(page);
     await enterEditorMode(page);
     await openButtonEditor(page, /^eat$/);
 
-    await page.getByPlaceholder('Search symbols…').fill('eat');
-    await page.getByRole('button', { name: 'Search' }).click();
-    await expect(page.locator('button[title] img').first()).toBeVisible({ timeout: 20000 });
-    await page.locator('button[title] img').first().click();
+    await page.getByPlaceholder(SEARCH_PLACEHOLDER).fill('comer');
+    await page.getByRole('button', { name: SEARCH_BUTTON }).click();
+    const firstHit = page.locator('[data-voxa-symbol-results] button img').first();
+    await expect(firstHit).toBeVisible({ timeout: 20000 });
+    await expect(firstHit).toHaveAttribute('src', /^\/symbols\/mulberry\//);
+    await expect(page.locator('[data-voxa-symbol-credit="mulberry"]').first()).toContainText('CC BY-SA 4.0');
+    await firstHit.click();
 
-    await expect(page.getByRole('button', { name: 'Remove symbol' })).toBeVisible();
+    await expect(page.getByRole('button', { name: REMOVE_SYMBOL })).toBeVisible();
     await page.getByRole('button', { name: 'Done' }).click();
     await saveBoardAndWait(page);
 
     const obf = await exportObfText(page);
-    expect(obf).toMatch(/image_id|symbolUrl|arasaac|static\.arasaac/i);
+    expect(obf).not.toMatch(/arasaac/i);
+    const board = JSON.parse(obf) as {
+      buttons: { label?: string; image_id?: string }[];
+      images?: { id: string; url?: string; license?: { type?: string; author_name?: string } }[];
+    };
+    const eat = board.buttons.find((button) => button.label === 'eat');
+    expect(eat?.image_id).toBeTruthy();
+    const image = board.images?.find((entry) => entry.id === eat?.image_id);
+    expect(image?.url ?? '').toMatch(/\/symbols\/mulberry\//);
+    expect(image?.license?.type).toBe('CC BY-SA 4.0');
+    expect(image?.license?.author_name).toBe('Steve Lee');
   });
 
   test('GLP button plays uploaded caregiver audio in communicator', async ({ page }) => {
@@ -65,16 +84,16 @@ test.describe('Media workflow (W2 Epic C)', () => {
     await openButtonEditor(page, /^eat$/);
 
     const fileChooser = page.waitForEvent('filechooser');
-    await page.getByRole('button', { name: /Upload photo/ }).click();
+    await page.getByRole('button', { name: UPLOAD_PHOTO }).click();
     (await fileChooser).setFiles(SYMBOL_FIXTURE);
-    await expect(page.getByRole('button', { name: 'Remove symbol' })).toBeVisible({ timeout: 20000 });
+    await expect(page.getByRole('button', { name: REMOVE_SYMBOL })).toBeVisible({ timeout: 20000 });
     await page.getByRole('button', { name: 'Done' }).click();
     await saveBoardAndWait(page);
 
     const obzPath = await exportObzPath(page);
 
     await openButtonEditor(page, /^eat$/);
-    await page.getByRole('button', { name: 'Remove symbol' }).click();
+    await page.getByRole('button', { name: REMOVE_SYMBOL }).click();
     await page.getByRole('button', { name: 'Done' }).click();
     await saveBoardAndWait(page);
 
@@ -85,6 +104,6 @@ test.describe('Media workflow (W2 Epic C)', () => {
     await expect(page.getByText(/Live v\d+/)).toBeVisible({ timeout: 20000 });
 
     await openButtonEditor(page, /^eat$/);
-    await expect(page.getByRole('button', { name: 'Remove symbol' })).toBeVisible({ timeout: 20000 });
+    await expect(page.getByRole('button', { name: REMOVE_SYMBOL })).toBeVisible({ timeout: 20000 });
   });
 });
