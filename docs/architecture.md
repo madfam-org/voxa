@@ -84,6 +84,6 @@ Data model: [docs/data-model.md](./data-model.md)
 
 - **Monorepo:** pnpm workspaces + Turborepo
 - **Web:** Next.js 15, React 19
-- **API:** Hono on Node 20 (edge-deployable later)
+- **API:** Hono on Node 22 (edge-deployable later)
 - **Database:** PostgreSQL + Drizzle ORM (`apps/api/src/db/`), one shared pool per API process ([connection budget](./deploy/ENCLII.md#connection-budget-contract)); atomic JSON-file fallback when `DATABASE_URL` is unset
 - **Mobile (future):** Expo + React Native sharing `@voxa/ui` tokens

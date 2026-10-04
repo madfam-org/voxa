@@ -29,6 +29,8 @@ jobs:
   build-and-push:
     name: Build & Push Web Image
     runs-on: ubuntu-24.04
+    # Build (~10 min) + sign + pin + up to 12 min waiting for the new build.
+    timeout-minutes: 45
     permissions:
       contents: write
       packages: write
@@ -60,6 +62,7 @@ jobs:
             NEXT_PUBLIC_BASE_URL=https://voxa.madfam.io
             NEXT_PUBLIC_OIDC_ISSUER=https://auth.madfam.io
             NEXT_PUBLIC_OIDC_CLIENT_ID=${{ vars.NEXT_PUBLIC_OIDC_CLIENT_ID }}
+            GIT_SHA=${{ github.sha }}
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
@@ -189,7 +192,9 @@ jobs:
       - name: Smoke test production web
         if: success()
         run: |
-          chmod +x scripts/launch/verify-prod-ga.sh scripts/launch/verify-prod-demo.sh scripts/launch/verify-prod-image-optimizer.sh
+          chmod +x scripts/launch/wait-for-build.sh scripts/launch/verify-prod-ga.sh scripts/launch/verify-prod-demo.sh scripts/launch/verify-prod-image-optimizer.sh
+          # HTTP 200 alone is not proof: the previous pods answer it too.
+          ./scripts/launch/wait-for-build.sh https://voxa.madfam.io/api/health "${GITHUB_SHA}"
           ./scripts/launch/verify-prod-ga.sh || true
           ./scripts/launch/verify-prod-demo.sh
           ./scripts/launch/verify-prod-image-optimizer.sh

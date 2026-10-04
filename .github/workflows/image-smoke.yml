@@ -1,0 +1,147 @@
+name: Image smoke
+
+# Builds the production API and web images without pushing them and checks
+# what ships: Node 22, no package manager in the runtime stage, and a healthy
+# server that serves the GIT_SHA build arg as `build`. Runs when something that
+# changes an image's base or dependencies changes, or this workflow or the
+# build-identity helpers. Nothing is pushed or signed here; the deploy workflows do that.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "apps/api/Dockerfile"
+      - "apps/web/Dockerfile"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "package.json"
+      - "apps/*/package.json"
+      - ".github/workflows/image-smoke.yml"
+      - "apps/api/src/lib/build-info.ts"
+      - "apps/web/src/lib/build-info.ts"
+  push:
+    branches: [main]
+    paths:
+      - "apps/api/Dockerfile"
+      - "apps/web/Dockerfile"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "package.json"
+      - "apps/*/package.json"
+      - ".github/workflows/image-smoke.yml"
+      - "apps/api/src/lib/build-info.ts"
+      - "apps/web/src/lib/build-info.ts"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: image-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Do not publish Docker build-record artifacts from this public repo
+  # (repo-boundary contract, class 7: public Actions artifacts).
+  DOCKER_BUILD_RECORD_UPLOAD: "false"
+  # Dummy commit id baked in as GIT_SHA; the health endpoint must serve it.
+  SMOKE_SHA: 0123456789abcdef0123456789abcdef01234567
+
+jobs:
+  image:
+    name: Image smoke (${{ matrix.app }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Mirrors the k8s securityContext: uid 1001, read-only root, the
+          # same writable mounts as the Deployment's emptyDir volumes.
+          - app: api
+            port: 8080
+            health: /health
+            writable: /app/data
+          - app: web
+            port: 3000
+            health: /api/health
+            writable: /tmp
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build (no push)
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: apps/${{ matrix.app }}/Dockerfile
+          push: false
+          load: true
+          build-args: |
+            GIT_SHA=${{ env.SMOKE_SHA }}
+          tags: voxa-${{ matrix.app }}:smoke
+          cache-from: |
+            type=gha,scope=image-smoke-${{ matrix.app }}
+            type=gha
+          cache-to: type=gha,mode=max,scope=image-smoke-${{ matrix.app }}
+          provenance: false
+          sbom: false
+
+      - name: Node 22 and no package managers
+        env:
+          IMAGE: voxa-${{ matrix.app }}:smoke
+        run: |
+          set -euo pipefail
+          version="$(docker run --rm --entrypoint node "$IMAGE" --version)"
+          echo "node --version: ${version}"
+          case "$version" in
+            v22.*) ;;
+            *) echo "::error::${IMAGE} runs Node ${version}, expected v22.x"; exit 1 ;;
+          esac
+          found="$(docker run --rm --entrypoint sh "$IMAGE" -c 'for t in npm npx corepack yarn yarnpkg pnpm; do command -v "$t" || true; done')"
+          if [ -n "$found" ]; then
+            echo "::error::${IMAGE} still ships a package manager:"
+            echo "$found"
+            exit 1
+          fi
+          echo "no npm, npx, corepack, yarn, yarnpkg or pnpm on PATH"
+
+      - name: Server starts and answers health
+        env:
+          IMAGE: voxa-${{ matrix.app }}:smoke
+          PORT: ${{ matrix.port }}
+          HEALTH: ${{ matrix.health }}
+          WRITABLE: ${{ matrix.writable }}
+        run: |
+          set -euo pipefail
+          # No DATABASE_URL, Redis or identity settings: the API boots on its
+          # file store in ${WRITABLE}, the web app with OIDC unconfigured.
+          docker run -d --name "smoke-${{ matrix.app }}" \
+            --user 1001:1001 --read-only --cap-drop ALL \
+            --security-opt no-new-privileges \
+            --tmpfs "${WRITABLE}:rw,uid=1001,gid=1001,mode=0755" \
+            -p "127.0.0.1:${PORT}:${PORT}" \
+            "$IMAGE"
+          code=000
+          for _ in $(seq 1 30); do
+            code="$(curl -sS -o /tmp/health.json -w '%{http_code}' "http://127.0.0.1:${PORT}${HEALTH}" || true)"
+            [ "$code" = "200" ] && break
+            sleep 2
+          done
+          echo "GET ${HEALTH} -> ${code}"
+          docker logs "smoke-${{ matrix.app }}" 2>&1 | tail -n 40
+          if [ "$code" != "200" ]; then
+            echo "::error::${IMAGE} did not answer 200 on ${HEALTH} within 60 s"
+            exit 1
+          fi
+          cat /tmp/health.json; echo
+          build="$(jq -r '.build // "none"' /tmp/health.json)"
+          if [ "$build" != "$SMOKE_SHA" ]; then
+            echo "::error::${HEALTH} serves build=${build}, expected the GIT_SHA build arg ${SMOKE_SHA}"
+            exit 1
+          fi
+          echo "build identity OK: ${build}"
+          docker rm -f "smoke-${{ matrix.app }}" >/dev/null
