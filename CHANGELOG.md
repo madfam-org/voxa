@@ -12,6 +12,10 @@ All notable changes to Voxa are documented here.
 - API: plan entitlements come from the `voxa_tier` claim of the verified Janua access token (`free`, `family`, `clinic`) instead of a per-request call to the billing API, which answered for no user, so everyone silently got the free tier. A missing, malformed or unknown claim still resolves to `free` and is logged. `GET /v1/billing/entitlement` now answers `{ tier, features, source: "janua" }` (previously `{ entitlement: { … } }`). `DHANAM_API_URL` and `DHANAM_API_TOKEN` are no longer read.
 - Migration `0005_purge_legacy_utterance_text` clears `activation_events.speech_text` on rows recorded before server-side consent existed (irreversible; count rows stay). Count-only dry run: `apps/api/scripts/legacy-utterance-text-dry-run.sql`.
 
+### Security
+
+- Dependencies: cleared the advisories outside the mobile app. API: `@sentry/node` 8 → 10, which moves `@opentelemetry/core` to 2.x (GHSA-8988-4f7v-96qf; Sentry 8 and 9 have no fixed release). Dev tooling: `drizzle-kit` 0.30 → 0.31 and esbuild overrides for `@esbuild-kit/core-utils` and `tsx` (GHSA-67mh-4wv8-2f99, GHSA-g7r4-m6w7-qqqr). Web build: `postcss` used by `next` → 8.5.28 (GHSA-qx2v-qp2m-jg93, GHSA-6g55-p6wh-862q, GHSA-r28c-9q8g-f849, GHSA-fxqj-rqcc-2cmp). Root dev tool: `body-parser` 2.3.0 and `qs` 6.16.0 under the shadcn CLI (GHSA-v422-hmwv-36x6, GHSA-x5fp-wj9c-mxmx, GHSA-4mjr-xmp4-gh2g). Each override is noted in `package.json` under `//pnpm.overrides`. The mobile app's Expo tree is unchanged and waits for the Expo SDK upgrade.
+
 ### Removed
 
 - CI: the production web deploy no longer logs in to the identity provider with an admin account to sync Argo CD and restart pods; Argo CD auto-syncs the digest pin, which already bumps the pod template's `restartedAt`. The three scripts that step used (`scripts/deploy/*`) and the June GA soak-window tools (`soak-window-progress.sh`, `soak-status.sh`, `verify-soak-window.sh`, `setup-staging-soak-secrets.sh`) moved to MADFAM's private operations repository.
