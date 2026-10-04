@@ -7,6 +7,7 @@ import {
   exportObfText,
   prepareAuthenticatedApp,
 } from '../helpers/app-session';
+import { ui } from '../helpers/i18n';
 
 test.describe('Editor workflow (W2)', () => {
   test('SLP creates three boards and exports each as OBF', async ({ page }) => {
@@ -44,7 +45,7 @@ test.describe('Editor workflow (W2)', () => {
     await page.getByRole('button', { name: /^eat$/ }).click();
     await page.getByLabel('Speech').fill('snack time');
     await page.getByRole('button', { name: 'Done' }).click();
-    await page.getByRole('button', { name: 'Save' }).click();
+    await page.getByRole('button', { name: ui('common.save') }).click();
 
     await expect(page.getByRole('button', { name: /want \(locked motor-plan slot\)/ })).toBeVisible();
 
@@ -63,7 +64,7 @@ test.describe('Editor workflow (W2)', () => {
     await page.getByRole('button', { name: /^home$/ }).click();
     await page.getByRole('checkbox', { name: 'Hide from communicator view' }).check();
     await page.getByRole('button', { name: 'Done' }).click();
-    await page.getByRole('button', { name: 'Save' }).click();
+    await page.getByRole('button', { name: ui('common.save') }).click();
 
     await enterCommunicatorMode(page);
     await expect(page.getByRole('button', { name: /^home$/ })).toHaveCount(0);
@@ -75,7 +76,18 @@ test.describe('Editor workflow (W2)', () => {
     await expect(page.getByRole('button', { name: /^home$/ })).toHaveCount(0);
 
     await page.getByRole('button', { name: 'Babble' }).click();
-    await page.getByLabel('Board').selectOption({ label: /Core 47 Starter/ });
+    // selectOption's `label` takes a string, not a RegExp: pick the starter
+    // board's option value by its visible text.
+    const starterBoard = await page
+      .getByLabel('Board')
+      .locator('option')
+      .evaluateAll((options) =>
+        options
+          .map((o) => o as HTMLOptionElement)
+          .find((o) => /Core 47 Starter/.test(o.textContent ?? ''))?.value,
+      );
+    expect(starterBoard).toBeTruthy();
+    await page.getByLabel('Board').selectOption(starterBoard!);
     await expect(page.getByRole('button', { name: /home \(hidden, babble mode\)/ })).toHaveCount(0);
     await expect(page.getByRole('button', { name: /^home$/ })).toHaveCount(0);
   });

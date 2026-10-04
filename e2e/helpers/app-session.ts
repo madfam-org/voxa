@@ -1,6 +1,7 @@
 import { type Page, expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { signInViaJanua } from './janua-login';
+import { ui } from './i18n';
 
 /** Seed editor state, sign in, and grant both consent purposes if the app asks. */
 export async function prepareAuthenticatedApp(page: Page): Promise<void> {
@@ -15,19 +16,25 @@ export async function prepareAuthenticatedApp(page: Page): Promise<void> {
 /**
  * Consent is the signed-in user's server record: the banner asks while the
  * API holds no decision. Grants word suggestions and usage counts.
+ *
+ * Every label the app takes from the message catalogs is matched with
+ * `ui(key)` (any locale): `/app` renders in Spanish by default. Labels the
+ * app still renders as literal English stay plain strings.
  */
 export async function grantConsentIfAsked(page: Page): Promise<void> {
-  const dialog = page.getByRole('dialog', { name: 'Privacy choices' });
+  const dialog = page.getByRole('dialog', { name: ui('consent.ariaLabel') });
   if (!(await dialog.isVisible({ timeout: 5000 }).catch(() => false))) return;
-  await dialog.getByLabel('Word suggestions').check();
-  await dialog.getByLabel('Usage counts').check();
-  await dialog.getByRole('button', { name: 'Save choices' }).click();
+  await dialog.getByLabel(ui('consent.aiLabel', { exact: false })).check();
+  await dialog.getByLabel(ui('consent.usageLabel', { exact: false })).check();
+  await dialog.getByRole('button', { name: ui('consent.save') }).click();
   await expect(dialog).toBeHidden({ timeout: 15000 });
 }
 
 export async function openAccessibilitySettings(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Settings' }).click();
-  await page.getByRole('dialog', { name: 'Accessibility settings' }).waitFor();
+  await page.getByRole('button', { name: ui('common.settings') }).click();
+  // The panel's accessible name is the catalog title ("Accesibilidad" /
+  // "Accessibility"), not "Accessibility settings".
+  await page.getByRole('dialog', { name: ui('settings.title') }).waitFor();
 }
 
 /**
@@ -53,7 +60,7 @@ export async function enterEditorMode(page: Page): Promise<void> {
     await expect(roleSelect).toBeEnabled();
   }
   await roleSelect.selectOption('editor');
-  await page.getByRole('button', { name: 'New board' }).waitFor();
+  await page.getByRole('button', { name: ui('communicator.newBoard') }).waitFor();
 }
 
 export async function enterCommunicatorMode(page: Page): Promise<void> {
@@ -65,13 +72,13 @@ export async function createBoardNamed(page: Page, name: string): Promise<void> 
   page.once('dialog', async (dialog) => {
     await dialog.accept(name);
   });
-  await page.getByRole('button', { name: 'New board' }).click();
+  await page.getByRole('button', { name: ui('communicator.newBoard') }).click();
   await expect(page.getByLabel('Board')).toHaveText(new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
 }
 
 export async function exportObfText(page: Page): Promise<string> {
   const downloadPromise = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Export OBF' }).click();
+  await page.getByRole('button', { name: ui('communicator.exportObf') }).click();
   const file = await downloadPromise;
   const path = await file.path();
   if (!path) throw new Error('OBF download missing path');
@@ -83,8 +90,13 @@ export async function openButtonEditor(page: Page, name: RegExp | string): Promi
   await expect(page.getByRole('heading', { name: 'Edit button' })).toBeVisible();
 }
 
+/**
+ * Save the board and wait until the sync badge reads live again. The Save
+ * button label comes from the catalogs ("Guardar" on the Spanish default);
+ * the sync badge ("● Live v3") is literal English today.
+ */
 export async function saveBoardAndWait(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Save' }).click();
+  await page.getByRole('button', { name: ui('common.save') }).click();
   await expect(page.getByText(/Live v\d+/)).toBeVisible({ timeout: 20000 });
 }
 
@@ -99,10 +111,10 @@ export async function exportObzPath(page: Page): Promise<string> {
 
 export async function openUsageReport(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Usage' }).click();
-  await expect(page.getByRole('dialog', { name: 'Usage report' })).toBeVisible();
+  await expect(page.getByRole('dialog', { name: ui('communicator.usageReport') })).toBeVisible();
 }
 
 export async function openAuditLog(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Audit' }).click();
+  await page.getByRole('button', { name: ui('communicator.auditLog') }).click();
   await expect(page.getByRole('dialog', { name: 'Edit audit log' })).toBeVisible();
 }

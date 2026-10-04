@@ -1,12 +1,15 @@
 name: Daily smoke
 
-# Read-only checks of production, every day and on demand. Nothing here writes
-# to the repository or to production.
+# Two independent jobs, every day and on demand. Nothing here writes to the
+# repository or to production.
 #
-# Until staging is rebuilt from main, the browser specs run against the public
-# production pages only (landing, demo, legal, sign-in page). The authenticated
-# staging specs (`pnpm test:e2e:staging`) and the staging soak scripts
-# (`scripts/launch/soak-scenarios.sh`) come back to the schedule with staging.
+# - `smoke`: read-only checks of production's public pages (landing, demo,
+#   legal, sign-in page).
+# - `staging-signed-in`: the signed-in specs against staging, which rebuilds
+#   from main on every merge (deploy-voxa-*-staging.yml). They sign in as the
+#   staging test account and write test boards, consent choices and media to
+#   staging only. Without the staging credentials the job logs why and skips.
+#   Staging never gates production deploys; a red run here is a staging signal.
 
 on:
   workflow_dispatch:
@@ -63,3 +66,84 @@ jobs:
         run: pnpm --filter @voxa/e2e exec playwright test -c playwright.config.ts specs/a11y.spec.ts --grep "public pages" --workers=1
         env:
           PLAYWRIGHT_BASE_URL: ${{ env.VOXA_PROD_WEB_URL }}
+
+  staging-signed-in:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      VOXA_STAGING_WEB_URL: https://voxa-staging.madfam.io
+      VOXA_STAGING_API_URL: https://voxa-api-staging.madfam.io
+    steps:
+      - name: Check staging credentials
+        id: creds
+        env:
+          JANUA_TEST_EMAIL: ${{ secrets.VOXA_STAGING_TEST_EMAIL }}
+          JANUA_TEST_PASSWORD: ${{ secrets.VOXA_STAGING_TEST_PASSWORD }}
+          OIDC_CLIENT_ID: ${{ secrets.VOXA_STAGING_OIDC_CLIENT_ID }}
+          OIDC_CLIENT_SECRET: ${{ secrets.VOXA_STAGING_OIDC_CLIENT_SECRET }}
+        run: |
+          if [ -z "${JANUA_TEST_EMAIL}" ] || [ -z "${JANUA_TEST_PASSWORD}" ]; then
+            echo "::notice title=Signed-in staging specs skipped::VOXA_STAGING_TEST_EMAIL and VOXA_STAGING_TEST_PASSWORD are not set, so the signed-in specs did not run."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "run=true" >> "$GITHUB_OUTPUT"
+          if [ -z "${OIDC_CLIENT_ID}" ] || [ -z "${OIDC_CLIENT_SECRET}" ]; then
+            echo "::notice title=Staging API soak skipped::VOXA_STAGING_OIDC_CLIENT_ID and VOXA_STAGING_OIDC_CLIENT_SECRET are not set, so staging-auth.spec.ts skips; the browser specs still run."
+            echo "token=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "token=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.creds.outputs.run == 'true'
+      - uses: pnpm/action-setup@v4
+        if: steps.creds.outputs.run == 'true'
+        with:
+          version: 9.15.0
+      - uses: actions/setup-node@v4
+        if: steps.creds.outputs.run == 'true'
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+        if: steps.creds.outputs.run == 'true'
+      - run: pnpm exec playwright install chromium --with-deps
+        if: steps.creds.outputs.run == 'true'
+        working-directory: e2e
+
+      - name: Staging is up
+        id: up
+        if: steps.creds.outputs.run == 'true'
+        run: |
+          for url in "${VOXA_STAGING_WEB_URL}/api/health" "${VOXA_STAGING_API_URL}/health"; do
+            code="$(curl -sS -o /dev/null -w '%{http_code}' "$url" || true)"
+            echo "${url} -> ${code}"
+            if [ "$code" != "200" ]; then
+              echo "::error title=Staging is down::${url} answered ${code}; the signed-in specs need a live staging."
+              exit 1
+            fi
+          done
+
+      - name: Staging API access token
+        if: steps.creds.outputs.run == 'true' && steps.creds.outputs.token == 'true'
+        env:
+          OIDC_CLIENT_ID: ${{ secrets.VOXA_STAGING_OIDC_CLIENT_ID }}
+          OIDC_CLIENT_SECRET: ${{ secrets.VOXA_STAGING_OIDC_CLIENT_SECRET }}
+          JANUA_TEST_EMAIL: ${{ secrets.VOXA_STAGING_TEST_EMAIL }}
+          JANUA_TEST_PASSWORD: ${{ secrets.VOXA_STAGING_TEST_PASSWORD }}
+        run: |
+          set -euo pipefail
+          token="$(./scripts/launch/fetch-staging-access-token.sh)"
+          echo "::add-mask::${token}"
+          echo "VOXA_TEST_ACCESS_TOKEN=${token}" >> "$GITHUB_ENV"
+
+      # Runs even when the token step failed (that failure still fails the job),
+      # so a Janua token problem does not hide the browser results.
+      - name: Signed-in specs (staging)
+        if: ${{ !cancelled() && steps.creds.outputs.run == 'true' && steps.up.outcome == 'success' }}
+        run: pnpm test:e2e:staging:signed-in
+        env:
+          PLAYWRIGHT_BASE_URL: ${{ env.VOXA_STAGING_WEB_URL }}
+          JANUA_TEST_EMAIL: ${{ secrets.VOXA_STAGING_TEST_EMAIL }}
+          JANUA_TEST_PASSWORD: ${{ secrets.VOXA_STAGING_TEST_PASSWORD }}
