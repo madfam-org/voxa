@@ -195,6 +195,12 @@ self.addEventListener('fetch', (event) => {
 
 self.addEventListener('message', (event) => {
   const data = event.data;
+  // Sign-out and account switching (src/lib/account-data.ts): forget the
+  // previous account's shell before the next person signs in.
+  if (data && data.type === 'voxa:forget-account') {
+    event.waitUntil(caches.delete(SHELL_CACHE));
+    return;
+  }
   if (!data || data.type !== 'voxa:cache-urls' || !Array.isArray(data.urls)) return;
   const urls = data.urls.filter((u) => typeof u === 'string').slice(0, 500);
   event.waitUntil(

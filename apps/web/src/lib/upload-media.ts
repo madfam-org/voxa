@@ -1,3 +1,5 @@
+import { apiFetch } from '@/lib/api-client';
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
 
 export interface UploadedMedia {
@@ -8,7 +10,6 @@ export interface UploadedMedia {
 }
 
 export async function uploadBoardMedia(
-  accessToken: string,
   boardId: string,
   file: Blob,
   filename: string,
@@ -17,13 +18,8 @@ export async function uploadBoardMedia(
   form.set('boardId', boardId);
   form.set('file', file, filename);
 
-  const res = await fetch(`${API_URL.replace(/\/$/, '')}/v1/media`, {
-    method: 'POST',
-    // The bearer token alone identifies the caller; development identity
-    // headers are not CORS-allowed in production.
-    headers: { Authorization: `Bearer ${accessToken}` },
-    body: form,
-  });
+  // Through the same-origin proxy, which adds the session's bearer on the server.
+  const res = await apiFetch('/v1/media', { method: 'POST', body: form });
 
   if (!res.ok) {
     const body = (await res.json().catch(() => ({}))) as { error?: string };

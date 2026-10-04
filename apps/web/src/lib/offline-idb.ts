@@ -1,9 +1,9 @@
-const DB_NAME = 'voxa-offline';
+export const OFFLINE_DB_NAME = 'voxa-offline';
 const STORE = 'kv';
 
 function openDb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, 1);
+    const req = indexedDB.open(OFFLINE_DB_NAME, 1);
     req.onupgradeneeded = () => req.result.createObjectStore(STORE);
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);

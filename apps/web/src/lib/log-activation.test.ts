@@ -50,29 +50,29 @@ afterEach(() => {
 
 describe('logButtonActivation', () => {
   it('sends nothing while undecided, signed out, or with usage counts off', async () => {
-    await logButtonActivation('token', press);
+    await logButtonActivation(true, press);
     decide({ choices: { aiProcessing: true, usageAnalytics: false } });
-    await logButtonActivation('token', press);
+    await logButtonActivation(true, press);
     decide({ choices: { aiProcessing: false, usageAnalytics: true } });
-    await logButtonActivation(undefined, press);
+    await logButtonActivation(false, press);
     assert.deepEqual(bodies, []);
   });
 
   it('never logs the shared demo board', async () => {
     decide({ choices: { aiProcessing: false, usageAnalytics: true } });
-    await logButtonActivation('token', { ...press, boardId: DEMO_BOARD_ID });
+    await logButtonActivation(true, { ...press, boardId: DEMO_BOARD_ID });
     assert.deepEqual(bodies, []);
   });
 
   it('sends ids only, without the spoken text, under usage counts', async () => {
     decide({ choices: { aiProcessing: false, usageAnalytics: true } });
-    await logButtonActivation('token', press);
+    await logButtonActivation(true, press);
     assert.deepEqual(bodies, [{ boardId: 'family-board', buttonId: 'want' }]);
   });
 
   it('includes the text only when the API reported text retention for this user', async () => {
     decide({ choices: { aiProcessing: false, usageAnalytics: true }, utteranceText: true });
-    await logButtonActivation('token', press);
+    await logButtonActivation(true, press);
     assert.deepEqual(bodies, [press]);
   });
 });

@@ -165,7 +165,20 @@ describe('service worker (public/sw.js)', () => {
   it('forgets the cached shell when the user signs out', async () => {
     await await dispatchFetch(`${ORIGIN}/app`, 'navigate');
     assert.ok([...stores.keys()].some((name) => name.startsWith('voxa-shell-')));
-    assert.equal(await dispatchFetch(`${ORIGIN}/auth/signout`, 'navigate'), undefined);
+    // Sign-out is a POST form submission (GET answers 405).
+    assert.equal(await dispatchFetch(`${ORIGIN}/auth/signout`, 'navigate', 'POST'), undefined);
+    assert.ok(![...stores.keys()].some((name) => name.startsWith('voxa-shell-')));
+  });
+
+  it('forgets the cached shell when the page switches accounts', async () => {
+    await dispatchFetch(`${ORIGIN}/app`, 'navigate');
+    assert.ok([...stores.keys()].some((name) => name.startsWith('voxa-shell-')));
+    const waits: Array<Promise<unknown>> = [];
+    listeners.get('message')!({
+      data: { type: 'voxa:forget-account' },
+      waitUntil: (p: Promise<unknown>) => waits.push(p),
+    });
+    await Promise.all(waits);
     assert.ok(![...stores.keys()].some((name) => name.startsWith('voxa-shell-')));
   });
 });

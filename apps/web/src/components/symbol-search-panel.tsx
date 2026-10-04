@@ -7,8 +7,7 @@ import { MULBERRY_LICENSE_URL, MULBERRY_SITE_URL } from '@voxa/symbols';
 import { Link } from '@/i18n/navigation';
 import { uploadBoardMedia } from '@/lib/upload-media';
 import { brand, neutral, status, surface } from '@/lib/tokens';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
+import { apiFetch } from '@/lib/api-client';
 
 /** One hit from `GET /v1/symbols/search` (vendored Mulberry Symbols, CC BY-SA 4.0). */
 export interface SymbolHit {
@@ -28,7 +27,7 @@ export interface SymbolSelection {
 
 interface SymbolSearchPanelProps {
   boardId: string;
-  accessToken?: string;
+  signedIn: boolean;
   contentLocale?: string;
   currentUrl?: string;
   /** The button had a symbol Voxa no longer shows; ask for a replacement. */
@@ -40,7 +39,7 @@ interface SymbolSearchPanelProps {
 
 export function SymbolSearchPanel({
   boardId,
-  accessToken,
+  signedIn,
   contentLocale = 'es-MX',
   currentUrl,
   symbolUnavailable = false,
@@ -71,15 +70,10 @@ export function SymbolSearchPanel({
     setBusy(true);
     setError(null);
     try {
-      // Signed in: the bearer token alone. Development identity headers are
-      // only for local API runs (VOXA_DEV_AUTH) and are not CORS-allowed in production.
-      const headers: Record<string, string> = accessToken
-        ? { Authorization: `Bearer ${accessToken}` }
-        : { 'X-Voxa-Role': 'editor' };
+      // Through the same-origin proxy, which adds the session's bearer on the server.
       const language = contentLocale.split('-')[0] ?? 'es';
-      const res = await fetch(
-        `${API_URL.replace(/\/$/, '')}/v1/symbols/search?q=${encodeURIComponent(query.trim())}&locale=${encodeURIComponent(language)}&limit=18`,
-        { headers },
+      const res = await apiFetch(
+        `/v1/symbols/search?q=${encodeURIComponent(query.trim())}&locale=${encodeURIComponent(language)}&limit=18`,
       );
       if (!res.ok) {
         const body = (await res.json().catch(() => ({}))) as { error?: string };
@@ -94,18 +88,18 @@ export function SymbolSearchPanel({
     } finally {
       setBusy(false);
     }
-  }, [accessToken, contentLocale, query, t]);
+  }, [contentLocale, query, t]);
 
   const uploadPhoto = useCallback(
     async (file: File) => {
-      if (!accessToken) {
+      if (!signedIn) {
         setError(t('signInToUpload'));
         return;
       }
       setBusy(true);
       setError(null);
       try {
-        const uploaded = await uploadBoardMedia(accessToken, boardId, file, file.name);
+        const uploaded = await uploadBoardMedia(boardId, file, file.name);
         onSelect({ imageUrl: uploaded.url });
       } catch (err) {
         setError((err as Error).message);
@@ -113,7 +107,7 @@ export function SymbolSearchPanel({
         setBusy(false);
       }
     },
-    [accessToken, boardId, onSelect, t],
+    [signedIn, boardId, onSelect, t],
   );
 
   const creditLink = { color: 'inherit', textDecoration: 'underline' } as const;

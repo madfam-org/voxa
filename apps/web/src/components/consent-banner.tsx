@@ -4,9 +4,9 @@ import { Link } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { ConsentToggles } from '@/components/consent-choices';
+import { isSignedIn as fetchSignedIn } from '@/lib/client-session';
 import {
   decisionFromServer,
-  fetchAccessToken,
   fetchServerConsents,
   readConsentCache,
   recordConsentChoices,
@@ -24,7 +24,7 @@ import { brand, neutral, surface } from '@/lib/tokens';
 export function ConsentBanner(): React.ReactNode {
   const t = useTranslations('consent');
   const [visible, setVisible] = useState(false);
-  const [accessToken, setAccessToken] = useState<string | undefined>();
+  const [signedIn, setSignedIn] = useState(false);
   const [draft, setDraft] = useState<ConsentChoices>({
     aiProcessing: false,
     usageAnalytics: false,
@@ -36,10 +36,10 @@ export function ConsentBanner(): React.ReactNode {
     let cancelled = false;
     void (async () => {
       const cached = readConsentCache();
-      const token = await fetchAccessToken();
+      const sessionActive = await fetchSignedIn();
       if (cancelled) return;
-      if (token) {
-        const view = await fetchServerConsents(token);
+      if (sessionActive) {
+        const view = await fetchServerConsents();
         if (cancelled) return;
         if (view) {
           const decision = decisionFromServer(view);
@@ -54,14 +54,14 @@ export function ConsentBanner(): React.ReactNode {
           }
           // Signed in but undecided on the server: ask, starting from any
           // choice made on this device.
-          setAccessToken(token);
+          setSignedIn(true);
           setDraft(cached?.choices ?? { aiProcessing: false, usageAnalytics: false });
           setVisible(true);
           return;
         }
         // The API cannot be reached: the offline cache decides.
         if (cached) return;
-        setAccessToken(token);
+        setSignedIn(true);
         setVisible(true);
         return;
       }
@@ -79,7 +79,7 @@ export function ConsentBanner(): React.ReactNode {
     setSaving(true);
     setError(false);
     try {
-      await recordConsentChoices(accessToken, choices);
+      await recordConsentChoices(signedIn, choices);
       setVisible(false);
     } catch {
       setError(true);

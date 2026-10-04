@@ -123,7 +123,7 @@ describe('recordConsentChoices', () => {
       requests.push({ url, init });
       throw new Error('no request expected');
     }) as unknown as typeof fetch;
-    const cache = await recordConsentChoices(undefined, {
+    const cache = await recordConsentChoices(false, {
       aiProcessing: true,
       usageAnalytics: false,
     });
@@ -147,17 +147,19 @@ describe('recordConsentChoices', () => {
         { status: 200 },
       );
     }) as unknown as typeof fetch;
-    const cache = await recordConsentChoices('token', { aiProcessing: true, usageAnalytics: true });
+    const cache = await recordConsentChoices(true, { aiProcessing: true, usageAnalytics: true });
     assert.equal(cache.source, 'server');
     assert.equal(requests.length, 1);
-    assert.match(requests[0]!.url, /\/v1\/consents$/);
+    // Through the same-origin proxy: the session cookie, never a bearer in page code.
+    assert.equal(requests[0]!.url, '/api/v1/consents');
+    assert.equal(requests[0]!.init?.credentials, 'same-origin');
     assert.equal(requests[0]!.init?.method, 'PUT');
     assert.deepEqual(JSON.parse(String(requests[0]!.init?.body)), {
       consents: { ai_processing: true, usage_analytics: true },
     });
     assert.equal(
       (requests[0]!.init?.headers as Record<string, string>).Authorization,
-      'Bearer token',
+      undefined,
     );
     assert.equal(getUsageConsent(), true);
   });
@@ -165,7 +167,7 @@ describe('recordConsentChoices', () => {
   it('signed in: a failed save throws and leaves the cache untouched', async () => {
     globals.fetch = (async () => new Response('nope', { status: 503 })) as unknown as typeof fetch;
     await assert.rejects(
-      recordConsentChoices('token', { aiProcessing: true, usageAnalytics: true }),
+      recordConsentChoices(true, { aiProcessing: true, usageAnalytics: true }),
     );
     assert.equal(storage.getItem(CONSENT_CACHE_KEY), null);
     assert.equal(getAiConsent(), false);

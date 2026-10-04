@@ -4,12 +4,11 @@ import { useCallback, useEffect, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import type { SyncEvent } from '@voxa/core';
 import { neutral, status, surface } from '@/lib/tokens';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
+import { apiFetch } from '@/lib/api-client';
 
 interface BoardAuditPanelProps {
   boardId: string;
-  accessToken?: string;
+  signedIn: boolean;
   onClose: () => void;
 }
 
@@ -25,7 +24,7 @@ function describeEvent(event: SyncEvent): { key: AuditMessageKey; version: numbe
 
 export function BoardAuditPanel({
   boardId,
-  accessToken,
+  signedIn,
   onClose,
 }: BoardAuditPanelProps): React.ReactNode {
   const t = useTranslations('auditLog');
@@ -36,21 +35,14 @@ export function BoardAuditPanel({
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!accessToken) {
+    if (!signedIn) {
       setError(t('signIn'));
       return;
     }
     setBusy(true);
     setError(null);
     try {
-      const res = await fetch(
-        `${API_URL.replace(/\/$/, '')}/v1/boards/${encodeURIComponent(boardId)}/audit?limit=40`,
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        },
-      );
+      const res = await apiFetch(`/v1/boards/${encodeURIComponent(boardId)}/audit?limit=40`);
       if (!res.ok) {
         const body = (await res.json().catch(() => ({}))) as { error?: string };
         throw new Error(body.error ?? String(res.status));
@@ -63,7 +55,7 @@ export function BoardAuditPanel({
     } finally {
       setBusy(false);
     }
-  }, [accessToken, boardId, t]);
+  }, [signedIn, boardId, t]);
 
   useEffect(() => {
     void load();

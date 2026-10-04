@@ -8,12 +8,13 @@
  * When nothing is decided, nothing is sent.
  */
 
+import { apiFetch } from './api-client';
+
 export const CONSENT_CACHE_KEY = 'voxa-consent';
 /** Pre-2026-10 single "AI consent" flag. It is not a valid consent for either purpose now. */
 export const LEGACY_CONSENT_KEY = 'voxa-ai-consent';
 export const CONSENT_CHANGE_EVENT = 'voxa-consent-change';
 
-const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000').replace(/\/$/, '');
 
 export interface ConsentChoices {
   /** `ai_processing`: word and symbol suggestions computed by the API. */
@@ -114,24 +115,10 @@ export function getUtteranceTextConsent(): boolean {
   return readConsentCache()?.utteranceText === true;
 }
 
-/** Access token of the signed-in user, or undefined when signed out or offline. */
-export async function fetchAccessToken(): Promise<string | undefined> {
-  try {
-    const res = await fetch('/api/auth/session');
-    if (!res.ok) return undefined;
-    const session = (await res.json()) as { accessToken?: string };
-    return session.accessToken || undefined;
-  } catch {
-    return undefined;
-  }
-}
-
 /** The signed-in user's records, or null when the API cannot be reached. */
-export async function fetchServerConsents(accessToken: string): Promise<ServerConsentView | null> {
+export async function fetchServerConsents(): Promise<ServerConsentView | null> {
   try {
-    const res = await fetch(`${API_URL}/v1/consents`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
+    const res = await apiFetch('/v1/consents');
     if (!res.ok) return null;
     return (await res.json()) as ServerConsentView;
   } catch {
@@ -140,13 +127,10 @@ export async function fetchServerConsents(accessToken: string): Promise<ServerCo
 }
 
 /** Saves both choices to the API. Throws when the API does not confirm. */
-export async function saveServerConsents(
-  accessToken: string,
-  choices: ConsentChoices,
-): Promise<ServerConsentView> {
-  const res = await fetch(`${API_URL}/v1/consents`, {
+export async function saveServerConsents(choices: ConsentChoices): Promise<ServerConsentView> {
+  const res = await apiFetch('/v1/consents', {
     method: 'PUT',
-    headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       consents: { ai_processing: choices.aiProcessing, usage_analytics: choices.usageAnalytics },
     }),
@@ -161,12 +145,12 @@ export async function saveServerConsents(
  * the caller can say so instead of pretending it worked.
  */
 export async function recordConsentChoices(
-  accessToken: string | undefined,
+  signedIn: boolean,
   choices: ConsentChoices,
 ): Promise<ConsentCache> {
   let cache: ConsentCache;
-  if (accessToken) {
-    const view = await saveServerConsents(accessToken, choices);
+  if (signedIn) {
+    const view = await saveServerConsents(choices);
     const decision = decisionFromServer(view);
     cache = {
       choices: decision.choices,

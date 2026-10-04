@@ -1,27 +1,17 @@
-import { NextResponse } from 'next/server';
-import {
-  SESSION_COOKIE_NAME,
-  SESSION_DISPLAY_COOKIE_NAME,
-  sessionCookieAttrs,
-} from '@/lib/auth';
+import { sessionForRequest } from '@/lib/route-session';
+import { isSameOriginRequest } from '@/lib/same-origin';
+import { signOutResponse } from '@/lib/sign-out';
 
-export async function POST() {
-  return clearSessionResponse();
-}
+/** Sign-out (POST only). See `src/lib/sign-out.ts`. */
+export const dynamic = 'force-dynamic';
 
-export async function GET() {
-  return clearSessionResponse();
-}
-
-function clearSessionResponse() {
-  const response = NextResponse.redirect(
-    process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000',
-  );
-  response.cookies.set(SESSION_COOKIE_NAME, '', { ...sessionCookieAttrs(0), maxAge: 0 });
-  response.cookies.set(SESSION_DISPLAY_COOKIE_NAME, '', {
-    ...sessionCookieAttrs(0),
-    httpOnly: false,
-    maxAge: 0,
+export async function POST(request: Request): Promise<Response> {
+  return signOutResponse(request, {
+    sameOrigin: isSameOriginRequest(request),
+    idToken: async () => (await sessionForRequest(request)).token?.idToken,
   });
-  return response;
+}
+
+export async function GET(request: Request): Promise<Response> {
+  return signOutResponse(request, { sameOrigin: false, idToken: async () => undefined });
 }

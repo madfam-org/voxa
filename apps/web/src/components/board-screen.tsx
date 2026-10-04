@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
+import { AccountControls } from '@/components/account-controls';
 import type { BoardButton, BoardDisplayPreferences, PartOfSpeechTag, StarterTemplateId, TeamRole } from '@voxa/core';
 import {
   applyKeyboardActivation,
@@ -161,7 +162,6 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
     exportObz,
     isEditor,
     isAuthenticated,
-    accessToken,
     sessionUserId,
     sessionTeamRole,
   } = useSyncedBoard(role);
@@ -287,7 +287,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
       if (scheduleMode && !isEditor) {
         const text = resolveActivationSpeech(btn);
         setCompletedStepIds((prev) => new Set(prev).add(btn.id as string));
-        void logButtonActivation(accessToken, {
+        void logButtonActivation(isAuthenticated, {
           boardId,
           buttonId: btn.id as string,
           speechText: text,
@@ -301,7 +301,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
       const text = resolveActivationSpeech(btn);
       setUtterance((prev) => [...prev, text]);
       setRecentButtonIds((prev) => [...prev, btn.id as string].slice(-8));
-      void logButtonActivation(accessToken, {
+      void logButtonActivation(isAuthenticated, {
         boardId,
         buttonId: btn.id as string,
         speechText: text,
@@ -311,7 +311,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
       }
     },
     [
-      accessToken,
+      isAuthenticated,
       boardId,
       isEditor,
       editingId,
@@ -1092,11 +1092,9 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
           </a>
         ) : null}
 
-        {isAuthenticated && (
-          <a href="/auth/signout" style={{ ...secondaryBtn, textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>
-            {tcx('signOut')}
-          </a>
-        )}
+        {isAuthenticated ? (
+          <AccountControls redirectTo={remoteEditor ? '/app/edit' : '/app'} buttonStyle={secondaryBtn} />
+        ) : null}
 
         <div
           data-voxa-message-bar=""
@@ -1373,7 +1371,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
             showEditorPinSettings={role === 'admin'}
             boardDisplay={board.display}
             onBoardDisplayChange={isEditor ? handleBoardDisplayChange : undefined}
-            accessToken={accessToken}
+            signedIn={isAuthenticated}
             speechLocale={speechLocale}
             deviceVoices={deviceVoices}
             onOpenFirstRun={
@@ -1390,7 +1388,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
         {usageOpen && isEditor && isAuthenticated ? (
           <UsageReportPanel
             boardId={boardId}
-            accessToken={accessToken}
+            signedIn={isAuthenticated}
             buttons={sorted}
             onClose={() => setUsageOpen(false)}
           />
@@ -1399,7 +1397,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
         {auditOpen && isEditor && isAuthenticated ? (
           <BoardAuditPanel
             boardId={boardId}
-            accessToken={accessToken}
+            signedIn={isAuthenticated}
             onClose={() => setAuditOpen(false)}
           />
         ) : null}
@@ -1419,7 +1417,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
             button={sorted.find((b) => (b.id as string) === editingId)!}
             boardId={boardId}
             boardCatalog={boardCatalog}
-            accessToken={accessToken}
+            signedIn={isAuthenticated}
             recordedBy={sessionUserId}
             defaultSymbolSkinTone={settings.defaultSymbolSkinTone}
             contentLocale={settings.contentLocale}
@@ -1471,7 +1469,7 @@ function EditorPanel({
   button,
   boardId,
   boardCatalog,
-  accessToken,
+  signedIn,
   recordedBy,
   defaultSymbolSkinTone,
   contentLocale,
@@ -1482,7 +1480,7 @@ function EditorPanel({
   button: BoardButton;
   boardId: string;
   boardCatalog: BoardSummary[];
-  accessToken?: string;
+  signedIn: boolean;
   recordedBy: string;
   defaultSymbolSkinTone: CommunicatorSettings['defaultSymbolSkinTone'];
   contentLocale: CommunicatorSettings['contentLocale'];
@@ -1512,7 +1510,7 @@ function EditorPanel({
 
       <SymbolSearchPanel
         boardId={boardId}
-        accessToken={accessToken}
+        signedIn={signedIn}
         contentLocale={contentLocale}
         currentUrl={buttonSymbolUrl(button, { skinTone: defaultSymbolSkinTone })}
         symbolUnavailable={buttonSymbolUnavailable(button)}
@@ -1528,7 +1526,7 @@ function EditorPanel({
 
       <RecordedMediaPanel
         boardId={boardId}
-        accessToken={accessToken}
+        signedIn={signedIn}
         recordedBy={recordedBy}
         button={button}
         disabled={fieldsLocked}

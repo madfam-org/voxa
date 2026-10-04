@@ -8,7 +8,7 @@ import { neutral, status, surface } from '@/lib/tokens';
 
 interface RecordedMediaPanelProps {
   boardId: string;
-  accessToken?: string;
+  signedIn: boolean;
   recordedBy: string;
   button: BoardButton;
   disabled?: boolean;
@@ -18,7 +18,7 @@ interface RecordedMediaPanelProps {
 
 export function RecordedMediaPanel({
   boardId,
-  accessToken,
+  signedIn,
   recordedBy,
   button,
   disabled,
@@ -38,14 +38,14 @@ export function RecordedMediaPanel({
 
   const uploadFile = useCallback(
     async (file: File, onSuccess: (url: string, mimeType: string) => void) => {
-      if (!accessToken) {
+      if (!signedIn) {
         setError(t('signInToUpload'));
         return;
       }
       setBusy(true);
       setError(null);
       try {
-        const uploaded = await uploadBoardMedia(accessToken, boardId, file, file.name);
+        const uploaded = await uploadBoardMedia(boardId, file, file.name);
         onSuccess(uploaded.url, uploaded.mimeType);
       } catch (err) {
         setError((err as Error).message);
@@ -53,11 +53,11 @@ export function RecordedMediaPanel({
         setBusy(false);
       }
     },
-    [accessToken, boardId, t],
+    [signedIn, boardId, t],
   );
 
   const startRecording = useCallback(async () => {
-    if (!accessToken) {
+    if (!signedIn) {
       setError(t('signInToRecord'));
       return;
     }
@@ -91,7 +91,7 @@ export function RecordedMediaPanel({
     } catch (err) {
       setError((err as Error).message);
     }
-  }, [accessToken, onAudioChange, recordedBy, t, uploadFile]);
+  }, [signedIn, onAudioChange, recordedBy, t, uploadFile]);
 
   const stopRecording = useCallback(() => {
     recorderRef.current?.stop();

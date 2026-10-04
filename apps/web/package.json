@@ -23,6 +23,7 @@
     "@voxa/vocabulary": "workspace:*",
     "jose": "^5.9.6",
     "next": "^15.5.27",
+    "next-auth": "5.0.0-beta.32",
     "next-intl": "^4.13.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

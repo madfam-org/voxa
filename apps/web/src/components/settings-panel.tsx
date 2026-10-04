@@ -47,7 +47,7 @@ interface SettingsPanelProps {
   boardDisplay?: BoardDisplayPreferences;
   onBoardDisplayChange?: (patch: Partial<BoardDisplayPreferences>) => void;
   /** Signed-in user's token: privacy choices are saved to their server record. */
-  accessToken?: string;
+  signedIn: boolean;
   /** The board's speech locale (the voice choice is stored per locale). */
   speechLocale: string;
   deviceVoices: DeviceVoices;
@@ -62,7 +62,7 @@ export function SettingsPanel({
   showEditorPinSettings = false,
   boardDisplay,
   onBoardDisplayChange,
-  accessToken,
+  signedIn,
   speechLocale,
   deviceVoices,
   onOpenFirstRun,
@@ -479,7 +479,7 @@ export function SettingsPanel({
         </section>
       ) : null}
 
-      <PrivacySettingsSection accessToken={accessToken} />
+      <PrivacySettingsSection signedIn={signedIn} />
 
       {showEditorPinSettings ? (
         <section style={{ borderTop: `1px solid ${neutral.borderSubtle}`, paddingTop: 12, marginTop: 8 }}>
