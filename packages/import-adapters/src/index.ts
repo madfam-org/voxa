@@ -1,48 +1,58 @@
 import { type BoardButton } from '@voxa/core';
-import { type ObfBoard } from '@voxa/obf';
 import { zipSync } from 'fflate';
-import {
-  gridsetPageToBoardButtons,
-  gridsetPrimaryPageToObf,
-  parseGridsetArchive,
-  type GridsetPage,
-} from './gridset.js';
+import { gridsetPageToBoardButtons, parseGridsetArchive, type GridsetPage } from './gridset.js';
 
 export {
   gridsetPageToBoardButtons,
-  gridsetPrimaryPageToObf,
   parseGridsetArchive,
+  parseGridsetSettings,
   parseGridXml,
   type GridsetCell,
   type GridsetPage,
   type GridsetParseResult,
 } from './gridset.js';
 
+export interface AdapterOptions {
+  /** Locale when the file has none (Voxa passes the importer's content locale). */
+  fallbackLocale?: string;
+}
+
+export interface AdapterPageResult<Page> {
+  page: Page;
+  buttons: BoardButton[];
+  /** Locale of the imported page: from the file when present, else the fallback. */
+  locale: string;
+  warnings: string[];
+}
+
+/** Grid 3: the HOME grid (from the gridset settings), captions only (beta). */
 export function gridsetArchiveToBoardUpdate(
   bytes: Uint8Array,
-  boardId: string,
-): { page: GridsetPage; buttons: BoardButton[]; warnings: string[] } {
-  const { pages, warnings } = parseGridsetArchive(bytes);
-  const page = pages[0];
-  if (!page) {
-    throw new Error('Gridset has no importable grids.');
-  }
-  const { warnings: pageWarnings } = gridsetPrimaryPageToObf(pages, boardId);
-  return {
-    page,
-    buttons: gridsetPageToBoardButtons(page),
-    warnings: [...warnings, ...pageWarnings],
-  };
+  options: AdapterOptions = {},
+): AdapterPageResult<GridsetPage> {
+  const { home, locale: fileLocale, warnings } = parseGridsetArchive(bytes);
+  const locale = fileLocale ?? options.fallbackLocale ?? 'es-MX';
+  return { page: home, buttons: gridsetPageToBoardButtons(home, locale), locale, warnings };
 }
 
-export function gridsetArchiveToObf(bytes: Uint8Array, boardId: string): { board: ObfBoard; warnings: string[] } {
-  const { pages, warnings } = parseGridsetArchive(bytes);
-  const { board, warnings: pageWarnings } = gridsetPrimaryPageToObf(pages, boardId);
-  return { board, warnings: [...warnings, ...pageWarnings] };
-}
-
-/** Build a minimal gridset zip for tests and fixtures. */
-export function buildSampleGridsetArchive(): Uint8Array {
+/**
+ * Build a minimal SYNTHETIC gridset zip for tests: two grids, where the home
+ * grid (named by `Settings0/settings.xml` `<StartGrid>`) is not the
+ * alphabetically first one. It mirrors the documented structure; it is not a
+ * file produced by Grid 3.
+ */
+export function buildSampleGridsetArchive(options: { language?: string; startGrid?: string | null } = {}): Uint8Array {
+  const startGrid = options.startGrid === undefined ? 'core-home' : options.startGrid;
+  const settingsXml = `<?xml version="1.0" encoding="utf-8"?>
+<GridSetSettings>${startGrid ? `<StartGrid>${startGrid}</StartGrid>` : ''}${
+    options.language ? `<Language>${options.language}</Language>` : ''
+  }</GridSetSettings>`;
+  const alphaXml = `<?xml version="1.0" encoding="utf-8"?>
+<Grid Name="Alphabet">
+  <RowDefinitions><RowDefinition/></RowDefinitions>
+  <ColumnDefinitions><ColumnDefinition/></ColumnDefinitions>
+  <Cells><Cell><Content><CaptionAndImage><Caption>a</Caption></CaptionAndImage></Content></Cell></Cells>
+</Grid>`;
   const gridXml = `<?xml version="1.0" encoding="utf-8"?>
 <Grid Name="Core" GridGuid="core-home">
   <RowDefinitions><RowDefinition Height="1"/><RowDefinition Height="1"/></RowDefinitions>
@@ -57,6 +67,8 @@ export function buildSampleGridsetArchive(): Uint8Array {
 </Grid>`;
 
   return zipSync({
+    'Settings0/settings.xml': new TextEncoder().encode(settingsXml),
+    'Grids/Alphabet/grid.xml': new TextEncoder().encode(alphaXml),
     'Grids/core-home/grid.xml': new TextEncoder().encode(gridXml),
   });
 }

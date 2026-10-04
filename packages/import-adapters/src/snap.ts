@@ -1,4 +1,4 @@
-import { createBoardId, createButtonId, type BoardButton } from '@voxa/core';
+import { createButtonId, type BoardButton } from '@voxa/core';
 
 export interface SnapCell {
   row: number;
@@ -83,13 +83,13 @@ function pageFromCells(cells: SnapCell[], pageId: string): SnapPage {
   };
 }
 
-export function snapCellsToBoardButtons(cells: SnapCell[]): BoardButton[] {
+export function snapCellsToBoardButtons(cells: SnapCell[], locale = 'es-MX'): BoardButton[] {
   return cells.map((cell, index) => ({
     kind: 'analytic' as const,
     id: createButtonId(`snap-${cell.row}-${cell.column}-${index}`),
     label: cell.label,
     speechText: cell.vocalization,
-    locale: 'en-US',
+    locale,
     position: { row: cell.row, column: cell.column },
     locked: false,
   }));
@@ -104,27 +104,33 @@ export async function parseSnapArchive(bytes: Uint8Array): Promise<{ page: SnapP
     }
     return {
       page: pageFromCells(cells, 'snap-primary'),
-      warnings: ['Snap import uses primary page buttons only; symbols and links are not migrated yet.'],
+      warnings: ['Snap import (beta) imports the words of one page; pictures and links are not imported.'],
     };
   } finally {
     db.close();
   }
 }
 
+/**
+ * TD Snap `.spb` (BETA — imports the words of one page): button labels and
+ * messages at their grid positions. The file carries no locale Voxa reads, so
+ * the board uses `fallbackLocale`.
+ */
 export async function snapArchiveToBoardUpdate(
   bytes: Uint8Array,
-  boardId: string,
-): Promise<{ page: SnapPage; buttons: BoardButton[]; warnings: string[] }> {
-  void boardId;
+  options: { fallbackLocale?: string } = {},
+): Promise<{ page: SnapPage; buttons: BoardButton[]; locale: string; warnings: string[] }> {
   const { page, warnings } = await parseSnapArchive(bytes);
+  const locale = options.fallbackLocale ?? 'es-MX';
   return {
     page,
-    buttons: snapCellsToBoardButtons(page.cells),
+    buttons: snapCellsToBoardButtons(page.cells, locale),
+    locale,
     warnings,
   };
 }
 
-/** Build a minimal Snap-style SQLite archive for tests. */
+/** Build a minimal SYNTHETIC Snap-style SQLite archive for tests (not a file produced by TD Snap). */
 export async function buildSampleSnapArchive(): Promise<Uint8Array> {
   const initSqlJs = (await import('sql.js')).default as () => Promise<SqlJsStatic>;
   const SQL = await initSqlJs();

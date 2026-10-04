@@ -1,5 +1,6 @@
 import { createBoardId, createButtonId, type BoardButton } from '@voxa/core';
-import { unzipSync, zipSync } from 'fflate';
+import { safeUnzip } from '@voxa/obf';
+import { zipSync } from 'fflate';
 
 export interface TouchChatCell {
   row: number;
@@ -36,8 +37,8 @@ async function openTouchChatDatabase(bytes: Uint8Array): Promise<SqlJsDatabase> 
 }
 
 function extractC4vDatabase(bytes: Uint8Array): Uint8Array {
-  const entries = unzipSync(bytes);
-  for (const [path, data] of Object.entries(entries)) {
+  const entries = safeUnzip(bytes);
+  for (const [path, data] of entries) {
     if (path.toLowerCase().endsWith('.c4v')) {
       return data;
     }
@@ -144,14 +145,14 @@ function queryPageCells(db: SqlJsDatabase, pageId: number, columns: number): Tou
   return cells;
 }
 
-export function touchChatCellsToBoardButtons(cells: TouchChatCell[]): BoardButton[] {
+export function touchChatCellsToBoardButtons(cells: TouchChatCell[], locale = 'es-MX'): BoardButton[] {
   return cells.map((cell, index) => {
     const base = {
       kind: 'analytic' as const,
       id: createButtonId(`tc-${cell.row}-${cell.column}-${index}`),
       label: cell.label,
       speechText: cell.vocalization,
-      locale: 'en-US',
+      locale,
       position: { row: cell.row, column: cell.column },
       locked: false,
     };
@@ -192,7 +193,7 @@ export async function parseTouchChatArchive(
         cells,
       },
       warnings: [
-        'TouchChat import uses the Home page only; symbols and custom images are not migrated yet.',
+        'TouchChat import (beta) imports the words of the Home page only; pictures and other pages are not imported.',
       ],
     };
   } finally {
@@ -200,20 +201,26 @@ export async function parseTouchChatArchive(
   }
 }
 
+/**
+ * TouchChat `.ce` (BETA — imports the words of one page): the Home page's
+ * button labels and messages. The file carries no locale Voxa reads, so the
+ * board uses `fallbackLocale`.
+ */
 export async function touchChatArchiveToBoardUpdate(
   bytes: Uint8Array,
-  boardId: string,
-): Promise<{ page: TouchChatPage; buttons: BoardButton[]; warnings: string[] }> {
-  void boardId;
+  options: { fallbackLocale?: string } = {},
+): Promise<{ page: TouchChatPage; buttons: BoardButton[]; locale: string; warnings: string[] }> {
   const { page, warnings } = await parseTouchChatArchive(bytes);
+  const locale = options.fallbackLocale ?? 'es-MX';
   return {
     page,
-    buttons: touchChatCellsToBoardButtons(page.cells),
+    buttons: touchChatCellsToBoardButtons(page.cells, locale),
+    locale,
     warnings,
   };
 }
 
-/** Build a minimal TouchChat `.ce` zip archive for tests. */
+/** Build a minimal SYNTHETIC TouchChat `.ce` zip archive for tests (not a file produced by TouchChat). */
 export async function buildSampleTouchChatArchive(): Promise<Uint8Array> {
   const initSqlJs = (await import('sql.js')).default as () => Promise<SqlJsStatic>;
   const SQL = await initSqlJs();

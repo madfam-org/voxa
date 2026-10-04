@@ -1,4 +1,4 @@
-import type { ObzExportOptions, ObzImageLoader } from '@voxa/obf';
+import type { ObzExportOptions, ObzImageLoader, ObzSoundLoader } from '@voxa/obf';
 import { MULBERRY_ASSET_BASE } from '@voxa/symbols';
 import { getMediaAsset } from './media-store.js';
 
@@ -74,7 +74,32 @@ export function createObzImageLoader(boardId: string, deps: LoaderDeps = {}): Ob
   };
 }
 
+/**
+ * Loads a recording uploaded to this API for the same board, for embedding in
+ * an OBZ export. Nothing else is read; failures leave the sound a URL reference.
+ */
+export function createObzSoundLoader(boardId: string, deps: Pick<LoaderDeps, 'getMedia' | 'databaseUrl' | 'warn'> = {}): ObzSoundLoader {
+  const getMedia = deps.getMedia ?? getMediaAsset;
+  const databaseUrl = deps.databaseUrl ?? process.env.DATABASE_URL;
+  const warn = deps.warn ?? ((message: string) => console.warn(message));
+  return async (source) => {
+    if (source.kind !== 'media' || !source.mediaId) return null;
+    try {
+      const asset = await getMedia(databaseUrl, source.mediaId);
+      if (!asset || asset.boardId !== boardId || !asset.mimeType.startsWith('audio/')) return null;
+      return { bytes: new Uint8Array(asset.data), contentType: asset.mimeType };
+    } catch (err) {
+      warn(`[obz-export] media ${source.mediaId} unreadable: ${(err as Error).message}`);
+      return null;
+    }
+  };
+}
+
 /** Export options used by the board stores. */
 export function obzExportOptions(boardId: string): ObzExportOptions {
-  return { assetBaseUrl: webBaseUrl(), loadImage: createObzImageLoader(boardId) };
+  return {
+    assetBaseUrl: webBaseUrl(),
+    loadImage: createObzImageLoader(boardId),
+    loadSound: createObzSoundLoader(boardId),
+  };
 }
