@@ -16,6 +16,9 @@ concurrency:
 
 env:
   REGISTRY: ghcr.io
+  # Do not publish Docker build-record artifacts from this public repo
+  # (repo-boundary contract, class 7: public Actions artifacts).
+  DOCKER_BUILD_RECORD_UPLOAD: "false"
   IMAGE_NAME: madfam-org/voxa/voxa-web
 
 jobs:

@@ -2,8 +2,8 @@
 # Configure GitHub Actions secrets for staging authenticated soak (e2e-smoke workflow).
 #
 # Usage (values from password manager / Enclii voxa-secrets — never commit):
-#   VOXA_STAGING_OIDC_CLIENT_ID='jnc_…' \
-#   VOXA_STAGING_OIDC_CLIENT_SECRET='jns_…' \
+#   VOXA_STAGING_OIDC_CLIENT_ID='<client-id>' \
+#   VOXA_STAGING_OIDC_CLIENT_SECRET='<client-secret>' \
 #   VOXA_STAGING_TEST_EMAIL='…' \
 #   VOXA_STAGING_TEST_PASSWORD='…' \
 #     ./scripts/launch/setup-staging-soak-secrets.sh
