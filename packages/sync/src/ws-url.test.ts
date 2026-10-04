@@ -5,15 +5,16 @@ import { buildBoardSyncWsUrl } from './ws-url.js';
 describe('buildBoardSyncWsUrl', () => {
   it('builds a ws url with board id only', () => {
     assert.equal(
-      buildBoardSyncWsUrl('https://voxa-api.madfam.io', 'demo-core'),
-      'wss://voxa-api.madfam.io/v1/ws?boardId=demo-core',
+      buildBoardSyncWsUrl('https://api.example.test', 'demo-core'),
+      'wss://api.example.test/v1/ws?boardId=demo-core',
     );
   });
 
-  it('includes accessToken when provided', () => {
-    const url = buildBoardSyncWsUrl('http://localhost:4000', 'board-1', 'jwt-token');
+  it('carries a single-use ticket, never an access token', () => {
+    const url = buildBoardSyncWsUrl('http://localhost:4000/', 'board-1', 'tkt_abc');
     assert.match(url, /^ws:\/\/localhost:4000\/v1\/ws\?/);
     assert.match(url, /boardId=board-1/);
-    assert.match(url, /accessToken=jwt-token/);
+    assert.match(url, /ticket=tkt_abc/);
+    assert.doesNotMatch(url, /accessToken/);
   });
 });

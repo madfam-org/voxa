@@ -17,7 +17,8 @@ import { buildSha } from './lib/build-info.js';
 import { unwrapDbError } from './lib/db-errors.js';
 import { devAuthEnabled } from './lib/dev-auth.js';
 import { closeSockets, isShuttingDown } from './lib/graceful-shutdown.js';
-import { resolveWsTeam } from './lib/ws-auth.js';
+import { wsTicketGate } from './lib/ws-auth.js';
+import { closeAtTokenExpiry, mintWsTicket } from './lib/ws-tickets.js';
 import { checkStoreReady, getStore, getStoreDriver, storeIsAcceptable } from './store/index.js';
 import { getSyncHubStatus, presenceCount, registerClient, unregisterClient } from './ws/sync-hub.js';
 
@@ -44,12 +45,18 @@ app.use('*', corsMiddleware());
 // Order matters: the address limit counts requests without credentials (a
 // proxy carrying many users' tokens shares one address), the body ceiling
 // refuses oversized bodies before anything reads them, the failure limit
-// counts 401s per address around teamAuth, and the user limits key on the
-// identity teamAuth verified. See src/middleware/rate-limit.ts.
+// counts 401s per address around teamAuth (and around the WebSocket ticket
+// gate), and the user limits key on the identity teamAuth verified. See
+// src/middleware/rate-limit.ts.
+//
+// The WebSocket upgrade carries no Authorization header (browsers cannot set
+// one): it skips teamAuth and is authorized by its single-use ticket in
+// wsTicketGate below.
+const bearerAuth = teamAuth();
 app.use('/v1/*', ipRateLimit());
 app.use('/v1/*', requestBodyLimits());
 app.use('/v1/*', authFailureLimit());
-app.use('/v1/*', teamAuth());
+app.use('/v1/*', (c, next) => (c.req.path === '/v1/ws' ? next() : bearerAuth(c, next)));
 app.use('/v1/*', userRateLimit());
 
 app.get('/robots.txt', (c) => c.text(API_ROBOTS_TXT));
@@ -102,22 +109,32 @@ app.route('/v1/media', mediaRoutes);
 app.route('/v1/symbols', symbolRoutes);
 app.route('/v1/ai', aiRoutes);
 
+/**
+ * Single-use WebSocket ticket for the bearer's identity (see
+ * src/lib/ws-tickets.ts). The web app calls it through its same-origin proxy.
+ */
+app.post('/v1/ws-ticket', async (c) => {
+  const minted = await mintWsTicket(c.get('team'), { databaseUrl: process.env.DATABASE_URL });
+  c.header('Cache-Control', 'no-store');
+  if (!minted) return c.json({ error: 'Access token expired' }, 401);
+  return c.json(minted);
+});
+
 app.get(
   '/v1/ws',
+  wsTicketGate(),
   upgradeWebSocket((c) => {
     const boardId = c.req.query('boardId') ?? 'demo-core';
+    const team = c.get('wsGrant');
     let clientRef: { send: (data: string) => void; boardId?: string } | null = null;
     let authorized = false;
+    let cancelExpiryClose: (() => void) | null = null;
 
     return {
       onOpen(_event, ws) {
+        // The socket never outlives the access token the ticket was minted from.
+        cancelExpiryClose = closeAtTokenExpiry((code, reason) => ws.close(code, reason), team.tokenExpiresAt);
         void (async () => {
-          const team = await resolveWsTeam(c);
-          if (!team) {
-            ws.close(4401, 'Unauthorized');
-            return;
-          }
-
           const board = await getStore().getBoard(boardId);
           if (
             !board ||
@@ -150,6 +167,7 @@ app.get(
         })();
       },
       onClose() {
+        cancelExpiryClose?.();
         if (authorized && clientRef) unregisterClient(clientRef);
       },
     };
