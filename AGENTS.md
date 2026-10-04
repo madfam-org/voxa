@@ -78,7 +78,12 @@ pnpm build
   `VOXA_TEST_REDIS_URL`: it starts two API processes on that database and
   Redis and proves cross-replica delivery and global presence. CI provides
   `postgres:16` and `redis:7` service containers; `turbo.json` passes both
-  variables through.
+  variables and `CI` through. The runner checks these suites before any test
+  starts (`SERVICE_SUITES` in `scripts/run-unit-tests.mjs`, by file name:
+  `*.pg.test.*`, `*.redis.test.*`): locally it prints which suites skip and
+  why; with `CI` set, an unset variable fails the run (a skipped suite is not
+  a pass); and a set variable whose host refuses a TCP connection fails the
+  run everywhere. A new PostgreSQL or Redis suite only needs the file name.
 - CI (`.github/workflows/ci.yml`, on pushes and PRs to `main`): the
   repository guards (`pnpm guards`, `pnpm test:guards`; see [Guards](#guards)),
   typecheck, `pnpm test`, the Drizzle drift step (`drizzle-kit generate` must produce no
@@ -126,7 +131,8 @@ pnpm build
    `src/db/client.ts` is the only pool on request paths (board store, media
    store, `POST /v1/events/activations`, the readiness ping). Default size 5
    (`DATABASE_POOL_MAX`); migrations use their own `max: 1` client that is
-   closed afterwards; `closeSharedDb()` runs on `SIGTERM`/`SIGINT`. The
+   closed afterwards; `closeSharedDb()` runs on `SIGTERM`/`SIGINT`, after
+   the HTTP server has drained (`src/lib/graceful-shutdown.ts`). The
    Postgres server is shared under a fixed connection limit and the API
    connects directly (no pooler): see
    [docs/deploy/ENCLII.md](./docs/deploy/ENCLII.md#connection-budget-contract).
@@ -309,6 +315,8 @@ rather than passing (each one asserts how much it read).
 | Test discovery | a tracked `*.test.*` the unit job does not run; a package test script that names files by hand; a test the old lists ran that is no longer discovered | `scripts/run-unit-tests.mjs`, `scripts/guards/test-discovery.mjs` | CI build job (`pnpm guards`, `pnpm test:guards`) | voxa#40 |
 | Licence (ruling R86) | the removed non-commercial symbol library's name or hosts (case-insensitive) in any tracked file outside a short allowlist (history, legacy-data shim, guards, tests); a vendored symbol set (`apps/*/{public,assets}/symbols/<set>/`) without a licence file at its root or a `NOTICE` entry | `scripts/guards/licence.mjs`; also `packages/symbols/src/no-removed-symbol-hosts.test.ts` (hosts in source), `apps/web/src/symbol-credits-messages.test.ts` (credits copy) | CI build job; unit job | voxa#18, voxa#35 (OBF licence objects), voxa#40 |
 | No direct LLM egress (ruling R88) | model-vendor API hosts and SDK imports or dependencies in `apps/` or `packages/` (the Selva client `apps/api/src/lib/selva.ts` may import an OpenAI-compatible SDK); vendor API-key variables (`OPENAI_API_KEY` style) in code, manifests or workflows anywhere | `scripts/guards/llm-egress.mjs` | CI build job | voxa#40 |
+| Workflows (A-026) | a workflow without a top-level `permissions:` key or with a write scope there; an action or reusable workflow not pinned to a full commit SHA (or a `docker://` image without a digest); a pin without its version in a trailing comment | `scripts/guards/workflows.mjs` | CI build job | this PR |
+| Loud service suites (A-032) | with `CI` set, a `*.pg.test.*` or `*.redis.test.*` suite whose `VOXA_TEST_*` variable is unset; anywhere, a set variable whose host refuses connections | `scripts/run-unit-tests.mjs` (`SERVICE_SUITES`), tests in `scripts/guards/service-suites.test.mjs` | unit job (`pnpm test`) | this PR |
 | Public-repo hygiene | RFC 1918 addresses (outside test fixtures and SVG path data), `*.svc.cluster.local` names, the operator SSH host pattern, Cloudflare tunnel ids, `@madfam.io` addresses other than role mailboxes. Real client names are checked by MADFAM's private estate scan, not in this repository. | `scripts/guards/hygiene.mjs` (per-rule allowlist by file) | CI build job | voxa#40 |
 | Claims stop-list | public copy claims with nothing behind them (SLA, offline-ready, eye-tracker integrations, release review by speech therapists …), the retired mailbox, the upgrade dead end | `apps/web/src/lib/claims-stoplist.test.ts` | unit job | voxa#20, voxa#36 |
 | Crawling and security headers | robots, sitemap, `llms.txt` and `llms-full.txt` per host (landing host only, no claim the product cannot back); CSP, HSTS and the static header set | `apps/web/src/lib/crawling.test.ts`, `apps/web/src/lib/security-headers.test.ts`, `apps/web/src/next-config.test.ts`, `apps/api/src/middleware/security-headers.test.ts` | unit job | voxa#21 |
@@ -372,7 +380,14 @@ Argo CD auto-syncs the pinned manifests; the web pin commit also bumps the pod
 template's `restartedAt`, so no workflow calls Argo or restarts pods, and no
 workflow holds an identity-provider or platform credential. Each deploy
 workflow has its own concurrency group. GitHub-hosted jobs are pinned to
-`ubuntu-24.04`. Full runbook: [docs/deploy/ENCLII.md](./docs/deploy/ENCLII.md);
+`ubuntu-24.04`. Every workflow declares a read-only top-level token
+(`permissions: contents: read`); the deploy jobs ask for exactly what they
+use (`packages: write` to push, `id-token: write` for keyless cosign,
+`contents: write` for the digest pin) and `ghcr-public.yml`'s job for
+`packages: write`. Every action is pinned to a full commit SHA with its
+version in a trailing comment (`@<sha> # v4.4.0`); `.github/dependabot.yml`
+updates them weekly, and the workflows guard fails on anything else. CI
+cancels a pull request's superseded run; runs on `main` are never cancelled. Full runbook: [docs/deploy/ENCLII.md](./docs/deploy/ENCLII.md);
 on-call: [docs/ops/RUNBOOK.md](./docs/ops/RUNBOOK.md).
 
 Both images build from `node:22-alpine` pinned by digest (through

@@ -97,6 +97,7 @@ ArgoCD auto-syncs after digest commits (automated sync with self-heal); the web 
 - Production runs 2 web and 2 API replicas, spread across nodes when possible (`topologySpreadConstraints`, `ScheduleAnyway`). Staging runs 1 of each.
 - Rollouts are surge-first (`maxSurge: 1`, `maxUnavailable: 0`, `minReadySeconds: 5`): a new pod must pass readiness before an old one stops. If the surge pod cannot be scheduled, the rollout waits on the old pods, which keep serving.
 - A `preStop` sleep of 5 s lets the endpoint removal reach the Service before the container gets `SIGTERM`.
+- On `SIGTERM` the API drains (`apps/api/src/lib/graceful-shutdown.ts`): `/health/ready` answers 503, open WebSockets get a 1001 close frame (clients reconnect to the other replica), requests in flight finish, then Redis and the database pool close and the process exits 0. It exits 1 on a second signal or after `SHUTDOWN_DEADLINE_MS` (default 20 s, below the 30 s `terminationGracePeriodSeconds` minus the 5 s `preStop`). The web server is Next's standalone server, which already stops accepting and awaits in-flight requests on `SIGTERM` before it exits.
 - `k8s/*/pod-disruption-budgets.yaml`: production keeps `minAvailable: 1` per Deployment; staging (1 replica) allows one disruption so node drains are never blocked.
 - Capacity: a production rollout briefly runs 3 pods of the Deployment being updated (web requests 50m CPU / 128Mi per pod, API 100m / 256Mi).
 
