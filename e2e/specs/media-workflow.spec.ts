@@ -42,10 +42,17 @@ test.describe('Media workflow (W2 Epic C)', () => {
     await saveBoardAndWait(page);
 
     const obf = await exportObfText(page);
-    expect(obf).toMatch(/"image_id"/);
-    expect(obf).toMatch(/symbols\/mulberry\//);
-    expect(obf).toMatch(/"type": "CC BY-SA 4\.0"/);
     expect(obf).not.toMatch(/arasaac/i);
+    const board = JSON.parse(obf) as {
+      buttons: { label?: string; image_id?: string }[];
+      images?: { id: string; url?: string; license?: { type?: string; author_name?: string } }[];
+    };
+    const eat = board.buttons.find((button) => button.label === 'eat');
+    expect(eat?.image_id).toBeTruthy();
+    const image = board.images?.find((entry) => entry.id === eat?.image_id);
+    expect(image?.url ?? '').toMatch(/\/symbols\/mulberry\//);
+    expect(image?.license?.type).toBe('CC BY-SA 4.0');
+    expect(image?.license?.author_name).toBe('Steve Lee');
   });
 
   test('GLP button plays uploaded caregiver audio in communicator', async ({ page }) => {
