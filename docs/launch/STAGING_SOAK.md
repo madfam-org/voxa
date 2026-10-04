@@ -27,7 +27,8 @@ Run locally or via scheduled CI (`e2e-smoke` workflow, weekdays 14:00 UTC):
 ./scripts/launch/soak-scenarios.sh
 
 # With Janua voxa session + OBF import/export on staging:
-# Sign in at staging → copy accessToken from /api/auth/session
+# Get a token with ./scripts/launch/fetch-staging-access-token.sh
+# (the web session never exposes one to the page)
 VOXA_TEST_ACCESS_TOKEN='…' ./scripts/launch/soak-scenarios.sh --with-auth
 ```
 

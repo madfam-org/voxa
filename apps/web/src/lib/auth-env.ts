@@ -5,8 +5,9 @@
  *   the Janua client secret (ruling R42).
  * - `AUTH_JANUA_ISSUER`, `AUTH_JANUA_CLIENT_ID`, `AUTH_JANUA_CLIENT_SECRET`:
  *   the Janua confidential client.
- * - `AUTH_URL` (optional): the public origin, so callback and sign-out URLs
- *   never depend on forwarded headers. Falls back to `NEXT_PUBLIC_BASE_URL`.
+ * - `AUTH_URL` (optional): pins every callback and sign-out URL to one origin.
+ *   Leave it unset when one deployment serves several hosts: Auth.js then
+ *   builds the callback from the host the browser used (`trustHost`).
  *
  * Read per call, never at import: `next build` evaluates modules without
  * secrets, and a missing value must be a readiness failure, not a build one.
@@ -83,17 +84,18 @@ export function sessionCookieName(env: Env = process.env): string {
   return useSecureAuthCookies(env) ? '__Secure-authjs.session-token' : 'authjs.session-token';
 }
 
-/** Whether the public origin is configured (AUTH_URL or NEXT_PUBLIC_BASE_URL). */
-export function hasConfiguredBaseUrl(env: Env = process.env): boolean {
-  return Boolean(value(env, 'AUTH_URL') ?? value(env, 'NEXT_PUBLIC_BASE_URL'));
+/** Whether the public origin is pinned with AUTH_URL. */
+export function hasPinnedAuthUrl(env: Env = process.env): boolean {
+  return Boolean(value(env, 'AUTH_URL'));
 }
 
 /**
- * Where Janua sends the browser after RP-initiated logout: the sign-in page of
- * the configured public origin. Without one (local runs, CI), the origin the
- * request was addressed to; Janua accepts only registered URIs either way.
+ * Where Janua sends the browser after RP-initiated logout: the sign-in page.
+ * With AUTH_URL pinned, on that origin; otherwise on the host the browser
+ * used (one web serves several hosts), falling back to NEXT_PUBLIC_BASE_URL.
+ * Janua accepts only registered URIs either way.
  */
 export function postLogoutRedirectUri(env: Env = process.env, requestOrigin?: string): string {
-  const base = !hasConfiguredBaseUrl(env) && requestOrigin ? requestOrigin : appBaseUrl(env);
+  const base = !hasPinnedAuthUrl(env) && requestOrigin ? requestOrigin : appBaseUrl(env);
   return `${base}/auth/signin`;
 }

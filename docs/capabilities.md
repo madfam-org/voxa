@@ -102,6 +102,16 @@ of clinical review until one has happened.
 | Imports from three other AAC apps' files (`.gridset`, `.sps`/`.spb`, `.ce`): the words of one page | Partial (beta) | [#35](https://github.com/madfam-org/voxa/pull/35); [migration guide](./launch/MIGRATION.md) |
 | OBF button actions and absolute placement | Not yet | [migration guide](./launch/MIGRATION.md) |
 
+## Accounts and sign-in
+
+| Capability | Status | Evidence |
+| --- | --- | --- |
+| Sign-in with the person's MADFAM account (Janua) through Auth.js; the session is an encrypted cookie and no access token ever reaches page code (the app calls the API through its own server) | Shipped | [#39](https://github.com/madfam-org/voxa/pull/39); `apps/web/src/lib/auth-session.test.ts`, `apps/web/src/lib/api-proxy.test.ts`, `e2e/specs/session-account.spec.ts` |
+| The session renews itself before the access token expires; when it cannot, the person is signed out cleanly | Shipped | [#39](https://github.com/madfam-org/voxa/pull/39); `apps/web/src/lib/auth-session.test.ts` |
+| **Cambiar de cuenta** (choose another MADFAM account) and **Entrar como otra persona** (sign in again) on the sign-in page and in the app, in Spanish, English and French | Shipped | [#39](https://github.com/madfam-org/voxa/pull/39); `apps/web/src/lib/account-switch.test.ts`, `e2e/specs/session-account.spec.ts` |
+| Signing out also ends the MADFAM session, so the next person on a shared tablet is not signed back in as the previous one | Shipped | [#39](https://github.com/madfam-org/voxa/pull/39); `apps/web/src/lib/sign-out.test.ts` |
+| Signing out or switching clears the previous account's boards, pending changes and consent copy from the device (device settings such as the access method stay); a change queued under one account is never sent under another | Shipped | [#39](https://github.com/madfam-org/voxa/pull/39); `apps/web/src/lib/account-data.test.ts`, `apps/web/src/lib/pending-board-save.test.ts` |
+
 ## Team sync and co-editing
 
 | Capability | Status | Evidence |
@@ -109,7 +119,7 @@ of clinical review until one has happened.
 | Boards saved to the cloud and opened on any signed-in device | Shipped | `apps/api/src/routes/boards.routes.test.ts`, `packages/sync/src/save-board.test.ts` |
 | Two people saving the same board version: one save wins, the other is told and reloads; nothing is overwritten silently | Shipped | [#37](https://github.com/madfam-org/voxa/pull/37); `apps/api/src/store/pg-board-store.pg.test.ts` |
 | Roles from the person's MADFAM account (communicator, editor, admin), limited to their own organization; owners edit their own boards | Shipped | [#16](https://github.com/madfam-org/voxa/pull/16); `apps/api/src/routes/authz.routes.test.ts` |
-| Live updates between devices while a board is open | Not yet | The browser's live connection is refused today; changes from another device appear on reload. See [AGENTS.md](../AGENTS.md#pending-work-and-known-gaps) |
+| Live updates between devices while a board is open: each browser opens its live connection with a single-use ticket, and an edit saved on one device reaches the others | Shipped | [#39](https://github.com/madfam-org/voxa/pull/39); `e2e/specs/live-sync.spec.ts`, `apps/api/src/routes/ws-ticket.routes.test.ts` |
 | Live updates across server replicas (Redis) | Partial: built and tested, not enabled in production | [#37](https://github.com/madfam-org/voxa/pull/37); `apps/api/src/ws/sync-hub.redis.test.ts` |
 | Inviting a care team from inside Voxa | Not yet | Roles are granted in the MADFAM account |
 

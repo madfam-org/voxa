@@ -78,10 +78,17 @@ async function createBoard(api: ApiProcess, boardId: string): Promise<void> {
   assert.equal(res.status, 201, await res.text());
 }
 
-/** Opens a board WebSocket with the development identity (src/lib/ws-auth.ts). */
+/**
+ * Opens a board WebSocket. The socket takes only a single-use ticket
+ * (src/lib/ws-tickets.ts), minted here through the development headers, which
+ * teamAuth honours on `POST /v1/ws-ticket` with VOXA_DEV_AUTH in tests.
+ */
 async function openBoardSocket(api: ApiProcess, boardId: string) {
-  const query = new URLSearchParams({ boardId, userId: OWNER, role: 'communicator' });
-  const socket = await connectTestWs(`${api.url.replace('http://', 'ws://')}/v1/ws?${query}`, ownerHeaders);
+  const minted = await fetch(`${api.url}/v1/ws-ticket`, { method: 'POST', headers: ownerHeaders });
+  assert.equal(minted.status, 200, await minted.clone().text());
+  const { ticket } = (await minted.json()) as { ticket: string };
+  const query = new URLSearchParams({ boardId, ticket });
+  const socket = await connectTestWs(`${api.url.replace('http://', 'ws://')}/v1/ws?${query}`);
   await socket.waitFor((m) => (m as { type?: string }).type === 'connected');
   return socket;
 }

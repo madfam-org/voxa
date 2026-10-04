@@ -20,13 +20,16 @@ ships, with status: [capabilities.md](./capabilities.md).
             │                                           │
             ▼                                           │
  apps/web  Next.js 15 standalone, Node 22               │
- ├─ sign-in with Janua (OIDC)                           │
+ ├─ sign-in: Auth.js + Janua OIDC; encrypted httpOnly   │
+ │  session holds the tokens (page JS never sees one)   │
+ ├─ /api/v1/*  same-origin API proxy (adds the bearer)  │
  ├─ /api/media/:id   same-origin media proxy            │
  ├─ /api/health, /api/health/ready                      │
  ├─ robots.txt, sitemap.xml, llms.txt, llms-full.txt    │
  │  (host-aware: only the landing host is indexable)    │
  └─ /symbols/mulberry/**  vendored Mulberry SVGs        │
-            │  REST + WebSocket (/v1/*), Janua bearer   │
+            │  REST (server-side bearer); WebSocket     │
+            │  from the browser with a one-use ticket   │
             ▼                                           ▼
  apps/api  Hono on Node 22
  ├─ Janua JWKS: RS256 token verification, voxa:* application roles, voxa_tier claim
@@ -78,13 +81,21 @@ ships, with status: [capabilities.md](./capabilities.md).
   editor (`voxa:editor`, `voxa:slp`) and admin (`voxa:admin`), scoped to the
   person's organization. Owners edit their own boards; the demo board is
   read-only.
+- **Sessions** (`apps/web/src/auth.ts`, [docs/auth/JANUA.md](./auth/JANUA.md)):
+  Auth.js with Janua as OIDC provider; the encrypted session cookie keeps
+  Janua's tokens on the server, refreshed before expiry. Page code calls the
+  API through the same-origin proxy `/api/v1/*`. Sign-out ends the Janua
+  session too, and switching account purges the previous account's local
+  data.
 - **Live updates** use a WebSocket hub that relays board events and counts
-  presence. With `REDIS_URL` the hub spans replicas; without it each replica
-  serves its own clients and `/health/ready` reports a warning. The browser's
-  live connection is refused today (see [AGENTS.md](../AGENTS.md#pending-work-and-known-gaps)),
-  so other devices' changes appear on reload.
-- **Offline:** a save that cannot reach the API is queued in IndexedDB and
-  sent when the connection returns; a save the server refuses (422, 403 …) is
+  presence. The browser opens it with a single-use ticket
+  (`POST /v1/ws-ticket`, stored hashed in PostgreSQL for 30 seconds) and the
+  API closes it when the access token expires. With `REDIS_URL` the hub spans
+  replicas; without it each replica serves its own clients and
+  `/health/ready` reports a warning.
+- **Offline:** a save that cannot reach the API is queued in IndexedDB with
+  the account that made it and sent when the connection returns, only for
+  that account; a save the server refuses (422, 403 …) is
   shown and removed from the queue.
 - **Usage counts** (optional, consent-gated) record board and button ids for
   the usage report, never what was said.

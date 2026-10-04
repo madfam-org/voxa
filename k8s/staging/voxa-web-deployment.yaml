@@ -80,8 +80,9 @@ spec:
               value: "https://voxa-staging.madfam.io"
             # Sign-in (Auth.js + Janua; docs/auth/JANUA.md). The Janua client is the
             # one the web always used; its secret keeps its Secret key name.
-            - name: AUTH_URL
-              value: "https://voxa-staging.madfam.io"
+            # No AUTH_URL: this web serves the landing host and the app host,
+            # and Auth.js builds each callback from the host the browser used
+            # (trustHost), so sign-in stays on that host.
             - name: AUTH_JANUA_ISSUER
               value: "https://auth.madfam.io"
             - name: AUTH_JANUA_CLIENT_ID

@@ -42,6 +42,12 @@ table, with status and evidence per row, is
 - **Offline.** The open board keeps working when the network drops, edits queue
   on the device, and `/app` reopens offline after one online visit
   ([#32](https://github.com/madfam-org/voxa/pull/32)).
+- **Accounts and live sync.** Sign-in with the MADFAM account (Janua) through
+  Auth.js; no token ever reaches page code. **Cambiar de cuenta** and **Entrar
+  como otra persona** for shared tablets, and sign-out ends the MADFAM session
+  too; each clears the previous account's boards and pending changes from the
+  device. Boards update live between open devices
+  ([#39](https://github.com/madfam-org/voxa/pull/39)).
 - **Open Board Format 0.1** import and export (`.obf`, `.obz`); imports always
   create new boards ([#35](https://github.com/madfam-org/voxa/pull/35)).
 - **Privacy.** Consent stored per person and purpose on the server; usage
@@ -67,8 +73,7 @@ table, with status and evidence per row, is
   suggestion table and agreement rules are **pending review by a credentialed
   speech-language pathologist**. Voxa claims no clinical review until one has
   happened.
-- **Live updates between devices** while a board is open (changes from another
-  device appear on reload), and model-based suggestions (built, switched off).
+- **Model-based suggestions** (built, switched off).
 
 Engineering gaps and their priority: [AGENTS.md](./AGENTS.md#pending-work-and-known-gaps).
 
@@ -126,11 +131,13 @@ pnpm build
             │                                          │
             ▼                                          │
  apps/web  Next.js 15, standalone                      │
- ├─ sign-in with Janua (OIDC)                          │
+ ├─ sign-in: Auth.js + Janua (OIDC), encrypted session │
+ ├─ /api/v1/*  same-origin API proxy (adds the bearer) │
  ├─ /api/media/:id  same-origin media proxy            │
  ├─ robots.txt, sitemap.xml, llms.txt, llms-full.txt   │
  └─ /symbols/mulberry/**  vendored Mulberry SVGs       │
-            │  REST + WebSocket, Janua bearer token    │
+            │  REST (server-side bearer); WebSocket    │
+            │  from the browser with a one-use ticket  │
             ▼                                          ▼
  apps/api  Hono on Node 22 ── Janua JWKS: verifies tokens, voxa:* roles, voxa_tier claim
  │                         └─ Selva /v1 (optional, off): X-Sensitivity: restricted
@@ -185,8 +192,10 @@ Service status: [status.madfam.io](https://status.madfam.io).
 
 ## Related repositories and contracts
 
-- **Identity — [Janua](https://github.com/madfam-org/janua).** The API verifies
-  Janua access tokens against its JWKS. Roles come only from namespaced
+- **Identity — [Janua](https://github.com/madfam-org/janua).** The web signs in
+  through Auth.js with Janua as OIDC provider (the public-npm alternative to
+  the private `@madfam/janua-next`; [docs/auth/JANUA.md](./docs/auth/JANUA.md)).
+  The API verifies Janua access tokens against its JWKS. Roles come only from namespaced
   application roles, per Janua's
   [claims contract](https://github.com/madfam-org/janua/blob/main/docs/architecture/CLAIMS_DE_ORGANIZACION_Y_SERVICE_PRINCIPALS.md);
   integration: [Janua ecosystem integration guide](https://github.com/madfam-org/janua/blob/main/docs/guides/ECOSYSTEM_INTEGRATION.md)

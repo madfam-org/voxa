@@ -88,8 +88,9 @@ describe('sign-out (RP-initiated logout)', () => {
     assert.equal(location.searchParams.get('post_logout_redirect_uri'), `${ORIGIN}/auth/signin`);
   });
 
-  it('without a configured public origin, returns to the sign-in page of the host the browser used', async () => {
-    const { AUTH_URL: _unused, ...local } = env;
+  it('without AUTH_URL, returns to the sign-in page of the host the browser used', async () => {
+    const { AUTH_URL: _unused, ...rest } = env;
+    const local = { ...rest, NEXT_PUBLIC_BASE_URL: 'https://landing.example.test' };
     const req = new Request('http://0.0.0.0:3000/auth/signout', {
       method: 'POST',
       headers: { Origin: 'http://127.0.0.1:3000', Host: '127.0.0.1:3000' },
@@ -99,7 +100,7 @@ describe('sign-out (RP-initiated logout)', () => {
     assert.equal(location.searchParams.get('post_logout_redirect_uri'), 'http://127.0.0.1:3000/auth/signin');
   });
 
-  it('a configured public origin wins over the Host header', async () => {
+  it('a pinned AUTH_URL wins over the Host header', async () => {
     const req = new Request(`${ORIGIN}/auth/signout`, {
       method: 'POST',
       headers: { Origin: ORIGIN, Host: 'attacker.example' },

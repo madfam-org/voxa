@@ -73,8 +73,9 @@ export function buildAuthConfig(env: Record<string, string | undefined> = proces
 
   return {
     secret: authSecret(env),
-    // The public origin comes from AUTH_URL in the deployments; locally and in
-    // CI the request's own host is used.
+    // Callbacks are built from the host the browser used (the tunnel forwards
+    // it): one web serves the landing and app hosts. AUTH_URL may pin one
+    // origin instead.
     trustHost: true,
     useSecureCookies: useSecureAuthCookies(env),
     providers: client ? [januaProvider(client)] : [],

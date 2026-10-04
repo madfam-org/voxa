@@ -80,7 +80,7 @@ AUTH_SECRET=<generated server-side; never the Janua client secret>
 AUTH_JANUA_ISSUER=https://auth.madfam.io
 AUTH_JANUA_CLIENT_ID=<Janua client id>
 AUTH_JANUA_CLIENT_SECRET=<Janua client secret>
-AUTH_URL=https://voxa.madfam.io          # public origin (callback and sign-out URLs)
+# AUTH_URL=<origin>   # optional pin; unset in the deployments (see below)
 NEXT_PUBLIC_API_URL=https://voxa-api.madfam.io
 ```
 
@@ -94,7 +94,14 @@ same name fills from the platform's secret store (`secret/voxa`, property
 inside the store by the secret intake (`--generate auth_secret`); nobody
 types or sees it.
 
-Janua client registration, per host: redirect URI
+One web deployment serves two hosts per environment: the landing host
+(`voxa.madfam.io`) and the app host (`voxa-app.madfam.io`; `voxa-staging…` and
+`voxa-app-staging…` on staging). `AUTH_URL` is therefore left unset: Auth.js
+builds the callback from the host the browser used (`trustHost`), so the
+PKCE, state and nonce cookies and the session cookie stay on that host.
+Sign-out returns to that host's sign-in page.
+
+Janua client registration, for **each of the four hosts**: redirect URI
 `https://<host>/api/auth/callback/janua` (exact match) and post-logout redirect
 `https://<host>/auth/signin`.
 
@@ -159,7 +166,7 @@ grant endpoint (`app` = `voxa`, `role` = `admin` / `editor` / `slp`).
 
 ## Operator checklist
 
-1. Register, for production and staging, the Auth.js callback `https://<host>/api/auth/callback/janua` and the post-logout redirect `https://<host>/auth/signin` on the Voxa Janua client.
+1. Register, for each web host (landing and app, production and staging), the Auth.js callback `https://<host>/api/auth/callback/janua` and the post-logout redirect `https://<host>/auth/signin` on the Voxa Janua client.
 2. Generate the session secret in the platform's secret store with the Enclii secret intake (targets `voxa/web-session` and `voxa-staging/web-session`, key `auth_secret`); the `voxa-web-session` ExternalSecret delivers it.
 3. Deploy web; `/api/health/ready` must answer 200.
 4. Set API `JANUA_*` secrets via Enclii onboard.
