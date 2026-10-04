@@ -66,6 +66,21 @@ export {
 } from './inflections.js';
 
 export {
+  conjugateSpanishPresent,
+  conjugateSpanishVerbPhrase,
+  isKnownSpanishInfinitive,
+  SPANISH_PERSONS,
+  type SpanishPerson,
+} from './spanish-conjugation.js';
+
+export {
+  applySpanishAgreement,
+  inflectSpanishDescriptor,
+  type SpanishAgreementOptions,
+  type SpanishAgreementResult,
+} from './spanish-agreement.js';
+
+export {
   createButtonAtCell,
   GridMoveError,
   moveButtonToCell,
