@@ -1,5 +1,5 @@
 {
-  "_review": "Las cadenas en español añadidas en W2-B (2026-10-04) y las tablas de conjugación están pendientes de revisión por una persona terapeuta del lenguaje con cédula (ruling R89). También las de la configuración inicial (`firstRun`) y las plantillas de núcleo de 24, 36 y 60 celdas (2026-10-04). Pending review by a credentialed SLP.",
+  "_review": "Las cadenas en español añadidas en W2-B (2026-10-04) y las tablas de conjugación están pendientes de revisión por una persona terapeuta de lenguaje con cédula (ruling R89). También las de la configuración inicial (`firstRun`) y las plantillas de núcleo de 24, 36 y 60 celdas (2026-10-04). Pending review by a credentialed SLP.",
   "metadata": {
     "title": "Voxa — Plataforma de comunicación aumentativa",
     "description": "Comunicación aumentativa y alternativa (CAA) moderna para familias e instituciones. Demo en vivo, temas CVI, sugerencias de palabras y sincronización en la nube."
@@ -134,7 +134,7 @@
       },
       "obf": {
         "title": "Open Board Format",
-        "body": "Importa y exporta OBF para colaborar con logopedas y migrar desde otras apps sin dependencia."
+        "body": "Importa y exporta OBF para colaborar con terapeutas de lenguaje y migrar desde otras apps sin dependencia."
       },
       "offline": {
         "title": "Tolera cortes de red",
@@ -157,11 +157,11 @@
     "guardOff": "Guarda táctil: desactivada",
     "switchHint": "Flecha derecha avanza · Espacio selecciona",
     "readyTitle": "¿Listo para la plataforma completa?",
-    "readyBody": "Inicia sesión para sincronización en la nube, editor para logopedas, búsqueda de símbolos Mulberry (CC BY-SA 4.0, incluidos en Voxa), voz grabada, sugerencias de palabras e importación/exportación OBF.",
+    "readyBody": "Inicia sesión para sincronización en la nube, editor para terapeutas de lenguaje, búsqueda de símbolos Mulberry (CC BY-SA 4.0, incluidos en Voxa), voz grabada, sugerencias de palabras e importación/exportación OBF.",
     "startFree": "Empezar gratis — padres",
     "schoolsClinics": "Escuelas y clínicas",
     "classicBannerTitle": "Prueba Voxa como una app CAA clásica",
-    "classicBannerSubtitle": "Cuadrícula clara, botones con pictogramas y barra de frases — el mismo Núcleo 47 con plan motor al estilo Proloquo.",
+    "classicBannerSubtitle": "Cuadrícula clara, botones con pictogramas y barra de frases — el mismo Núcleo 47 con plan motor en un diseño claro y familiar.",
     "platformBannerTitle": "Demo interactiva de la plataforma",
     "scenesAriaLabel": "Escenas de la demo",
     "scheduleStep": "Paso {current} de {total}",
@@ -309,7 +309,7 @@
     "default": "Predeterminado",
     "cvi-dark": "CVI oscuro",
     "cvi-high-contrast": "CVI alto contraste",
-    "classic-light": "Clásico claro (estilo Proloquo)"
+    "classic-light": "Clásico claro"
   },
   "settings": {
     "title": "Accesibilidad",
@@ -486,7 +486,7 @@
       "sections": [
         {
           "title": "Descripción del servicio",
-          "content": "Voxa proporciona tableros CAA sincronizados en la nube, edición en equipo para cuidadores y logopedas, modos de accesibilidad y funciones opcionales asistidas por IA. El servicio se ofrece “según disponibilidad” durante fases de vista previa y disponibilidad general."
+          "content": "Voxa proporciona tableros CAA sincronizados en la nube, edición en equipo para cuidadores y terapeutas de lenguaje, modos de accesibilidad y funciones opcionales asistidas por IA. El servicio se ofrece “según disponibilidad” durante fases de vista previa y disponibilidad general."
         },
         {
           "title": "Cuentas",
@@ -525,7 +525,7 @@
     "accessibility": {
       "title": "Declaración de accesibilidad",
       "lastUpdated": "4 de octubre de 2026",
-      "intro": "Voxa apunta a WCAG 2.2 nivel AA y accesibilidad CAA específica más allá de los requisitos web básicos. Agradecemos comentarios de comunicadores, cuidadores y logopedas.",
+      "intro": "Voxa apunta a WCAG 2.2 nivel AA y accesibilidad CAA específica más allá de los requisitos web básicos. Agradecemos comentarios de comunicadores, cuidadores y terapeutas de lenguaje.",
       "sections": [
         {
           "title": "Objetivo de conformidad",
@@ -794,7 +794,7 @@
     "sizeHint36": "Intermedio: más palabras, celdas todavía grandes.",
     "sizeHint60": "Más palabras en celdas más pequeñas.",
     "motorPlanNote": "Al pasar a un tablero más grande ninguna palabra cambia de lugar: cada una conserva su fila y su columna.",
-    "reviewNote": "Vocabulario pendiente de revisión clínica por una persona terapeuta del lenguaje con cédula.",
+    "reviewNote": "Vocabulario pendiente de revisión clínica por una persona terapeuta de lenguaje con cédula.",
     "previewLabel": "Vista previa: tablero de {cells} celdas, {rows} filas por {columns} columnas",
     "voiceTitle": "Elige la voz",
     "voiceHint": "Las voces son las que tiene este dispositivo. Puedes escucharlas antes de elegir.",

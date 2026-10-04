@@ -28,6 +28,11 @@ const STOP_LIST: Array<{ label: string; pattern: RegExp }> = [
     label: 'eye-tracker hardware integration (none exists; dwell works through the pointer or the gaze event bridge)',
     pattern: /Tobii|IrisBond|eye-dwell|permanencia ocular|fixation oculaire/i,
   },
+  {
+    label: 'competitor product names in descriptive copy (describe the behaviour instead)',
+    pattern: /Proloquo|Acapela|CoughDrop|Cboard/i,
+  },
+  { label: "Spain's term for speech therapists (es-MX copy says terapeutas de lenguaje)", pattern: /logoped/i },
   { label: 'retired mailbox', pattern: new RegExp(RETIRED_MAILBOX.replace('.', '\\.'), 'i') },
   { label: 'upgrade dead end', pattern: new RegExp(['upgrade', 'family'].join('='), 'i') },
 ];
@@ -69,6 +74,8 @@ describe('i18n claims stop-list', () => {
       'Sincronización prioritaria',
       'IA completa y flujos GLP',
       'Paneles de uso por usuario final',
+      'Clásico claro (estilo Proloquo)',
+      'editor para logopedas',
       `mailto:${RETIRED_MAILBOX}`,
       '/app?' + ['upgrade', 'family'].join('='),
     ]) {

@@ -1,39 +1,46 @@
 # Voxa
 
-> Open, cross-platform AAC (Augmentative and Alternative Communication) platform: a Next.js board app, an Expo mobile app and a Hono sync/AI API in one pnpm + Turborepo monorepo. Apache-2.0. Public repository: operational detail and commercial research live in MADFAM's private operations repository, not here.
+> Open augmentative and alternative communication (AAC) app: a Next.js board app, an Expo mobile app and a Hono API in one pnpm + Turborepo monorepo (Node 22). Spanish first (es-MX), also English and French. Apache-2.0; the vendored Mulberry Symbols are CC BY-SA 4.0. Public repository: operational detail and commercial research live in MADFAM's private operations repository, not here. This file indexes the repository; the landing host serves its own product-facing `/llms.txt` and `/llms-full.txt` (built in `apps/web/src/lib/crawling.ts`).
 
 ## Read first
 
-- [AGENTS.md](./AGENTS.md): canonical agent instructions: layout, commands, tests, invariants, deploy workflows, related contracts, and "Pending work and known gaps", the single prioritized backlog.
-- [README.md](./README.md): product overview, quick start, environments.
-- [CONTRIBUTING.md](./CONTRIBUTING.md): PR checklist (accessibility and clinical review).
+- [AGENTS.md](./AGENTS.md): canonical agent instructions: layout, commands, tests, numbered invariants, guards, how a change ships, related contracts, and "Pending work and known gaps", the single prioritized backlog. `CLAUDE.md` points there.
+- [docs/capabilities.md](./docs/capabilities.md): what ships today, per capability, with status (shipped / partial / not yet) and the PR and tests behind it.
+- [README.md](./README.md): product overview, quick start, architecture sketch, environments.
+- [CONTRIBUTING.md](./CONTRIBUTING.md): PR checklist (accessibility, clinical accuracy, truthful public text).
 
 ## Code map
 
-- `apps/api/src/app.ts`: Hono app, routes under `/v1/*`, `/health`, `/health/ready`, WebSocket `/v1/ws`, `app.onError` (scrubs database errors).
-- `apps/api/src/index.ts`: startup (store, migrations, sync hub) and graceful shutdown (`closeSharedDb`).
-- `apps/api/src/db/client.ts`: `getSharedDb()` (one postgres-js pool per process, `DATABASE_POOL_MAX`, default 5), `runMigrations()` (own `max: 1` client).
-- `apps/api/src/db/startup-retry.ts`: bounded retry of connection-level errors on the startup migration (`DATABASE_STARTUP_RETRY_MS`, default 30 s).
-- `apps/api/src/lib/db-errors.ts`: `unwrapDbError` keeps `DrizzleQueryError` SQL parameters out of responses and logs.
-- `apps/api/src/store/`: board store drivers (PostgreSQL, or an atomic JSON file under `VOXA_DATA_DIR` when `DATABASE_URL` is unset).
-- `apps/api/src/lib/janua.ts`: identity (JWKS verification). `apps/api/src/lib/entitlement.ts`: plan tier from the token's `voxa_tier` claim and the tier → features table.
-- `apps/api/drizzle/migrations/`: SQL migrations, `meta/_journal.json`, snapshots 0000–0003; guarded by `src/db/migrations-journal.test.ts` and the CI drift step.
-- `apps/web`, `apps/mobile`, `packages/*`, `e2e`: web app, Expo app, shared packages, Playwright specs.
+- `apps/api/src/app.ts`: Hono app; middleware order on `/v1/*` (address rate limit, body limits, auth-failure limit, `teamAuth`, user rate limit); routes under `/v1/*`, `/health`, `/health/ready`, WebSocket `/v1/ws`; `app.onError` scrubs database errors.
+- `apps/api/src/index.ts`: startup (store, migrations under an advisory lock, sync hub, utterance-retention timer), fail-closed without `DATABASE_URL` in production, graceful shutdown.
+- `apps/api/src/db/`: `client.ts` (`getSharedDb()`, one pool per process), `startup-retry.ts`, `schema.ts`; migrations in `apps/api/drizzle/migrations/` (`0000`–`0007`, `meta/_journal.json`, snapshots).
+- `apps/api/src/store/`: PostgreSQL store (compare-and-set writes, scoped queries) and the atomic JSON file store; `board-import.ts` (imports create new boards).
+- `apps/api/src/lib/`: `janua.ts` (JWKS verification), `board-access.ts` (roles and org scope), `entitlement.ts` (`voxa_tier` claim), `consents.ts` and `utterance-retention.ts`, `selva.ts` (optional model gateway, off), `media-store.ts` and `media-sniff.ts`, `build-info.ts`.
+- `apps/api/src/middleware/`: rate limits, body limits, security headers, `teamAuth`. `apps/api/src/ws/`: sync hub (local or Redis).
+- `apps/web/src/components/`: board screen, editor, settings, voice settings, first-run setup, landing and demo. `apps/web/src/lib/`: speech (`play-button-speech.ts`, `speech-voices.ts`), communicator settings, consent, crawling files, media proxy URLs. `apps/web/public/sw.js`: service worker (plain JavaScript).
+- `packages/core` (board model, templates, core sizes), `packages/obf` (OBF 0.1, schemas), `packages/import-adapters` (beta), `packages/vocabulary` (motor plan, Spanish morphology), `packages/symbols` (Mulberry index and search), `packages/access` (scan machine, switches, dwell, keyguard), `packages/sync`, `packages/ai` (local predictor), `packages/i18n` (es/en/fr), `packages/ui`.
+- `scripts/run-unit-tests.mjs` (test discovery), `scripts/guards/` (licence, LLM egress, hygiene, test discovery), `scripts/launch/` (deploy smokes), `e2e/specs/` (Playwright), `k8s/` (digest-pinned manifests).
 
 ## Docs
 
-- [docs/architecture.md](./docs/architecture.md): system design and platform targets.
+- [docs/capabilities.md](./docs/capabilities.md): capabilities with status and evidence.
+- [docs/accessibility.md](./docs/accessibility.md): standards, access methods, speech and voices, first-run setup, testing.
+- [docs/linguistic-framework.md](./docs/linguistic-framework.md): motor planning and core sizes, GLP, Fitzgerald Key, Spanish morphology.
+- [docs/architecture.md](./docs/architecture.md): components, sync model, deploy flow.
 - [docs/data-model.md](./docs/data-model.md): tables, migrations and the journal rule.
 - [docs/auth/JANUA.md](./docs/auth/JANUA.md): SSO for web and API.
-- [docs/deploy/ENCLII.md](./docs/deploy/ENCLII.md): deploy workflows, storage, Postgres connection budget.
-- [docs/ops/RUNBOOK.md](./docs/ops/RUNBOOK.md): on-call incidents.
-- [docs/ops/BACKUP_RESTORE.md](./docs/ops/BACKUP_RESTORE.md): backups.
-- [docs/accessibility.md](./docs/accessibility.md), [docs/linguistic-framework.md](./docs/linguistic-framework.md), [docs/ai-roadmap.md](./docs/ai-roadmap.md).
-- [docs/launch/](./docs/launch/): GA roadmap (product and launch phases), checklist, soak, sign-off and migration records. Engineering pending work is in AGENTS.md.
-- [docs/legal/](./docs/legal/): privacy, terms, data handling.
+- [docs/deploy/ENCLII.md](./docs/deploy/ENCLII.md): deploy workflows, storage, Redis, request limits, Postgres connection budget.
+- [docs/ops/RUNBOOK.md](./docs/ops/RUNBOOK.md), [docs/ops/BACKUP_RESTORE.md](./docs/ops/BACKUP_RESTORE.md): on-call and backups.
+- [docs/ai-roadmap.md](./docs/ai-roadmap.md): word suggestions today and the plan.
+- [docs/launch/MIGRATION.md](./docs/launch/MIGRATION.md): Open Board Format import/export and beta imports. [docs/launch/MOBILE_GA.md](./docs/launch/MOBILE_GA.md): mobile store path. [docs/launch/SLP_SIGNOFF.md](./docs/launch/SLP_SIGNOFF.md): clinical review, pending. Other files in `docs/launch/` are June 2026 launch records kept for history.
+- [docs/legal/](./docs/legal/): privacy, terms and data-handling summaries.
+- [CHANGELOG.md](./CHANGELOG.md): the October 2026 stabilization and compliance wave, grouped by theme.
 
 ## Contracts with other repositories
 
-- Janua (identity): https://github.com/madfam-org/janua/blob/main/docs/guides/ECOSYSTEM_INTEGRATION.md
-- Enclii (deploy): https://github.com/madfam-org/enclii/blob/main/docs/guides/ZERO_TOUCH_CONTRACT.md
+- Janua (identity), claims contract: https://github.com/madfam-org/janua/blob/main/docs/architecture/CLAIMS_DE_ORGANIZACION_Y_SERVICE_PRINCIPALS.md
+- Janua integration: https://github.com/madfam-org/janua/blob/main/docs/guides/ECOSYSTEM_INTEGRATION.md and https://github.com/madfam-org/solarpunk-foundry/blob/main/docs/JANUA_INTEGRATION.md
 - Entitlements: the Janua `voxa_tier` claim (billing writes it through Janua), described in AGENTS.md.
+- Enclii (deploy): https://github.com/madfam-org/enclii/blob/main/docs/guides/ZERO_TOUCH_CONTRACT.md
+- Open Board Format: https://www.openboardformat.org/docs
+- Mulberry Symbols: https://github.com/mulberrysymbols/mulberry-symbols (CC BY-SA 4.0)

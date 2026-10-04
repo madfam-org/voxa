@@ -22,9 +22,10 @@ describe('middleware matcher', () => {
 });
 
 describe('middleware matcher: crawling files', () => {
-  it('leaves robots.txt, sitemap.xml and llms.txt to their route handlers', () => {
+  it('leaves robots.txt, sitemap.xml, llms.txt and llms-full.txt to their route handlers', () => {
     assert.equal(matches('/robots.txt'), false);
     assert.equal(matches('/sitemap.xml'), false);
     assert.equal(matches('/llms.txt'), false);
+    assert.equal(matches('/llms-full.txt'), false);
   });
 });

@@ -3,6 +3,7 @@ import { describe, it } from 'node:test';
 import {
   ALLOWED_AI_CRAWLERS,
   PUBLIC_PAGES,
+  buildLlmsFullTxt,
   buildLlmsTxt,
   buildRobotsTxt,
   buildSitemapXml,
@@ -86,17 +87,65 @@ describe('sitemap.xml', () => {
   });
 });
 
+// Claims the product cannot back today. Offline start shipped in voxa#32, so
+// only "offline-ready" stays banned, as in the claims stop-list.
+const UNBACKED_CLAIMS = [
+  /SLA/i,
+  /offline[- ]ready/i,
+  /eye[- ]?(gaze|tracking|dwell)/i,
+  /tobii/i,
+  /neural/i,
+  /GPT|OpenAI/i,
+  /WCAG/i,
+  /ARASAAC/i,
+  /\$|MXN|precio|price/i,
+  /reviewed by|SLP sign-off|clinically (reviewed|validated)/i,
+];
+
 describe('llms.txt', () => {
   const body = buildLlmsTxt(LANDING);
 
   it('describes the product and links the public pages on the given origin', () => {
     assert.match(body, /^# Voxa$/m);
     assert.ok(body.includes(`(${LANDING}/demo)`));
+    assert.ok(body.includes(`(${LANDING}/llms-full.txt)`));
   });
 
   it('makes none of the claims the product cannot back today', () => {
-    for (const claim of [/SLA/i, /offline/i, /eye[- ]?(gaze|tracking|dwell)/i, /tobii/i, /neural/i, /GPT|OpenAI/i, /WCAG/i, /ARASAAC/i, /\$|MXN|precio|price/i]) {
+    for (const claim of UNBACKED_CLAIMS) {
       assert.doesNotMatch(body, claim);
     }
+  });
+
+  it('says the clinical review is pending', () => {
+    assert.match(body, /pending review by a credentialed speech-language pathologist/);
+  });
+
+  it('links nothing behind sign-in and no other host of the product', () => {
+    assert.doesNotMatch(body, /\/app\b|\/auth\b|\/api\b|voxa-app|voxa-api/);
+  });
+});
+
+describe('llms-full.txt', () => {
+  const body = buildLlmsFullTxt(LANDING);
+
+  it('describes every capability area with a status and links the public pages', () => {
+    assert.match(body, /^# Voxa — full description$/m);
+    for (const heading of ['Clinical review', 'Access methods', 'Symbols', 'Open Board Format', 'Privacy and consent', 'Accessibility']) {
+      assert.match(body, new RegExp(`^## ${heading}$`, 'm'), heading);
+    }
+    // Read-proof: a stub must not pass as "no claims found".
+    assert.ok((body.match(/^- (Shipped|Partial|Not yet)/gm) ?? []).length >= 30);
+    assert.ok(body.includes(`(${LANDING}/demo)`));
+  });
+
+  it('makes none of the claims the product cannot back today', () => {
+    for (const claim of UNBACKED_CLAIMS) {
+      assert.doesNotMatch(body, claim);
+    }
+  });
+
+  it('links nothing behind sign-in and no other host of the product', () => {
+    assert.doesNotMatch(body, /\/app\b|\/auth\b|\/api\b|voxa-app|voxa-api/);
   });
 });

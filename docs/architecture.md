@@ -2,73 +2,103 @@
 
 ## Overview
 
-Voxa is a TypeScript monorepo targeting five client surfaces (Web, iOS, Android, Windows, Chromebook) backed by a cloud sync API. Shared domain logic lives in `packages/*`; each client consumes the same board model, vocabulary rules, and OBF interchange layer.
+Voxa is a TypeScript monorepo (pnpm workspaces + Turborepo): a Next.js web app,
+an Expo mobile app and a Hono API, sharing the board model, vocabulary rules,
+access methods and the Open Board Format layer through `packages/*`. The web
+app is the product today; it runs in current browsers on phones, tablets and
+computers. The mobile app builds in CI but is not in the app stores yet. What
+ships, with status: [capabilities.md](./capabilities.md).
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        Client Surfaces                          │
-│  Web (Next.js) │ iOS │ Android │ Windows │ Chromebook (future)  │
-└────────────┬────────────────────────────────────────────────────┘
-             │ shared packages
-┌────────────▼────────────────────────────────────────────────────┐
-│  @voxa/core  @voxa/ui  @voxa/obf  @voxa/vocabulary  @voxa/access │
-│  @voxa/ai                                                       │
-└────────────┬────────────────────────────────────────────────────┘
-             │ REST + WebSocket
-┌────────────▼────────────────────────────────────────────────────┐
-│  @voxa/api — sync, team editing, usage analytics, AI proxy     │
-└────────────┬────────────────────────────────────────────────────┘
-             │
-┌────────────▼────────────────────────────────────────────────────┐
-│  PostgreSQL (boards, profiles) │ Object storage (media, OBF)    │
-│  Redis (real-time presence)    │ AI inference (external/proxy)  │
-└─────────────────────────────────────────────────────────────────┘
+ Browser                                     Expo app (apps/mobile)
+ ├─ landing /, /demo, /legal/*  (public)                │
+ ├─ /app, /app/edit             (signed in)             │
+ └─ service worker (apps/web/public/sw.js):             │
+    /app shell (network first), /_next/static,          │
+    icons, /symbols (cache first);                      │
+    never /api/* and never another origin               │
+            │                                           │
+            ▼                                           │
+ apps/web  Next.js 15 standalone, Node 22               │
+ ├─ sign-in with Janua (OIDC)                           │
+ ├─ /api/media/:id   same-origin media proxy            │
+ ├─ /api/health, /api/health/ready                      │
+ ├─ robots.txt, sitemap.xml, llms.txt, llms-full.txt    │
+ │  (host-aware: only the landing host is indexable)    │
+ └─ /symbols/mulberry/**  vendored Mulberry SVGs        │
+            │  REST + WebSocket (/v1/*), Janua bearer   │
+            ▼                                           ▼
+ apps/api  Hono on Node 22
+ ├─ Janua JWKS: RS256 token verification, voxa:* application roles, voxa_tier claim
+ ├─ Selva /v1/chat/completions (optional, off by default; X-Sensitivity: restricted)
+ ├─ PostgreSQL (one pool per process): boards, sync events, activation counts,
+ │  consents, media bytes; migrations at startup under an advisory lock
+ └─ Redis (optional): board events and presence across API replicas
 ```
 
-## Design Principles
+## Design principles
 
-1. **Offline-first boards** — AAC devices must work without connectivity; sync reconciles on reconnect.
-2. **Immutable core grid slots** — Motor-planning positions are versioned, not silently moved.
-3. **Open interchange** — OBF is the canonical import/export path; proprietary formats are adapters only.
-4. **Accessibility by default** — UI components enforce WCAG 2.2 AA before feature work ships.
-5. **Privacy-preserving AI** — User utterance data for personalization stays tenant-scoped with explicit consent.
+1. **Motor plans are stable.** Locked core slots never move silently; only an
+   organization admin can override a lock, and the server enforces it. Core
+   boards in different sizes share one layout, so growing a board never moves
+   a learned word.
+2. **Open interchange.** Open Board Format 0.1 is the import and export path;
+   imports always create new boards. Other formats are beta adapters.
+3. **Works through a network drop.** The open board keeps working offline,
+   edits queue on the device, and `/app` reopens offline after one online visit.
+4. **Accessibility by default.** Components and pages are checked with axe in
+   CI before they ship.
+5. **Data minimisation.** Consent per person and purpose, counts-only usage
+   logging, no third-party AI calls; model suggestions, when switched on, send
+   only the current partial message to MADFAM's gateway as `restricted`.
+6. **Nothing claimed that does not ship.** Public text says only what `main`
+   does; pending clinical review is stated, never implied away.
 
-## Package Responsibilities
+## Package responsibilities
 
 | Package | Role |
 |---------|------|
-| `@voxa/core` | Board, button, profile, sync event types |
-| `@voxa/ui` | Touch targets ≥ 1 cm, CVI themes, dwell/snap primitives |
-| `@voxa/obf` | Parse/serialize `.obf` / `.obz` per Open Board Format spec |
-| `@voxa/vocabulary` | Fitzgerald Key, GLP chunks, motor-planning validators |
-| `@voxa/access` | Switch scan groups, eye-tracker dwell adapters |
-| `@voxa/sync` | REST + WebSocket client for board sync and OBF endpoints |
-| `@voxa/ai` | LLM prediction, PictoBERT, symbol gen, bilingual TTS contracts |
+| `@voxa/core` | Board, button and profile types; starter templates (Core 47, Core 100, core 24/36/60, literacy keyboard, visual schedule); symbol allow-map; team-role mapping |
+| `@voxa/ui` | Board grid and button components: touch targets ≥ 38 CSS px scaled by `targetScale`, 4 mm gutter, CVI themes with tested chrome colours, scan ring |
+| `@voxa/obf` | Open Board Format 0.1 reader and writer (`.obf`, `.obz`), safe unzip, JSON Schemas |
+| `@voxa/import-adapters` | Beta one-page imports from three other AAC file formats |
+| `@voxa/vocabulary` | Fitzgerald Key, motor-plan validation, grid moves, word forms, Spanish conjugation and agreement |
+| `@voxa/symbols` | Mulberry keyword index and offline es/en/fr search; legacy-reference handling |
+| `@voxa/access` | Switch-scan state machine, hardware switches (keyboard and gamepad), dwell, gaze event bridge, touch activation and keyguard |
+| `@voxa/sync` | API client: REST, WebSocket, save errors and the offline queue |
+| `@voxa/ai` | Local rule-based predictor (English and Spanish tables) |
+| `@voxa/i18n` | es (default), en and fr catalogs |
 
-## Sync Model
+## Sync model
 
-- **Boards** are CRDT-friendly documents keyed by `boardId`.
-- **Team roles:** communicator (read/use), editor (SLP/caregiver), admin (org).
-- **Real-time editing** uses WebSocket patches; conflict resolution favors immutable slot locks on core grids.
-- **Usage telemetry** (optional, consent-gated) records button activations for SLP reporting — never sold to third parties.
-
-## Platform Roadmap
-
-| Phase | Deliverable |
-|-------|-------------|
-| **0.1** | Web prototype, core types, OBF skeleton, API scaffold |
-| **0.2** | Cloud sync API, team editing, OBF import/export |
-| **0.3** | CVI themes, switch scanning, eye dwell, offline cache |
-| **0.5** (current) | Expo mobile, background sync, AI prediction strip, Enclii deploy |
-| **1.0** | Clinical pilot, bilingual neural TTS, PostgreSQL persistence, desktop shells |
+- **Boards** are JSON documents keyed by `boardId` with an integer `version`.
+  Writes are compare-and-set: of two saves on one version, one wins and the
+  other gets 409 `VERSION_CONFLICT` with the current version.
+- **Roles** come only from Janua application roles: communicator (use),
+  editor (`voxa:editor`, `voxa:slp`) and admin (`voxa:admin`), scoped to the
+  person's organization. Owners edit their own boards; the demo board is
+  read-only.
+- **Live updates** use a WebSocket hub that relays board events and counts
+  presence. With `REDIS_URL` the hub spans replicas; without it each replica
+  serves its own clients and `/health/ready` reports a warning. The browser's
+  live connection is refused today (see [AGENTS.md](../AGENTS.md#pending-work-and-known-gaps)),
+  so other devices' changes appear on reload.
+- **Offline:** a save that cannot reach the API is queued in IndexedDB and
+  sent when the connection returns; a save the server refuses (422, 403 …) is
+  shown and removed from the queue.
+- **Usage counts** (optional, consent-gated) record board and button ids for
+  the usage report, never what was said.
 
 ## Deployment (Enclii)
 
-Voxa ships to **madfam.io** via Enclii (zero-touch model): Dockerfiles, `k8s/`, and GitHub Actions live in this repo; ArgoCD apps and Cloudflare Tunnel routes are managed by Enclii runtime onboarding and junctions.
+Voxa ships to **madfam.io** through Enclii (zero-touch model): Dockerfiles,
+`k8s/` and GitHub Actions live in this repo; Argo CD apps and Cloudflare Tunnel
+routes are managed by Enclii.
 
 ```
-push main → CI → ghcr.io/madfam-org/voxa/* → sign → digest commit → k8s/production
-push main → CI (staging build) → sign → digest commit → k8s/staging
+merge to main → deploy-voxa-{web,api}.yml          → build (GIT_SHA), cosign sign, pin digest → k8s/production
+             └→ deploy-voxa-{web,api}-staging.yml  → build (GIT_SHA), cosign sign, pin digest → k8s/staging
+Argo CD auto-syncs each pin; the smoke waits until /health serves the commit's build.
 ```
 
 | Surface | Liveness | Readiness |
@@ -76,14 +106,19 @@ push main → CI (staging build) → sign → digest commit → k8s/staging
 | Web | `GET /api/health` | `GET /api/health/ready` |
 | API | `GET /health` | `GET /health/ready` |
 
-Full runbook: [docs/deploy/ENCLII.md](./deploy/ENCLII.md)
+Full runbook: [deploy/ENCLII.md](./deploy/ENCLII.md). Data model:
+[data-model.md](./data-model.md). How a change ships:
+[AGENTS.md](../AGENTS.md#how-a-change-ships).
 
-Data model: [docs/data-model.md](./data-model.md)
+## Technology choices
 
-## Technology Choices
-
-- **Monorepo:** pnpm workspaces + Turborepo
-- **Web:** Next.js 15, React 19
-- **API:** Hono on Node 22 (edge-deployable later)
-- **Database:** PostgreSQL + Drizzle ORM (`apps/api/src/db/`), one shared pool per API process ([connection budget](./deploy/ENCLII.md#connection-budget-contract)); atomic JSON-file fallback when `DATABASE_URL` is unset
-- **Mobile (future):** Expo + React Native sharing `@voxa/ui` tokens
+- **Monorepo:** pnpm 9 workspaces + Turborepo; Node 22 everywhere (images
+  pinned by digest, no package manager at runtime).
+- **Web:** Next.js 15, React 19, next-intl; per-request nonce CSP; image
+  optimizer off.
+- **API:** Hono on Node 22; Drizzle ORM on postgres-js, one shared pool per
+  process ([connection budget](./deploy/ENCLII.md#connection-budget-contract));
+  an atomic JSON-file store when `DATABASE_URL` is unset (never in production).
+- **Mobile:** Expo SDK 57 (React Native 0.86), EAS builds by dispatch only.
+- **Tests:** Node's test runner through `scripts/run-unit-tests.mjs` (files
+  discovered), Playwright and axe for browser specs.

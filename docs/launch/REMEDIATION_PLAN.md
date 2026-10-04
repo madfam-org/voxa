@@ -1,5 +1,7 @@
 # Voxa full GA remediation plan
 
+> **Historical record (June 2026).** This file records the June 2026 launch plan and is kept for history; it is not the current status. What ships today: [capabilities.md](../capabilities.md). Pending engineering work: [AGENTS.md](../../AGENTS.md#pending-work-and-known-gaps). The June "SLP sign-off" is **withdrawn**: no credentialed speech-language pathologist has reviewed Voxa yet ([SLP_SIGNOFF.md](./SLP_SIGNOFF.md), ruling R89).
+
 **Target:** Close remaining M2–M3 gates for full web commercial GA by **2026-06-15**.
 
 **Feature roadmap (M6):** a separate multi-quarter program, tracked privately with its competitive research.
@@ -15,9 +17,9 @@ Track execution in [GA_CHECKLIST.md](./GA_CHECKLIST.md).
 | **W0** | Platform hygiene (GHCR, Kyverno, webhook) | ✅ Done 2026-06-08 | PolicyExceptions removed |
 | **W1** | Soak automation + ops safety | 🟡 In progress | CI auth soak green; daily soak log 7/7 |
 | **W2** | P0 product gaps | 🟡 In progress | OBF soak ✅; board library MVP; migration doc |
-| **W3** | Clinical + launch gate | 🟡 In progress | SLP ✅ 2026-06-08; soak through **2026-06-15** |
+| **W3** | Clinical + launch gate | 🟡 In progress | Clinical review withdrawn (R89), pending; soak never completed |
 | **W4** | P1 baseline (post-M3) | Q3 2026 | Feature roadmap W1–W2 (private tracker) |
-| **W5** | P2 + M6 feature baseline | Q3–Q4 2026 | P2 rows shipped; SLP review |
+| **W5** | P2 + M6 feature baseline | Q3–Q4 2026 | P2 rows shipped; clinical review (pending) |
 
 ## W1 — Soak automation & ops safety
 
@@ -55,7 +57,7 @@ Track execution in [GA_CHECKLIST.md](./GA_CHECKLIST.md).
 |---|------|--------|
 | 10 | Staging soak 7 days | Daily `e2e-smoke` + `./scripts/launch/soak-daily-check.sh --log` through **2026-06-14** |
 | 11 | Manual scenarios | [STAGING_SOAK.md](./STAGING_SOAK.md) — CVI, switch, editor OBF |
-| 12 | SLP sign-off | ✅ [SLP_SIGNOFF.md](./SLP_SIGNOFF.md) — 2026-06-08 |
+| 12 | Clinical review | Withdrawn (R89): the June record was not a clinical review — [SLP_SIGNOFF.md](./SLP_SIGNOFF.md) |
 | 13 | Declare M3 web GA | [GA_DECLARATION.md](./GA_DECLARATION.md) on/after **2026-06-15** |
 
 ## W4 — P1 features (post-M3)
@@ -64,7 +66,7 @@ Full epic breakdown: private feature-roadmap plan.
 
 | # | Item | Target |
 |---|------|--------|
-| 14 | ARASAAC symbol search + media upload | W2 (2026-07) |
+| 14 | Symbol search + media upload (Mulberry Symbols since 2026-10-04; the earlier non-commercial library was removed) | W2 (2026-07) |
 | 15 | Recorded speech + GLP media | W2 |
 | 16 | Editor motor-plan locks + babble | W2 |
 | 17 | Mobile EAS preview | M4 — [MOBILE_GA.md](./MOBILE_GA.md) |
@@ -76,7 +78,7 @@ Full epic breakdown: private feature-roadmap plan.
 |---|------|--------|
 | 19 | Grid/TouchChat/Snap import | W5 — AACProcessors |
 | 20 | Hardware switch + gaze adapters | W4 |
-| 21 | Neural bilingual TTS | W6 — [ai-roadmap.md](../ai-roadmap.md) |
+| 21 | Natural and bilingual voices (not built) | [ai-roadmap.md](../ai-roadmap.md) |
 | 22 | M6 feature baseline | 2026-09-30 |
 
 ## Platform (non-blocking for M3)
@@ -109,7 +111,7 @@ pnpm test && pnpm typecheck
 - [x] GHCR public; Kyverno bypass removed
 - [x] Automated staging soak (unauthenticated + auth when secrets set)
 - [x] OBF auth round-trip validated
-- [x] SLP sign-off recorded
+- [ ] Clinical review recorded (the June record is withdrawn, R89)
 - [ ] 7 consecutive daily soak log entries green (2026-06-08 → 2026-06-14)
 - [ ] [GA_DECLARATION.md](./GA_DECLARATION.md) signed on/after 2026-06-15
 - [ ] No open S1/S2 on staging during soak window

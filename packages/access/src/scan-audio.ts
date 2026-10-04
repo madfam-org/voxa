@@ -4,7 +4,7 @@ export interface ScanBeepSpec {
   volume: number;
 }
 
-/** Standard scan-step cue (Grid/TD Snap style short tone). */
+/** Standard scan-step cue: a short tone, as switch users expect from AAC scanning. */
 export const SCAN_STEP_BEEP: ScanBeepSpec = {
   frequencyHz: 880,
   durationMs: 55,

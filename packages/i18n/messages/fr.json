@@ -160,7 +160,7 @@
     "startFree": "Commencer gratuit — parents",
     "schoolsClinics": "Écoles et cliniques",
     "classicBannerTitle": "Essayez Voxa comme une app CAA classique",
-    "classicBannerSubtitle": "Grille claire, boutons symboles d'abord et barre de phrase — le même Base 47 avec plan moteur style Proloquo.",
+    "classicBannerSubtitle": "Grille claire, boutons symboles d'abord et barre de phrase — le même Base 47 avec plan moteur dans une mise en page claire et familière.",
     "platformBannerTitle": "Démo interactive de la plateforme",
     "scenesAriaLabel": "Scènes de la démo",
     "scheduleStep": "Étape {current} sur {total}",
@@ -308,7 +308,7 @@
     "default": "Par défaut",
     "cvi-dark": "CVI sombre",
     "cvi-high-contrast": "CVI contraste élevé",
-    "classic-light": "Classique clair (style Proloquo)"
+    "classic-light": "Classique clair"
   },
   "settings": {
     "title": "Accessibilité",

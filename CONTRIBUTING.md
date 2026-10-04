@@ -4,21 +4,24 @@ Thank you for helping build accessible AAC tooling. A few ground rules:
 
 ## Before You Code
 
-1. Read the [PRD](./PRD.md) and [Accessibility Standards](./docs/accessibility.md).
+1. Read [what ships today](./docs/capabilities.md), the [Accessibility Standards](./docs/accessibility.md) and [AGENTS.md](./AGENTS.md) (invariants and guards). The [PRD](./PRD.md) is the long-term target, not the current state.
 2. AAC changes affect real communicators — prefer small, reviewable PRs.
 3. Never reduce touch target sizes below 1 cm without explicit SLP sign-off in the issue.
 
 ## Development
 
+Node.js 22 and pnpm 9 (Corepack):
+
 ```bash
 corepack enable
-pnpm install
+pnpm install --frozen-lockfile
 pnpm dev:web
-pnpm typecheck
+pnpm guards && pnpm test:guards
+pnpm turbo typecheck
 pnpm test
 ```
 
-Each package's `test` script lists its test files explicitly: add a new test file there or it will not run. API tests must not share state through `apps/api/data/`; the test preload gives every test process its own `VOXA_DATA_DIR`. See [AGENTS.md](./AGENTS.md) for the invariants (migration journal, shared database pool, error scrubbing).
+Test files are discovered: any `*.test.*` file under a package's `src/` runs as soon as it exists (do not list files in `package.json`; the test-discovery guard fails if you do). API tests must not share state through `apps/api/data/`; the test preload gives every test process its own `VOXA_DATA_DIR`. See [AGENTS.md](./AGENTS.md) for the invariants and the guards.
 
 Health endpoints used by Kubernetes probes (`/api/health` on web, `/health` on API) have unit tests under `apps/web` and `apps/api`.
 
@@ -26,10 +29,11 @@ For deployment changes, see [Enclii Deployment](./docs/deploy/ENCLII.md).
 
 ## Pull Request Checklist
 
-- [ ] Typecheck and tests pass (includes API board route tests and probe health tests)
+- [ ] Guards, typecheck and tests pass (`pnpm guards`, `pnpm turbo typecheck`, `pnpm test`)
 - [ ] Accessibility: axe scan clean on touched flows (when UI changes)
 - [ ] Motor-planning / GLP changes reviewed against `docs/linguistic-framework.md`
 - [ ] No secrets or PHI in fixtures
+- [ ] Public text (README, docs, catalogs) claims only what `main` does; anything pending clinical review says so
 
 ## Code of Conduct
 

@@ -10,7 +10,13 @@ Core vocabulary occupies **fixed grid coordinates** (`row`, `column`) on a commu
 2. `@voxa/vocabulary` validates that core-grid mutations preserve locked positions.
 3. Peripheral/folder vocabulary may reorganize without breaking motor plans.
 
-This mirrors clinical practice for Unity, LAMP, and Fitzgerald Key core boards.
+This follows the motor-planning principle used by core-vocabulary AAC systems: a word keeps its place so selection becomes automatic.
+
+### Core boards in three sizes
+
+The `core-24` (4×6), `core-36` (6×6) and `core-60` (6×10) templates come from one ordered core word list per locale (`packages/core/src/core-grid-sizes.ts`). The sizes are nested: each grid is the top-left block of the next, and cells are filled along a fixed growth order (the 4×6 block row by row, then the two rows 6×6 adds, then the four columns 6×10 adds). A smaller board is exactly the part of a larger one inside its block, so moving a communicator to a bigger board never moves a word they learned: same row, same column, same label. The three locales share one order today, so a word also keeps its cell across es-MX, en-US and fr-FR. Only word-bank words with distinct labels in all three locales are used; each keeps its Fitzgerald part of speech and gets a Mulberry symbol from the allow-map or stays label-only. `packages/core/src/core-grid-sizes.test.ts` checks the rule for every locale and size.
+
+> **Clinical review:** the word selection and order are pending review by a credentialed speech-language pathologist (ruling R89). The templates carry `vocabularyReview: "pending-clinical-review"` and the app says so where a template is chosen.
 
 ## Gestalt Language Processing (GLP)
 
@@ -41,9 +47,9 @@ Early-stage GLPs often reject synthesized speech; custom recordings preserve mel
 
 Color is applied to button borders/labels — never as the sole information carrier (icons + text always present).
 
-## Bilingual Profiles
+## Bilingual profiles (not built)
 
-Communicators may define two active languages. Buttons carry per-locale labels and TTS voice IDs. Mid-utterance code-switching is resolved at speak time by `@voxa/ai` phoneme routing.
+Today a board has one content language (es-MX, en-US or fr-FR), every utterance is spoken in that language, and the voice is chosen per language on the device. Two active languages per communicator and mid-utterance code-switching with per-word pronunciation are planned, not built; `segmentBilingualUtterance` in `@voxa/ai` is an unused contract.
 
 ## Spanish morphology (es-MX)
 

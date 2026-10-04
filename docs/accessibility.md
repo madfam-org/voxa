@@ -2,11 +2,13 @@
 
 Voxa targets **WCAG 2.2 Level AA** as a minimum bar. For AAC users with severe motor and visual impairments, several requirements exceed baseline web guidance.
 
+**Where this stands (2026-10-04).** Automated axe checks with the WCAG 2.2 AA rules run in CI on every pull request (see [Testing](#testing)); serious or critical findings fail the build. No external audit or conformance report exists yet, and the vocabulary and Spanish language features are pending review by a credentialed speech-language pathologist (see [launch/SLP_SIGNOFF.md](./launch/SLP_SIGNOFF.md)). The public statement shown in the app is `/legal/accessibility`; the capability list with status is [capabilities.md](./capabilities.md).
+
 ## Touch Targets (Success Criterion 2.5.8)
 
 All interactive communication buttons must be **at least 1 cm × 1 cm** (≈ 38 CSS px at 96 dpi, scaled by user preference). The `@voxa/ui` `AacButton` component enforces this via `min-width` / `min-height` tied to a user-configurable `targetScale`.
 
-Spacing between adjacent targets must allow error-free selection for users with spasticity — default gutter is 4 mm minimum.
+Spacing between adjacent targets must allow error-free selection for users with spasticity — default gutter is 4 mm minimum. Settings › Touch size scales every target from 1× to 2×.
 
 ## Pointer Gestures (2.5.7)
 
@@ -21,11 +23,11 @@ Built-in themes:
 | Theme | Background | Use case |
 |-------|------------|----------|
 | `default` | `#f8fafc` light | General use |
-| `classic-light` | Light gray + white cells | Classic AAC apps (Proloquo-style layouts) |
+| `classic-light` | Light gray + white cells | Familiar light layout with white cells |
 | `cvi-dark` | `#0a0a0a` | Cortical visual impairment — reduced visual complexity |
 | `cvi-high-contrast` | Black + saturated symbols | Maximum figure/ground separation |
 
-Users can disable decorative imagery, reduce grid chrome, and enlarge symbol-only mode.
+Users can hide labels or hide symbols per board, and enlarge targets (see Touch Targets).
 
 Each theme carries its own chrome colours (`CVI_THEMES[theme].chrome` in `@voxa/ui`: message bar, sync status, footer text and links), held to 4.5:1 for text against the theme background by `apps/web/src/lib/theme-contrast.test.ts`. The scan highlight is a **dual ring** (black inside white, `SCAN_RING`): whatever the button fill or background, one ring contrasts at least 4.5:1 with it, so the cursor meets the 3:1 non-text minimum on every theme. CI scans `/app` with axe in all four themes.
 
@@ -39,8 +41,27 @@ Voxa speaks through the browser's speech synthesis, with the voices installed on
 - **Tuning.** Rate, pitch and volume sliders with visible values and keyboard steps, a preview phrase, and a "higher voice (approximation)" preset that raises pitch and rate. It is labelled as an approximation and is not a child voice.
 - **No matching voice.** The section shows short steps to install a voice on Android, iPhone/iPad and Windows, and Voxa keeps speaking with the best voice available.
 - Tested in `apps/web/src/lib/speech-voices.test.ts`, `apps/web/src/lib/play-button-speech.test.ts` and `e2e/specs/voice-choice.spec.ts` (stubbed speech synthesis; axe on the section).
+- **Mobile app:** speaks with the device's default voice; voice choice and tuning are web only for now.
+
+## Language
+
+The interface is Spanish by default (unprefixed URLs), with complete English (`/en`) and French (`/fr`) catalogs; the page `lang` matches the interface language, and speech uses the board's language. A guard test (`apps/web/src/hardcoded-ui-text.test.ts`) fails on hard-coded interface text, and a parity test keeps the three catalogs aligned (WCAG 3.1.1 and 3.1.2).
+
+## First-run setup
+
+A signed-in person with no board of their own sees a short setup once per device on `/app` (never on `/demo` or in the editor): board language, access method (touch, switch scanning, pointer dwell, keyguard), grid size (24, 36 or 60 cells, with a live preview and a "pending clinical review" note) and voice, then the first board opens. It is a native modal `<dialog>`: focus moves to each step's heading, every control is a native button or form field (Tab, Space and Enter, so key-emulating switches work), every step can be skipped and Escape skips the setup. It can be reopened from Settings. Tested in `apps/web/src/lib/first-run.test.ts` and `e2e/specs/first-run.spec.ts` (axe on every step in a light and a dark theme).
+
+## Recorded media and GLP video
+
+A Gestalt (GLP) video plays in a visible dialog (`role="dialog"`, `aria-modal`, the phrase as accessible name and caption) with a large Close button that takes focus. Any key (including key-emulating switches), a tap on the backdrop or Close, or the next button activation dismisses it, and focus returns where it was. When a recording cannot be loaded (for example offline), the button's text is spoken with the device voice instead. Tested in `e2e/specs/offline-media.spec.ts` (axe on the dialog).
 
 ## Alternative Access
+
+### Touch
+
+- Select on **press** (default) or on **release** (Settings › Touch activation).
+- **Keyguard (touch guard):** semi-transparent overlays block touches in the gutters between buttons, around the grid, or both.
+- **Whisper mode:** build a message without speaking each word.
 
 ### Switch Scanning
 
@@ -65,10 +86,10 @@ Voxa speaks through the browser's speech synthesis, with the voices installed on
 | Bluetooth switch (keyboard mode) | ✅ | ✅ | Same key map; pair before opening Voxa |
 | Gamepad / switch box (HID gamepad) | ✅ | — | Buttons 0/1 via Gamepad API |
 | Eye tracker that moves the pointer (vendor software in mouse mode) | 🟡 | — | Pointer dwell; not tested on hardware by us |
-| Eye tracker SDK (Tobii, IrisBond …) | 🔴 | 🔴 | No direct integration; integrators can feed coordinates through the gaze event bridge |
-| iOS External Accessory switch | — | 🔴 | Planned native module (TestFlight) |
+| Eye-tracker vendor SDK | 🔴 | 🔴 | No direct integration; integrators can feed coordinates through the gaze event bridge |
+| iOS External Accessory switch | — | 🔴 | Not built |
 
-### Dwell selection (eye gaze, head pointers)
+### Dwell selection (head pointers and pointer-driving eye trackers)
 
 Voxa does **not** integrate eye-tracker hardware or vendor SDKs. Dwell works in two ways:
 
@@ -79,8 +100,13 @@ Voxa does **not** integrate eye-tracker hardware or vendor SDKs. Dwell works in 
 
 ## Testing
 
-- Automated: `@axe-core/playwright` in CI on critical pages (`e2e/specs/a11y.spec.ts` — home, demo, legal, sign-in, the editor, and `/app` in each of the four board themes; serious and critical violations fail the job)
-- Access methods: `e2e/specs/access-methods.spec.ts` (touch-only button moves, admin motor-plan override, rejected saves leave the queue) against a real local API
-- Daily `e2e-smoke` workflow ("Daily smoke"): Playwright smoke and axe against the production public pages; staging specs return when staging is rebuilt
-- Manual: SLP review checklist before release ([SLP_SIGNOFF.md](./launch/SLP_SIGNOFF.md))
-- Hardware: keyboard-emulating switches. Eye-tracker hardware has not been tested yet.
+- **Automated (every pull request, CI `a11y` job):** `@axe-core/playwright` with the WCAG 2.2 AA rule tags; serious and critical violations fail the job.
+  - `e2e/specs/a11y.spec.ts`: the landing, demo, legal and sign-in pages, the editor panels, `/app` in each of the four board themes, and, in Spanish (the default, unprefixed locale), the landing, `/demo`, `/app` and its settings panel. Each Spanish scan first asserts the page stayed on its unprefixed route with `lang="es"`.
+  - `e2e/specs/voice-choice.spec.ts`: the Voice settings and the install guidance, light and dark themes.
+  - `e2e/specs/first-run.spec.ts`: every first-run step, light and dark themes.
+  - `e2e/specs/offline-media.spec.ts`: the GLP video dialog.
+- **Contrast:** `apps/web/src/lib/theme-contrast.test.ts` (4.5:1 text, 3:1 scan ring, all four themes).
+- **Access methods:** `e2e/specs/access-methods.spec.ts` (touch-only button moves, keyboard moves, admin motor-plan override, rejected saves leave the queue) against a real local API; `packages/access/src/scan-machine.test.ts` for the scan.
+- **Daily smoke** (`e2e-smoke.yml`): Playwright smoke and axe against the production public pages, and the signed-in specs against staging.
+- **Clinical review:** pending; no credentialed speech-language pathologist has reviewed Voxa yet ([SLP_SIGNOFF.md](./launch/SLP_SIGNOFF.md)).
+- **Hardware:** keyboard-emulating switches. Eye-tracker hardware has not been tested yet.

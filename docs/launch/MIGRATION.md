@@ -1,6 +1,6 @@
 # Migrating to Voxa from other AAC platforms
 
-Voxa uses **Open Board Format (OBF)** as the primary interchange format. This guide covers supported import paths for commercial GA.
+Voxa uses **Open Board Format (OBF)** as the primary interchange format. This guide covers the import and export paths on `main` today; the capability table is [capabilities.md](../capabilities.md#open-board-format-and-other-files).
 
 ## Supported today
 
@@ -8,7 +8,7 @@ Every import creates **new boards** owned by you (in your organization) and open
 
 ### Open Board Format (`.obf` JSON, `.obz` packages)
 
-Voxa reads and writes [Open Board Format 0.1](https://www.openboardformat.org/docs) (`format: "open-board-0.1"`), the format Cboard, CoughDrop and other OpenAAC tools exchange.
+Voxa reads and writes [Open Board Format 0.1](https://www.openboardformat.org/docs) (`format: "open-board-0.1"`), the open format that many AAC tools exchange.
 
 1. Sign in at [voxa.madfam.io](https://voxa.madfam.io).
 2. Switch role to **Editor (SLP)** or **Admin**.
@@ -44,7 +44,7 @@ curl "https://voxa-api.madfam.io/v1/boards/{boardId}/export/obz" \
 
 **Not supported:** `button.action` / `actions` (spelling and clear actions), absolute button placement (`top`/`left`), board `url`/`data_url` downloads.
 
-### Grid 3, TD Snap and TouchChat — beta, imports the words of one page
+### Other AAC apps' files — beta, imports the words of one page
 
 These adapters were built from the documented file structures and are tested on synthetic archives only.
 
@@ -58,7 +58,7 @@ No pictures, no recordings and no links to other pages are imported (links are r
 
 ### Starter templates
 
-Create boards from **Core 47** (6×8, motor-plan locked core) or **Core 100** (10×10) via the editor template picker, or:
+Create boards from the editor template picker, from the first-run setup, or through the API. Templates: **core 24** (4×6), **core 36** (6×6) and **core 60** (6×10), which share one motor plan (a word keeps its row and column as the board grows); **Core 47** (6×8, motor-plan locked core); **Core 100** (10×10); **Literacy Keyboard**; **Visual Schedule**. Each is built in es-MX, en-US or fr-FR, and the vocabulary is pending clinical review. An unknown `templateId` answers `400`.
 
 ```bash
 curl -X POST "https://voxa-api.madfam.io/v1/boards" \
@@ -67,23 +67,15 @@ curl -X POST "https://voxa-api.madfam.io/v1/boards" \
   -d '{"id":"board-my-core","name":"Therapy core","templateId":"core-100","profileId":"default","version":1,"grid":{"rows":4,"columns":4,"buttons":[]}}'
 ```
 
-List templates: `GET /v1/boards/templates/list` (includes **Literacy Keyboard** QWERTY page)
+List templates: `GET /v1/boards/templates/list`.
 
 ### Literacy keyboard
 
-Create a **Literacy Keyboard** board from the editor template picker for literate users who type messages character-by-character. The message bar supports AI word suggestions from the prediction strip when consent is enabled.
-
-## Coming soon (P2)
-
-| Source | Format | Target |
-|--------|--------|--------|
-| Proloquo2Go | Backup export | Partner migration service |
-
-Progress is tracked in the feature roadmap ([GA_ROADMAP.md](./GA_ROADMAP.md), Phase 6).
+Create a **Literacy Keyboard** board from the editor template picker for literate users who type messages character-by-character (the es-MX keyboard adds á é í ó ú ü ñ ¿ ¡). The message bar shows basic word suggestions when the person has turned them on.
 
 ## Multi-board accounts
 
-After sign-in, use the **Board** selector in the header to switch boards. Editors can **New board** to create an empty grid owned by their account. Board limits follow your plan tier.
+After sign-in, use the **Board** selector in the header to switch boards. **New board** creates a board owned by your account. Board limits follow your plan tier (the free plan allows one board).
 
 ## Staging validation
 

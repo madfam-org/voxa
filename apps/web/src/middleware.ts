@@ -106,6 +106,6 @@ export const config = {
   matcher: [
     // Crawling files are route handlers at the app root (app/robots.txt etc.):
     // no locale rewrite and no sign-in redirect.
-    '/((?!api|_next/static|_next/image|favicon.ico|sw.js|manifest.json|manifest.webmanifest|robots.txt|sitemap.xml|llms.txt|icons/|symbols/).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|sw.js|manifest.json|manifest.webmanifest|robots.txt|sitemap.xml|llms.txt|llms-full.txt|icons/|symbols/).*)',
   ],
 };
