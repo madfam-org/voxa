@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { GRID_MAX_CELLS, GRID_MAX_DIMENSION, GRID_MIN_CELLS, GRID_MIN_DIMENSION } from '@voxa/vocabulary';
 import { brand, neutral, status, surface } from '@/lib/tokens';
 
@@ -19,6 +20,8 @@ export function GridSettingsPanel({
   onApply,
   onClose,
 }: GridSettingsPanelProps): React.ReactNode {
+  const t = useTranslations('gridSettings');
+  const tc = useTranslations('common');
   const [nextRows, setNextRows] = useState(rows);
   const [nextColumns, setNextColumns] = useState(columns);
   const cells = nextRows * nextColumns;
@@ -26,7 +29,7 @@ export function GridSettingsPanel({
   return (
     <aside
       role="dialog"
-      aria-label="Grid size"
+      aria-label={t('title')}
       style={{
         width: 300,
         background: surface.section,
@@ -37,19 +40,23 @@ export function GridSettingsPanel({
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <h2 style={{ margin: 0, fontSize: '1rem' }}>Grid size</h2>
+        <h2 style={{ margin: 0, fontSize: '1rem' }}>{t('title')}</h2>
         <button type="button" onClick={onClose} style={btnStyle}>
-          Close
+          {tc('close')}
         </button>
       </div>
 
       <p style={{ margin: '0 0 12px', fontSize: '0.8125rem', color: neutral.muted, lineHeight: 1.5 }}>
-        {GRID_MIN_CELLS}–{GRID_MAX_CELLS} cells ({GRID_MIN_DIMENSION}–{GRID_MAX_DIMENSION} rows/columns). Locked
-        motor-plan slots stay fixed; unlocked buttons reflow when the grid shrinks.
+        {t('limits', {
+          minCells: GRID_MIN_CELLS,
+          maxCells: GRID_MAX_CELLS,
+          minDimension: GRID_MIN_DIMENSION,
+          maxDimension: GRID_MAX_DIMENSION,
+        })}
       </p>
 
       <label style={labelStyle}>
-        Rows
+        {t('rows')}
         <input
           type="number"
           min={GRID_MIN_DIMENSION}
@@ -61,7 +68,7 @@ export function GridSettingsPanel({
       </label>
 
       <label style={labelStyle}>
-        Columns
+        {t('columns')}
         <input
           type="number"
           min={GRID_MIN_DIMENSION}
@@ -73,10 +80,8 @@ export function GridSettingsPanel({
       </label>
 
       <p style={{ fontSize: '0.875rem', margin: '0 0 12px' }}>
-        {cells} cells · {buttonCount} button{buttonCount === 1 ? '' : 's'}
-        {buttonCount > cells ? (
-          <span style={{ color: status.danger }}> — too many buttons for this grid</span>
-        ) : null}
+        {t('summary', { cells, buttons: buttonCount })}
+        {buttonCount > cells ? <span style={{ color: status.danger }}> {t('tooMany')}</span> : null}
       </p>
 
       <button
@@ -85,7 +90,7 @@ export function GridSettingsPanel({
         disabled={buttonCount > cells}
         onClick={() => onApply(nextRows, nextColumns)}
       >
-        Apply grid size
+        {t('apply')}
       </button>
     </aside>
   );

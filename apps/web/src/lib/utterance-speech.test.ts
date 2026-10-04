@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { createDemoBoard, createStarterBoard } from '@voxa/core';
+import { localAiService } from '@voxa/ai';
 import { presentBoardForDisplay } from './board-presentation';
-import { speakWholeMessage, speechLocaleForBoard } from './utterance-speech';
+import { composeMessage, speakWholeMessage, speechLocaleForBoard } from './utterance-speech';
 
 interface FakeUtterance {
   text: string;
@@ -40,7 +41,7 @@ describe('whole-message speech locale', () => {
   it('speaks an es-MX board in es-MX even when the UI is English', () => {
     const board = createStarterBoard('core-47', { locale: 'es-MX' });
     assert.equal(speakWholeMessage(board, ['yo', 'querer', 'beber'], 'en'), true);
-    assert.deepEqual(spoken, [{ text: 'yo querer beber', lang: 'es-MX' }]);
+    assert.deepEqual(spoken, [{ text: 'yo quiero beber', lang: 'es-MX' }]);
   });
 
   it('speaks the es-MX literacy keyboard sentence in es-MX', () => {
@@ -58,7 +59,7 @@ describe('whole-message speech locale', () => {
     const yo = board.grid.buttons.find((button) => button.id === 'i');
     assert.equal(yo?.kind === 'analytic' ? yo.label : undefined, 'yo');
     speakWholeMessage(board, ['yo', 'querer'], 'es');
-    assert.deepEqual(spoken, [{ text: 'yo querer', lang: 'es-MX' }]);
+    assert.deepEqual(spoken, [{ text: 'yo quiero', lang: 'es-MX' }]);
   });
 
   it('falls back to the UI content locale for a board with no buttons', () => {
@@ -70,5 +71,65 @@ describe('whole-message speech locale', () => {
   it('does not speak an empty message', () => {
     assert.equal(speakWholeMessage(createStarterBoard('core-47'), [], 'es'), false);
     assert.deepEqual(spoken, []);
+  });
+});
+
+describe('composeMessage (Spanish agreement on the message bar)', () => {
+  const es = createStarterBoard('core-47', { locale: 'es-MX' });
+
+  it('conjugates the verb after a subject pronoun on an es-MX board', () => {
+    assert.deepEqual(composeMessage(es, ['yo', 'querer', 'beber'], 'es'), {
+      text: 'yo quiero beber',
+      baseText: 'yo querer beber',
+      agreementApplied: true,
+    });
+  });
+
+  it('keeps the base form when the communicator turns agreement off', () => {
+    assert.deepEqual(composeMessage(es, ['yo', 'querer', 'beber'], 'es', { agreement: false }), {
+      text: 'yo querer beber',
+      baseText: 'yo querer beber',
+      agreementApplied: false,
+    });
+    speakWholeMessage(es, ['yo', 'querer', 'beber'], 'es', { agreement: false });
+    assert.deepEqual(spoken, [{ text: 'yo querer beber', lang: 'es-MX' }]);
+  });
+
+  it('leaves English boards to their own word forms', () => {
+    const en = createStarterBoard('core-47', { locale: 'en-US' });
+    const composed = composeMessage(en, ['I', 'want', 'drink'], 'es');
+    assert.equal(composed.text, 'I want drink');
+    assert.equal(composed.agreementApplied, false);
+  });
+
+  it('never rewrites what was typed on a keyboard board', () => {
+    const keyboard = createStarterBoard('literacy-keyboard', { locale: 'es-MX' });
+    const composed = composeMessage(keyboard, ['YO', 'QUERER'], 'es');
+    assert.equal(composed.agreementApplied, false);
+  });
+
+  it('reports no change when nothing needed agreement', () => {
+    const composed = composeMessage(es, ['más', 'agua'], 'es');
+    assert.equal(composed.text, 'más agua');
+    assert.equal(composed.agreementApplied, false);
+  });
+});
+
+describe('composeMessage on a tapped suggestion', () => {
+  it('agrees a Spanish suggestion the same way as tapped buttons', async () => {
+    const es = createStarterBoard('core-47', { locale: 'es-MX' });
+    const suggestions = await localAiService.predictText({
+      profileId: 'p',
+      recentUtterances: [],
+      partialText: 'yo querer',
+      locale: 'es-MX',
+      maxSuggestions: 3,
+    });
+    const first = suggestions[0]?.text ?? '';
+    assert.match(first, /^yo querer \S/);
+    const words = first.split(/\s+/);
+    const composed = composeMessage(es, words, 'es');
+    assert.equal(composed.text, ['yo', 'quiero', ...words.slice(2)].join(' '));
+    assert.equal(composed.baseText, first);
   });
 });

@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import type { BoardButton } from '@voxa/core';
 import {
   buildGridScanPath,
@@ -13,6 +14,7 @@ import {
   resolveScanGroups,
   SCAN_GROUP_BEEP,
   SCAN_STEP_BEEP,
+  type GroupScanLabels,
   type ScanOrder,
   type SwitchGroupStrategy,
 } from '@voxa/access';
@@ -53,6 +55,16 @@ export function useSwitchScan({
   onSelect,
   getLabel,
 }: UseSwitchScanOptions) {
+  const ts = useTranslations('scan');
+  const groupLabels = useMemo<GroupScanLabels>(
+    () => ({
+      row: (n) => ts('row', { n }),
+      regions: [ts('topLeft'), ts('topRight'), ts('bottomLeft'), ts('bottomRight')],
+      region: (n) => ts('region', { n }),
+      group: (n) => ts('group', { n }),
+    }),
+    [ts],
+  );
   const groups = useMemo(
     () => resolveScanGroups(rows, columns, groupStrategy),
     [rows, columns, groupStrategy],
@@ -100,7 +112,7 @@ export function useSwitchScan({
 
   const scanAnnouncement = groups
     ? phase === 'groups' && activeGroup
-      ? groupScanLabel(activeGroupIndex, groupStrategy, activeGroup)
+      ? groupScanLabel(activeGroupIndex, groupStrategy, activeGroup, groupLabels)
       : activeButton
         ? getLabel(activeButton)
         : ''

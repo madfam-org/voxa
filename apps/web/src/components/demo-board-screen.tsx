@@ -24,7 +24,7 @@ import { TouchGuardOverlay } from '@/components/touch-guard-overlay';
 import { VisualScheduleView } from '@/components/visual-schedule-view';
 import { useSwitchScan } from '@/hooks/use-switch-scan';
 import { SymbolCredit } from '@/components/symbol-credit';
-import { speakWholeMessage } from '@/lib/utterance-speech';
+import { composeMessage, speakWholeMessage } from '@/lib/utterance-speech';
 import { brand, classic, neutral, status, stone, surface } from '@/lib/tokens';
 
 const DEMO_SCENE_IDS: DemoSceneId[] = ['communicate', 'literacy', 'schedule', 'access'];
@@ -50,10 +50,13 @@ export function DemoBoardScreen(): React.ReactNode {
   const t = useTranslations('demo');
   const tc = useTranslations('common');
   const tcx = useTranslations('communicator');
+  const tb = useTranslations('board');
 
   const [scene, setScene] = useState<DemoSceneId>('communicate');
   const board = useMemo(() => boardForDemoScene(scene, locale), [scene, locale]);
   const [utterance, setUtterance] = useState<string[]>([]);
+  // Per-message choice to say the words exactly as tapped (no Spanish agreement).
+  const [keepBaseForm, setKeepBaseForm] = useState(false);
   const [completedStepIds, setCompletedStepIds] = useState<Set<string>>(() => new Set());
   const [tapCount, setTapCount] = useState(0);
   const [switchScanOn, setSwitchScanOn] = useState(false);
@@ -76,6 +79,7 @@ export function DemoBoardScreen(): React.ReactNode {
 
   useEffect(() => {
     setUtterance([]);
+    setKeepBaseForm(false);
     setCompletedStepIds(new Set());
     setSwitchScanOn(scene === 'access');
     setTouchGuardOn(scene === 'access');
@@ -153,8 +157,9 @@ export function DemoBoardScreen(): React.ReactNode {
     [activate, scene, switchScanOn],
   );
 
+  const composed = composeMessage(board, utterance, locale);
   const speakAll = () => {
-    speakWholeMessage(board, utterance, locale);
+    speakWholeMessage(board, utterance, locale, { agreement: !keepBaseForm });
   };
 
   const themeKey = scene === 'communicate' ? 'classic-light' : 'cvi-dark';
@@ -176,7 +181,9 @@ export function DemoBoardScreen(): React.ReactNode {
     : literacyMode
       ? formatKeyboardUtterance(utterance) || t('typeOnKeyboard')
       : utterance.length
-        ? utterance.join(' ')
+        ? keepBaseForm
+          ? composed.baseText
+          : composed.text
         : classicScene
           ? t('tapSymbols')
           : t('tapButtons');
@@ -297,6 +304,17 @@ export function DemoBoardScreen(): React.ReactNode {
           >
             {utteranceText}
           </div>
+          {composed.agreementApplied && !literacyMode && !scheduleMode ? (
+            <button
+              type="button"
+              onClick={() => setKeepBaseForm((value) => !value)}
+              style={classicScene ? classicSecondaryBtn : actionBtn}
+              aria-pressed={keepBaseForm}
+              title={keepBaseForm ? composed.text : composed.baseText}
+            >
+              {tcx('keepBaseForm')}
+            </button>
+          ) : null}
           {!scheduleMode ? (
             <button
               type="button"
@@ -310,6 +328,7 @@ export function DemoBoardScreen(): React.ReactNode {
             type="button"
             onClick={() => {
               setUtterance([]);
+              setKeepBaseForm(false);
               setCompletedStepIds(new Set());
             }}
             style={classicScene ? classicSecondaryBtn : actionBtn}
@@ -367,6 +386,7 @@ export function DemoBoardScreen(): React.ReactNode {
             ) : (
               <>
                 <BoardGrid
+                  ariaLabel={tb('gridLabel')}
                   rows={board.grid.rows}
                   columns={board.grid.columns}
                   theme={themeKey}

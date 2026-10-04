@@ -1,6 +1,7 @@
 'use client';
 
 import type { CSSProperties, DragEvent } from 'react';
+import { useTranslations } from 'next-intl';
 import { brand, neutral, surface } from '@/lib/tokens';
 
 const DRAG_MIME = 'application/x-voxa-button-id';
@@ -33,6 +34,7 @@ export function EditorGridCell({
   onAddButton,
   children,
 }: EditorGridCellProps): React.ReactNode {
+  const t = useTranslations('editor');
   const handleDragOver = (event: DragEvent) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
@@ -67,7 +69,7 @@ export function EditorGridCell({
         borderColor: dropHighlight ? brand.primary : neutral.border,
         background: dropHighlight ? brand.surfaceTint : surface.base,
       }}
-      aria-label={`Empty grid cell row ${row + 1} column ${column + 1}. Drop a button here or click to add.`}
+      aria-label={t('emptyCell', { row: row + 1, column: column + 1 })}
     >
       +
     </button>

@@ -1,8 +1,10 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import type { BoardButton, PartOfSpeechTag } from '@voxa/core';
 import { mergeSpeechForms, suggestInflections } from '@voxa/vocabulary';
 import { brand, neutral, surface } from '@/lib/tokens';
+import { useAppDialog } from '@/components/app-dialog';
 
 interface WordFormsPanelProps {
   button: BoardButton;
@@ -11,6 +13,8 @@ interface WordFormsPanelProps {
 }
 
 export function WordFormsPanel({ button, disabled, onChange }: WordFormsPanelProps): React.ReactNode {
+  const t = useTranslations('wordForms');
+  const dialogs = useAppDialog();
   if (button.kind !== 'analytic') return null;
 
   const forms = button.speechForms ?? [];
@@ -19,7 +23,7 @@ export function WordFormsPanel({ button, disabled, onChange }: WordFormsPanelPro
   const applySuggestions = () => {
     const suggested = suggestInflections(button.label || button.speechText, pos as PartOfSpeechTag);
     if (suggested.length === 0) {
-      window.alert('No suggested forms for this word yet. Add custom forms below.');
+      void dialogs.alert(t('noSuggestions'));
       return;
     }
     onChange({ speechForms: mergeSpeechForms(forms, suggested) });
@@ -39,10 +43,10 @@ export function WordFormsPanel({ button, disabled, onChange }: WordFormsPanelPro
     });
   };
 
-  const addCustom = () => {
-    const label = window.prompt('Form label (shown in editor)', '');
+  const addCustom = async () => {
+    const label = await dialogs.prompt(t('formLabelPrompt'));
     if (!label?.trim()) return;
-    const speechText = window.prompt('Spoken text', label.trim()) ?? label.trim();
+    const speechText = (await dialogs.prompt(t('spokenTextPrompt'), { defaultValue: label.trim() })) ?? label.trim();
     const id = `custom-${Date.now()}`;
     onChange({
       speechForms: [...forms, { id, label: label.trim(), speechText: speechText.trim() }],
@@ -51,22 +55,23 @@ export function WordFormsPanel({ button, disabled, onChange }: WordFormsPanelPro
 
   return (
     <section style={{ marginBottom: 16 }}>
-      <h3 style={{ margin: '0 0 8px', fontSize: '0.875rem' }}>Word forms</h3>
+      {dialogs.dialog}
+      <h3 style={{ margin: '0 0 8px', fontSize: '0.875rem' }}>{t('title')}</h3>
       <p style={{ margin: '0 0 8px', fontSize: '0.75rem', color: neutral.muted, lineHeight: 1.4 }}>
-        Alternate tenses or plurals. Communicators double-tap quickly to cycle forms.
+        {t('hint')}
       </p>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 8 }}>
         <button type="button" disabled={disabled} onClick={applySuggestions} style={btnStyle}>
-          Suggest forms
+          {t('suggest')}
         </button>
-        <button type="button" disabled={disabled} onClick={addCustom} style={btnStyle}>
-          Add custom
+        <button type="button" disabled={disabled} onClick={() => void addCustom()} style={btnStyle}>
+          {t('addCustom')}
         </button>
       </div>
 
       {forms.length === 0 ? (
-        <p style={{ fontSize: '0.8125rem', color: neutral.muted, margin: 0 }}>No alternate forms yet.</p>
+        <p style={{ fontSize: '0.8125rem', color: neutral.muted, margin: 0 }}>{t('empty')}</p>
       ) : (
         <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
           {forms.map((form) => (
@@ -88,11 +93,12 @@ export function WordFormsPanel({ button, disabled, onChange }: WordFormsPanelPro
                 onClick={() => setActive(form.id)}
                 style={{ ...btnStyle, flex: 1, textAlign: 'left' }}
               >
-                {form.label} → {form.speechText}
-                {form.id === button.activeSpeechFormId ? ' (active)' : ''}
+                {form.id === button.activeSpeechFormId
+                  ? t('formActive', { label: form.label, speech: form.speechText })
+                  : t('form', { label: form.label, speech: form.speechText })}
               </button>
               <button type="button" disabled={disabled} onClick={() => removeForm(form.id)} style={btnStyle}>
-                Remove
+                {t('remove')}
               </button>
             </li>
           ))}

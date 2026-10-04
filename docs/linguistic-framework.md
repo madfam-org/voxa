@@ -44,3 +44,55 @@ Color is applied to button borders/labels — never as the sole information carr
 ## Bilingual Profiles
 
 Communicators may define two active languages. Buttons carry per-locale labels and TTS voice IDs. Mid-utterance code-switching is resolved at speak time by `@voxa/ai` phoneme routing.
+
+## Spanish morphology (es-MX)
+
+> **Linguistic review:** pending review by a credentialed SLP (ruling R89). The
+> conjugation tables, the agreement rule and the Spanish interface strings were
+> written from standard Mexican Spanish grammar and have not been reviewed by a
+> speech-language pathologist yet.
+
+Spanish boards hold infinitives ("querer", "beber"), so a message built by
+tapping reads "yo querer beber". When the message bar is built on a board whose
+content locale is Spanish, `@voxa/vocabulary` suggests the agreed form and the
+bar shows and speaks it: "yo quiero beber".
+
+The rule (`applySpanishAgreement`, `packages/vocabulary/src/spanish-agreement.ts`):
+
+1. A subject pronoun (yo, tú, usted, él, ella, nosotros, nosotras, ustedes,
+   ellos, ellas) opens a clause and sets person, gender and number. es-MX uses
+   *ustedes* for the second person plural; *vosotros* is not produced.
+2. The first infinitive after it is conjugated in the present indicative.
+   Only negation and frequency adverbs may stand between them (no, también, ya,
+   nunca, siempre, todavía); any other word ends the clause unchanged. Later
+   infinitives stay infinitive ("yo quiero beber").
+3. An infinitive with an attached clitic is reflexive, and the clitic moves in
+   front of the verb and agrees with the subject: "ella sentarse" → "ella se
+   sienta", "yo no vestirme" → "yo no me visto". "sentir" followed by a
+   descriptor becomes "sentirse" ("yo sentir feliz" → "yo me siento feliz").
+4. *gustar* and *encantar* agree with what is liked: "yo gustar jugar" → "me
+   gusta jugar", "ella gustar" → "a ella le gusta".
+5. After a copula (ser, estar, sentirse, parecer, quedar, ponerse) a known
+   descriptor agrees in gender and number with the subject when the pronoun
+   states them: "ella estar cansado" → "ella está cansada", "nosotros estar
+   feliz" → "nosotros estamos felices". yo/tú/usted carry no gender, so their
+   descriptors keep the board form.
+6. With no subject pronoun nothing changes. Spanish drops subjects, and turning
+   "querer agua" into "quiero agua" would put words in the communicator's mouth.
+7. A word is a verb when the tables know it (regular board verbs, irregulars
+   such as ser, estar, ir, tener, querer, poder, hacer, decir, venir, ver, dar,
+   poner, salir, saber, jugar, and stem-changing verbs), or when the board tags
+   the button as a verb and it ends in -ar/-er/-ir. Unknown words pass through.
+
+**The communicator keeps control.** The agreed form is a suggestion applied when
+the message is built. The message bar shows a **Base form** toggle whenever the
+suggestion changed a word; pressing it shows and speaks the words exactly as
+tapped. **Settings → Spanish agreement** turns the suggestion off. A tapped word suggestion becomes the message's words and gets the same
+agreement, in its chip and when spoken. Single button
+taps still speak the button's own text, and English and French boards keep
+their existing word forms (`speechForms`).
+
+Scope today: present indicative only, no past tense, subjunctive or object
+agreement ("me gustan los carros" stays "me gusta"). Tests:
+`packages/vocabulary/src/spanish-morphology.test.ts` and
+`apps/web/src/lib/utterance-speech.test.ts`.

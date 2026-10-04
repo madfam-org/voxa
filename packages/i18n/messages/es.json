@@ -1,4 +1,5 @@
 {
+  "_review": "Las cadenas en español añadidas en W2-B (2026-10-04) y las tablas de conjugación están pendientes de revisión por una persona terapeuta del lenguaje con cédula (ruling R89). Pending review by a credentialed SLP.",
   "metadata": {
     "title": "Voxa — Plataforma de comunicación aumentativa",
     "description": "Comunicación aumentativa y alternativa (CAA) moderna para familias e instituciones. Demo en vivo, temas CVI, sugerencias de palabras y sincronización en la nube."
@@ -233,7 +234,60 @@
     "importObf": "Importar OBF",
     "exportObf": "Exportar OBF",
     "suggestionsLabel": "Sugerencias básicas:",
-    "suggestionsAria": "Sugerencias básicas de palabras"
+    "suggestionsAria": "Sugerencias básicas de palabras",
+    "actionFailed": "No se pudo completar la acción: {detail}",
+    "boardNamePrompt": "Nombre del tablero",
+    "defaultBoardName": "Mi tablero",
+    "demoCannotDelete": "El tablero de demostración no se puede eliminar.",
+    "deleteConfirm": "¿Eliminar el tablero «{name}»? No se puede deshacer.",
+    "delete": "Eliminar",
+    "rename": "Renombrar",
+    "duplicate": "Duplicar",
+    "pinPrompt": "Escribe el PIN de editor para desbloquear la edición del vocabulario",
+    "pinIncorrect": "PIN incorrecto. El modo editor sigue bloqueado.",
+    "overrideLockConfirm": "¿Anular el bloqueo del plan motor y mover esta posición?",
+    "slotLocked": "Esa posición está bloqueada. Desbloquéala en el editor del botón o usa la anulación de Admin.",
+    "buttonLabelPrompt": "Etiqueta del botón",
+    "syncLive": "● En vivo",
+    "syncLiveQueued": "● En vivo (guardado en cola)",
+    "syncConnecting": "… Conectando",
+    "syncOffline": "○ Sin conexión",
+    "remoteDemoReadOnly": "El tablero de demostración es de solo lectura. Crea un tablero propio para editarlo aquí.",
+    "remoteOwnBoard": "Este es tu tablero.",
+    "editMyBoard": "Editar mi tablero",
+    "remoteEditorTitle": "Editor remoto para terapeutas",
+    "remoteEditorBody": "— edita el vocabulario sin el dispositivo de la persona comunicadora. Los cambios se sincronizan en la nube y la app de comunicación los recibe automáticamente.",
+    "remoteNoPermission": "Tu cuenta no tiene permisos de editor clínico. Contacta a la persona administradora de tu organización.",
+    "remoteSignInPrompt": "Inicia sesión con tu cuenta clínica para editar tableros a distancia.",
+    "signIn": "Iniciar sesión",
+    "signOut": "Cerrar sesión",
+    "boardSelect": "Tablero",
+    "template": "Plantilla",
+    "templateBlank": "En blanco 4×4",
+    "templateCore47": "Vocabulario núcleo 47",
+    "templateCore100": "Vocabulario núcleo 100",
+    "templateLiteracyKeyboard": "Teclado de alfabetización",
+    "templateVisualSchedule": "Agenda visual",
+    "teamRole": "Rol en el equipo",
+    "demoReadOnlyShort": "El tablero de demostración es de solo lectura",
+    "roleCommunicator": "Persona comunicadora",
+    "roleEditor": "Editor (terapeuta)",
+    "roleFromAccount": "Rol según tu cuenta",
+    "babble": "Balbuceo",
+    "babbleBanner": "Modo balbuceo: el vocabulario oculto está visible en esta sesión. Desactiva Balbuceo para restaurar el plan motor.",
+    "usage": "Uso",
+    "scheduleStep": "Paso {current} de {total}",
+    "typeOnKeyboard": "Escribe en el teclado…",
+    "tapToBuild": "Toca los botones para formar un mensaje…",
+    "keepBaseForm": "Forma base",
+    "importObz": "Importar OBZ",
+    "importGrid": "Importar Grid",
+    "importSnap": "Importar Snap",
+    "importTouchChat": "Importar TouchChat",
+    "exportObz": "Exportar OBZ",
+    "editorHint": "Arrastra los botones desbloqueados para moverlos o intercambiarlos. Suelta en las celdas + para añadir vocabulario. Las posiciones bloqueadas muestran 🔒.",
+    "predictionConfidence": "Confianza {percent} %",
+    "symbolConfidence": "Pictograma · {percent} %"
   },
   "cviThemes": {
     "default": "Predeterminado",
@@ -304,7 +358,11 @@
     "removePin": "Quitar PIN",
     "pinPrompt": "Nuevo PIN del editor (4–8 dígitos)",
     "pinSaved": "PIN del editor guardado.",
-    "pinRemoveConfirm": "¿Quitar PIN del editor? El modo editor se abrirá sin solicitud."
+    "pinRemoveConfirm": "¿Quitar PIN del editor? El modo editor se abrirá sin solicitud.",
+    "pinInvalid": "El PIN debe tener de 4 a 8 dígitos.",
+    "pinStorageUnavailable": "Este navegador no permite guardar el PIN en el dispositivo.",
+    "spanishAgreement": "Concordancia en español",
+    "spanishAgreementHint": "En tableros en español, conjuga el verbo según el pronombre al formar el mensaje (yo querer → yo quiero). El botón «Forma base» dice las palabras tal como se tocaron."
   },
   "legal": {
     "shared": {
@@ -481,7 +539,12 @@
     "queuedSuffix": "Cambios en cola — se sincronizarán cuando vuelva la conexión.",
     "obfWarnings": "Advertencias OBF: {warnings}",
     "dismiss": "Descartar",
-    "retry": "Reintentar sync"
+    "retry": "Reintentar sync",
+    "refreshedByOtherEditor": "Otra persona editora guardó cambios primero: tu tablero se actualizó a la versión más reciente.",
+    "versionConflictReload": "Conflicto de versiones: recarga la página e inténtalo de nuevo.",
+    "offlineCached": "Sin conexión: se usa el tablero guardado en este dispositivo",
+    "apiUnreachable": "No se pudo conectar con el servidor: se usa el tablero de demostración local",
+    "saveQueued": "Guardado en cola: se sincronizará cuando vuelva la conexión"
   },
   "pwa": {
     "installApp": "Instalar app",
@@ -514,5 +577,112 @@
     "signInToUpload": "Inicia sesión para subir una foto.",
     "searchFailed": "La búsqueda falló ({status}).",
     "credit": "Símbolos: <symbols>Mulberry Symbols</symbols> © Steve Lee, <license>CC BY-SA 4.0</license>. <credits>Créditos</credits>"
+  },
+  "dialog": {
+    "ok": "Aceptar",
+    "cancel": "Cancelar"
+  },
+  "board": {
+    "gridLabel": "Tablero de comunicación",
+    "visualSchedule": "Agenda visual",
+    "buttonLocked": "{label} (posición de plan motor bloqueada)",
+    "buttonHiddenBabble": "{label} (oculto, modo balbuceo)",
+    "stepCompleted": "{label} (completado)",
+    "stepCurrent": "{label} (paso actual)"
+  },
+  "editor": {
+    "title": "Editar botón",
+    "linkToBoard": "Enlazar a otro tablero (navegación OBF)",
+    "linkNone": "Ninguno: solo hablar",
+    "slotLockedHint": "Posición de plan motor bloqueada: desbloquéala abajo para cambiar la etiqueta, la voz o la visibilidad.",
+    "label": "Etiqueta",
+    "speech": "Texto hablado",
+    "partOfSpeech": "Categoría gramatical",
+    "pos": {
+      "pronoun": "pronombre",
+      "verb": "verbo",
+      "noun": "sustantivo",
+      "adjective": "adjetivo",
+      "preposition": "preposición",
+      "social": "social",
+      "conjunction": "conjunción"
+    },
+    "lockPosition": "Bloquear posición (plan motor)",
+    "hideFromCommunicator": "Ocultar en la vista de la persona comunicadora",
+    "done": "Listo",
+    "emptyCell": "Celda vacía, fila {row}, columna {column}. Suelta un botón aquí o haz clic para añadir uno."
+  },
+  "wordForms": {
+    "title": "Formas de la palabra",
+    "hint": "Tiempos o plurales alternativos. La persona comunicadora toca dos veces rápido para cambiar de forma.",
+    "suggest": "Sugerir formas",
+    "addCustom": "Añadir forma",
+    "empty": "Aún no hay formas alternativas.",
+    "form": "{label} → {speech}",
+    "formActive": "{label} → {speech} (activa)",
+    "remove": "Quitar",
+    "noSuggestions": "Todavía no hay formas sugeridas para esta palabra. Añade formas propias abajo.",
+    "formLabelPrompt": "Etiqueta de la forma (se muestra en el editor)",
+    "spokenTextPrompt": "Texto hablado"
+  },
+  "gridSettings": {
+    "title": "Tamaño de la cuadrícula",
+    "limits": "{minCells}–{maxCells} celdas ({minDimension}–{maxDimension} filas/columnas). Las posiciones bloqueadas del plan motor no se mueven; los botones desbloqueados se reacomodan si la cuadrícula se reduce.",
+    "rows": "Filas",
+    "columns": "Columnas",
+    "summary": "{cells} celdas · {buttons, plural, one {# botón} other {# botones}}",
+    "tooMany": "— demasiados botones para esta cuadrícula",
+    "apply": "Aplicar tamaño"
+  },
+  "usageReport": {
+    "title": "Informe de uso",
+    "signIn": "Inicia sesión para ver los informes de uso.",
+    "loadFailed": "No se pudo cargar el informe ({detail}).",
+    "description": "Pulsaciones registradas mientras la persona comunicadora tiene activado el conteo de uso: qué botón y cuándo. Este informe muestra solo conteos.",
+    "period": "Periodo (días)",
+    "lastDays": "Últimos {days} días",
+    "refresh": "Actualizar",
+    "total": "{count, plural, one {# activación} other {# activaciones}}",
+    "empty": "No hay activaciones en este periodo.",
+    "button": "Botón",
+    "count": "Conteo"
+  },
+  "auditLog": {
+    "title": "Auditoría de ediciones",
+    "ariaLabel": "Registro de auditoría de ediciones",
+    "signIn": "Inicia sesión para ver la auditoría de ediciones.",
+    "loadFailed": "No se pudo cargar la auditoría ({detail}).",
+    "description": "Las ediciones remotas de terapeutas se registran al guardar, crear o importar vocabulario.",
+    "refresh": "Actualizar",
+    "empty": "Aún no hay ediciones registradas.",
+    "eventCreated": "Tablero creado",
+    "eventImportObf": "Vocabulario OBF importado",
+    "eventImportObz": "Paquete OBZ importado",
+    "eventSaved": "Vocabulario guardado (v{version})"
+  },
+  "recordedMedia": {
+    "title": "Voz grabada",
+    "hint": "Las grabaciones de cuidadores se reproducen en lugar de la voz sintética: son esenciales para la entonación en GLP.",
+    "audioAttached": "Audio adjunto",
+    "record": "Grabar",
+    "stop": "Detener",
+    "uploadAudio": "Subir audio",
+    "removeAudio": "Quitar audio",
+    "videoTitle": "Video GLP (opcional)",
+    "videoAttached": "Video adjunto",
+    "uploadVideo": "Subir video",
+    "removeVideo": "Quitar video",
+    "signInToUpload": "Inicia sesión para subir grabaciones.",
+    "signInToRecord": "Inicia sesión para grabar voz.",
+    "noMicrophone": "El micrófono no está disponible en este navegador."
+  },
+  "scan": {
+    "row": "Fila {n}",
+    "topLeft": "Arriba a la izquierda",
+    "topRight": "Arriba a la derecha",
+    "bottomLeft": "Abajo a la izquierda",
+    "bottomRight": "Abajo a la derecha",
+    "region": "Región {n}",
+    "group": "Grupo {n}"
   }
 }

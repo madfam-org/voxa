@@ -26,6 +26,7 @@ import {
 } from '@/lib/editor-pin';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { PrivacySettingsSection } from '@/components/consent-choices';
+import { useAppDialog } from '@/components/app-dialog';
 import { neutral, surface } from '@/lib/tokens';
 
 interface SettingsPanelProps {
@@ -52,6 +53,7 @@ export function SettingsPanel({
   const tc = useTranslations('common');
   const tCvi = useTranslations('cviThemes');
   const tl = useTranslations('language');
+  const dialogs = useAppDialog();
 
   return (
     <aside
@@ -66,6 +68,7 @@ export function SettingsPanel({
         overflowY: 'auto',
       }}
     >
+      {dialogs.dialog}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <h2 style={{ margin: 0, fontSize: '1rem' }}>{t('title')}</h2>
         <button type="button" onClick={onClose} style={closeBtn}>
@@ -305,6 +308,17 @@ export function SettingsPanel({
         </>
       )}
 
+      <Field label={t('spanishAgreement')}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <input
+            type="checkbox"
+            checked={settings.spanishAgreement}
+            onChange={(e) => onChange({ spanishAgreement: e.target.checked })}
+          />
+          {t('spanishAgreementHint')}
+        </label>
+      </Field>
+
       <Field label={t('whisperMode')}>
         <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <input
@@ -380,14 +394,18 @@ export function SettingsPanel({
           <button
             type="button"
             style={closeBtn}
-            onClick={() => {
-              const pin = window.prompt(t('pinPrompt'));
+            onClick={async () => {
+              const pin = await dialogs.prompt(t('pinPrompt'), { secret: true });
               if (!pin) return;
+              if (!/^\d{4,8}$/.test(pin)) {
+                await dialogs.alert(t('pinInvalid'));
+                return;
+              }
               try {
                 setEditorPin(pin);
-                window.alert(t('pinSaved'));
-              } catch (err) {
-                window.alert((err as Error).message);
+                await dialogs.alert(t('pinSaved'));
+              } catch {
+                await dialogs.alert(t('pinStorageUnavailable'));
               }
             }}
           >
@@ -397,8 +415,8 @@ export function SettingsPanel({
             <button
               type="button"
               style={{ ...closeBtn, marginTop: 8, width: '100%' }}
-              onClick={() => {
-                if (window.confirm(t('pinRemoveConfirm'))) {
+              onClick={async () => {
+                if (await dialogs.confirm(t('pinRemoveConfirm'))) {
                   clearEditorPin();
                 }
               }}

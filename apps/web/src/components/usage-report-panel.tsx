@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import type { BoardButton } from '@voxa/core';
 import { buttonLabel } from '@/lib/board-utils';
 import { neutral, status, surface } from '@/lib/tokens';
@@ -32,6 +33,8 @@ export function UsageReportPanel({
   buttons,
   onClose,
 }: UsageReportPanelProps): React.ReactNode {
+  const t = useTranslations('usageReport');
+  const tc = useTranslations('common');
   const [days, setDays] = useState(7);
   const [summary, setSummary] = useState<ActivationSummary | null>(null);
   const [busy, setBusy] = useState(false);
@@ -39,7 +42,7 @@ export function UsageReportPanel({
 
   const load = useCallback(async () => {
     if (!accessToken) {
-      setError('Sign in to view usage reports.');
+      setError(t('signIn'));
       return;
     }
     setBusy(true);
@@ -53,17 +56,17 @@ export function UsageReportPanel({
       );
       if (!res.ok) {
         const body = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(body.error ?? `Report failed (${res.status})`);
+        throw new Error(body.error ?? String(res.status));
       }
       const body = (await res.json()) as { summary: ActivationSummary };
       setSummary(body.summary);
     } catch (err) {
       setSummary(null);
-      setError((err as Error).message);
+      setError(t('loadFailed', { detail: (err as Error).message }));
     } finally {
       setBusy(false);
     }
-  }, [accessToken, boardId, days]);
+  }, [accessToken, boardId, days, t]);
 
   useEffect(() => {
     void load();
@@ -74,7 +77,7 @@ export function UsageReportPanel({
   return (
     <aside
       role="dialog"
-      aria-label="Usage report"
+      aria-label={t('title')}
       style={{
         width: 320,
         background: surface.section,
@@ -85,32 +88,31 @@ export function UsageReportPanel({
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <h2 style={{ margin: 0, fontSize: '1rem' }}>Usage report</h2>
+        <h2 style={{ margin: 0, fontSize: '1rem' }}>{t('title')}</h2>
         <button type="button" onClick={onClose} style={closeBtn}>
-          Close
+          {tc('close')}
         </button>
       </div>
 
       <p style={{ margin: '0 0 12px', fontSize: '0.8125rem', color: neutral.muted, lineHeight: 1.5 }}>
-        Button presses recorded while the communicator has usage counts turned on: which button and
-        when. This report shows counts only.
+        {t('description')}
       </p>
 
       <label style={labelStyle}>
-        Period (days)
+        {t('period')}
         <select
           value={days}
           onChange={(e) => setDays(Number(e.target.value))}
           style={fieldStyle}
         >
-          <option value={7}>Last 7 days</option>
-          <option value={14}>Last 14 days</option>
-          <option value={30}>Last 30 days</option>
+          <option value={7}>{t('lastDays', { days: 7 })}</option>
+          <option value={14}>{t('lastDays', { days: 14 })}</option>
+          <option value={30}>{t('lastDays', { days: 30 })}</option>
         </select>
       </label>
 
       <button type="button" onClick={() => void load()} disabled={busy} style={{ ...closeBtn, width: '100%', marginBottom: 12 }}>
-        {busy ? 'Loading…' : 'Refresh'}
+        {busy ? tc('loading') : t('refresh')}
       </button>
 
       {error ? <p style={{ color: status.danger, fontSize: '0.875rem' }}>{error}</p> : null}
@@ -118,16 +120,16 @@ export function UsageReportPanel({
       {summary ? (
         <>
           <p style={{ margin: '0 0 12px', fontSize: '1.125rem', fontWeight: 700 }}>
-            {summary.totalActivations} activation{summary.totalActivations === 1 ? '' : 's'}
+            {t('total', { count: summary.totalActivations })}
           </p>
           {rows.length === 0 ? (
-            <p style={{ color: neutral.muted, fontSize: '0.875rem' }}>No activations in this period.</p>
+            <p style={{ color: neutral.muted, fontSize: '0.875rem' }}>{t('empty')}</p>
           ) : (
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
               <thead>
                 <tr>
-                  <th style={thStyle}>Button</th>
-                  <th style={{ ...thStyle, textAlign: 'right' }}>Count</th>
+                  <th style={thStyle}>{t('button')}</th>
+                  <th style={{ ...thStyle, textAlign: 'right' }}>{t('count')}</th>
                 </tr>
               </thead>
               <tbody>

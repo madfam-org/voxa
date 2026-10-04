@@ -2,6 +2,8 @@ import { Children, type CSSProperties, type ReactNode } from 'react';
 import { CVI_THEMES, type CviTheme } from './index.js';
 
 export interface BoardGridProps {
+  /** Accessible name of the grid, in the page language (e.g. "Tablero de comunicación"). */
+  ariaLabel?: string;
   rows: number;
   columns: number;
   theme?: CviTheme;
@@ -11,6 +13,7 @@ export interface BoardGridProps {
 }
 
 export function BoardGrid({
+  ariaLabel = 'Communication board',
   rows,
   columns,
   theme = 'cvi-dark',
@@ -56,7 +59,7 @@ export function BoardGrid({
   }
 
   return (
-    <div role="grid" aria-label="Communication board" aria-rowcount={rowCount} aria-colcount={columns} style={gridStyle}>
+    <div role="grid" aria-label={ariaLabel} aria-rowcount={rowCount} aria-colcount={columns} style={gridStyle}>
       {matrix.map((rowCells, rowIndex) => (
         <div role="row" aria-rowindex={rowIndex + 1} key={`row-${rowIndex}`} style={rowStyle}>
           {rowCells.map((cell, colIndex) => (
