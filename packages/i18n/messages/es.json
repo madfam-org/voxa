@@ -69,7 +69,7 @@
   "landing": {
     "heroEyebrow": "Comunicación aumentativa y alternativa",
     "heroTitle": "Toda persona merece una voz que acompañe su vida.",
-    "heroBody": "Las apps de CAA convierten toques, interruptores o mirada en lenguaje hablado — en casa, en terapia y en clase. Voxa es un tablero moderno con planificación motora, temas accesibles para CVI, sugerencias de palabras, escaneo por interruptor, agendas visuales y sincronización segura — diseñado para que las familias empiecen gratis y las instituciones escalen con confianza.",
+    "heroBody": "Voxa es un tablero de comunicación, primero en español, que convierte el toque directo, el escaneo por interruptor o la permanencia del puntero en voz, con la voz del dispositivo que elijas — en casa, en terapia y en clase. La permanencia funciona con ratón, puntero de cabeza o un seguidor ocular cuyo propio software mueve el puntero. Los tableros núcleo de 24, 36 y 60 celdas mantienen un mismo plan motor, con temas accesibles para CVI, agendas visuales, sugerencias de palabras que tú decides activar y sincronización en la nube — diseñado para que las familias empiecen gratis y las instituciones escalen con confianza.",
     "tryDemo": "Probar demo en vivo",
     "signInFree": "Entrar gratis (padres)",
     "whyChangingTitle": "Por qué la CAA cambia vidas",
@@ -318,7 +318,7 @@
     "accessMethod": "Método de acceso",
     "accessTouch": "Táctil",
     "accessSwitch": "Escaneo por interruptor",
-    "accessEye": "Selección por permanencia (mirada, puntero de cabeza)",
+    "accessEye": "Permanencia del puntero (ratón, puntero de cabeza o un seguidor ocular que mueve el puntero)",
     "scanSpeed": "Velocidad de escaneo ({ms} ms)",
     "scanOrder": "Orden de escaneo",
     "scanRow": "Fila por fila",

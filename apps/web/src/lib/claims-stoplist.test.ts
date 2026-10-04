@@ -29,6 +29,15 @@ const STOP_LIST: Array<{ label: string; pattern: RegExp }> = [
     pattern: /Tobii|IrisBond|eye-dwell|permanencia ocular|fixation oculaire/i,
   },
   {
+    // Gaze as an input of its own ("taps, switches, or gaze"; "dwell (eye
+    // gaze, head pointer)"). What ships: pointer dwell, which an eye tracker
+    // can drive when its own software moves the pointer, and the voxa:gaze
+    // event bridge for integrators. Qualified mentions of both stay allowed.
+    label: 'gaze as an input of its own (say pointer dwell, or the gaze event bridge for integrators)',
+    pattern:
+      /(?:switch(?:es)?|interruptor(?:es)?|interrupteurs?),?\s+(?:or|o|ou)\s+(?:(?:le|la|eye)\s+)?(?:gaze|mirada|regard)\b|\(\s*(?:eye\s+gaze|mirada|regard)\s*,/i,
+  },
+  {
     label: 'competitor product names in descriptive copy (describe the behaviour instead)',
     pattern: /Proloquo|Acapela|CoughDrop|Cboard/i,
   },
@@ -76,6 +85,12 @@ describe('i18n claims stop-list', () => {
       'Paneles de uso por usuario final',
       'Clásico claro (estilo Proloquo)',
       'editor para logopedas',
+      'AAC apps turn taps, switches, or gaze into spoken language',
+      'convierten toques, interruptores o mirada en lenguaje hablado',
+      'transforment les touches, interrupteurs ou le regard en langage parlé',
+      'Dwell selection (eye gaze, head pointer)',
+      'Selección por permanencia (mirada, puntero de cabeza)',
+      'Sélection par maintien (regard, pointeur de tête)',
       `mailto:${RETIRED_MAILBOX}`,
       '/app?' + ['upgrade', 'family'].join('='),
     ]) {

@@ -68,7 +68,7 @@
   "landing": {
     "heroEyebrow": "Augmentative & alternative communication",
     "heroTitle": "Every person deserves a voice that keeps up with their life.",
-    "heroBody": "AAC apps turn taps, switches, or gaze into spoken language — at home, in therapy, and in class. Voxa is a modern communication board with motor planning, CVI-friendly themes, word suggestions, switch scanning, visual schedules, and secure cloud sync — designed so families start free and institutions scale with confidence.",
+    "heroBody": "Voxa is a Spanish-first communication board that turns direct touch, switch scanning or pointer dwell into speech with the device voice you choose — at home, in therapy, and in class. Pointer dwell works with a mouse, a head pointer, or an eye tracker whose own software moves the pointer. Core boards in 24, 36 and 60 cells keep one motor plan, with CVI-friendly themes, visual schedules, word suggestions you choose to turn on, and cloud sync — designed so families start free and institutions scale with confidence.",
     "tryDemo": "Try the live demo",
     "signInFree": "Sign in free (parents)",
     "whyChangingTitle": "Why AAC is life-changing",
@@ -317,7 +317,7 @@
     "accessMethod": "Access method",
     "accessTouch": "Touch",
     "accessSwitch": "Switch scanning",
-    "accessEye": "Dwell selection (eye gaze, head pointer)",
+    "accessEye": "Pointer dwell (mouse, head pointer, or an eye tracker that moves the pointer)",
     "scanSpeed": "Scan speed ({ms} ms)",
     "scanOrder": "Scan order",
     "scanRow": "Row by row",
