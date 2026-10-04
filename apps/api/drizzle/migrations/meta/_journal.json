@@ -36,6 +36,13 @@
       "when": 1791092097258,
       "tag": "0004_consents",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791093006383,
+      "tag": "0005_purge_legacy_utterance_text",
+      "breakpoints": true
     }
   ]
 }
