@@ -31,7 +31,8 @@
     "privacy": "Privacy",
     "terms": "Terms",
     "accessibility": "Accessibility",
-    "footerTagline": "Voxa is augmentative and alternative communication (AAC) built for real families, therapists, and classrooms — motor planning, CVI-friendly design, and cloud sync when you are ready."
+    "footerTagline": "Voxa is augmentative and alternative communication (AAC) built for real families, therapists, and classrooms — motor planning, CVI-friendly design, and cloud sync when you are ready.",
+    "symbolCredits": "Symbol credits"
   },
   "consent": {
     "ariaLabel": "Privacy choices",
@@ -275,13 +276,6 @@
     "gazeTobii": "External voxa:gaze events (experimental)",
     "gazeHintTobii": "Lab inject: window.__voxaInjectGaze(x, y) or dispatch voxa:gaze CustomEvent.",
     "gazeHintPointer": "Hold pointer over a button to activate (simulates eye dwell).",
-    "symbolDiversity": "Symbol diversity (default skin tone)",
-    "skinWhite": "Light",
-    "skinAsian": "East Asian",
-    "skinMulatto": "Medium",
-    "skinAztec": "Tan",
-    "skinBlack": "Deep",
-    "symbolDiversityHint": "Default for new person symbols in the editor. Per-button overrides remain available.",
     "whisperMode": "Whisper mode (build without speaking)",
     "whisperHint": "Add words to the message bar without TTS",
     "hideSymbols": "Hide symbols (text-only CVI mode)",
@@ -419,6 +413,57 @@
           "content": "Email hola@madfam.io with the page or feature, assistive technology used, and steps to reproduce barriers. We aim to respond within five business days."
         }
       ]
+    },
+    "symbols": {
+      "title": "Symbol credits",
+      "lastUpdated": "October 3, 2026",
+      "intro": "The pictograms Voxa shows are Mulberry Symbols. This page credits their author and licence, as the licence requires.",
+      "sections": [
+        {
+          "title": "Mulberry Symbols",
+          "content": "Mulberry Symbols © Steve Lee, licensed under Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0). Voxa includes the complete set unmodified (version 3.6.1, 3,436 symbols) and serves it from its own servers.",
+          "links": [
+            {
+              "label": "mulberrysymbols.org",
+              "href": "https://mulberrysymbols.org"
+            },
+            {
+              "label": "Mulberry Symbols repository",
+              "href": "https://github.com/mulberrysymbols/mulberry-symbols"
+            },
+            {
+              "label": "CC BY-SA 4.0 licence",
+              "href": "https://creativecommons.org/licenses/by-sa/4.0/"
+            }
+          ]
+        },
+        {
+          "title": "Search keywords",
+          "content": "English and French names and the categories come from the Mulberry Symbols metadata (same licence). The Spanish keywords were prepared by the Voxa project for the core vocabulary and the most common words; they are pending review by a credentialed speech-language pathologist. The search index is published under CC BY-SA 4.0."
+        },
+        {
+          "title": "Your own photos",
+          "content": "Photos you upload remain yours. Voxa only shows them on your boards and includes them when you export those boards."
+        },
+        {
+          "title": "Exports",
+          "content": "When you export a board as OBF or OBZ, every Mulberry symbol carries its licence notice (CC BY-SA 4.0, Steve Lee, links to the licence and the source), so you can share it in line with the licence."
+        },
+        {
+          "title": "Earlier symbols",
+          "content": "Boards created before October 2026 could use pictograms from another library whose licence allows non-commercial use only. Voxa no longer shows, searches or exports them: those cells show their text only and the editor asks you to choose a new symbol."
+        },
+        {
+          "title": "Code",
+          "content": "Voxa's code is published under the Apache 2.0 licence. The symbols and the search index keep their CC BY-SA 4.0 licence.",
+          "links": [
+            {
+              "label": "Voxa source code",
+              "href": "https://github.com/madfam-org/voxa"
+            }
+          ]
+        }
+      ]
     }
   },
   "sync": {
@@ -446,5 +491,20 @@
     "createAccount": "Create free parent account",
     "representInstitution": "I represent a school or clinic",
     "keepExploring": "Keep exploring demo"
+  },
+  "symbols": {
+    "heading": "Symbol",
+    "library": "Mulberry Symbols library",
+    "searchPlaceholder": "Search symbols…",
+    "search": "Search",
+    "noResults": "No results. Try another word or upload a photo.",
+    "unavailable": "Symbol unavailable: choose a new one",
+    "customPhoto": "Your own photo",
+    "upload": "Upload photo (JPEG, PNG, WebP)",
+    "uploading": "Uploading…",
+    "remove": "Remove symbol",
+    "signInToUpload": "Sign in to upload a photo.",
+    "searchFailed": "Search failed ({status}).",
+    "credit": "Symbols: <symbols>Mulberry Symbols</symbols> © Steve Lee, <license>CC BY-SA 4.0</license>. <credits>Credits</credits>"
   }
 }

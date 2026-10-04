@@ -1,0 +1,37 @@
+Voxa — Copyright 2026 Innovaciones MADFAM S.A.S. de C.V.
+
+The Voxa source code is licensed under the Apache License, Version 2.0
+(see LICENSE). The Apache-2.0 licence covers the code only. The third-party
+assets below are distributed with Voxa under their own licences, which they
+keep; the Apache-2.0 licence does not apply to them.
+
+------------------------------------------------------------------------
+Mulberry Symbols
+------------------------------------------------------------------------
+Files:    apps/web/public/symbols/mulberry/**  (SVG pictograms; full upstream
+          set under EN/, plus 26 byte-identical copies named by Voxa core slug)
+Author:   Copyright 2018-2026 Steve Lee
+Licence:  Creative Commons Attribution-ShareAlike 4.0 International
+          (CC BY-SA 4.0) https://creativecommons.org/licenses/by-sa/4.0/
+Source:   https://mulberrysymbols.org
+          https://github.com/mulberrysymbols/mulberry-symbols
+          (version 3.6.1, commit 9cbab9f400c5de44e2bc58839cca07294aadb086)
+Changes:  none; the SVGs are vendored unmodified.
+Credits:  shown to users at /legal/symbols (es/en/fr) and in the symbol
+          editor; every exported OBF/OBZ image carries an OBF licence object.
+
+------------------------------------------------------------------------
+Mulberry symbol keyword index
+------------------------------------------------------------------------
+Files:    packages/symbols/src/mulberry-index.json
+          packages/symbols/data/mulberry-es.tsv
+Licence:  CC BY-SA 4.0 https://creativecommons.org/licenses/by-sa/4.0/
+Notes:    The index adapts the Mulberry Symbols metadata (English and French
+          names, categories and tags from upstream scripts/data/symbol-info.csv,
+          (c) Steve Lee, CC BY-SA 4.0), so it is shared under the same licence.
+          The Spanish keywords were curated by the Voxa project for the AAC core
+          and common words (no third-party Spanish label set was used) and are
+          released under CC BY-SA 4.0 with the index. They are pending review by
+          a credentialed speech-language pathologist.
+          Regenerate with packages/symbols/scripts/build-mulberry-index.mjs
+          (that script is code, Apache-2.0).
