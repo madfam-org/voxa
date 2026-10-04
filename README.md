@@ -22,7 +22,8 @@ Current market-leading AAC apps are siloed on iOS, have steep learning curves, l
 | **Interoperability** | Open Board Format 0.1 (`.obf` / `.obz`) import and export; imports always create new boards. Grid 3, Snap and TouchChat import in beta (the words of one page) |
 | **Accessibility** | Targets WCAG 2.2 Level AA — 1 cm minimum touch targets, one- and two-switch scanning, dwell selection for pointer-driving devices (head pointers, eye trackers in mouse mode) |
 | **Linguistics** | Motor-planning grids, GLP phrase chunks, Modified Fitzgerald Key color coding |
-| **AI** | LLM predictive text, PictoBERT symbol prediction, guarded symbol generation, bilingual neural TTS |
+| **Speech** | Speaks with the voices installed on the device: choose the voice per language (es-MX first), tune rate, pitch and volume, and get install guidance when no voice matches. Natural child voices are pending |
+| **AI** | LLM predictive text, PictoBERT symbol prediction, guarded symbol generation |
 
 ## Monorepo Structure
 

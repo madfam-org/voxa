@@ -44,6 +44,8 @@ Caregiver workflow:
 
 ## Bilingual Neural TTS
 
+> **Status (2026-10):** not built. Voxa speaks with the voices installed on the device, with voice choice and rate/pitch/volume tuning ([accessibility.md](./accessibility.md#speech-output-device-voices)). Licensed or neural voices, including natural child voices, are pending an owner decision. The plan below is the target, not the current state.
+
 - Primary engines: cloud neural TTS with regional variants (en-US, es-MX, es-US, etc.)
 - Mid-sentence language detection per word → route to correct voice
 - User-recorded GLP audio always takes precedence when configured

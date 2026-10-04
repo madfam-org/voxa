@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { readdirSync, readFileSync } from 'node:fs';
+import { join, relative } from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import type { BoardButton } from '@voxa/core';
 import {
@@ -184,5 +186,26 @@ describe('speech module: one voice and tuning for every utterance', () => {
       pitch: 1.4,
       volume: 1,
     });
+  });
+});
+
+describe('one speech path', () => {
+  it('no other web source builds or speaks an utterance', () => {
+    const root = join(import.meta.dirname, '..');
+    const files: string[] = [];
+    const walk = (dir: string) => {
+      for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        const full = join(dir, entry.name);
+        if (entry.isDirectory()) walk(full);
+        else if (/\.tsx?$/.test(entry.name) && !/\.test\.tsx?$/.test(entry.name)) files.push(full);
+      }
+    };
+    walk(root);
+    assert.ok(files.length > 50, `expected to scan apps/web/src, listed ${files.length}`);
+    const offenders = files
+      .map((file) => relative(root, file))
+      .filter((file) => file !== join('lib', 'play-button-speech.ts'))
+      .filter((file) => /speechSynthesis\.speak\(|new SpeechSynthesisUtterance\(/.test(readFileSync(join(root, file), 'utf8')));
+    assert.deepEqual(offenders, []);
   });
 });
