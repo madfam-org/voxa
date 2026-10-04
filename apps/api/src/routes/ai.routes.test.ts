@@ -1,11 +1,9 @@
 import assert from 'node:assert/strict';
 import { afterEach, before, beforeEach, describe, it } from 'node:test';
 
-// Entitlements fall back to the free tier (which includes `ai:basic`) without
-// calling out when no billing endpoint is configured, so the only network
-// request this route could make would be a model call.
-delete process.env.DHANAM_API_URL;
-delete process.env.DHANAM_API_TOKEN;
+// Entitlements come from the access token's `voxa_tier` claim (none here, so
+// the free tier, which includes `ai:basic`) and never from a network call, so
+// the only network request this route could make would be a model call.
 
 type TestApp = { request: (path: string, init?: RequestInit) => Response | Promise<Response> };
 let app: TestApp;
@@ -30,7 +28,7 @@ describe('AI prediction routes', () => {
   let outbound: string[] = [];
 
   before(async () => {
-    // Imported after the env cleanup above (a static import would be hoisted).
+    // Imported lazily, inside the suite.
     // Depending on the module loader the default export may arrive wrapped.
     const mod = (await import('../app.js')) as unknown as { default: TestApp | { default: TestApp } };
     app = 'request' in mod.default ? mod.default : mod.default.default;

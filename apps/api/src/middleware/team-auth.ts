@@ -1,12 +1,20 @@
 import type { Context, Next } from 'hono';
 import type { TeamRole } from '@voxa/core';
 import { devAuthEnabled, parseDevRole } from '../lib/dev-auth.js';
+import { VOXA_TIER_CLAIM } from '../lib/entitlement.js';
 import { mapJanuaRole, verifyAccessToken } from '../lib/janua.js';
 
 export interface TeamContext {
   userId: string;
   role: TeamRole;
   orgId?: string;
+  /**
+   * Raw `voxa_tier` claim of the verified access token (`undefined` when absent
+   * or for the local-development headers). Never read it directly: resolve it
+   * with `resolveEntitlement` (`src/lib/entitlement.ts`), which fails safe to
+   * `free`.
+   */
+  tierClaim?: unknown;
 }
 
 declare module 'hono' {
@@ -37,6 +45,7 @@ export function teamAuth() {
           userId: String(claims.sub),
           role: mapJanuaRole(claims),
           orgId: String(claims.org_id ?? claims.organization_id ?? '') || undefined,
+          tierClaim: claims[VOXA_TIER_CLAIM],
         });
         await next();
         return;
