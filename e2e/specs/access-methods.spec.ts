@@ -83,7 +83,15 @@ function position(board: StoredBoard, buttonId: string) {
  */
 async function seedOwner(name: string, role: 'editor' | 'admin'): Promise<{ owner: Owner; board: StoredBoard }> {
   const userId = `e2e-access-${name}`;
-  const token = api!.token({ sub: userId, email: `${name}@voxa.test`, name: `E2E ${name}`, roles: [`voxa:${role}`] });
+  // The API honours the motor-plan override only for an admin of the board's
+  // organization, so the owner's token carries one (the board takes it on create).
+  const token = api!.token({
+    sub: userId,
+    email: `${name}@voxa.test`,
+    name: `E2E ${name}`,
+    roles: [`voxa:${role}`],
+    org_id: 'e2e-access-org',
+  });
   const consent = await call(token, 'PUT', '/v1/consents', {
     consents: { ai_processing: false, usage_analytics: false },
   });

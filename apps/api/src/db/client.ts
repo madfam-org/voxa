@@ -33,6 +33,23 @@ export function poolMaxFromEnv(raw: string | undefined = process.env.DATABASE_PO
 let dbClientsCreated = 0;
 
 /**
+ * Test-only SQL observer. Receives the SQL text of every query the shared
+ * client runs, never the bound parameters (invariant 4: they are user data).
+ * Unset in production; `setQueryObserverForTests(null)` removes it.
+ */
+let queryObserver: ((sqlText: string) => void) | null = null;
+
+export function setQueryObserverForTests(observer: ((sqlText: string) => void) | null): void {
+  queryObserver = observer;
+}
+
+const observingLogger = {
+  logQuery(query: string): void {
+    queryObserver?.(query);
+  },
+};
+
+/**
  * Opens a NEW postgres-js pool. Callers own it and must `client.end()` it.
  * Request-path code must use getSharedDb() instead; calling this per request
  * leaks a pool per call.
@@ -43,7 +60,7 @@ export function createDb(databaseUrl: string, options: { max?: number } = {}) {
     max: options.max ?? poolMaxFromEnv(),
     idle_timeout: POOL_IDLE_TIMEOUT_SECONDS,
   });
-  const db = drizzle(client, { schema });
+  const db = drizzle(client, { schema, logger: observingLogger });
   return { db, client };
 }
 

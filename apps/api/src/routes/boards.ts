@@ -8,7 +8,7 @@ import {
   type Board,
   type StarterTemplateId,
 } from '@voxa/core';
-import { canAccessBoard, canEditBoard } from '../lib/board-access.js';
+import { canAccessBoard, canEditBoard, canOverrideMotorPlanning } from '../lib/board-access.js';
 import { maxBoardCount, resolveEntitlement } from '../lib/entitlement.js';
 import { saveMediaAsset } from '../lib/media-store.js';
 import { isImportFormat, MAX_IMPORT_BYTES, planImport, type ImportPlan } from '../store/board-import.js';
@@ -23,10 +23,8 @@ export const boardRoutes = new Hono();
 
 boardRoutes.get('/', async (c) => {
   const { userId, role, orgId } = c.get('team');
-  const all = await getStore().listBoards();
-  const boards = all.filter((board) =>
-    canAccessBoard(board.id as string, board.ownerUserId, userId, role, board.orgId, orgId),
-  );
+  // Filtered by the store (in SQL on PostgreSQL) with the canAccessBoard rule.
+  const boards = await getStore().listBoardsForActor({ userId, role, orgId });
   return c.json({ boards });
 });
 
@@ -79,10 +77,8 @@ boardRoutes.post('/', async (c) => {
   const contentLocale = isStarterContentLocale(body.contentLocale) ? body.contentLocale : 'es-MX';
 
   const entitlement = resolveEntitlement(team);
-  const owned = (await getStore().listBoards()).filter(
-    (board) => board.ownerUserId === userId,
-  );
-  if (owned.length >= maxBoardCount(entitlement)) {
+  const owned = await getStore().countBoardsOwnedBy(userId);
+  if (owned >= maxBoardCount(entitlement)) {
     return c.json({ error: 'Board limit reached for your plan', tier: entitlement.tier }, 402);
   }
 
@@ -122,6 +118,17 @@ boardRoutes.put('/:boardId', async (c) => {
   if (!canEditBoard(boardId, current.ownerUserId, userId, role, current.orgId, orgId)) {
     return c.json({ error: 'Forbidden' }, 403);
   }
+  // The motor-plan override is enforced here, not only in the client: asking
+  // for it without the right refuses the whole save.
+  if (body.forceMotorPlanning === true && !canOverrideMotorPlanning(role, current.orgId, orgId)) {
+    return c.json(
+      {
+        error: 'Only an administrator of this board\'s organization may override motor planning',
+        code: 'MOTOR_PLANNING_OVERRIDE_FORBIDDEN',
+      },
+      403,
+    );
+  }
 
   try {
     const result = await getStore().updateBoard(boardId, body, userId, {
@@ -131,9 +138,16 @@ boardRoutes.put('/:boardId', async (c) => {
     broadcastBoardEvent(result.event);
     return c.json(result);
   } catch (err) {
-    const error = unwrapDbError(err) as Error & { status?: number; details?: unknown };
+    const error = unwrapDbError(err) as Error & {
+      status?: number;
+      details?: unknown;
+      currentVersion?: number;
+    };
     if (error.status === 409) {
-      return c.json({ error: error.message }, 409);
+      return c.json(
+        { error: error.message, code: 'VERSION_CONFLICT', currentVersion: error.currentVersion },
+        409,
+      );
     }
     if (error.status === 422 && error.details) {
       return c.json({ error: error.message, ...(error.details as object) }, 422);
@@ -194,14 +208,12 @@ boardRoutes.post('/import/:format', importBodyLimit, async (c) => {
   const team = c.get('team');
   const { userId, role, orgId } = team;
   const bytes = new Uint8Array(await c.req.arrayBuffer());
-  const all = await getStore().listBoards();
+  // Scoped queries (never every board): what the importer may open, and a count.
   const readable = new Set(
-    all
-      .filter((board) => canAccessBoard(board.id as string, board.ownerUserId, userId, role, board.orgId, orgId))
-      .map((board) => board.id as string),
+    (await getStore().listBoardsForActor({ userId, role, orgId })).map((board) => board.id as string),
   );
   const entitlement = resolveEntitlement(team);
-  const owned = all.filter((board) => board.ownerUserId === userId).length;
+  const owned = await getStore().countBoardsOwnedBy(userId);
   const origin = new URL(c.req.url).origin;
 
   let plan: ImportPlan;

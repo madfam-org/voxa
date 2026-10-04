@@ -52,7 +52,7 @@ describe('API error paths with a wrapped database error', () => {
     await store.resetStoreForTests?.();
     useTestStore({
       ...store,
-      listBoards: async () => {
+      listBoardsForActor: async () => {
         throw wrappedDbError();
       },
       updateBoard: async () => {

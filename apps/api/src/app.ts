@@ -1,7 +1,8 @@
 import { createNodeWebSocket } from '@hono/node-ws';
 import { Hono } from 'hono';
 import { corsMiddleware } from './middleware/cors.js';
-import { rateLimit } from './middleware/rate-limit.js';
+import { requestBodyLimits } from './middleware/body-limit.js';
+import { authFailureLimit, ipRateLimit, userRateLimit } from './middleware/rate-limit.js';
 import { API_ROBOTS_TXT, securityHeaders } from './middleware/security-headers.js';
 import { teamAuth } from './middleware/team-auth.js';
 import { aiRoutes } from './routes/ai.js';
@@ -16,8 +17,8 @@ import { buildSha } from './lib/build-info.js';
 import { unwrapDbError } from './lib/db-errors.js';
 import { devAuthEnabled } from './lib/dev-auth.js';
 import { resolveWsTeam } from './lib/ws-auth.js';
-import { checkStoreReady, getStore, getStoreDriver } from './store/index.js';
-import { getSyncHubMode, presenceCount, registerClient, unregisterClient } from './ws/sync-hub.js';
+import { checkStoreReady, getStore, getStoreDriver, storeIsAcceptable } from './store/index.js';
+import { getSyncHubStatus, presenceCount, registerClient, unregisterClient } from './ws/sync-hub.js';
 
 export const API_VERSION = '1.0.0';
 
@@ -39,8 +40,16 @@ app.onError((err, c) => {
 
 app.use('*', securityHeaders());
 app.use('*', corsMiddleware());
-app.use('/v1/*', rateLimit());
+// Order matters: the address limit counts requests without credentials (a
+// proxy carrying many users' tokens shares one address), the body ceiling
+// refuses oversized bodies before anything reads them, the failure limit
+// counts 401s per address around teamAuth, and the user limits key on the
+// identity teamAuth verified. See src/middleware/rate-limit.ts.
+app.use('/v1/*', ipRateLimit());
+app.use('/v1/*', requestBodyLimits());
+app.use('/v1/*', authFailureLimit());
 app.use('/v1/*', teamAuth());
+app.use('/v1/*', userRateLimit());
 
 app.get('/robots.txt', (c) => c.text(API_ROBOTS_TXT));
 
@@ -54,22 +63,30 @@ app.get('/health', (c) =>
   }),
 );
 
+// Readiness: the store answers, and it is a durable one (the JSON file store
+// is never ready in production). An unreachable Redis does not make a replica
+// unready (it degrades to local fan-out); it shows as `syncHubWarning`.
 app.get('/health/ready', async (c) => {
-  const ready = await checkStoreReady();
-  if (!ready) {
+  const store = getStoreDriver();
+  const hub = getSyncHubStatus();
+  const details = {
+    service: 'voxa-api',
+    build: buildSha(),
+    store,
+    syncHub: hub.mode,
+    ...(hub.warning ? { syncHubWarning: hub.warning } : {}),
+  };
+  if (!storeIsAcceptable()) {
     return c.json(
-      { status: 'unavailable', service: 'voxa-api', build: buildSha(), store: getStoreDriver() },
+      { status: 'unavailable', ...details, reason: 'The file store is not allowed in production' },
       503,
     );
   }
-  return c.json({
-    status: 'ready',
-    service: 'voxa-api',
-    build: buildSha(),
-    store: getStoreDriver(),
-    syncHub: getSyncHubMode(),
-    authEnforced: !devAuthEnabled(),
-  });
+  const ready = await checkStoreReady();
+  if (!ready) {
+    return c.json({ status: 'unavailable', ...details }, 503);
+  }
+  return c.json({ status: 'ready', ...details, authEnforced: !devAuthEnabled() });
 });
 
 app.route('/v1/boards', boardRoutes);
@@ -117,12 +134,12 @@ app.get(
             boardId,
             send: (data: string) => ws.send(data),
           };
-          registerClient(clientRef);
+          await registerClient(clientRef);
           ws.send(
             JSON.stringify({
               type: 'connected',
               boardId,
-              presence: presenceCount(boardId),
+              presence: await presenceCount(boardId),
             }),
           );
         })();

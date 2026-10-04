@@ -10,16 +10,28 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
 
-export const boards = pgTable('boards', {
-  id: text('id').primaryKey(),
-  name: text('name').notNull(),
-  profileId: text('profile_id').notNull(),
-  ownerUserId: text('owner_user_id'),
-  orgId: text('org_id'),
-  grid: jsonb('grid').notNull(),
-  version: integer('version').notNull().default(1),
-  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'string' }).notNull(),
-});
+export const boards = pgTable(
+  'boards',
+  {
+    id: text('id').primaryKey(),
+    name: text('name').notNull(),
+    profileId: text('profile_id').notNull(),
+    ownerUserId: text('owner_user_id'),
+    orgId: text('org_id'),
+    grid: jsonb('grid').notNull(),
+    // Optional board kind ('grid' | 'literacy-keyboard' | 'visual-schedule').
+    layout: text('layout'),
+    // Optional per-board display preferences (BoardDisplayPreferences).
+    display: jsonb('display'),
+    version: integer('version').notNull().default(1),
+    updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'string' }).notNull(),
+  },
+  // Board list (owner or organization) and the plan's board-count limit.
+  (table) => [
+    index('boards_owner_user_idx').on(table.ownerUserId),
+    index('boards_org_idx').on(table.orgId),
+  ],
+);
 
 export const boardMembers = pgTable(
   'board_members',
@@ -120,5 +132,9 @@ export const mediaAssets = pgTable(
     data: text('data').notNull(),
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'string' }).notNull(),
   },
-  (table) => [index('media_assets_board_idx').on(table.boardId)],
+  (table) => [
+    index('media_assets_board_idx').on(table.boardId),
+    // Per-user media quota: sum(size_bytes) by owner.
+    index('media_assets_owner_user_idx').on(table.ownerUserId),
+  ],
 );

@@ -5,7 +5,9 @@ import * as localHub from './hub.js';
 import {
   broadcastBoardEvent,
   getSyncHubMode,
+  getSyncHubStatus,
   initSyncHub,
+  presenceCount,
   registerClient,
   shutdownSyncHub,
   unregisterClient,
@@ -47,5 +49,40 @@ describe('sync hub', () => {
     assert.equal(messages.length, 1);
     assert.match(messages[0] ?? '', /"type":"sync"/);
     unregisterClient(client);
+  });
+
+  it('an unreachable Redis degrades to local mode with a warning instead of failing startup', async () => {
+    // Port 1 on loopback refuses connections at once.
+    process.env.REDIS_URL = 'redis://127.0.0.1:1/0';
+    const started = Date.now();
+    await initSyncHub();
+    assert.ok(Date.now() - started < 10_000);
+    assert.equal(getSyncHubMode(), 'local');
+    const status = getSyncHubStatus();
+    assert.equal(status.redisConfigured, true);
+    assert.match(status.warning ?? '', /Redis is unreachable/);
+
+    // Local fan-out and local presence keep working.
+    const boardId = 'board-degraded' as BoardId;
+    const messages: string[] = [];
+    const client: localHub.WsClient = { boardId, send: (data) => messages.push(data) };
+    await registerClient(client);
+    assert.equal(await presenceCount(boardId), 1);
+    broadcastBoardEvent({
+      id: 'evt-degraded',
+      type: 'board.updated',
+      boardId,
+      version: 3,
+      actorUserId: 'editor-1',
+      timestamp: new Date().toISOString(),
+    });
+    assert.equal(messages.length, 1);
+    unregisterClient(client);
+  });
+
+  it('without REDIS_URL there is no warning', async () => {
+    delete process.env.REDIS_URL;
+    await initSyncHub();
+    assert.deepEqual(getSyncHubStatus(), { mode: 'local', redisConfigured: false });
   });
 });

@@ -20,11 +20,12 @@ import {
   type SyncEvent,
   type TeamRole,
 } from '@voxa/core';
-import { canEditBoard } from '../lib/board-access.js';
+import { canAccessBoard, canEditBoard } from '../lib/board-access.js';
 import {
   applyCreateBoard,
   applyDeleteBoard,
   applyUpdateBoard,
+  assertSyncEventBatch,
   exportBoardObf,
   exportBoardObz,
   trimSyncEvents,
@@ -105,8 +106,14 @@ export function createFileBoardStore(initialState?: StoreState): BoardStore {
   }
 
   return {
-    async listBoards() {
-      return Object.values(state.boards);
+    async listBoardsForActor({ userId, role, orgId }) {
+      return Object.values(state.boards).filter((board) =>
+        canAccessBoard(board.id as string, board.ownerUserId, userId, role, board.orgId, orgId),
+      );
+    },
+
+    async countBoardsOwnedBy(userId: string) {
+      return Object.values(state.boards).filter((board) => board.ownerUserId === userId).length;
     },
 
     async getBoard(boardId: string) {
@@ -148,6 +155,7 @@ export function createFileBoardStore(initialState?: StoreState): BoardStore {
     },
 
     async appendSyncEvents(events: SyncEvent[]) {
+      assertSyncEventBatch(events);
       for (const event of events) recordEvent(event);
       persist();
     },

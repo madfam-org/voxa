@@ -171,7 +171,32 @@ The API selects a store driver at startup:
 | Set | PostgreSQL | Production and staging (durable) |
 | Unset | JSON file (`boards.json` under `VOXA_DATA_DIR`, default `./data`) | Local dev and tests |
 
-Without `DATABASE_URL`, pods fall back to the file store on the `/app/data` `emptyDir` volume: data is lost on restart and each replica has its own copy. The file store replaces `boards.json` atomically (temp file, `fsync`, `rename`), so a crash mid-write never leaves a truncated file.
+With `NODE_ENV=production` and no `DATABASE_URL` the API **refuses to start** (exit 1, with a message naming `DATABASE_URL`): the file store would live on the `/app/data` `emptyDir` volume, lose its data on restart and keep one copy per replica. `/health/ready` also answers 503 on the file store in production. Outside production the file store replaces `boards.json` atomically (temp file, `fsync`, `rename`), so a crash mid-write never leaves a truncated file.
+
+### Concurrent edits
+
+Board writes are compare-and-set: the API reads the board by id, applies the change, then updates the row only if its `version` is unchanged (`UPDATE … WHERE id = $1 AND version = $2 RETURNING`), and records the sync event in the same transaction. Of two writers on the same version exactly one wins; the other gets **409** `{"code":"VERSION_CONFLICT","currentVersion":N}`. A PUT without `expectedVersion` re-reads and retries up to three times instead. Board lists and the plan's board limit run scoped SQL (owner, or organization for editors and admins; `count(*)`), never a scan of every board.
+
+### Real-time co-editing across replicas (Redis)
+
+Production runs two API replicas. WebSocket clients connect to either, so board changes must fan out through Redis: with `REDIS_URL` set and reachable, each replica publishes its `board.*` events on one channel and relays the others', and presence (`{"type":"connected","presence":N}`) counts clients on every replica (a sorted set per board with 30 s expiring entries, so a crashed replica's clients age out). `/health/ready` then reports `"syncHub":"redis"`.
+
+- `REDIS_URL` is a key of the `voxa-secrets` Secret (the shared Redis requires a password and gives each app its own DB index, so the URL is never a literal in a manifest). Both API Deployments bind it explicitly with `optional: true`.
+- Without it, or with Redis unreachable, the API keeps serving in **local** mode (events reach only clients on the same replica), keeps reconnecting in the background, switches to Redis by itself, and `/health/ready` stays 200 with a `syncHubWarning`. An unreachable Redis never makes a pod unready.
+- The `allow-data-egress` NetworkPolicy already allows TCP 6379 to the `data` namespace; the data side admits namespaces labelled for data access, the same label that already admits Postgres.
+- Verify after binding: `REQUIRE_REDIS=1 ./scripts/launch/verify-prod-redis.sh`.
+
+### Request limits
+
+| Variable | Default | Notes |
+|----------|---------|-------|
+| `RATE_LIMIT_IP_PER_MINUTE` | `600` | Per client address (`CF-Connecting-IP`, else the socket peer; never `X-Forwarded-For`), counting only requests **without** a bearer token. Authenticated traffic is never limited per address: the web server proxies browser calls, so all users can share one address. |
+| `RATE_LIMIT_AUTH_FAILURES_PER_MINUTE` | `60` | Per client address: requests that end in 401. Past it, failing requests get 429; a token that verifies always passes. Bounds token spraying. |
+| `RATE_LIMIT_PER_MINUTE` | `300` | Per verified user id, every route except media reads. A signed-in selection costs about three requests (two predictions, one activation). |
+| `RATE_LIMIT_MEDIA_PER_MINUTE` | `600` | Per verified user id, `GET /v1/media/:id` only (opening a board loads all its pictures at once; browsers cache them afterwards). |
+| `MEDIA_QUOTA_BYTES_PER_USER` | `524288000` (500 MB) | Total uploaded media per user; summed from stored sizes, 413 `MEDIA_QUOTA_EXCEEDED` past it. |
+
+Both rate limits are in memory and per replica (two replicas allow up to twice the rate); they are abuse ceilings, not quotas. Body ceilings (413 `PAYLOAD_TOO_LARGE`, checked from `Content-Length` before reading, or cut off at the limit for chunked bodies): 1 MB for JSON; 51 MB for `POST /v1/media` (largest type, video, 50 MB); an outer 51 MB for `POST /v1/boards/import/:format` (the route itself refuses more than 30 MB with 400 `ARCHIVE_TOO_LARGE`). Uploads must match their declared type by magic bytes (415 `MEDIA_TYPE_MISMATCH`), and media is served with `X-Content-Type-Options: nosniff` and `Content-Disposition: inline`.
 
 ### How the API reaches Postgres
 
@@ -197,7 +222,7 @@ The Postgres server is shared with other services under a fixed connection limit
 |----------|---------|-------|
 | `DATABASE_POOL_MAX` | `5` | Max pooled connections per API process. |
 | `DATABASE_STARTUP_RETRY_MS` | `30000` | Total time startup retries connection-level errors. `0` disables the retry. |
-| `VOXA_DATA_DIR` | `./data` | File-store directory when `DATABASE_URL` is unset. |
+| `VOXA_DATA_DIR` | `./data` | File-store directory when `DATABASE_URL` is unset (never in production). |
 
 ### Managed Postgres addon (alternative)
 

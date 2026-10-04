@@ -19,8 +19,29 @@ export function getStore(): BoardStore {
   return activeStore;
 }
 
+/** Message of the startup refusal when production has no database (A-020). */
+export const PRODUCTION_REQUIRES_DATABASE_MESSAGE =
+  'DATABASE_URL is required when NODE_ENV=production: refusing to start on the local JSON file store, ' +
+  'whose data would live on the container filesystem and be lost on restart.';
+
+function isProduction(): boolean {
+  return process.env.NODE_ENV === 'production';
+}
+
+/**
+ * True when the active store keeps data durably. The JSON file store is for
+ * local development and tests; in production it is never acceptable.
+ */
+export function storeIsAcceptable(): boolean {
+  return driver === 'postgres' || !isProduction();
+}
+
 export async function initStore(): Promise<StoreDriver> {
   const databaseUrl = process.env.DATABASE_URL?.trim();
+
+  if (!databaseUrl && isProduction()) {
+    throw new Error(PRODUCTION_REQUIRES_DATABASE_MESSAGE);
+  }
 
   if (databaseUrl) {
     // First database contact. A transient connection refusal at startup is

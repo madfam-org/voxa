@@ -19,7 +19,11 @@ if [[ -z "${ready_body}" ]]; then
 fi
 
 sync_hub="$(python3 -c "import json,sys; print(json.load(sys.stdin).get('syncHub','unknown'))" <<<"${ready_body}")"
+sync_warning="$(python3 -c "import json,sys; print(json.load(sys.stdin).get('syncHubWarning',''))" <<<"${ready_body}")"
 echo "INFO prod syncHub=${sync_hub} (${API_BASE})"
+if [[ -n "${sync_warning}" ]]; then
+  echo "WARN ${sync_warning}"
+fi
 
 if [[ "${sync_hub}" == "redis" ]]; then
   echo "OK   Production syncHub is redis (multi-replica co-edit ready)"
