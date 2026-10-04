@@ -22,6 +22,6 @@ images:
 - digest: sha256:79be117a0475835bfd01db9fee102d54bd991c9e016350d2dcf50f37b04f4261
   name: voxa-api
   newName: ghcr.io/madfam-org/voxa/voxa-api
-- digest: sha256:908d563dab5e0b31cd2071c86090c692db86e10ec220984df2205b580e8055a9
+- digest: sha256:4a661a59793517eaae3d56ff31ef99984bf950a26d098bc585813624778b4b68
   name: voxa-web
   newName: ghcr.io/madfam-org/voxa/voxa-web
