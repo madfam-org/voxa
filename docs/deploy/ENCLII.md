@@ -130,11 +130,13 @@ enclii onboard --repo madfam-org/voxa --project voxa --manifest-path k8s/product
 
 Workload `Deployment` YAML must contain `@sha256:` references, not short names like `voxa-web`. CI updates both `kustomization.yaml` and the deployment files on each build.
 
-### Kyverno blocks sync (`verify-image-signatures`, GHCR DENIED)
+### Kyverno blocks sync (`verify-image-signatures`)
 
-Until `ghcr.io/madfam-org/voxa/voxa-web` and `voxa-api` are **public** GitHub Packages, Kyverno keyless verification cannot pull manifests. A temporary `PolicyException` in `k8s/*/signature-policyexception.yaml` (sync-wave `-1`) unblocks rollout.
+Both Voxa GHCR packages are public, and every deploy workflow (production and staging) signs the pushed digest with cosign keyless (GitHub Actions OIDC, recorded in the public Rekor log) **before** it pins the digest in `k8s/`. Kyverno verifies Voxa images like any other workload: the repository carries no `PolicyException` (the June 2026 stopgap from when the packages were private was removed in October 2026).
 
-**Cleanup:** GitHub → madfam-org → Packages → each Voxa image → **Change visibility to public**, then remove the PolicyException manifests and sync.
+If admission denies a Voxa pod with `no matching signatures`, the pinned digest was not signed: rerun the deploy workflow's failed jobs. To check a digest anonymously, `GET https://ghcr.io/v2/madfam-org/voxa/<image>/manifests/sha256-<digest>.sig` with an anonymous pull token must answer 200. Do not re-add a `PolicyException`: it would also admit any future unsigned image.
+
+Signature verification makes Kyverno stamp a digest-keyed `kyverno.io/verify-images` annotation on the Deployments and deny any request that changes it. The Argo CD apps must therefore diff client-side: an app whose `argocd.argoproj.io/compare-options` contains `ServerSideDiff=true` sends the git target (new digest, no annotation) through admission on every diff, is denied, and the whole app stops syncing (ComparisonError). Runtime-registered apps get client-side diff on the next Enclii `onboard/ensure`.
 
 ### API pod CrashLoop
 

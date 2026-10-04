@@ -7,7 +7,6 @@ resources:
 - namespace.yaml
 - network-policies.yaml
 - pod-disruption-budgets.yaml
-- signature-policyexception.yaml
 - voxa-api-deployment.yaml
 - voxa-api-service.yaml
 - voxa-web-deployment.yaml
