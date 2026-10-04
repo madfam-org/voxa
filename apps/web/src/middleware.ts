@@ -1,5 +1,5 @@
 import createMiddleware from 'next-intl/middleware';
-import { NextResponse, type NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { routing } from '@/i18n/routing';
 import { isOidcConfigured } from '@/lib/auth';
 import { buildContentSecurityPolicy, generateNonce } from '@/lib/security-headers';
@@ -40,11 +40,10 @@ function bypassIntlMiddleware(pathname: string): boolean {
 function contentSecurityPolicy(nonce: string): string {
   const isDev = process.env.NODE_ENV === 'development';
   return buildContentSecurityPolicy(nonce, {
-    // Same fallback the browser code uses outside production; production
-    // images always set NEXT_PUBLIC_API_URL (apps/web/Dockerfile).
-    apiUrl:
-      process.env.NEXT_PUBLIC_API_URL ??
-      (process.env.NODE_ENV === 'production' ? undefined : 'http://localhost:4000'),
+    // The same expression the browser code uses for the API base (inlined at
+    // build time), so the policy allows exactly the origin the app calls.
+    // Production images always set NEXT_PUBLIC_API_URL (apps/web/Dockerfile).
+    apiUrl: process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000',
     oidcIssuers: [process.env.NEXT_PUBLIC_OIDC_ISSUER, process.env.OIDC_ISSUER],
     isDev,
   });
@@ -72,10 +71,14 @@ export function middleware(request: NextRequest) {
   // scripts it renders; next-intl forwards these request headers.
   const nonce = generateNonce();
   const csp = contentSecurityPolicy(nonce);
-  request.headers.set('x-nonce', nonce);
-  request.headers.set('Content-Security-Policy', csp);
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-nonce', nonce);
+  requestHeaders.set('Content-Security-Policy', csp);
 
-  const intlResponse = withCsp(intlMiddleware(request), csp);
+  const intlResponse = withCsp(
+    intlMiddleware(new NextRequest(request, { headers: requestHeaders })),
+    csp,
+  );
 
   if (!isOidcConfigured() || isPublicPath(pathname)) {
     return intlResponse;
