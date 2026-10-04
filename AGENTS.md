@@ -238,24 +238,6 @@ pnpm build
     `apps/web/src/lib/speech-voices.test.ts`,
     `apps/web/src/lib/play-button-speech.test.ts` and
     `e2e/specs/voice-choice.spec.ts`.
-13. **No token in page JavaScript.** The web signs in with Auth.js and the
-    Janua OIDC provider (`apps/web/src/auth.ts`); the session is an encrypted
-    httpOnly cookie (`AUTH_SECRET`, never the Janua client secret) holding
-    Janua's tokens. `GET /api/auth/session` returns identity and role only.
-    Browser code calls the API only through the same-origin proxy
-    `/api/v1/*` (`src/lib/api-proxy.ts`: plain `/v1/` paths, same-origin writes,
-    no cookie forwarded) or `/api/media/:id`; never `NEXT_PUBLIC_API_URL`
-    directly with a bearer. The WebSocket opens with a single-use ticket
-    (`POST /v1/ws-ticket`, `ws_tickets` table; never `?accessToken=`) and closes
-    at the token's `exp`. Sign-out is `POST /auth/signout` with RP-initiated
-    logout; account switching uses `prompt=select_account` / `prompt=login`;
-    both purge the account's local data, and queued offline saves are sent
-    only for the account that made them. Tested in
-    `apps/web/src/lib/auth-session.test.ts`, `api-proxy.test.ts`,
-    `sign-out.test.ts`, `account-switch.test.ts`, `account-data.test.ts`,
-    `pending-board-save.test.ts`, `apps/api/src/lib/ws-auth.test.ts` and
-    `apps/api/src/routes/ws-ticket.routes.test.ts` / `ws-ticket.pg.test.ts`.
-
 13. **Board writes are compare-and-set; reads are scoped.** The PostgreSQL
     store reads one board by id, applies the change, and updates the row only
     `WHERE id = $1 AND version = $2`, with the sync event in the same
@@ -325,6 +307,23 @@ pnpm build
     `/demo`), writes the existing communicator settings, and offers an
     existing board instead of a second one (no 402 dead end). Tested in
     `apps/web/src/lib/first-run.test.ts` and `e2e/specs/first-run.spec.ts`.
+17. **No token in page JavaScript.** The web signs in with Auth.js and the
+    Janua OIDC provider (`apps/web/src/auth.ts`); the session is an encrypted
+    httpOnly cookie (`AUTH_SECRET`, never the Janua client secret) holding
+    Janua's tokens. `GET /api/auth/session` returns identity and role only.
+    Browser code calls the API only through the same-origin proxy
+    `/api/v1/*` (`src/lib/api-proxy.ts`: plain `/v1/` paths, same-origin writes,
+    no cookie forwarded) or `/api/media/:id`; never `NEXT_PUBLIC_API_URL`
+    directly with a bearer. The WebSocket opens with a single-use ticket
+    (`POST /v1/ws-ticket`, `ws_tickets` table; never `?accessToken=`) and closes
+    at the token's `exp`. Sign-out is `POST /auth/signout` with RP-initiated
+    logout; account switching uses `prompt=select_account` / `prompt=login`;
+    both purge the account's local data, and queued offline saves are sent
+    only for the account that made them. Tested in
+    `apps/web/src/lib/auth-session.test.ts`, `api-proxy.test.ts`,
+    `sign-out.test.ts`, `account-switch.test.ts`, `account-data.test.ts`,
+    `pending-board-save.test.ts`, `apps/api/src/lib/ws-auth.test.ts` and
+    `apps/api/src/routes/ws-ticket.routes.test.ts` / `ws-ticket.pg.test.ts`.
 
 ## Guards
 
@@ -465,7 +464,7 @@ invariant 6).
   (`X-Voxa-User-Id`/`X-Voxa-Role`) need `VOXA_DEV_AUTH=true` and never work in
   production. The web signs in through Auth.js with the Janua OIDC provider
   (`AUTH_SECRET`, `AUTH_JANUA_ISSUER`, `AUTH_JANUA_CLIENT_ID`,
-  `AUTH_JANUA_CLIENT_SECRET`; invariant 13). Contract:
+  `AUTH_JANUA_CLIENT_SECRET`; invariant 17). Contract:
   [Janua ecosystem integration guide](https://github.com/madfam-org/janua/blob/main/docs/guides/ECOSYSTEM_INTEGRATION.md).
   Voxa setup: [docs/auth/JANUA.md](./docs/auth/JANUA.md).
 - **Entitlements (Janua claim, ADR-006).** The plan tier is a claim on the
