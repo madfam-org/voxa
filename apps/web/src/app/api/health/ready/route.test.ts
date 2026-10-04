@@ -44,6 +44,30 @@ describe('GET /api/health/ready', () => {
     });
   }
 
+  it('is not ready with a malformed AUTH_PUBLIC_HOSTS entry, and names the setting only', async () => {
+    const savedHosts = process.env.AUTH_PUBLIC_HOSTS;
+    try {
+      setEnv(COMPLETE);
+      process.env.AUTH_PUBLIC_HOSTS = 'voxa.example.test, https://app.example.test/path';
+      const res = await GET();
+      assert.equal(res.status, 503);
+      const text = await res.text();
+      assert.ok(!text.includes('app.example.test'));
+      assert.deepEqual(JSON.parse(text), {
+        status: 'unavailable',
+        service: 'voxa-web',
+        missing: [],
+        invalid: ['AUTH_PUBLIC_HOSTS'],
+      });
+
+      process.env.AUTH_PUBLIC_HOSTS = 'voxa.example.test, app.example.test';
+      assert.equal((await GET()).status, 200);
+    } finally {
+      if (savedHosts === undefined) delete process.env.AUTH_PUBLIC_HOSTS;
+      else process.env.AUTH_PUBLIC_HOSTS = savedHosts;
+    }
+  });
+
   it('treats a blank value as missing', async () => {
     setEnv({ ...COMPLETE, AUTH_SECRET: '   ' });
     const res = await GET();

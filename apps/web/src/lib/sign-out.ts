@@ -5,6 +5,7 @@ import {
   useSecureAuthCookies,
 } from './auth-env';
 import { buildEndSessionUrl, januaEndpoints } from './janua-oidc';
+import { resolvePublicOrigin, unknownHostResponse } from './public-origin';
 import { expireSessionCookies, parseCookieHeader } from './session-cookies';
 
 /**
@@ -30,18 +31,6 @@ export interface SignOutDeps {
   fetchImpl?: typeof fetch;
 }
 
-/** The origin the browser addressed (forwarded headers first), if it can be read. */
-function requestOrigin(request: Request): string | undefined {
-  const host = request.headers.get('x-forwarded-host')?.split(',')[0]?.trim() || request.headers.get('host')?.trim();
-  if (!host) return undefined;
-  const proto = request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim() || new URL(request.url).protocol.replace(':', '');
-  try {
-    return new URL(`${proto}://${host}`).origin;
-  } catch {
-    return undefined;
-  }
-}
-
 export async function signOutResponse(request: Request, deps: SignOutDeps): Promise<Response> {
   if (request.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
@@ -57,12 +46,16 @@ export async function signOutResponse(request: Request, deps: SignOutDeps): Prom
   }
 
   const env = deps.env ?? process.env;
+  // The sign-in page of the host the browser used, when that host is
+  // allow-listed (AUTH_PUBLIC_HOSTS); else AUTH_URL; else nothing is built.
+  const publicOrigin = resolvePublicOrigin(request.headers, env);
+  if (!publicOrigin.ok) return unknownHostResponse();
   const idToken = await deps.idToken().catch(() => undefined);
   const jar = parseCookieHeader(request.headers.get('cookie'));
   const cleared = expireSessionCookies(jar, sessionCookieName(env), useSecureAuthCookies(env));
 
   const client = januaClientConfig(env);
-  const redirectUri = postLogoutRedirectUri(env, requestOrigin(request));
+  const redirectUri = postLogoutRedirectUri(env, publicOrigin.origin);
   const location = client
     ? buildEndSessionUrl({
         endSessionEndpoint: (await januaEndpoints(client.issuer, deps.fetchImpl)).endSessionEndpoint,

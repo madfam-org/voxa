@@ -191,12 +191,13 @@ describe('isSameOriginRequest', () => {
     assert.equal(isSameOriginRequest(req, env), true);
   });
 
-  it('accepts the forwarded host behind a proxy', () => {
+  it('accepts the forwarded host behind a proxy when it is allow-listed (AUTH_PUBLIC_HOSTS)', () => {
     const req = new Request('http://0.0.0.0:3000/api/v1/boards', {
       method: 'POST',
       headers: { Origin: 'https://app.example.test', Host: '10.0.0.5:3000', 'X-Forwarded-Host': 'app.example.test' },
     });
-    assert.equal(isSameOriginRequest(req, env), true);
+    assert.equal(isSameOriginRequest(req, { ...env, AUTH_PUBLIC_HOSTS: 'voxa.example.test,app.example.test' }), true);
+    assert.equal(isSameOriginRequest(req, env), false);
   });
 
   it('refuses another site even when it reaches the same host', () => {

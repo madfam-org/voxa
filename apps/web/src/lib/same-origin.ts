@@ -1,4 +1,5 @@
 import { appBaseUrl } from './auth-env';
+import { isAllowedPublicHost, requestedHost } from './public-origin';
 
 /**
  * CSRF guard for cookie-authenticated, state-changing requests: the request
@@ -6,11 +7,12 @@ import { appBaseUrl } from './auth-env';
  * PUT, PATCH and DELETE made by fetch or a form; `Sec-Fetch-Site` is the
  * fallback when a client omits `Origin`.
  *
- * Allowed: the public origin (AUTH_URL / NEXT_PUBLIC_BASE_URL), the origin the
- * request URL names, and an `Origin` whose host equals the request's
- * `X-Forwarded-Host` or `Host` (the check Next.js applies to server actions).
- * A server bound to 0.0.0.0 sees request URLs on another host name than the
- * browser used, which is why the Host comparison is needed.
+ * Allowed: the configured origin (AUTH_URL / NEXT_PUBLIC_BASE_URL), and an
+ * `Origin` whose host equals the request's first `X-Forwarded-Host` or `Host`
+ * (the check Next.js applies to server actions) when that host is in the
+ * allow-list (AUTH_PUBLIC_HOSTS, `src/lib/public-origin.ts`). The request URL
+ * is never used: a server bound to 0.0.0.0 sees request URLs on its bind
+ * address, not on the host the browser used.
  */
 export function isSameOriginRequest(
   request: Request,
@@ -20,21 +22,15 @@ export function isSameOriginRequest(
   if (!origin) return request.headers.get('sec-fetch-site') === 'same-origin';
   if (origin === 'null') return false;
 
-  const allowed = new Set<string>([appBaseUrl(env)]);
-  try {
-    allowed.add(new URL(request.url).origin);
-  } catch {
-    /* keep the configured origin only */
-  }
-  if (allowed.has(origin)) return true;
+  if (origin === appBaseUrl(env)) return true;
 
   let originHost: string;
   try {
-    originHost = new URL(origin).host;
+    originHost = new URL(origin).host.toLowerCase();
   } catch {
     return false;
   }
-  const forwardedHost = request.headers.get('x-forwarded-host')?.split(',')[0]?.trim();
-  const host = forwardedHost || request.headers.get('host')?.trim();
-  return Boolean(host) && host === originHost;
+  const host = requestedHost(request.headers);
+  if (!host || host !== originHost) return false;
+  return isAllowedPublicHost(host, env);
 }

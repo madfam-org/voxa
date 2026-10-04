@@ -5,9 +5,12 @@
  *   the Janua client secret (ruling R42).
  * - `AUTH_JANUA_ISSUER`, `AUTH_JANUA_CLIENT_ID`, `AUTH_JANUA_CLIENT_SECRET`:
  *   the Janua confidential client.
- * - `AUTH_URL` (optional): pins every callback and sign-out URL to one origin.
- *   Leave it unset when one deployment serves several hosts: Auth.js then
- *   builds the callback from the host the browser used (`trustHost`).
+ * - `AUTH_PUBLIC_HOSTS`: the hosts this web answers sign-in on
+ *   (comma-separated). Auth.js and sign-out build their URLs on the host the
+ *   browser used only when it is in this list (`src/lib/public-origin.ts`).
+ * - `AUTH_URL` (optional, break-glass): pins every callback and sign-out URL to
+ *   one origin, for every host. Leave it unset when one deployment serves
+ *   several hosts.
  *
  * Read per call, never at import: `next build` evaluates modules without
  * secrets, and a missing value must be a readiness failure, not a build one.
@@ -91,9 +94,9 @@ export function hasPinnedAuthUrl(env: Env = process.env): boolean {
 
 /**
  * Where Janua sends the browser after RP-initiated logout: the sign-in page.
- * With AUTH_URL pinned, on that origin; otherwise on the host the browser
- * used (one web serves several hosts), falling back to NEXT_PUBLIC_BASE_URL.
- * Janua accepts only registered URIs either way.
+ * With AUTH_URL pinned, on that origin; otherwise on `requestOrigin`, the
+ * allow-listed public origin of the request (`resolvePublicOrigin`), falling
+ * back to NEXT_PUBLIC_BASE_URL. Janua accepts only registered URIs either way.
  */
 export function postLogoutRedirectUri(env: Env = process.env, requestOrigin?: string): string {
   const base = !hasPinnedAuthUrl(env) && requestOrigin ? requestOrigin : appBaseUrl(env);
