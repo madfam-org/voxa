@@ -1,5 +1,5 @@
 import type { ButtonHTMLAttributes, CSSProperties, ReactNode } from 'react';
-import { targetSizePx } from './index.js';
+import { SCAN_RING, targetSizePx } from './index.js';
 
 export type AacButtonPresentation = 'default' | 'symbol-forward';
 
@@ -38,6 +38,7 @@ export function AacButton({
   children,
   ...rest
 }: AacButtonProps) {
+  const scanState = scanHighlighted ? 'item' : scanGroupHighlighted ? 'group' : undefined;
   const size = targetSizePx(targetScale);
   const symbolForward = presentation === 'symbol-forward';
   const dwellFill =
@@ -52,9 +53,9 @@ export function AacButton({
     width: '100%',
     height: '100%',
     border: scanHighlighted
-      ? `4px solid #facc15`
+      ? `4px solid ${SCAN_RING.accent}`
       : scanGroupHighlighted
-        ? `3px solid rgba(250, 204, 21, 0.75)`
+        ? `3px dashed ${SCAN_RING.accent}`
         : `${symbolForward ? 4 : 3}px solid ${borderColor}`,
     borderRadius: symbolForward ? 6 : 8,
     display: 'flex',
@@ -65,13 +66,12 @@ export function AacButton({
     padding: symbolForward ? '6px 4px 4px' : 8,
     cursor: 'pointer',
     position: 'relative',
+    // Dual ring (dark inside light): visible on every theme and button fill.
     boxShadow: scanHighlighted
-      ? '0 0 0 3px rgba(250,204,21,0.35)'
+      ? `0 0 0 3px ${SCAN_RING.dark}, 0 0 0 7px ${SCAN_RING.light}`
       : scanGroupHighlighted
-        ? '0 0 0 2px rgba(250,204,21,0.2)'
+        ? `0 0 0 2px ${SCAN_RING.dark}, 0 0 0 5px ${SCAN_RING.light}`
         : undefined,
-    outline: scanHighlighted ? '2px solid #ffffff' : undefined,
-    outlineOffset: scanHighlighted ? 2 : undefined,
     background: dwellFill ?? baseFill,
     color: symbolForward ? '#111827' : undefined,
     ...style,
@@ -96,6 +96,7 @@ export function AacButton({
       aria-label={label}
       className={className}
       style={buttonStyle}
+      data-voxa-scan={scanState}
       {...rest}
     >
       {symbolUrl && !hideSymbol ? (

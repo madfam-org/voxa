@@ -19,6 +19,7 @@ import { initialBoardId } from '@/lib/editor-access';
 import { exportBoardObfJson } from '@/lib/local-obf-export';
 import { BOARD_CACHE_KEY, SELECTED_BOARD_KEY } from '@/lib/communicator-settings';
 import { registerBackgroundSync } from '@/lib/offline-idb';
+import { classifySaveFailure } from '@/lib/save-errors';
 import {
   clearPendingBoardSave,
   hasPendingBoardSave,
@@ -77,10 +78,30 @@ export function useSyncedBoard(role: TeamRole) {
   const boardRef = useRef(board);
   boardRef.current = board;
   const isEditor = role === 'editor' || role === 'admin';
+  const roleRef = useRef(role);
+  roleRef.current = role;
+  // Set when an admin confirms moving a locked (motor-plan) button; the next
+  // save of this board then asks the server to accept that move.
+  const motorPlanOverrideRef = useRef(false);
+  // A refused save's message stays up until a save succeeds (a later empty
+  // queue flush must not hide why the change was not applied).
+  const rejectionShownRef = useRef(false);
 
   useEffect(() => {
     setBoardIdState(loadSelectedBoardId());
   }, []);
+
+  useEffect(() => {
+    motorPlanOverrideRef.current = false;
+  }, [boardId]);
+
+  const markMotorPlanningOverride = useCallback(() => {
+    if (roleRef.current === 'admin') motorPlanOverrideRef.current = true;
+  }, []);
+
+  const saveOptions = () => ({
+    forceMotorPlanning: motorPlanOverrideRef.current && roleRef.current === 'admin',
+  });
 
   const setBoardId = useCallback((nextId: string) => {
     setBoardIdState(nextId);
@@ -182,6 +203,34 @@ export function useSyncedBoard(role: TeamRole) {
     }
   }, [boardId, client, setBoard]);
 
+  /**
+   * A save the server refused for good (422 motor-plan violation, 400, 403 …):
+   * drop it from the queue instead of retrying it forever, reload the board
+   * the server holds after a motor-plan refusal, and say why.
+   */
+  const dropRejectedSave = useCallback(
+    async (kind: 'motor-plan' | 'rejected', err: unknown): Promise<string> => {
+      await clearPendingBoardSave(boardId);
+      setPendingSave(false);
+      motorPlanOverrideRef.current = false;
+      const message =
+        kind === 'motor-plan'
+          ? tRef.current('motorPlanRejected')
+          : tRef.current('saveRejected', { detail: (err as Error).message });
+      if (kind === 'motor-plan') {
+        try {
+          setBoard(await client.getBoard(boardId));
+        } catch {
+          /* keep the local board; the message still explains the refusal */
+        }
+      }
+      setSyncError(message);
+      rejectionShownRef.current = true;
+      return message;
+    },
+    [boardId, client, setBoard],
+  );
+
   const clearConflictNotice = useCallback(() => {
     setConflictRefreshed(false);
   }, []);
@@ -197,26 +246,33 @@ export function useSyncedBoard(role: TeamRole) {
     const pending = await loadPendingBoardSave(boardId);
     if (!pending) {
       setPendingSave(false);
-      setSyncError(null);
+      if (!rejectionShownRef.current) setSyncError(null);
       return;
     }
 
     try {
-      const result = await client.saveBoard(pending, pending.version);
+      const result = await client.saveBoard(pending, pending.version, saveOptions());
       setBoard(result.board);
       await clearPendingBoardSave(boardId);
       setPendingSave(false);
       setSyncError(null);
       setError(null);
+      motorPlanOverrideRef.current = false;
+      rejectionShownRef.current = false;
     } catch (err) {
       if (isVersionConflictError(err)) {
         await applyVersionConflict();
         return;
       }
+      const kind = classifySaveFailure(err);
+      if (kind !== 'retry') {
+        await dropRejectedSave(kind, err);
+        return;
+      }
       setPendingSave(true);
       setSyncError((err as Error).message);
     }
-  }, [applyVersionConflict, boardId, client, setBoard]);
+  }, [applyVersionConflict, boardId, client, dropRejectedSave, setBoard]);
 
   const reload = useCallback(async () => {
     try {
@@ -258,7 +314,7 @@ export function useSyncedBoard(role: TeamRole) {
       disconnect = client.connectBoardSync(
         boardId,
         async (event: SyncEvent) => {
-          if (event.actorUserId === sessionUserId) return;
+          if (cancelled || event.actorUserId === sessionUserId) return;
           if (event.type === 'board.updated' || event.type === 'board.created') {
             try {
               const fresh = await client.getBoard(boardId);
@@ -269,6 +325,10 @@ export function useSyncedBoard(role: TeamRole) {
           }
         },
         (status) => {
+          // A socket from an earlier client (before the session loaded, or for
+          // another board) closes after its replacement opened: ignore it, or
+          // the badge would read offline while the current socket is live.
+          if (cancelled) return;
           const live = status === 'connected';
           setSyncStatus(live ? 'live' : 'offline');
           if (live) void flushPendingSave();
@@ -315,24 +375,30 @@ export function useSyncedBoard(role: TeamRole) {
 
   const saveBoard = useCallback(async (): Promise<SaveBoardResult> => {
     try {
-      const result = await client.saveBoard(boardRef.current, boardRef.current.version);
+      const result = await client.saveBoard(boardRef.current, boardRef.current.version, saveOptions());
       setBoard(result.board);
       await clearPendingBoardSave(boardId);
       setPendingSave(false);
       setSyncError(null);
       setConflictRefreshed(false);
+      motorPlanOverrideRef.current = false;
+      rejectionShownRef.current = false;
       return result;
     } catch (err) {
       if (isVersionConflictError(err)) {
         await applyVersionConflict(true);
         return { conflict: true };
       }
+      const kind = classifySaveFailure(err);
+      if (kind !== 'retry') {
+        throw new Error(await dropRejectedSave(kind, err));
+      }
       await queuePendingBoardSave(boardId, boardRef.current);
       setPendingSave(true);
       void registerBackgroundSync();
       throw new Error(tRef.current('saveQueued'));
     }
-  }, [applyVersionConflict, boardId, client, setBoard]);
+  }, [applyVersionConflict, boardId, client, dropRejectedSave, setBoard]);
 
   const importObf = useCallback(
     async (raw: string) => {
@@ -484,6 +550,7 @@ export function useSyncedBoard(role: TeamRole) {
     reload,
     retryPendingSave: flushPendingSave,
     saveBoard,
+    markMotorPlanningOverride,
     importObf,
     exportObf,
     importObz,

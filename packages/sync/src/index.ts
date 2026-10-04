@@ -86,11 +86,23 @@ export class VoxaClient {
     return res.json() as Promise<BoardUpdateResult>;
   }
 
-  async saveBoard(board: Board, expectedVersion?: number): Promise<BoardUpdateResult> {
+  /**
+   * Save a board. `forceMotorPlanning` asks the server to accept moves of
+   * locked (motor-plan) buttons; send it only for an admin's explicit override.
+   */
+  async saveBoard(
+    board: Board,
+    expectedVersion?: number,
+    options: { forceMotorPlanning?: boolean } = {},
+  ): Promise<BoardUpdateResult> {
     const res = await fetch(this.url(`/v1/boards/${board.id as string}`), {
       method: 'PUT',
       headers: teamHeaders(this.options),
-      body: JSON.stringify({ ...board, expectedVersion }),
+      body: JSON.stringify({
+        ...board,
+        expectedVersion,
+        ...(options.forceMotorPlanning ? { forceMotorPlanning: true } : {}),
+      }),
     });
     if (!res.ok) {
       await throwApiError(res, 'Save failed');

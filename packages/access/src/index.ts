@@ -19,6 +19,16 @@ export interface SwitchScanConfig {
   groups?: number[][];
   auditoryBeep?: boolean;
   auditoryHighlight?: boolean;
+  /** 'auto' (one switch, timed) or 'step' (two switches: move / select). */
+  scanMode?: 'auto' | 'step';
+  /** Full cycles inside a group without a selection before returning to group level. */
+  groupCycles?: number;
+  /** Extra time the first item of each level stays highlighted. */
+  firstItemHoldMs?: number;
+  /** Presses shorter than this are ignored. */
+  acceptanceMs?: number;
+  /** Pause after a selection before scanning resumes. */
+  postSelectionPauseMs?: number;
 }
 
 export interface EyeTrackingConfig {
@@ -124,6 +134,23 @@ export {
   indexToCell,
   resolveScanGroups,
 } from './group-scan.js';
+export {
+  applyScanInput,
+  clampGroupCycles,
+  createScanMachine,
+  DEFAULT_GROUP_CYCLES,
+  GROUP_CYCLES_MAX,
+  GROUP_CYCLES_MIN,
+  scanStepDelay,
+  SwitchAcceptanceFilter,
+  type ScanHighlight,
+  type ScanInput,
+  type ScanMachine,
+  type ScanMachineConfig,
+  type ScanSelectResult,
+  type ScanState,
+  type SwitchScanMode,
+} from './scan-machine.js';
 export {
   dispatchGazePoint,
   resolveGazeButtonId,

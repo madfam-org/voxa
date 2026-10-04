@@ -10,7 +10,7 @@ interface UseGazeBridgeDwellOptions {
   onActivate: (buttonId: string) => void;
 }
 
-/** Coordinate-based dwell for Tobii / lab gaze injectors (`voxa:gaze` events). */
+/** Coordinate-based dwell for the gaze event bridge (`voxa:gaze` events from an integrator). */
 export function useGazeBridgeDwell({ enabled, dwellMs, onActivate }: UseGazeBridgeDwellOptions) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const activeIdRef = useRef<string | null>(null);

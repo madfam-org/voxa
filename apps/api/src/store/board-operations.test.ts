@@ -73,6 +73,30 @@ describe('board operations', () => {
     assert.equal(forced.board.version, 2);
   });
 
+  it('accepts unlocking and moving a locked button in one save', () => {
+    const boards: Record<string, ReturnType<typeof createDemoBoard>> = {};
+    const { board } = applyCreateBoard(boards, createDemoBoard(), 'editor-1');
+    const locked = board.grid.buttons.find((b) => b.locked);
+    assert.ok(locked);
+    const free = { row: board.grid.rows + 1, column: 0 };
+    const next = {
+      ...board,
+      grid: {
+        ...board.grid,
+        buttons: board.grid.buttons.map((button) =>
+          button.id === locked!.id ? { ...button, locked: false, position: free } : button,
+        ),
+      },
+    };
+    const result = applyUpdateBoard(boards, DEMO_BOARD_ID, next, 'editor-1', {
+      expectedVersion: board.version,
+    });
+    assert.equal(result.board.version, board.version + 1);
+    const stored = result.board.grid.buttons.find((b) => b.id === locked!.id);
+    assert.deepEqual(stored?.position, free);
+    assert.equal(stored?.locked, false);
+  });
+
   it('imports a Grid 3 gridset archive into a board', () => {
     const boards: Record<string, ReturnType<typeof createDemoBoard>> = {};
     applyCreateBoard(boards, createDemoBoard(), 'editor-1');

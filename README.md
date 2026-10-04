@@ -20,7 +20,7 @@ Current market-leading AAC apps are siloed on iOS, have steep learning curves, l
 |------|-------------------|
 | **Platform** | Web, iOS, Android, Windows, Chromebook — one cloud-synced ecosystem |
 | **Interoperability** | Native Open Board Format (`.obf` / `.obz`) import and export |
-| **Accessibility** | WCAG 2.2 Level AA — 1 cm minimum touch targets, switch scanning, eye tracking |
+| **Accessibility** | Targets WCAG 2.2 Level AA — 1 cm minimum touch targets, one- and two-switch scanning, dwell selection for pointer-driving devices (head pointers, eye trackers in mouse mode) |
 | **Linguistics** | Motor-planning grids, GLP phrase chunks, Modified Fitzgerald Key color coding |
 | **AI** | LLM predictive text, PictoBERT symbol prediction, guarded symbol generation, bilingual neural TTS |
 
@@ -39,7 +39,7 @@ voxa/
 │   ├── import-adapters/ # Imports from other AAC formats (Gridset, Snap, TouchChat)
 │   ├── vocabulary/   # GLP, Fitzgerald Key, motor planning
 │   ├── symbols/      # Symbol sources and search
-│   ├── access/       # Switch scanning & eye-tracking adapters
+│   ├── access/       # Switch scanning state machine, hardware switches, dwell and gaze event bridge
 │   ├── sync/         # Cloud sync REST + WebSocket client
 │   ├── i18n/         # Shared translations
 │   └── ai/           # LLM, PictoBERT, symbol gen interfaces

@@ -10,7 +10,9 @@ Spacing between adjacent targets must allow error-free selection for users with 
 
 ## Pointer Gestures (2.5.7)
 
-No AAC workflow may require multi-finger gestures, path-based gestures, or drag-only actions. Every swipe/drag affordance has a **single-pointer alternative** (e.g., explicit "move" buttons, long-press menus with cancel).
+No AAC workflow may require multi-finger gestures, path-based gestures, or drag-only actions. Every swipe/drag affordance has a **single-pointer alternative**.
+
+- **Editor, moving buttons:** HTML5 drag and drop works with a mouse, but it does not fire on touch screens. In the button editor, **Move** selects the button and a tap or click on any destination cell moves it there (a button already there swaps places); Escape or **Cancel move** ends it. The ↑ ↓ ← → commands move it one cell at a time from the keyboard. Locked (motor-plan) buttons move only for an admin, after a confirmation. Covered by `e2e/specs/access-methods.spec.ts` in a touch-only (`hasTouch`) browser.
 
 ## Visual Accommodations (CVI)
 
@@ -18,25 +20,29 @@ Built-in themes:
 
 | Theme | Background | Use case |
 |-------|------------|----------|
-| `default` | System preference | General use |
+| `default` | `#f8fafc` light | General use |
 | `classic-light` | Light gray + white cells | Classic AAC apps (Proloquo-style layouts) |
 | `cvi-dark` | `#0a0a0a` | Cortical visual impairment — reduced visual complexity |
 | `cvi-high-contrast` | Black + saturated symbols | Maximum figure/ground separation |
 
 Users can disable decorative imagery, reduce grid chrome, and enlarge symbol-only mode.
 
+Each theme carries its own chrome colours (`CVI_THEMES[theme].chrome` in `@voxa/ui`: message bar, sync status, footer text and links), held to 4.5:1 for text against the theme background by `apps/web/src/lib/theme-contrast.test.ts`. The scan highlight is a **dual ring** (black inside white, `SCAN_RING`): whatever the button fill or background, one ring contrasts at least 4.5:1 with it, so the cursor meets the 3:1 non-text minimum on every theme. CI scans `/app` with axe in all four themes.
+
 ## Alternative Access
 
 ### Switch Scanning
 
 - Configurable scan order: row-major, column-major, linear, custom groups
-- Two-level **group scan**: row groups or quadrant regions, then cells within the selected group
-- Adjustable scan interval (300 ms – 5 s)
+- **Auto scan** (one switch: the highlight moves on a timer, the switch selects) or **step scan** (two switches: switch 1 moves, switch 2 selects; nothing moves on its own)
+- Two-level **group scan**: row groups or quadrant regions, then cells within the selected group. Inside a group the scan offers a **Back** position after the last cell, and after a configurable number of full rounds without a selection (default 2) it returns to the group level by itself, so a wrong group never traps the user
+- Empty cells and groups without a button are skipped
+- Adjustable scan interval (300 ms – 5 s), **first-item hold** (extra time on the first item of each level), **acceptance time** (presses shorter than it are ignored) and **post-selection pause**
+- The state machine is pure and unit-tested: `packages/access/src/scan-machine.ts`
 - Auditory scan highlight optional (screen reader live region)
 - Optional spoken scan voice for each focused cell
 - **Scan-step beep** (880 Hz tone; 660 Hz for group scan) with optional spoken label
 - Scan pauses automatically while TTS or recorded speech plays (configurable)
-- **Eye dwell (web):** pointer hover simulation, or **Tobii bridge** via `voxa:gaze` / `window.__voxaInjectGaze(x,y)` in settings
 - **Hardware USB/BT switches (web):** `@voxa/access` `HardwareSwitchAdapter` — keyboard keys (Space/Enter/Tab/Arrow/F13) + Gamepad API buttons 0/1 during switch scan
 - **Hardware USB/BT switches (mobile):** BT switches that emulate a keyboard drive scan via hidden focus capture (`MobileSwitchKeyCapture`, `classifySwitchNativeKey`); on-screen Next/Select/Tune always available
 
@@ -47,18 +53,23 @@ Users can disable decorative imagery, reduce grid chrome, and enlarge symbol-onl
 | USB switch (keyboard emulation) | ✅ | ✅ (via BT keyboard mode) | Space/Enter = select; Tab/Arrow Right = advance |
 | Bluetooth switch (keyboard mode) | ✅ | ✅ | Same key map; pair before opening Voxa |
 | Gamepad / switch box (HID gamepad) | ✅ | — | Buttons 0/1 via Gamepad API |
-| Tobii eye gaze | 🟡 | — | `voxa:gaze` bridge + dwell sim |
+| Eye tracker that moves the pointer (vendor software in mouse mode) | 🟡 | — | Pointer dwell; not tested on hardware by us |
+| Eye tracker SDK (Tobii, IrisBond …) | 🔴 | 🔴 | No direct integration; integrators can feed coordinates through the gaze event bridge |
 | iOS External Accessory switch | — | 🔴 | Planned native module (TestFlight) |
 
-### Eye Tracking
+### Dwell selection (eye gaze, head pointers)
 
-- Dwell time: 500 ms – 3 s (per-user profile)
-- **Snap-to-item:** magnetic locking when gaze is within expanded hit box
-- Cancel dwell on large saccade (vendor-specific adapters in `@voxa/access`)
+Voxa does **not** integrate eye-tracker hardware or vendor SDKs. Dwell works in two ways:
+
+- **Pointer dwell (default):** hold the pointer over a button for the dwell time (500 ms – 3 s) to select it. Any device that moves the pointer works this way: a mouse, a head pointer, or an eye tracker whose own software drives the pointer.
+- **Gaze event bridge (integrators):** a page or helper that knows gaze coordinates dispatches a `voxa:gaze` `CustomEvent` with `{ x, y }` in viewport pixels (or calls `window.__voxaInjectGaze(x, y)`), and Voxa resolves the button under that point and applies the same dwell. Select **Gaze event bridge** as the dwell input in Settings. The event name and payload are a stable API (`VOXA_GAZE_EVENT` in `@voxa/access`). No driver or helper app ships with Voxa.
+
+`snapHitBox` in `@voxa/access` is a helper for a future snap-to-item mode; the app does not use it yet.
 
 ## Testing
 
-- Automated: `@axe-core/playwright` in CI on critical pages (`e2e/specs/a11y.spec.ts` — home, legal, sign-in)
+- Automated: `@axe-core/playwright` in CI on critical pages (`e2e/specs/a11y.spec.ts` — home, demo, legal, sign-in, the editor, and `/app` in each of the four board themes; serious and critical violations fail the job)
+- Access methods: `e2e/specs/access-methods.spec.ts` (touch-only button moves, admin motor-plan override, rejected saves leave the queue) against a real local API
 - Daily `e2e-smoke` workflow ("Daily smoke"): Playwright smoke and axe against the production public pages; staging specs return when staging is rebuilt
 - Manual: SLP review checklist before release ([SLP_SIGNOFF.md](./launch/SLP_SIGNOFF.md))
-- Hardware: Tobii, IrisBond, and switch interfaces on reference devices
+- Hardware: keyboard-emulating switches. Eye-tracker hardware has not been tested yet.

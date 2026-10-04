@@ -105,3 +105,9 @@ jobs:
         env:
           PLAYWRIGHT_BASE_URL: http://127.0.0.1:3000
           VOXA_E2E_API_URL: http://localhost:4000
+      - name: Access methods (touch-only move, motor-plan override, refused saves, Classic light signed-in)
+        # e2e/specs/access-methods.spec.ts: same local API as the offline spec.
+        run: pnpm test:e2e:access
+        env:
+          PLAYWRIGHT_BASE_URL: http://127.0.0.1:3000
+          VOXA_E2E_API_URL: http://localhost:4000

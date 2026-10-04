@@ -3,10 +3,13 @@
 import {
   EYE_DWELL_MAX_MS,
   EYE_DWELL_MIN_MS,
+  GROUP_CYCLES_MAX,
+  GROUP_CYCLES_MIN,
   SWITCH_INTERVAL_MIN_MS,
   SWITCH_INTERVAL_MAX_MS,
   type ScanOrder,
   type SwitchGroupStrategy,
+  type SwitchScanMode,
   type TouchGuardMask,
 } from '@voxa/access';
 import { CVI_THEMES, type CviTheme } from '@voxa/ui';
@@ -18,7 +21,12 @@ import {
   type UiLocale,
 } from '@voxa/i18n';
 import { useTranslations } from 'next-intl';
-import type { CommunicatorSettings } from '@/lib/communicator-settings';
+import {
+  SCAN_ACCEPTANCE_MAX_MS,
+  SCAN_FIRST_ITEM_HOLD_MAX_MS,
+  SCAN_POST_SELECTION_PAUSE_MAX_MS,
+  type CommunicatorSettings,
+} from '@/lib/communicator-settings';
 import {
   clearEditorPin,
   editorPinIsConfigured,
@@ -151,6 +159,19 @@ export function SettingsPanel({
 
       {settings.accessMode === 'switch' && (
         <>
+          <Field label={t('scanMode')}>
+            <select
+              value={settings.switchScanMode}
+              onChange={(e) => onChange({ switchScanMode: e.target.value as SwitchScanMode })}
+              style={fieldStyle}
+            >
+              <option value="auto">{t('scanModeAuto')}</option>
+              <option value="step">{t('scanModeStep')}</option>
+            </select>
+          </Field>
+          <p style={hintStyle}>
+            {settings.switchScanMode === 'step' ? t('scanModeHintStep') : t('scanModeHintAuto')}
+          </p>
           <Field label={t('scanSpeed', { ms: settings.switchIntervalMs })}>
             <input
               type="range"
@@ -189,6 +210,53 @@ export function SettingsPanel({
           <p style={hintStyle}>
             {settings.switchGroupStrategy === 'none' ? t('scanHintNone') : t('scanHintGroup')}
           </p>
+          {settings.switchGroupStrategy !== 'none' ? (
+            <Field label={t('groupCycles', { n: settings.switchGroupCycles })}>
+              <input
+                type="range"
+                min={GROUP_CYCLES_MIN}
+                max={GROUP_CYCLES_MAX}
+                step={1}
+                value={settings.switchGroupCycles}
+                onChange={(e) => onChange({ switchGroupCycles: Number(e.target.value) })}
+                style={{ width: '100%' }}
+              />
+            </Field>
+          ) : null}
+          <Field label={t('firstItemHold', { ms: settings.switchFirstItemHoldMs })}>
+            <input
+              type="range"
+              min={0}
+              max={SCAN_FIRST_ITEM_HOLD_MAX_MS}
+              step={100}
+              value={settings.switchFirstItemHoldMs}
+              onChange={(e) => onChange({ switchFirstItemHoldMs: Number(e.target.value) })}
+              style={{ width: '100%' }}
+            />
+          </Field>
+          <Field label={t('acceptanceTime', { ms: settings.switchAcceptanceMs })}>
+            <input
+              type="range"
+              min={0}
+              max={SCAN_ACCEPTANCE_MAX_MS}
+              step={50}
+              value={settings.switchAcceptanceMs}
+              onChange={(e) => onChange({ switchAcceptanceMs: Number(e.target.value) })}
+              style={{ width: '100%' }}
+            />
+          </Field>
+          <p style={hintStyle}>{t('acceptanceHint')}</p>
+          <Field label={t('postSelectionPause', { ms: settings.switchPostSelectionPauseMs })}>
+            <input
+              type="range"
+              min={0}
+              max={SCAN_POST_SELECTION_PAUSE_MAX_MS}
+              step={100}
+              value={settings.switchPostSelectionPauseMs}
+              onChange={(e) => onChange({ switchPostSelectionPauseMs: Number(e.target.value) })}
+              style={{ width: '100%' }}
+            />
+          </Field>
           <Field label={t('auditoryHighlight')}>
             <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <input
@@ -299,11 +367,11 @@ export function SettingsPanel({
               style={fieldStyle}
             >
               <option value="pointer">{t('gazePointer')}</option>
-              <option value="tobii-bridge">{t('gazeTobii')}</option>
+              <option value="event-bridge">{t('gazeBridge')}</option>
             </select>
           </Field>
           <p style={hintStyle}>
-            {settings.gazeSource === 'tobii-bridge' ? t('gazeHintTobii') : t('gazeHintPointer')}
+            {settings.gazeSource === 'event-bridge' ? t('gazeHintBridge') : t('gazeHintPointer')}
           </p>
         </>
       )}

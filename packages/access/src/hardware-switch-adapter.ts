@@ -1,3 +1,4 @@
+import { SwitchAcceptanceFilter } from './scan-machine.js';
 import { classifySwitchKey, type SwitchKeyAction } from './switch-input.js';
 
 export interface HardwareSwitchHandlers {
@@ -18,6 +19,8 @@ export const DEFAULT_GAMEPAD_BUTTONS: GamepadButtonSpec = {
 export interface BrowserHardwareSwitchOptions extends HardwareSwitchHandlers {
   enabled: boolean;
   gamepadButtons?: GamepadButtonSpec;
+  /** Acceptance time: presses held for less than this many ms are ignored (0 = on press). */
+  acceptanceMs?: number;
 }
 
 export interface GamepadLike {
@@ -74,23 +77,62 @@ export function attachBrowserHardwareSwitch(options: BrowserHardwareSwitchOption
   }
 
   const spec = options.gamepadButtons ?? DEFAULT_GAMEPAD_BUTTONS;
+  const acceptanceMs = Math.max(0, options.acceptanceMs ?? 0);
+  const filter = new SwitchAcceptanceFilter<SwitchKeyAction>(acceptanceMs);
+  const timers = new Set<number>();
   const pressed = new Map<number, boolean>();
   let frame = 0;
 
+  const fire = (action: SwitchKeyAction | null) => {
+    if (action === 'select') options.onSelect();
+    else if (action === 'advance') options.onAdvance();
+  };
+  const now = () => (typeof performance !== 'undefined' ? performance.now() : Date.now());
+
+  const switchDown = (action: SwitchKeyAction) => {
+    const immediate = filter.press(action, now());
+    if (immediate) {
+      fire(immediate);
+      return;
+    }
+    const id = window.setTimeout(() => {
+      timers.delete(id);
+      for (const due of filter.due(now())) fire(due);
+    }, acceptanceMs);
+    timers.add(id);
+  };
+  const switchUp = (action: SwitchKeyAction) => fire(filter.release(action, now()));
+
   const onKeyDown = (event: KeyboardEvent) => {
-    const action = handleHardwareSwitchKey(event.code, options);
-    if (action) event.preventDefault();
+    const action = classifySwitchKey(event.code);
+    if (!action) return;
+    event.preventDefault();
+    if (event.repeat) return;
+    switchDown(action);
+  };
+  const onKeyUp = (event: KeyboardEvent) => {
+    const action = classifySwitchKey(event.code);
+    if (!action) return;
+    event.preventDefault();
+    switchUp(action);
   };
 
   window.addEventListener('keydown', onKeyDown);
+  window.addEventListener('keyup', onKeyUp);
 
   const pollGamepads = () => {
     if (typeof navigator.getGamepads !== 'function') return;
     const pads = Array.from(navigator.getGamepads());
-    const { action, nextPressed } = detectGamepadSwitchAction(pads, pressed, spec);
-    for (const [index, down] of nextPressed) pressed.set(index, down);
-    if (action === 'select') options.onSelect();
-    else if (action === 'advance') options.onAdvance();
+    for (const [buttonIndex, action] of [
+      [spec.selectIndex, 'select'],
+      [spec.advanceIndex, 'advance'],
+    ] as const) {
+      const down = pads.some((pad) => pad?.buttons[buttonIndex]?.pressed ?? false);
+      const wasDown = pressed.get(buttonIndex) ?? false;
+      if (down && !wasDown) switchDown(action);
+      else if (!down && wasDown) switchUp(action);
+      pressed.set(buttonIndex, down);
+    }
     frame = window.requestAnimationFrame(pollGamepads);
   };
 
@@ -100,7 +142,10 @@ export function attachBrowserHardwareSwitch(options: BrowserHardwareSwitchOption
 
   return () => {
     window.removeEventListener('keydown', onKeyDown);
+    window.removeEventListener('keyup', onKeyUp);
     if (frame) window.cancelAnimationFrame(frame);
+    for (const id of timers) window.clearTimeout(id);
+    filter.reset();
   };
 }
 

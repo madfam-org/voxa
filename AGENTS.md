@@ -60,9 +60,13 @@ pnpm build
   built web app, which also runs `pnpm test:e2e:offline`
   (`e2e/specs/offline-media.spec.ts`: offline reload of `/app`, uploaded
   photo, visible GLP video, spoken fallback; it starts the built API itself
-  with a file store and a test JWKS).
+  with a file store and a test JWKS) and `pnpm test:e2e:access`
+  (`e2e/specs/access-methods.spec.ts`, same local API: tap-only button moves
+  in a `hasTouch` browser, keyboard move commands, the admin motor-plan
+  override, a refused 422 save leaving the queue). The axe job scans `/app`
+  in all four board themes and fails on serious or critical violations.
 - Playwright: `pnpm test:e2e:smoke`, `pnpm test:e2e:a11y`,
-  `pnpm test:e2e:offline`, `pnpm test:e2e:staging`,
+  `pnpm test:e2e:offline`, `pnpm test:e2e:access`, `pnpm test:e2e:staging`,
   `pnpm test:e2e:staging:signed-in` (the five
   signed-in specs, one worker). Authenticated specs skip themselves without
   `JANUA_TEST_EMAIL`/`JANUA_TEST_PASSWORD` (or `VOXA_TEST_ACCESS_TOKEN`).
@@ -199,6 +203,8 @@ blocks production use, **P1** next, **P2** planned, **P3** cleanup.
 | **Paid tiers are not grantable yet.** The API reads the plan tier from the Janua `voxa_tier` claim, but the push that writes the claim for user subscriptions (billing → Janua) is not built. | Nobody can hold `family` or `clinic`, so every user gets the free limits (one board). Fails safe: no one gets a paid tier they did not buy. | P1 | Ecosystem work outside this repo; no Voxa change is needed once tokens carry the claim | Y1 |
 | **Prettier is not enforced.** `pnpm format` exists but CI does not check it, and several files predate it.                                                                                                                   | Formatting drifts and creates noise in unrelated PRs.                                                                                                                                   | P3       | Engineering work (one reformat, then a CI check)                                | —        |
 | **Selva predictions are off.** `SELVA_ENABLED` defaults to `false`, so every text suggestion comes from the local predictor. Turning it on needs a Janua service client for this edge, its id and secret delivered to the API, and a local model behind Selva for `restricted` requests. | Until then suggestions are rule-based only. Turning it on early is safe (every failure falls back to local) but pointless. | P2 | Ecosystem and operator work; no Voxa code change is needed | — |
+| **Real-time board sync never connects for a signed-in user.** The API's `teamAuth()` runs on `/v1/*` and answers the `/v1/ws` upgrade with 401, because a browser WebSocket cannot send the bearer header and the token travels as `?accessToken=` (which only `src/lib/ws-auth.ts` reads, after the middleware). | The sync badge reads offline for every signed-in user, an editor's edits are queued locally instead of saved live, and changes from another device arrive only on reload. Found by `e2e/specs/access-methods.spec.ts`. | P1 | Engineering work (exempt `/v1/ws` from `teamAuth`, which `resolveWsTeam` already authenticates; or a short-lived WS ticket) | — |
+| **The API accepts `forceMotorPlanning` from any editor of the board.** `PUT /v1/boards/:id` passes the flag through for anyone `canEditBoard` allows; only the web client limits the override to admins. | An editor (or a script with an editor token) can move locked motor-plan buttons. | P2 | Engineering work (accept the flag only for `voxa:admin`) | — |
 | **Two internal literals left in deploy-functional or app files.** The Kubernetes web deployments still carry the OAuth client id as a literal, and a code comment in `apps/web/src/lib/pricing.ts` points at a pricing document that is now private. | The operational and commercial docs moved out on 2026-10-03; these two need a deploy-touching change, so they were left for a separate PR. | P2       | Engineering work (read the client id from configuration; reword the comment)    | —        |
 
 The Next image optimizer gap listed here before 2026-10-02 is closed (#13,

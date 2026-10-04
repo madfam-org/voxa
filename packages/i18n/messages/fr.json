@@ -192,7 +192,7 @@
       },
       "access": {
         "title": "Modes d'accès cliniques intégrés",
-        "body": "Balayage avec repères auditifs, garde tactile, simulation de fixation oculaire et activation au relâchement — configurables par communicateur dans Réglages."
+        "body": "Balayage avec repères auditifs, garde tactile, sélection par maintien (pour pointeurs de tête et oculomètres qui déplacent le pointeur) et activation au relâchement — configurables par communicateur dans Réglages."
       },
       "institution": {
         "title": "Plans pour écoles et cliniques",
@@ -284,7 +284,7 @@
     "importSnap": "Importer Snap",
     "importTouchChat": "Importer TouchChat",
     "exportObz": "Exporter OBZ",
-    "editorHint": "Faites glisser les boutons déverrouillés pour les déplacer ou les échanger. Déposez sur les cases + pour ajouter du vocabulaire. Les emplacements verrouillés affichent 🔒.",
+    "editorHint": "Sélectionnez un bouton, puis Déplacer et touchez la case de destination (ou faites-le glisser à la souris) pour le déplacer ou l’échanger. Touchez une case + pour ajouter du vocabulaire. Les emplacements verrouillés affichent 🔒.",
     "predictionConfidence": "Confiance {percent} %",
     "symbolConfidence": "Pictogramme · {percent} %"
   },
@@ -301,7 +301,7 @@
     "accessMethod": "Méthode d'accès",
     "accessTouch": "Tactile",
     "accessSwitch": "Balayage par interrupteur",
-    "accessEye": "Sélection par maintien",
+    "accessEye": "Sélection par maintien (regard, pointeur de tête)",
     "scanSpeed": "Vitesse de balayage ({ms} ms)",
     "scanOrder": "Ordre de balayage",
     "scanRow": "Ligne par ligne",
@@ -312,7 +312,7 @@
     "groupRows": "Groupes par lignes",
     "groupRegions": "Groupes par régions (quadrants)",
     "scanHintNone": "Matériel : Espace/Entrée sélectionne ; Tab/Flèche droite avance. Les interrupteurs Bluetooth et adaptateurs USB clavier fonctionnent automatiquement. Manette : bouton 0 sélectionne ; bouton 1 avance.",
-    "scanHintGroup": "Sélectionnez un groupe, puis une cellule. Clavier et manette fonctionnent comme en balayage simple.",
+    "scanHintGroup": "Sélectionnez un groupe, puis une cellule. Après la dernière cellule vient « Retour », qui revient aux groupes ; sans sélection, le balayage revient aussi seul aux groupes.",
     "auditoryHighlight": "Surbrillance auditive du balayage",
     "auditoryHighlightHint": "Annoncer le bouton focus (lecteur d'écran)",
     "auditoryBeep": "Bip auditif de balayage",
@@ -332,11 +332,9 @@
     "maskPerimeter": "Bord du tableau seulement",
     "touchGuardHelp": "Des superpositions semi-transparentes bloquent les touches accidentelles.",
     "dwellTime": "Temps de fixation ({ms} ms)",
-    "gazeSource": "Source du regard",
-    "gazePointer": "Survol du pointeur (simulation)",
-    "gazeTobii": "Événements externes voxa:gaze (expérimental)",
-    "gazeHintTobii": "Lab : window.__voxaInjectGaze(x, y) ou dispatch voxa:gaze CustomEvent.",
-    "gazeHintPointer": "Maintenez le pointeur sur un bouton pour activer (simule la fixation oculaire).",
+    "gazeSource": "Entrée du maintien",
+    "gazePointer": "Pointeur (souris, pointeur de tête ou oculomètre qui déplace le pointeur)",
+    "gazeHintPointer": "Maintenez le pointeur sur un bouton pour le sélectionner. Un oculomètre fonctionne lorsque son propre logiciel déplace le pointeur ; Voxa ne se connecte pas directement au matériel d'oculométrie.",
     "whisperMode": "Mode chuchotement (construire sans parler)",
     "whisperHint": "Ajouter des mots à la barre sans TTS",
     "hideSymbols": "Masquer les symboles (mode CVI texte seul)",
@@ -361,7 +359,19 @@
     "pinInvalid": "Le code PIN doit comporter 4 à 8 chiffres.",
     "pinStorageUnavailable": "Ce navigateur ne peut pas enregistrer le code PIN sur l'appareil.",
     "spanishAgreement": "Accord en espagnol",
-    "spanishAgreementHint": "Sur les tableaux en espagnol, conjugue le verbe selon le pronom lors de la composition du message (yo querer → yo quiero). Le bouton « Forme de base » prononce les mots tels quels."
+    "spanishAgreementHint": "Sur les tableaux en espagnol, conjugue le verbe selon le pronom lors de la composition du message (yo querer → yo quiero). Le bouton « Forme de base » prononce les mots tels quels.",
+    "scanMode": "Mode de balayage",
+    "scanModeAuto": "Automatique (un interrupteur)",
+    "scanModeStep": "Pas à pas (deux interrupteurs : déplacer, sélectionner)",
+    "scanModeHintAuto": "La surbrillance avance seule ; appuyez sur l'interrupteur pour sélectionner. Un second interrupteur (Tab ou Flèche droite) la fait aussi avancer.",
+    "scanModeHintStep": "Rien n'avance seul : l'interrupteur 1 (Tab ou Flèche droite, bouton 1 de la manette) déplace, l'interrupteur 2 (Espace ou Entrée, bouton 0 de la manette) sélectionne.",
+    "groupCycles": "Revenir aux groupes après {n} tours sans sélection",
+    "firstItemHold": "Temps supplémentaire sur le premier élément ({ms} ms)",
+    "acceptanceTime": "Temps d'acceptation ({ms} ms)",
+    "acceptanceHint": "Un appui ne compte qu'après avoir été maintenu ce temps, ce qui ignore les appuis brefs ou accidentels. 0 compte chaque appui immédiatement.",
+    "postSelectionPause": "Pause après une sélection ({ms} ms)",
+    "gazeBridge": "Pont d’événements de regard (voxa:gaze, pour intégrateurs)",
+    "gazeHintBridge": "Pour les intégrateurs : envoyez des coordonnées d'écran avec window.__voxaInjectGaze(x, y) ou un CustomEvent voxa:gaze ; Voxa applique le même maintien. Aucun pilote d'oculomètre n'est fourni avec Voxa."
   },
   "legal": {
     "shared": {
@@ -454,7 +464,7 @@
     },
     "accessibility": {
       "title": "Déclaration d'accessibilité",
-      "lastUpdated": "7 juin 2026",
+      "lastUpdated": "4 octobre 2026",
       "intro": "Voxa vise WCAG 2.2 niveau AA et une accessibilité CAA au-delà des exigences web de base. Nous accueillons les retours des communicateurs, aidants et orthophonistes.",
       "sections": [
         {
@@ -463,7 +473,7 @@
         },
         {
           "title": "Fonctions CAA spécifiques",
-          "content": "Voxa inclut thèmes CVI, balayage par interrupteur, sélection par fixation oculaire, alternatives à un seul pointeur aux gestes de glissement, et verrouillages de plan moteur. Voir docs/accessibility.md dans notre dépôt."
+          "content": "Voxa inclut thèmes CVI ; balayage par interrupteur (un ou deux interrupteurs, groupes par lignes et quadrants, temps d'acceptation) ; sélection par maintien qui fonctionne avec tout appareil qui déplace le pointeur, y compris pointeurs de tête et oculomètres dont le logiciel déplace le pointeur (Voxa n'a pas d'intégration directe avec le matériel d'oculométrie) ; une alternative « toucher pour déplacer » au glissement des boutons dans l'éditeur ; et verrouillages de plan moteur. Voir docs/accessibility.md dans notre dépôt."
         },
         {
           "title": "Limites connues",
@@ -471,7 +481,7 @@
         },
         {
           "title": "Approche d'évaluation",
-          "content": "Nous combinons vérifications automatisées et tests matériels avec interrupteurs et eye-tracking lorsque disponible."
+          "content": "Des vérifications axe automatiques s'exécutent en CI sur les pages publiques et sur le communicateur dans chaque thème de tableau ; le balayage est testé avec des interrupteurs émulant un clavier. Nous n'avons pas encore testé avec du matériel d'oculométrie."
         },
         {
           "title": "Retours",
@@ -543,7 +553,9 @@
     "versionConflictReload": "Conflit de versions — rechargez la page et réessayez.",
     "offlineCached": "Hors ligne — tableau en cache utilisé",
     "apiUnreachable": "Serveur injoignable — tableau de démonstration local utilisé",
-    "saveQueued": "Enregistrement en attente — synchronisation au retour de la connexion"
+    "saveQueued": "Enregistrement en attente — synchronisation au retour de la connexion",
+    "motorPlanRejected": "Non enregistré : ce changement déplace un bouton verrouillé (plan moteur). Seul un administrateur peut lever un verrou ; sinon, déverrouillez d'abord le bouton. Le tableau a été rechargé depuis le serveur.",
+    "saveRejected": "Non enregistré : le serveur a refusé ce changement ({detail}). Il ne sera pas réessayé."
   },
   "pwa": {
     "installApp": "Installer l'app",
@@ -609,7 +621,15 @@
     "lockPosition": "Verrouiller la position (plan moteur)",
     "hideFromCommunicator": "Masquer dans la vue de la personne qui communique",
     "done": "Terminé",
-    "emptyCell": "Case vide, ligne {row}, colonne {column}. Déposez un bouton ici ou cliquez pour en ajouter un."
+    "emptyCell": "Case vide, ligne {row}, colonne {column}. Touchez ou cliquez pour ajouter un bouton, ou pour déplacer ici le bouton sélectionné.",
+    "moveSection": "Déplacer ce bouton",
+    "moveStart": "Déplacer : puis touchez la destination",
+    "moveCancel": "Annuler le déplacement",
+    "moveUp": "Monter d'une case",
+    "moveDown": "Descendre d'une case",
+    "moveLeft": "Déplacer d'une case à gauche",
+    "moveRight": "Déplacer d'une case à droite",
+    "moveBanner": "Déplacement de « {label} » : touchez ou cliquez la case de destination (un bouton présent échange sa place). Échap annule."
   },
   "wordForms": {
     "title": "Formes du mot",
@@ -682,6 +702,8 @@
     "bottomLeft": "En bas à gauche",
     "bottomRight": "En bas à droite",
     "region": "Zone {n}",
-    "group": "Groupe {n}"
+    "group": "Groupe {n}",
+    "back": "Retour",
+    "backToGroups": "↩ Retour aux groupes"
   }
 }
