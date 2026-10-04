@@ -6,6 +6,10 @@ All notable changes to Voxa are documented here.
 
 ### Fixed
 
+- Web: paid-plan calls to action (Family, Institutional, demo gate) go to a discovery call at `https://kalya.app/madfam` until a checkout exists; the `/app?upgrade=family` dead end and the unused checkout URL builder are removed. Prices stay visible.
+- API: predictions come only from the in-process local predictor (`source: "local"`); the optional third-party LLM backend is removed. The suggestion strip is labelled as basic suggestions.
+- Copy (es/en/fr): removed or reworded claims with nothing behind them (SLA, priority sync, full AI and GLP workflows, per-end-user dashboards, care-team invites and team roles, offline-ready, eye-dwell, centrally enforced AI policy, release review by speech therapists). Contact mailbox is `hola@madfam.io`. A stop-list test guards the catalogs.
+- Web: the institutional total applies IVA to the whole net total and rounds up to the peso; the per-seat line shows the net parts.
 - API: migration `0003_media_assets` is now listed in the drizzle journal (it was never applied by the startup migrator, so `media_assets` was missing on migrator-built databases); it is idempotent for databases that already have the table. Drizzle snapshots added so `db:generate` diffs against the real schema; CI fails on migration/journal/snapshot drift.
 - API: the media store (`POST/GET /v1/media`) and activation events opened a new PostgreSQL pool on every request and never closed it. The API now uses one process-wide pool (default 5 connections, `DATABASE_POOL_MAX`), shared with the board store and closed on shutdown.
 - API: the JSON file store (used when `DATABASE_URL` is unset) rewrote `boards.json` in place, so a concurrent reader or a restart after a crash mid-write could see a truncated file. Writes are now atomic (temp file, `fsync`, `rename`). The directory is configurable with `VOXA_DATA_DIR`, and the API test suite gives every parallel test process its own directory, which removes the intermittent `Unexpected end of JSON input` test failures.
