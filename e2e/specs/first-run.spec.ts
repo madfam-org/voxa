@@ -236,7 +236,10 @@ test('a returning user with a board never sees the setup', async ({ page, contex
   await page.goto('/app');
   // The board list has loaded (the board picker lists the user's board).
   await expect(page.getByLabel(ui('communicator.boardSelect'))).toContainText('Returning board', { timeout: 30_000 });
-  await page.waitForLoadState('networkidle');
+  // Not 'networkidle': same-origin /api calls made while the service worker
+  // takes control never report finished. The setup decision follows the board
+  // list, which has loaded; give it a moment to (not) appear.
+  await page.waitForTimeout(1000);
   await expect(page.locator('[data-voxa-first-run]')).toHaveCount(0);
 });
 
@@ -257,8 +260,14 @@ test('"Skip setup" closes it for good and creates no board', async ({ page, cont
   await expect(setup).toBeVisible({ timeout: 30_000 });
   await setup.getByRole('button', { name: ui('firstRun.skipAll') }).click();
   await expect(setup).toBeHidden();
+  const listed = page.waitForResponse(
+    (r) => r.url().endsWith('/api/v1/boards') && r.request().method() === 'GET',
+    { timeout: 30_000 },
+  );
   await page.reload();
-  await page.waitForLoadState('networkidle');
+  // The setup decision follows the board list (not 'networkidle', see above).
+  await listed;
+  await page.waitForTimeout(1000);
   await expect(page.locator('[data-voxa-first-run]')).toHaveCount(0);
   expect(await ownedBoards(user)).toHaveLength(0);
 });
@@ -295,14 +304,13 @@ test('a 402 from the plan limit on create offers the existing board, not a dead 
   // The first board list the page reads is stale (empty), as if the board was
   // created on another device after the list was read.
   let stale = true;
-  await page.route(`${api.url}/v1/boards`, async (route) => {
+  // The page reads the API through the web's same-origin proxy.
+  await page.route('**/api/v1/boards', async (route) => {
     if (route.request().method() === 'GET' && stale) {
       stale = false;
-      const origin = route.request().headers()['origin'] ?? '*';
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        headers: { 'Access-Control-Allow-Origin': origin, Vary: 'Origin' },
         body: JSON.stringify({ boards: [] }),
       });
       return;

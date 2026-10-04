@@ -34,10 +34,17 @@ function replicaEnv(): Record<string, string | undefined> {
   };
 }
 
-function wsUrl(api: ApiProcess): string {
-  // teamAuth reads the development headers; the socket handler reads the
-  // development identity from the query (src/lib/ws-auth.ts).
-  const query = new URLSearchParams({ boardId: BOARD_ID, userId: OWNER, role: 'communicator' });
+/**
+ * The socket takes only a single-use ticket (src/lib/ws-tickets.ts). It is
+ * minted on `mintOn` (here through the development headers, which teamAuth
+ * honours on `POST /v1/ws-ticket` in tests) and consumed on `api`: tickets
+ * live in PostgreSQL, so a ticket from one replica opens a socket on the other.
+ */
+async function wsUrl(api: ApiProcess, mintOn: ApiProcess = api): Promise<string> {
+  const minted = await fetch(`${mintOn.url}/v1/ws-ticket`, { method: 'POST', headers: ownerHeaders });
+  assert.equal(minted.status, 200, await minted.clone().text());
+  const { ticket } = (await minted.json()) as { ticket: string };
+  const query = new URLSearchParams({ boardId: BOARD_ID, ticket });
   return `${api.url.replace('http://', 'ws://')}/v1/ws?${query}`;
 }
 
@@ -86,14 +93,15 @@ describe('sync hub across two replicas with Redis', { skip }, () => {
       board: Record<string, unknown> & { version: number };
     };
 
-    const onB = await connectTestWs(wsUrl(replicaB), ownerHeaders);
+    // Minted on A, opened on B: the ticket store is shared.
+    const onB = await connectTestWs(await wsUrl(replicaB, replicaA));
     sockets.push(onB);
     const firstConnected = (await onB.waitFor(
       (m) => (m as { type?: string }).type === 'connected',
     )) as { presence: number };
     assert.equal(firstConnected.presence, 1);
 
-    const onA = await connectTestWs(wsUrl(replicaA), ownerHeaders);
+    const onA = await connectTestWs(await wsUrl(replicaA));
     sockets.push(onA);
     const secondConnected = (await onA.waitFor(
       (m) => (m as { type?: string }).type === 'connected',

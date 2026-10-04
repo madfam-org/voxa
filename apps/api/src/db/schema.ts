@@ -138,3 +138,23 @@ export const mediaAssets = pgTable(
     index('media_assets_owner_user_idx').on(table.ownerUserId),
   ],
 );
+
+/**
+ * Single-use WebSocket tickets (`POST /v1/ws-ticket`, consumed by `GET /v1/ws`).
+ * Only the SHA-256 of the ticket is stored, never the ticket or the access
+ * token it was minted from; `token_expires_at` is that token's `exp`, so the
+ * socket closes when the token would have. Rows live 30 seconds; consumed and
+ * expired rows are deleted. Shared by every API replica (src/lib/ws-tickets.ts).
+ */
+export const wsTickets = pgTable(
+  'ws_tickets',
+  {
+    ticketHash: text('ticket_hash').primaryKey(),
+    userId: text('user_id').notNull(),
+    role: text('role').notNull(),
+    orgId: text('org_id'),
+    expiresAt: timestamp('expires_at', { withTimezone: true, mode: 'string' }).notNull(),
+    tokenExpiresAt: timestamp('token_expires_at', { withTimezone: true, mode: 'string' }).notNull(),
+  },
+  (table) => [index('ws_tickets_expires_idx').on(table.expiresAt)],
+);

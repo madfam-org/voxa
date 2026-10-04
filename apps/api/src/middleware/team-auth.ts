@@ -15,6 +15,8 @@ export interface TeamContext {
    * `free`.
    */
   tierClaim?: unknown;
+  /** `exp` of the verified access token (epoch seconds); absent for the development headers. */
+  tokenExp?: number;
 }
 
 declare module 'hono' {
@@ -46,6 +48,7 @@ export function teamAuth() {
           role: mapJanuaRole(claims),
           orgId: String(claims.org_id ?? claims.organization_id ?? '') || undefined,
           tierClaim: claims[VOXA_TIER_CLAIM],
+          tokenExp: typeof claims.exp === 'number' ? claims.exp : undefined,
         });
         await next();
         return;

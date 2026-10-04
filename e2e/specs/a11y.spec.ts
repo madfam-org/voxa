@@ -12,7 +12,7 @@ import {
   openAccessibilitySettings,
   prepareAuthenticatedApp,
 } from '../helpers/app-session';
-import { openAuthenticatedEditor, seedLocalState } from '../helpers/test-session';
+import { openAuthenticatedEditor, seedLocalState, seedTestSession } from '../helpers/test-session';
 
 const PUBLIC_PAGES = [
   { name: 'home', path: '/' },
@@ -43,11 +43,10 @@ test.describe('Voxa accessibility (axe) — public pages', () => {
  * muted gray measured 3.19:1. Nothing caught it, because the only authed lane
  * needed JANUA_TEST_* secrets and therefore skipped on every CI run.
  *
- * This lane runs everywhere the public lane does. It works because Voxa's
- * session cookie is unsigned JSON that `getSession()` reads with JSON.parse,
- * and because the CI a11y job runs the standalone server with no OIDC env at
- * all — see helpers/test-session.ts for the full argument. No auth code was
- * weakened to make this possible.
+ * This lane runs everywhere the public lane does. The CI a11y job starts the
+ * web server with a test-only AUTH_SECRET, and helpers/test-session.ts
+ * encrypts a real Auth.js session with it; see that file for why this
+ * weakens nothing.
  */
 test.describe('Voxa accessibility (axe) — authenticated surfaces (mock session)', () => {
   test('/app/edit editor grid has no WCAG 2.2 AA violations', async ({ page, context, baseURL }) => {
@@ -138,7 +137,13 @@ test.describe('Voxa accessibility (axe) — /app in every board theme', () => {
   test.use({ locale: 'en-US' });
 
   for (const theme of BOARD_THEMES) {
-    test(`/app in the ${theme} theme has no serious or critical WCAG 2.2 AA violations`, async ({ page }) => {
+    test(`/app in the ${theme} theme has no serious or critical WCAG 2.2 AA violations`, async ({
+      page,
+      context,
+      baseURL,
+    }) => {
+      // /app is gated on a valid session (the CI server has sign-in configured).
+      await seedTestSession(context, baseURL!, { role: 'communicator' });
       await seedLocalState(page);
       await page.addInitScript((cviTheme) => {
         localStorage.setItem('voxa-communicator-settings', JSON.stringify({ cviTheme }));
@@ -191,7 +196,9 @@ test.describe('Voxa accessibility (axe) — Spanish (default locale)', () => {
     });
   }
 
-  test('/app communicator in Spanish has no serious or critical WCAG 2.2 AA violations', async ({ page }) => {
+  test('/app communicator in Spanish has no serious or critical WCAG 2.2 AA violations', async ({ page, context, baseURL }) => {
+    // /app is gated on a valid session (the CI server has sign-in configured).
+    await seedTestSession(context, baseURL!, { role: 'communicator' });
     await seedLocalState(page);
     await page.goto('/app');
     await page.locator('[data-voxa-button-id]').first().waitFor({ timeout: 30_000 });
@@ -199,7 +206,9 @@ test.describe('Voxa accessibility (axe) — Spanish (default locale)', () => {
     await expectNoBlocking(page);
   });
 
-  test('/app settings in Spanish has no serious or critical WCAG 2.2 AA violations', async ({ page }) => {
+  test('/app settings in Spanish has no serious or critical WCAG 2.2 AA violations', async ({ page, context, baseURL }) => {
+    // /app is gated on a valid session (the CI server has sign-in configured).
+    await seedTestSession(context, baseURL!, { role: 'communicator' });
     await seedLocalState(page);
     await page.goto('/app');
     await page.locator('[data-voxa-button-id]').first().waitFor({ timeout: 30_000 });

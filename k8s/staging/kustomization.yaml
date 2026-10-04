@@ -11,6 +11,7 @@ resources:
 - voxa-api-deployment.yaml
 - voxa-api-service.yaml
 - voxa-web-deployment.yaml
+- voxa-web-session-externalsecret.yaml
 - voxa-web-service.yaml
 
 labels:

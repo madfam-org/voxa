@@ -2,6 +2,28 @@ import type { Board } from '@voxa/core';
 import { idbDelete, idbGet, idbSet } from '@/lib/offline-idb';
 import { PENDING_SAVE_KEY } from '@/lib/communicator-settings';
 
+/**
+ * Offline board saves, queued until the API answers again.
+ *
+ * Every queued save carries the id of the account that made it. A save is only
+ * ever sent for that account: when another account (or nobody) is signed in,
+ * it is deleted unsent and the caller shows a notice. On a shared tablet this
+ * is what keeps one caregiver's offline edits from being written to the API
+ * under the next person's session. Saves queued before ownership was recorded
+ * have no owner and are dropped the same way.
+ */
+interface PendingEnvelope {
+  ownerUserId: string;
+  board: Board;
+}
+
+export type PendingBoardSave =
+  | { status: 'none' }
+  | { status: 'ready'; board: Board }
+  /** A save exists but who is signed in is not known yet (offline): kept, not sent. */
+  | { status: 'held' }
+  | { status: 'dropped' };
+
 function legacyKey(boardId: string): string {
   return `${PENDING_SAVE_KEY}:${boardId}`;
 }
@@ -21,31 +43,75 @@ async function writePending(boardId: string, json: string): Promise<void> {
   }
 }
 
-export async function queuePendingBoardSave(boardId: string, board: Board): Promise<void> {
-  const json = JSON.stringify(board);
-  await writePending(boardId, json);
+function envelope(ownerUserId: string, board: Board): string {
+  return JSON.stringify({ ownerUserId, board } satisfies PendingEnvelope);
 }
 
-export function queuePendingBoardSaveSync(boardId: string, board: Board): void {
-  const json = JSON.stringify(board);
-  void writePending(boardId, json);
+export async function queuePendingBoardSave(
+  boardId: string,
+  board: Board,
+  ownerUserId: string,
+): Promise<void> {
+  await writePending(boardId, envelope(ownerUserId, board));
 }
 
-export async function loadPendingBoardSave(boardId: string): Promise<Board | null> {
+export function queuePendingBoardSaveSync(boardId: string, board: Board, ownerUserId: string): void {
+  void writePending(boardId, envelope(ownerUserId, board));
+}
+
+async function readRaw(boardId: string): Promise<string | null> {
   try {
     const fromIdb = await idbGet(idbKey(boardId));
-    if (fromIdb) return JSON.parse(fromIdb) as Board;
+    if (fromIdb) return fromIdb;
   } catch {
     /* fall through */
   }
-
   if (typeof localStorage === 'undefined') return null;
   try {
-    const raw = localStorage.getItem(legacyKey(boardId));
-    return raw ? (JSON.parse(raw) as Board) : null;
+    return localStorage.getItem(legacyKey(boardId));
   } catch {
     return null;
   }
+}
+
+function parseEnvelope(raw: string): PendingEnvelope | null {
+  try {
+    const parsed = JSON.parse(raw) as Partial<PendingEnvelope> | null;
+    if (
+      parsed &&
+      typeof parsed.ownerUserId === 'string' &&
+      parsed.ownerUserId &&
+      parsed.board &&
+      typeof parsed.board === 'object'
+    ) {
+      return { ownerUserId: parsed.ownerUserId, board: parsed.board };
+    }
+  } catch {
+    /* unreadable: treated as unowned */
+  }
+  return null;
+}
+
+/**
+ * The queued save for this board, if it belongs to `currentUserId`. A save
+ * owned by anyone else, or by no recorded account, is deleted here and
+ * reported as `dropped`; it is never returned for sending. `currentUserId`
+ * `null` means signed out; `undefined` means not known yet (offline), and the
+ * save is kept (`held`).
+ */
+export async function loadPendingBoardSave(
+  boardId: string,
+  currentUserId: string | null | undefined,
+): Promise<PendingBoardSave> {
+  const raw = await readRaw(boardId);
+  if (!raw) return { status: 'none' };
+  if (currentUserId === undefined) return { status: 'held' };
+  const pending = parseEnvelope(raw);
+  if (!pending || !currentUserId || pending.ownerUserId !== currentUserId) {
+    await clearPendingBoardSave(boardId);
+    return { status: 'dropped' };
+  }
+  return { status: 'ready', board: pending.board };
 }
 
 export async function clearPendingBoardSave(boardId: string): Promise<void> {
@@ -59,6 +125,11 @@ export async function clearPendingBoardSave(boardId: string): Promise<void> {
   }
 }
 
-export async function hasPendingBoardSave(boardId: string): Promise<boolean> {
-  return Boolean(await loadPendingBoardSave(boardId));
+/** Whether a save for this account is waiting (others' saves are dropped, not counted). */
+export async function hasPendingBoardSave(
+  boardId: string,
+  currentUserId: string | null | undefined,
+): Promise<boolean> {
+  const { status } = await loadPendingBoardSave(boardId, currentUserId);
+  return status === 'ready' || status === 'held';
 }

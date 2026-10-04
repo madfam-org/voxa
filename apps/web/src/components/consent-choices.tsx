@@ -92,7 +92,7 @@ function ToggleRow({
  * signed in (the cache follows the API's answer), or to this device only when
  * signed out. A failed save is shown and the toggles return to the saved state.
  */
-export function PrivacySettingsSection({ accessToken }: { accessToken?: string }): React.ReactNode {
+export function PrivacySettingsSection({ signedIn }: { signedIn: boolean }): React.ReactNode {
   const t = useTranslations('consent');
   const [choices, setChoices] = useState<ConsentChoices>({
     aiProcessing: false,
@@ -117,7 +117,7 @@ export function PrivacySettingsSection({ accessToken }: { accessToken?: string }
     setSaving(true);
     setError(false);
     try {
-      const saved = await recordConsentChoices(accessToken, next);
+      const saved = await recordConsentChoices(signedIn, next);
       setChoices(saved.choices);
     } catch {
       setChoices(previous);
@@ -133,7 +133,7 @@ export function PrivacySettingsSection({ accessToken }: { accessToken?: string }
     >
       <h3 style={{ margin: '0 0 8px', fontSize: '0.9375rem' }}>{t('settingsTitle')}</h3>
       <ConsentToggles value={choices} onChange={(next) => void update(next)} disabled={saving} />
-      {!accessToken ? (
+      {!signedIn ? (
         <p style={{ margin: '10px 0 0', fontSize: '0.75rem', color: neutral.muted }}>
           {t('signedOutNote')}
         </p>

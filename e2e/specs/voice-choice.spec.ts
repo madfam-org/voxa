@@ -15,7 +15,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { WCAG_TAGS, formatViolations } from '../helpers/a11y';
 import { ui } from '../helpers/i18n';
-import { seedLocalState } from '../helpers/test-session';
+import { seedLocalState, seedTestSession } from '../helpers/test-session';
 
 // The standalone server in CI listens on 127.0.0.1; pin the UI language so
 // every run takes the same `/app` -> `/en/app` route. The board itself is
@@ -165,6 +165,10 @@ async function stubSpeech(
 }
 
 async function openApp(page: Page): Promise<void> {
+  // /app is gated on a valid session (the CI server has sign-in configured).
+  await seedTestSession(page.context(), process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:3000', {
+    role: 'communicator',
+  });
   await page.goto('/app');
   await expect(page.locator('[data-voxa-button-id="yo"]')).toBeVisible({ timeout: 30_000 });
 }

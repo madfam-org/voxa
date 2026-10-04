@@ -1,65 +1,40 @@
 import type { BrowserContext, Page } from '@playwright/test';
+import { mintSessionCookieValue } from '../../apps/web/src/lib/session-mint';
 
 /**
- * Credential-free authenticated session for CI a11y scans.
+ * Credential-free signed-in session for CI scans and specs.
  *
- * WHY THIS IS SAFE — read before changing anything here.
- * ------------------------------------------------------
- * This mints a `voxa_session` cookie locally. It does NOT weaken production
- * auth, and it required no change to any auth code, because of how Voxa's
- * session already works:
+ * The web app's session is an Auth.js cookie encrypted with AUTH_SECRET. The
+ * CI a11y job starts the standalone server with a TEST-ONLY AUTH_SECRET (and
+ * placeholder Janua settings), and this helper encrypts a session with that
+ * same secret, exactly as Auth.js does (`apps/web/src/lib/session-mint.ts`).
+ * Nothing in the app was weakened for it: a cookie minted with any other
+ * secret is rejected, and against a real deployment (whose secret this repo
+ * never sees) the helper simply produces a cookie the server cannot decrypt.
  *
- *   1. `verifyIdToken()` (jose + remote JWKS) runs exactly once, in
- *      /auth/callback, BEFORE the cookie is written. That is the real
- *      security boundary and it is untouched.
- *   2. `getSession()` in apps/web/src/lib/auth.ts reads the cookie with
- *      `JSON.parse` and checks only `expires_at`. The session cookie is
- *      plain JSON by design — it is never signature-checked on read.
- *   3. `middleware.ts` gates routes on `cookies.get('voxa_session')` —
- *      presence only, no verification.
- *   4. All of the above is inert in CI regardless: the a11y job starts the
- *      standalone server with no OIDC env, so `isOidcConfigured()` is false
- *      and middleware does not gate `/app` at all.
- *
- * So a locally-minted cookie is accepted by the same code path a real one
- * takes, and forging one buys an attacker nothing they could not already do
- * by calling the unauthenticated app directly. The cookie's `access_token` is
- * a structurally-valid but unsigned JWT: /api/auth/session derives teamRole
- * with `decodeJwt` (decode, not verify), which is what lets this fixture
- * select the `editor` role and reach the SLP-only surfaces. Voxa reads only
- * namespaced Janua application roles (`voxa:editor`, `voxa:admin`), so that
- * is what the fixture projects.
- *
- * The cookie is scoped to the local test origin and is never sent anywhere
- * else. Against a REAL deployment this fixture would simply fail — a genuine
- * API would reject the unsigned token — which is the correct outcome.
+ * The role travels in the session, as it does after a real sign-in, where it
+ * comes from the RS256-verified Janua access token. Specs that call a real
+ * local API pass `accessToken` (an RS256 token from `local-api.ts`); the proxy
+ * forwards it as the bearer. Otherwise a placeholder that no API accepts.
  */
+export const E2E_AUTH_SECRET =
+  process.env.VOXA_E2E_AUTH_SECRET ?? 'voxa-e2e-test-only-auth-secret-not-for-deploy';
+
+/** Auth.js cookie name for an http origin (`__Secure-` only on https). */
+export function sessionCookieNameFor(baseURL: string): string {
+  return baseURL.startsWith('https://') ? '__Secure-authjs.session-token' : 'authjs.session-token';
+}
 
 export interface TestSessionOptions {
-  /** Team role to project into the access-token claims. */
+  /** Voxa role carried by the session. */
   role?: 'communicator' | 'editor' | 'admin';
   userId?: string;
   email?: string;
   name?: string;
-  /**
-   * A real signed access token to carry instead of the unsigned fixture
-   * (specs that run against a local API with a test JWKS; see local-api.ts).
-   */
+  /** A real signed access token for specs that run against a local API (see local-api.ts). */
   accessToken?: string;
-}
-
-function base64Url(input: string): string {
-  return Buffer.from(input, 'utf8').toString('base64url');
-}
-
-/**
- * Build an unsigned but structurally-valid JWT. Only the payload matters:
- * /api/auth/session uses `decodeJwt`, never `jwtVerify`, for role mapping.
- */
-function unsignedJwt(claims: Record<string, unknown>): string {
-  const header = base64Url(JSON.stringify({ alg: 'none', typ: 'JWT' }));
-  const payload = base64Url(JSON.stringify(claims));
-  return `${header}.${payload}.`;
+  /** Session id token, for sign-out's `id_token_hint`. */
+  idToken?: string;
 }
 
 /**
@@ -84,7 +59,7 @@ function cookieHosts(baseURL: string): string[] {
   return [...hosts];
 }
 
-/** Seed a Voxa session cookie so authenticated surfaces render. */
+/** Seed a signed-in session cookie (encrypted with the test-only AUTH_SECRET). */
 export async function seedTestSession(
   context: BrowserContext,
   baseURL: string,
@@ -95,30 +70,31 @@ export async function seedTestSession(
     userId = 'a11y-test-user',
     email = 'a11y@voxa.test',
     name = 'A11y Test User',
-    accessToken,
+    accessToken = 'e2e-placeholder-access-token',
+    idToken,
   } = options;
 
-  const session = {
-    access_token:
-      accessToken ??
-      unsignedJwt({
-        sub: userId,
-        email,
-        name,
-        // Communicator is the absence of a Voxa app role.
-        roles: role === 'communicator' ? [] : [`voxa:${role}`],
-      }),
-    user_id: userId,
-    email,
-    name,
-    expires_at: Math.floor(Date.now() / 1000) + 60 * 60,
-  };
+  const cookieName = sessionCookieNameFor(baseURL);
+  const value = await mintSessionCookieValue({
+    secret: E2E_AUTH_SECRET,
+    cookieName,
+    token: {
+      userId,
+      name,
+      email,
+      teamRole: role,
+      accessToken,
+      idToken,
+      expiresAt: Math.floor(Date.now() / 1000) + 60 * 60,
+    },
+  });
+  if (value.length > 3900) throw new Error('Test session cookie would need chunking; keep fixtures small');
 
   const secure = baseURL.startsWith('https://');
   await context.addCookies(
     cookieHosts(baseURL).map((domain) => ({
-      name: 'voxa_session',
-      value: JSON.stringify(session),
+      name: cookieName,
+      value,
       domain,
       path: '/',
       httpOnly: true,
@@ -126,6 +102,11 @@ export async function seedTestSession(
       sameSite: 'Lax' as const,
     })),
   );
+  // The browser's stored data already belongs to this account (otherwise the
+  // app purges it on first load, as it does for a real account change).
+  await context.addInitScript((owner) => {
+    localStorage.setItem('voxa-account-owner', owner);
+  }, userId);
 }
 
 /**
@@ -178,8 +159,11 @@ export async function openAuthenticatedEditor(
   const userId = 'a11y-test-user';
   await seedTestSession(context, baseURL, { role: 'editor', userId });
   await seedLocalState(page);
+  // Not 'networkidle': same-origin /api calls made while the service worker
+  // takes control are never reported finished to Playwright, so the page
+  // never looks idle. The waits below target what the scan needs instead.
   await page.goto('/app/edit');
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('load');
 
   const demoCacheKey = `${BOARD_CACHE_KEY}:${DEMO_BOARD_ID}`;
   await page.waitForFunction((key) => localStorage.getItem(key) !== null, demoCacheKey, {
@@ -202,7 +186,7 @@ export async function openAuthenticatedEditor(
   );
 
   await page.reload();
-  await page.waitForLoadState('networkidle');
-  // The editor-only chrome renders after /api/auth/session resolves.
+  await page.waitForLoadState('load');
+  // The editor-only chrome renders after /api/auth/session resolves (identity and role only).
   await page.getByRole('button', { name: 'Audit' }).waitFor({ timeout: 20_000 });
 }

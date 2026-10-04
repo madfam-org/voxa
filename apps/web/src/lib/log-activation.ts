@@ -1,7 +1,6 @@
 import { DEMO_BOARD_ID } from '@voxa/core';
+import { apiFetch } from '@/lib/api-client';
 import { getUsageConsent, getUtteranceTextConsent } from '@/lib/consent';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
 
 /**
  * Records one button press for usage counts. Sent only when signed in, with
@@ -11,10 +10,10 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
  * otherwise the request carries the board and button ids only.
  */
 export async function logButtonActivation(
-  accessToken: string | undefined,
+  signedIn: boolean,
   input: { boardId: string; buttonId: string; speechText: string },
 ): Promise<void> {
-  if (!accessToken || input.boardId === DEMO_BOARD_ID || !getUsageConsent()) return;
+  if (!signedIn || input.boardId === DEMO_BOARD_ID || !getUsageConsent()) return;
 
   const body: { boardId: string; buttonId: string; speechText?: string } = {
     boardId: input.boardId,
@@ -23,12 +22,9 @@ export async function logButtonActivation(
   if (getUtteranceTextConsent()) body.speechText = input.speechText;
 
   try {
-    await fetch(`${API_URL.replace(/\/$/, '')}/v1/events/activations`, {
+    await apiFetch('/v1/events/activations', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
       keepalive: true,
     });

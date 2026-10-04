@@ -1,50 +1,23 @@
 import createMiddleware from 'next-intl/middleware';
 import { NextRequest, NextResponse } from 'next/server';
+import { handlers } from '@/auth';
 import { routing } from '@/i18n/routing';
-import { isOidcConfigured } from '@/lib/auth';
+import { isAuthConfigured } from '@/lib/auth-env';
+import { bypassesIntl, gateDecision, isPublicPath, stripLocalePrefix } from '@/lib/route-gate';
+import { readServerSession } from '@/lib/server-session';
 import { buildContentSecurityPolicy, generateNonce } from '@/lib/security-headers';
 
 const intlMiddleware = createMiddleware(routing);
 
-function stripLocalePrefix(pathname: string): string {
-  for (const locale of routing.locales) {
-    if (pathname === `/${locale}`) return '/';
-    if (pathname.startsWith(`/${locale}/`)) {
-      return pathname.slice(locale.length + 1) || '/';
-    }
-  }
-  return pathname;
-}
-
-function isPublicPath(pathname: string): boolean {
-  return (
-    pathname === '/' ||
-    pathname.startsWith('/demo') ||
-    pathname.startsWith('/auth') ||
-    pathname.startsWith('/api/auth') ||
-    pathname.startsWith('/api/health') ||
-    pathname.startsWith('/legal')
-  );
-}
-
-function bypassIntlMiddleware(pathname: string): boolean {
-  return (
-    pathname.startsWith('/api/') ||
-    pathname === '/auth/callback' ||
-    pathname.startsWith('/auth/callback/') ||
-    pathname === '/auth/signout' ||
-    pathname.startsWith('/auth/signout/')
-  );
-}
-
 function contentSecurityPolicy(nonce: string): string {
   const isDev = process.env.NODE_ENV === 'development';
   return buildContentSecurityPolicy(nonce, {
-    // The same expression the browser code uses for the API base (inlined at
-    // build time), so the policy allows exactly the origin the app calls.
-    // Production images always set NEXT_PUBLIC_API_URL (apps/web/Dockerfile).
+    // The browser opens the live-sync WebSocket to the API origin (HTTP calls
+    // go through the same-origin proxy). Production images always set
+    // NEXT_PUBLIC_API_URL (apps/web/Dockerfile).
     apiUrl: process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000',
-    oidcIssuers: [process.env.NEXT_PUBLIC_OIDC_ISSUER, process.env.OIDC_ISSUER],
+    // Sign-in and sign-out navigate to Janua (form-action covers the redirect).
+    oidcIssuers: [process.env.AUTH_JANUA_ISSUER],
     isDev,
   });
 }
@@ -54,18 +27,17 @@ function withCsp(response: NextResponse, csp: string): NextResponse {
   return response;
 }
 
-export function middleware(request: NextRequest) {
-  const pathname = stripLocalePrefix(request.nextUrl.pathname);
-
-  if (bypassIntlMiddleware(pathname)) {
-    if (!isOidcConfigured() || isPublicPath(pathname)) {
-      return NextResponse.next();
-    }
-    if (!request.cookies.get('voxa_session')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    return NextResponse.next();
-  }
+/**
+ * Locale routing, the nonce CSP and the sign-in gate.
+ *
+ * Pages that need a session are gated on a VALID one: Auth.js's own session
+ * endpoint decrypts the cookie and runs the `jwt` callback (refresh when the
+ * access token is due, sign-out when it cannot be refreshed). A rotated
+ * session is written back on this response. Public pages never read it.
+ */
+export default async function middleware(request: NextRequest): Promise<NextResponse> {
+  const pathname = stripLocalePrefix(request.nextUrl.pathname, routing.locales);
+  if (bypassesIntl(pathname)) return NextResponse.next();
 
   // Next.js reads the nonce from the request's CSP header and stamps it on the
   // scripts it renders; next-intl forwards these request headers.
@@ -75,31 +47,32 @@ export function middleware(request: NextRequest) {
   requestHeaders.set('x-nonce', nonce);
   requestHeaders.set('Content-Security-Policy', csp);
 
-  const intlResponse = withCsp(
-    intlMiddleware(new NextRequest(request, { headers: requestHeaders })),
-    csp,
-  );
-
-  if (!isOidcConfigured() || isPublicPath(pathname)) {
-    return intlResponse;
+  const authConfigured = isAuthConfigured();
+  let hasValidSession = false;
+  let setCookies: string[] = [];
+  if (authConfigured && !isPublicPath(pathname)) {
+    const session = await readServerSession(request, { sessionHandler: handlers.GET });
+    hasValidSession = Boolean(session.token);
+    setCookies = session.setCookies;
   }
 
-  if (!request.cookies.get('voxa_session')) {
+  let response: NextResponse;
+  if (gateDecision({ pathname, authConfigured, hasValidSession }) === 'signin') {
     const url = request.nextUrl.clone();
-    const localePrefix = routing.locales.find(
-      (locale) =>
-        request.nextUrl.pathname === `/${locale}` ||
-        request.nextUrl.pathname.startsWith(`/${locale}/`),
-    ) ?? routing.defaultLocale;
-    url.pathname =
-      localePrefix === routing.defaultLocale
-        ? '/auth/signin'
-        : `/${localePrefix}/auth/signin`;
+    const localePrefix =
+      routing.locales.find(
+        (locale) =>
+          request.nextUrl.pathname === `/${locale}` || request.nextUrl.pathname.startsWith(`/${locale}/`),
+      ) ?? routing.defaultLocale;
+    url.pathname = localePrefix === routing.defaultLocale ? '/auth/signin' : `/${localePrefix}/auth/signin`;
+    url.search = '';
     url.searchParams.set('redirect_to', pathname);
-    return withCsp(NextResponse.redirect(url), csp);
+    response = withCsp(NextResponse.redirect(url), csp);
+  } else {
+    response = withCsp(intlMiddleware(new NextRequest(request, { headers: requestHeaders })), csp);
   }
-
-  return intlResponse;
+  for (const line of setCookies) response.headers.append('Set-Cookie', line);
+  return response;
 }
 
 export const config = {

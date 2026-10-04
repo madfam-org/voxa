@@ -1,17 +1,16 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { apiFetch } from '@/lib/api-client';
+import { isSignedIn as fetchSignedIn } from '@/lib/client-session';
 import {
   CONSENT_CHANGE_EVENT,
-  fetchAccessToken,
   getAiConsent,
   readConsentCache,
   writeConsentCache,
 } from '@/lib/consent';
 import type { Board, BoardButton } from '@voxa/core';
 import { localAiService, type SymbolPrediction, type TextPrediction } from '@voxa/ai';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
 
 function localPredictions(
   board: Board,
@@ -47,20 +46,18 @@ async function fetchPredictions(
   partialText: string,
   recentButtonIds: string[],
   contentLocale: string,
-  accessToken?: string,
+  signedIn: boolean,
 ): Promise<{ text: TextPrediction[]; symbols: SymbolPrediction[] }> {
-  if (!accessToken) {
+  if (!signedIn) {
     const [text, symbols] = await localPredictions(board, partialText, recentButtonIds, contentLocale);
     return { text, symbols };
   }
 
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${accessToken}`,
-  };
+  // Through the same-origin proxy, which adds the session's bearer on the server.
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
 
   const [textRes, symbolRes] = await Promise.all([
-    fetch(`${API_URL}/v1/ai/predict/text`, {
+    apiFetch('/v1/ai/predict/text', {
       method: 'POST',
       headers,
       body: JSON.stringify({
@@ -71,7 +68,7 @@ async function fetchPredictions(
         maxSuggestions: 3,
       }),
     }),
-    fetch(`${API_URL}/v1/ai/predict/symbols`, {
+    apiFetch('/v1/ai/predict/symbols', {
       method: 'POST',
       headers,
       body: JSON.stringify({
@@ -129,14 +126,14 @@ export function usePredictions(
     let cancelled = false;
 
     (async () => {
-      const accessToken = await fetchAccessToken();
+      const signedIn = await fetchSignedIn();
 
       const { text, symbols } = await fetchPredictions(
         board,
         partialText,
         recentButtonIds,
         contentLocale,
-        accessToken,
+        signedIn,
       );
 
       if (!cancelled) {

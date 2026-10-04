@@ -31,7 +31,7 @@ spec:
       annotations:
         kubectl.kubernetes.io/restartedAt: "2026-10-04T22:51:47Z"
         reloader.stakater.com/match: "true"
-        secret.reloader.stakater.com/reload: "voxa-secrets"
+        secret.reloader.stakater.com/reload: "voxa-secrets,voxa-web-session"
       labels:
         app: voxa-web
         app.kubernetes.io/name: voxa-web
@@ -74,24 +74,37 @@ spec:
               value: "1"
             - name: NEXT_PUBLIC_API_URL
               value: "https://voxa-api.madfam.io"
-            - name: NEXT_PUBLIC_OIDC_ISSUER
-              value: "https://auth.madfam.io"
-            - name: OIDC_ISSUER
-              value: "https://auth.madfam.io"
-            - name: NEXT_PUBLIC_OIDC_CLIENT_ID
-              value: "jnc_4qRWyI-ul_GL28hrSxrX7AvIyotFMBuB"
-            - name: OIDC_CLIENT_ID
-              value: "jnc_4qRWyI-ul_GL28hrSxrX7AvIyotFMBuB"
             - name: NEXT_PUBLIC_BASE_URL
               value: "https://voxa.madfam.io"
             # robots.txt/sitemap.xml/llms.txt: only this host is crawlable (R40).
             - name: VOXA_INDEXABLE_HOSTS
               value: "voxa.madfam.io"
-            - name: OIDC_CLIENT_SECRET
+            # Sign-in (Auth.js + Janua; docs/auth/JANUA.md). The Janua client is the
+            # one the web always used; its secret keeps its Secret key name.
+            # No AUTH_URL: this web serves the landing host and the app host,
+            # and Auth.js builds each callback from the host the browser used
+            # (trustHost), so sign-in stays on that host.
+            - name: AUTH_JANUA_ISSUER
+              value: "https://auth.madfam.io"
+            - name: AUTH_JANUA_CLIENT_ID
+              value: "jnc_4qRWyI-ul_GL28hrSxrX7AvIyotFMBuB"
+            - name: AUTH_JANUA_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
                   name: voxa-secrets
                   key: OIDC_CLIENT_SECRET
+                  optional: true
+            # Encrypts the session cookie: this app's own secret, never the Janua
+            # client secret (R42). Delivered by the voxa-web-session
+            # ExternalSecret (secret intake, --generate). Optional here so a
+            # missing key shows up as
+            # /api/health/ready 503 (missing: AUTH_SECRET) and the rollout stalls on
+            # the previous pods (maxUnavailable: 0).
+            - name: AUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: voxa-web-session
+                  key: AUTH_SECRET
                   optional: true
           resources:
             requests:

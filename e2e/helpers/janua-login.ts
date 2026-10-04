@@ -32,16 +32,13 @@ export async function signInViaJanua(page: Page): Promise<void> {
     throw new Error(`Janua sign-in failed: still on ${page.url()}`);
   }
 
-  await page.waitForResponse(
-    (response) =>
-      response.url().includes('/api/auth/session') && response.status() === 200,
-    { timeout: 30000 },
-  ).catch(async () => {
-    const session = await page.request.get('/api/auth/session');
-    if (!session.ok()) {
-      throw new Error(`Session not established (${session.status()}): ${await session.text()}`);
-    }
-  });
+  // Auth.js answers /api/auth/session with 200 and `null` when signed out:
+  // check that it names a user (identity and role only, never a token).
+  const session = await page.request.get('/api/auth/session');
+  const body = (await session.json().catch(() => null)) as { user?: { id?: string } } | null;
+  if (!session.ok() || !body?.user?.id) {
+    throw new Error(`Session not established (${session.status()})`);
+  }
 
   await page.goto('/app');
   await expect(page.getByRole('button', { name: ui('common.settings') })).toBeVisible({ timeout: 20000 });

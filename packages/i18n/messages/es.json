@@ -54,16 +54,17 @@
     "title": "Inicia sesión en Voxa",
     "subtitle": "Usa tu cuenta MADFAM (Janua) para sincronizar tableros y colaborar con tu equipo.",
     "continueJanua": "Continuar con Janua",
-    "oidcNotConfigured": "OIDC no está configurado. Define NEXT_PUBLIC_OIDC_ISSUER y NEXT_PUBLIC_OIDC_CLIENT_ID para inicio de sesión en producción.",
+    "switchAccount": "Cambiar de cuenta",
+    "signInAsSomeoneElse": "Entrar como otra persona",
+    "signOut": "Cerrar sesión",
+    "accountControls": "Cuenta",
+    "sharedDeviceHint": "¿Compartes esta tableta? Al cambiar de cuenta o cerrar sesión, Voxa borra de este dispositivo las copias locales de tableros y los cambios pendientes de la cuenta anterior.",
+    "oidcNotConfigured": "El inicio de sesión no está configurado. Define AUTH_SECRET y las variables AUTH_JANUA_* para iniciar sesión.",
     "errors": {
-      "missing_code_or_state": "No se pudo completar el inicio de sesión. Inténtalo de nuevo.",
-      "token_exchange_failed": "Falló el intercambio de token con Janua. Inténtalo de nuevo.",
-      "state_mismatch": "La sesión de inicio expiró. Inténtalo de nuevo.",
-      "id_token_verification_failed": "No se pudo verificar el token de identidad de Janua.",
-      "missing_tokens": "Janua no devolvió los tokens necesarios.",
-      "missing_required_claims": "La cuenta Janua no incluye correo o id de usuario.",
-      "invalid_token_expiry": "Janua devolvió una caducidad de sesión inválida.",
-      "generic": "Error de autenticación: {code}"
+      "AccessDenied": "Janua no permitió el acceso con esa cuenta. Inténtalo con otra cuenta.",
+      "Configuration": "El inicio de sesión no está disponible en este momento. Inténtalo más tarde.",
+      "Verification": "El enlace de inicio de sesión expiró o ya se usó. Inténtalo de nuevo.",
+      "generic": "No se pudo completar el inicio de sesión. Inténtalo de nuevo."
     }
   },
   "landing": {
@@ -615,7 +616,8 @@
     "apiUnreachable": "No se pudo conectar con el servidor: se usa el tablero de demostración local",
     "saveQueued": "Guardado en cola: se sincronizará cuando vuelva la conexión",
     "motorPlanRejected": "No se guardó: este cambio mueve un botón bloqueado (planificación motora). Solo un administrador puede anular un bloqueo; si no, desbloquea el botón primero. El tablero se recargó desde el servidor.",
-    "saveRejected": "No se guardó: el servidor rechazó este cambio ({detail}). No se reintentará."
+    "saveRejected": "No se guardó: el servidor rechazó este cambio ({detail}). No se reintentará.",
+    "pendingDroppedOtherAccount": "Se descartaron cambios sin conexión hechos con otra cuenta en este dispositivo; no se enviaron."
   },
   "pwa": {
     "installApp": "Instalar app",

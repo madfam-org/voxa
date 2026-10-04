@@ -35,7 +35,7 @@ describe('pending-board-save', () => {
       createStorage(localBacking);
   });
 
-  it('queues and loads a pending board save from localStorage', async () => {
+  it('queues and loads a pending board save for the account that made it', async () => {
     const {
       clearPendingBoardSave,
       hasPendingBoardSave,
@@ -46,15 +46,16 @@ describe('pending-board-save', () => {
     const board = createDemoBoard();
     board.name = 'Pending soak board';
 
-    queuePendingBoardSaveSync('demo-core', board);
-    assert.equal(await hasPendingBoardSave('demo-core'), true);
+    queuePendingBoardSaveSync('demo-core', board, 'user-a');
+    assert.equal(await hasPendingBoardSave('demo-core', 'user-a'), true);
 
-    const loaded = await loadPendingBoardSave('demo-core');
-    assert.equal(loaded?.name, 'Pending soak board');
-    assert.equal(loaded?.id, board.id);
+    const loaded = await loadPendingBoardSave('demo-core', 'user-a');
+    assert.equal(loaded.status, 'ready');
+    assert.equal(loaded.status === 'ready' && loaded.board.name, 'Pending soak board');
+    assert.equal(loaded.status === 'ready' && loaded.board.id, board.id);
 
     await clearPendingBoardSave('demo-core');
-    assert.equal(await hasPendingBoardSave('demo-core'), false);
+    assert.equal(await hasPendingBoardSave('demo-core', 'user-a'), false);
     assert.equal(localBacking[`${PENDING_SAVE_KEY}:demo-core`], undefined);
   });
 
@@ -64,8 +65,39 @@ describe('pending-board-save', () => {
     const board = createDemoBoard();
     board.version = 42;
 
-    await queuePendingBoardSave('demo-core', board);
-    const loaded = await loadPendingBoardSave('demo-core');
-    assert.equal(loaded?.version, 42);
+    await queuePendingBoardSave('demo-core', board, 'user-a');
+    const loaded = await loadPendingBoardSave('demo-core', 'user-a');
+    assert.equal(loaded.status === 'ready' && loaded.board.version, 42);
+  });
+
+  it('never hands user A’s queued write to user B: it is deleted unsent', async () => {
+    const { loadPendingBoardSave, queuePendingBoardSave } = await import('./pending-board-save.js');
+    await queuePendingBoardSave('family-board', createDemoBoard(), 'user-a');
+
+    assert.deepEqual(await loadPendingBoardSave('family-board', 'user-b'), { status: 'dropped' });
+    assert.equal(localBacking[`${PENDING_SAVE_KEY}:family-board`], undefined);
+    // Gone for user A too: nothing is replayed later under anyone.
+    assert.deepEqual(await loadPendingBoardSave('family-board', 'user-a'), { status: 'none' });
+  });
+
+  it('drops a queued write when nobody is signed in', async () => {
+    const { loadPendingBoardSave, queuePendingBoardSave } = await import('./pending-board-save.js');
+    await queuePendingBoardSave('family-board', createDemoBoard(), 'user-a');
+    assert.deepEqual(await loadPendingBoardSave('family-board', null), { status: 'dropped' });
+  });
+
+  it('drops a save queued before writes carried an owner', async () => {
+    const { loadPendingBoardSave } = await import('./pending-board-save.js');
+    localBacking[`${PENDING_SAVE_KEY}:family-board`] = JSON.stringify(createDemoBoard());
+    assert.deepEqual(await loadPendingBoardSave('family-board', 'user-b'), { status: 'dropped' });
+    assert.equal(localBacking[`${PENDING_SAVE_KEY}:family-board`], undefined);
+  });
+
+  it('keeps a queued write while it cannot tell who is signed in (offline)', async () => {
+    const { loadPendingBoardSave, queuePendingBoardSave } = await import('./pending-board-save.js');
+    await queuePendingBoardSave('family-board', createDemoBoard(), 'user-a');
+    assert.deepEqual(await loadPendingBoardSave('family-board', undefined), { status: 'held' });
+    const later = await loadPendingBoardSave('family-board', 'user-a');
+    assert.equal(later.status, 'ready');
   });
 });

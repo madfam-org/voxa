@@ -53,16 +53,17 @@
     "title": "Connectez-vous à Voxa",
     "subtitle": "Utilisez votre compte MADFAM (Janua) pour synchroniser les tableaux et collaborer avec votre équipe.",
     "continueJanua": "Continuer avec Janua",
-    "oidcNotConfigured": "OIDC n'est pas configuré. Définissez NEXT_PUBLIC_OIDC_ISSUER et NEXT_PUBLIC_OIDC_CLIENT_ID pour la connexion en production.",
+    "switchAccount": "Changer de compte",
+    "signInAsSomeoneElse": "Se connecter en tant qu’une autre personne",
+    "signOut": "Se déconnecter",
+    "accountControls": "Compte",
+    "sharedDeviceHint": "Vous partagez cette tablette ? Quand vous changez de compte ou vous déconnectez, Voxa supprime de cet appareil les copies locales des tableaux et les modifications en attente du compte précédent.",
+    "oidcNotConfigured": "La connexion n’est pas configurée. Définissez AUTH_SECRET et les variables AUTH_JANUA_* pour activer la connexion.",
     "errors": {
-      "missing_code_or_state": "La connexion n'a pas pu être terminée. Réessayez.",
-      "token_exchange_failed": "Échec de l'échange de jeton Janua. Réessayez.",
-      "state_mismatch": "La session de connexion a expiré. Réessayez.",
-      "id_token_verification_failed": "Impossible de vérifier le jeton d'identité Janua.",
-      "missing_tokens": "Janua n'a pas renvoyé les jetons requis.",
-      "missing_required_claims": "Le compte Janua n'inclut pas l'e-mail ou l'identifiant utilisateur.",
-      "invalid_token_expiry": "Janua a renvoyé une expiration de session invalide.",
-      "generic": "Erreur d'authentification : {code}"
+      "AccessDenied": "Janua n’a pas autorisé l’accès avec ce compte. Essayez un autre compte.",
+      "Configuration": "La connexion n’est pas disponible pour le moment. Réessayez plus tard.",
+      "Verification": "Le lien de connexion a expiré ou a déjà été utilisé. Réessayez.",
+      "generic": "La connexion n’a pas pu aboutir. Réessayez."
     }
   },
   "landing": {
@@ -614,7 +615,8 @@
     "apiUnreachable": "Serveur injoignable — tableau de démonstration local utilisé",
     "saveQueued": "Enregistrement en attente — synchronisation au retour de la connexion",
     "motorPlanRejected": "Non enregistré : ce changement déplace un bouton verrouillé (plan moteur). Seul un administrateur peut lever un verrou ; sinon, déverrouillez d'abord le bouton. Le tableau a été rechargé depuis le serveur.",
-    "saveRejected": "Non enregistré : le serveur a refusé ce changement ({detail}). Il ne sera pas réessayé."
+    "saveRejected": "Non enregistré : le serveur a refusé ce changement ({detail}). Il ne sera pas réessayé.",
+    "pendingDroppedOtherAccount": "Des modifications hors ligne faites avec un autre compte sur cet appareil ont été supprimées sans être envoyées."
   },
   "pwa": {
     "installApp": "Installer l'app",

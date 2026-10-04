@@ -1,24 +1,24 @@
 import { test, expect } from '@playwright/test';
+import { ui } from '../helpers/i18n';
 import { hasJanuaTestCredentials, signInViaJanua } from '../helpers/janua-login';
 
 test.describe('Staging authenticated UX soak', () => {
-  test('sign-out clears session and API returns 401', async ({ page, request }) => {
+  test('sign-out ends the session and the proxy then answers 401', async ({ page }) => {
     test.skip(!hasJanuaTestCredentials(), 'Requires JANUA_TEST_EMAIL/PASSWORD');
 
     await signInViaJanua(page);
 
     const sessionBefore = await page.request.get('/api/auth/session');
-    expect(sessionBefore.ok()).toBeTruthy();
+    expect(((await sessionBefore.json()) as { user?: { id?: string } } | null)?.user?.id).toBeTruthy();
 
-    await page.goto('/auth/signout');
-    await page.waitForURL(/voxa-staging\.madfam\.io/);
+    // Sign-out is a POST form; GET answers 405.
+    expect((await page.request.get('/auth/signout', { maxRedirects: 0 })).status()).toBe(405);
+    await page.getByRole('button', { name: ui('auth.signOut') }).click();
+    await page.waitForURL(/\/auth\/signin/, { timeout: 30_000 });
 
     const sessionAfter = await page.request.get('/api/auth/session');
-    expect(sessionAfter.status()).toBe(401);
-
-    const apiBase =
-      process.env.VOXA_STAGING_API_URL ?? 'https://voxa-api-staging.madfam.io';
-    const boards = await request.get(`${apiBase}/v1/boards`);
+    expect(await sessionAfter.json()).toBeNull();
+    const boards = await page.request.get('/api/v1/boards');
     expect(boards.status()).toBe(401);
   });
 });

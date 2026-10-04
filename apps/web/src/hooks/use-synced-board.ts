@@ -15,6 +15,13 @@ import {
   type TeamRole,
 } from '@voxa/core';
 import { createVoxaClient, isVersionConflictError, type BoardImportFormat } from '@voxa/sync';
+import { API_PROXY_BASE, API_WS_BASE } from '@/lib/api-client';
+import {
+  lastKnownAccountOwner,
+  loadClientSession,
+  reloadClientSession,
+  type ClientSession,
+} from '@/lib/client-session';
 import { initialBoardId } from '@/lib/editor-access';
 import { exportBoardObfJson } from '@/lib/local-obf-export';
 import { BOARD_CACHE_KEY, SELECTED_BOARD_KEY } from '@/lib/communicator-settings';
@@ -22,13 +29,10 @@ import { registerBackgroundSync } from '@/lib/offline-idb';
 import { classifySaveFailure } from '@/lib/save-errors';
 import {
   clearPendingBoardSave,
-  hasPendingBoardSave,
   loadPendingBoardSave,
   queuePendingBoardSave,
   queuePendingBoardSaveSync,
 } from '@/lib/pending-board-save';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
 
 export interface BoardSummary {
   id: string;
@@ -128,47 +132,55 @@ export function useSyncedBoard(role: TeamRole) {
     [boardId],
   );
 
-  const [accessToken, setAccessToken] = useState<string | undefined>();
+  // The session holds no token for page code: identity and role only. API
+  // calls go through the same-origin proxy with the session cookie. Nothing
+  // loads before the session is known, because claiming this browser's stored
+  // data for the signed-in account may purge another account's copies first.
+  const [sessionReady, setSessionReady] = useState(false);
+  const [sessionStatus, setSessionStatus] = useState<ClientSession['status']>('unknown');
   const [sessionUserId, setSessionUserId] = useState<string>('web-user');
   const [sessionTeamRole, setSessionTeamRole] = useState<TeamRole>('communicator');
+  const signedIn = sessionStatus === 'signed-in';
+  // Whose queued saves may be sent: the signed-in user; nobody when signed
+  // out (they are dropped); undecided while the session is unknown (offline),
+  // so they are kept until it is known.
+  const flushOwner: string | null | undefined =
+    sessionStatus === 'unknown' ? undefined : signedIn ? sessionUserId : null;
+  // Who a save made now belongs to. Offline, the account this browser's data
+  // was last claimed for; checked against the real session before sending.
+  const queueOwner = signedIn ? sessionUserId : sessionStatus === 'unknown' ? lastKnownAccountOwner() : null;
+
+  const applySession = useCallback((session: ClientSession) => {
+    setSessionStatus(session.status);
+    if (session.userId) setSessionUserId(session.userId);
+    setSessionTeamRole(session.teamRole);
+    setSessionReady(true);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch('/api/auth/session');
-        if (!res.ok) return;
-        const body = (await res.json()) as {
-          accessToken?: string;
-          user?: { id?: string };
-          teamRole?: TeamRole;
-        };
-        if (cancelled) return;
-        if (body.accessToken) setAccessToken(body.accessToken);
-        if (body.user?.id) setSessionUserId(body.user.id);
-        if (body.teamRole) setSessionTeamRole(body.teamRole);
-      } catch {
-        /* unauthenticated or OIDC not configured */
-      }
-    })();
+    void loadClientSession().then((session) => {
+      if (!cancelled) applySession(session);
+    });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [applySession]);
 
   const client = useMemo(
     () =>
       createVoxaClient({
-        baseUrl: API_URL,
+        baseUrl: API_PROXY_BASE,
+        wsBaseUrl: API_WS_BASE,
+        sameOriginSession: true,
         userId: sessionUserId,
         role,
-        accessToken,
       }),
-    [accessToken, role, sessionUserId],
+    [role, sessionUserId],
   );
 
   useEffect(() => {
-    if (!accessToken) {
+    if (!signedIn) {
       setBoardCatalog([]);
       setCatalogStatus('idle');
       return;
@@ -192,11 +204,26 @@ export function useSyncedBoard(role: TeamRole) {
     return () => {
       cancelled = true;
     };
-  }, [accessToken, client, catalogNonce]);
+  }, [signedIn, client, catalogNonce]);
+
+  /**
+   * A queued save made under another account is deleted unsent; say so. The
+   * notice stays until this account saves, so a later sync does not hide it.
+   */
+  const [droppedSaveNotice, setDroppedSaveNotice] = useState(false);
+  const reportDroppedSave = useCallback(() => {
+    setPendingSave(false);
+    setDroppedSaveNotice(true);
+  }, []);
 
   const refreshPendingFlag = useCallback(async () => {
-    setPendingSave(await hasPendingBoardSave(boardId));
-  }, [boardId]);
+    const pending = await loadPendingBoardSave(boardId, flushOwner);
+    if (pending.status === 'dropped') {
+      reportDroppedSave();
+      return;
+    }
+    setPendingSave(pending.status === 'ready' || pending.status === 'held');
+  }, [boardId, flushOwner, reportDroppedSave]);
 
   const applyVersionConflict = useCallback(async (fromManualSave = false) => {
     try {
@@ -255,15 +282,23 @@ export function useSyncedBoard(role: TeamRole) {
       setPendingSave(false);
       return;
     }
-    const pending = await loadPendingBoardSave(boardId);
-    if (!pending) {
+    const pending = await loadPendingBoardSave(boardId, flushOwner);
+    if (pending.status === 'dropped') {
+      reportDroppedSave();
+      return;
+    }
+    if (pending.status === 'held') {
+      setPendingSave(true);
+      return;
+    }
+    if (pending.status === 'none') {
       setPendingSave(false);
       if (!rejectionShownRef.current) setSyncError(null);
       return;
     }
 
     try {
-      const result = await client.saveBoard(pending, pending.version, saveOptions());
+      const result = await client.saveBoard(pending.board, pending.board.version, saveOptions());
       setBoard(result.board);
       await clearPendingBoardSave(boardId);
       setPendingSave(false);
@@ -284,7 +319,7 @@ export function useSyncedBoard(role: TeamRole) {
       setPendingSave(true);
       setSyncError((err as Error).message);
     }
-  }, [applyVersionConflict, boardId, client, dropRejectedSave, setBoard]);
+  }, [applyVersionConflict, boardId, client, dropRejectedSave, flushOwner, reportDroppedSave, setBoard]);
 
   const reload = useCallback(async () => {
     try {
@@ -302,6 +337,7 @@ export function useSyncedBoard(role: TeamRole) {
   }, [boardId, client, flushPendingSave, refreshPendingFlag, setBoard]);
 
   useEffect(() => {
+    if (!sessionReady) return;
     let cancelled = false;
     let disconnect: (() => void) | undefined;
 
@@ -352,7 +388,7 @@ export function useSyncedBoard(role: TeamRole) {
       cancelled = true;
       disconnect?.();
     };
-  }, [boardId, client, flushPendingSave, refreshPendingFlag, setBoard]);
+  }, [boardId, client, flushPendingSave, refreshPendingFlag, sessionReady, setBoard]);
 
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return;
@@ -368,22 +404,35 @@ export function useSyncedBoard(role: TeamRole) {
   }, [flushPendingSave]);
 
   useEffect(() => {
-    const onOnline = () => void flushPendingSave();
+    const onOnline = () => {
+      // Back online after an offline start: learn who is signed in first, so
+      // held saves are sent for their owner (or dropped for anyone else).
+      if (sessionStatus === 'unknown') {
+        void reloadClientSession().then(applySession);
+        return;
+      }
+      void flushPendingSave();
+    };
     window.addEventListener('online', onOnline);
     return () => window.removeEventListener('online', onOnline);
-  }, [flushPendingSave]);
+  }, [applySession, flushPendingSave, sessionStatus]);
+
+  // When the session becomes known, settle anything that was held.
+  useEffect(() => {
+    if (sessionStatus !== 'unknown') void refreshPendingFlag();
+  }, [refreshPendingFlag, sessionStatus]);
 
   useEffect(() => {
-    if (!isEditor || !accessToken) return;
+    if (!isEditor || !queueOwner) return;
     if (syncStatus === 'live' && !pendingSave) return;
 
     const timer = window.setTimeout(() => {
-      queuePendingBoardSaveSync(boardId, boardRef.current);
+      queuePendingBoardSaveSync(boardId, boardRef.current, queueOwner);
       setPendingSave(true);
     }, 1500);
 
     return () => window.clearTimeout(timer);
-  }, [accessToken, board, boardId, isEditor, pendingSave, syncStatus]);
+  }, [board, boardId, isEditor, queueOwner, pendingSave, syncStatus]);
 
   const saveBoard = useCallback(async (): Promise<SaveBoardResult> => {
     try {
@@ -395,6 +444,7 @@ export function useSyncedBoard(role: TeamRole) {
       setConflictRefreshed(false);
       motorPlanOverrideRef.current = false;
       rejectionShownRef.current = false;
+      setDroppedSaveNotice(false);
       return result;
     } catch (err) {
       if (isVersionConflictError(err)) {
@@ -405,12 +455,13 @@ export function useSyncedBoard(role: TeamRole) {
       if (kind !== 'retry') {
         throw new Error(await dropRejectedSave(kind, err));
       }
-      await queuePendingBoardSave(boardId, boardRef.current);
+      if (!queueOwner) throw err;
+      await queuePendingBoardSave(boardId, boardRef.current, queueOwner);
       setPendingSave(true);
       void registerBackgroundSync();
       throw new Error(tRef.current('saveQueued'));
     }
-  }, [applyVersionConflict, boardId, client, dropRejectedSave, setBoard]);
+  }, [applyVersionConflict, boardId, client, dropRejectedSave, queueOwner, setBoard]);
 
   /**
    * Import a board file as NEW boards (the server never writes into the board
@@ -528,7 +579,7 @@ export function useSyncedBoard(role: TeamRole) {
     error,
     warnings,
     pendingSave,
-    syncError,
+    syncError: syncError ?? (droppedSaveNotice ? t('pendingDroppedOtherAccount') : null),
     conflictRefreshed,
     clearConflictNotice,
     reload,
@@ -539,8 +590,7 @@ export function useSyncedBoard(role: TeamRole) {
     exportObf,
     exportObz,
     isEditor,
-    isAuthenticated: Boolean(accessToken),
-    accessToken,
+    isAuthenticated: signedIn,
     sessionUserId,
     sessionTeamRole,
   };

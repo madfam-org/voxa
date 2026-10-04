@@ -6,10 +6,24 @@ export { VoxaSyncError, isVersionConflictError } from './errors.js';
 export { buildBoardSyncWsUrl } from './ws-url.js';
 
 export interface VoxaClientOptions {
+  /**
+   * Base of the HTTP API. Native clients use the API origin; the web app uses
+   * its same-origin proxy (`/api`), which adds the bearer on the server.
+   */
   baseUrl: string;
+  /** Origin for the WebSocket (the API origin). Defaults to `baseUrl`. */
+  wsBaseUrl?: string;
   userId?: string;
   role?: TeamRole;
+  /** Bearer for clients that call the API directly (mobile). The web app never holds one. */
   accessToken?: string;
+  /**
+   * The web app's session cookie authenticates every call through the
+   * same-origin proxy: send no Authorization and no development headers.
+   */
+  sameOriginSession?: boolean;
+  /** Called once when the WebSocket gives up because the caller is not signed in. */
+  onUnauthorized?: () => void;
 }
 
 /** File formats `importBoards` accepts. Grid 3, Snap and TouchChat are beta (one page, words only). */
@@ -37,6 +51,7 @@ function teamHeaders(options: VoxaClientOptions): HeadersInit {
     headers.Authorization = `Bearer ${options.accessToken}`;
     return headers;
   }
+  if (options.sameOriginSession) return headers;
 
   headers['X-Voxa-User-Id'] = options.userId ?? 'dev-user';
   headers['X-Voxa-Role'] = options.role ?? 'editor';
@@ -181,23 +196,86 @@ export class VoxaClient {
     }
   }
 
+  /**
+   * Mints a single-use WebSocket ticket (valid 30 seconds) for the caller.
+   * Throws a VoxaSyncError with the HTTP status when it is refused.
+   */
+  async createWsTicket(): Promise<string> {
+    const res = await fetch(this.url('/v1/ws-ticket'), {
+      method: 'POST',
+      headers: teamHeaders(this.options),
+    });
+    if (!res.ok) {
+      await throwApiError(res, 'WebSocket ticket refused');
+    }
+    const body = (await res.json()) as { ticket?: unknown };
+    if (typeof body.ticket !== 'string') throw new VoxaSyncError('Malformed WebSocket ticket', 502);
+    return body.ticket;
+  }
+
+  /**
+   * Live sync for one board. Each connection opens with a fresh ticket. When
+   * the socket closes (network loss, or the API closing it at the access
+   * token's expiry) it reconnects with a new ticket, backing off up to 30
+   * seconds; it stops when the caller is no longer signed in (401/403).
+   */
   connectBoardSync(
     boardId: string,
     onEvent: (event: SyncEvent) => void,
     onStatus?: (status: 'connected' | 'disconnected') => void,
   ): () => void {
-    this.ws = new WebSocket(
-      buildBoardSyncWsUrl(this.options.baseUrl, boardId, this.options.accessToken),
-    );
+    let disposed = false;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+    let attempt = 0;
+    const wsBase = this.options.wsBaseUrl ?? this.options.baseUrl;
 
-    this.ws.onopen = () => onStatus?.('connected');
-    this.ws.onclose = () => onStatus?.('disconnected');
-    this.ws.onmessage = (msg) => {
-      const data = JSON.parse(msg.data as string) as SyncMessage;
-      if (data.type === 'sync') onEvent(data.event);
+    const scheduleRetry = () => {
+      if (disposed) return;
+      const delay = Math.min(30_000, 1000 * 2 ** Math.min(attempt, 5));
+      attempt += 1;
+      retryTimer = setTimeout(() => void open(), delay);
     };
 
+    const open = async () => {
+      let ticket: string;
+      try {
+        ticket = await this.createWsTicket();
+      } catch (err) {
+        if (disposed) return;
+        onStatus?.('disconnected');
+        const status = err instanceof VoxaSyncError ? err.status : 0;
+        if (status === 401 || status === 403) {
+          this.options.onUnauthorized?.();
+          return;
+        }
+        scheduleRetry();
+        return;
+      }
+      if (disposed) return;
+
+      const ws = new WebSocket(buildBoardSyncWsUrl(wsBase, boardId, ticket));
+      this.ws = ws;
+      ws.onopen = () => {
+        attempt = 0;
+        onStatus?.('connected');
+      };
+      ws.onclose = () => {
+        if (this.ws === ws) this.ws = null;
+        if (disposed) return;
+        onStatus?.('disconnected');
+        scheduleRetry();
+      };
+      ws.onmessage = (msg) => {
+        const data = JSON.parse(msg.data as string) as SyncMessage;
+        if (data.type === 'sync') onEvent(data.event);
+      };
+    };
+
+    void open();
+
     return () => {
+      disposed = true;
+      if (retryTimer) clearTimeout(retryTimer);
       this.ws?.close();
       this.ws = null;
     };

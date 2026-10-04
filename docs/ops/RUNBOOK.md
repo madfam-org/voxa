@@ -49,14 +49,14 @@ The API holds one pool per process, capped by `DATABASE_POOL_MAX` (default 5), a
 
 ### Web loads but sync fails
 
-1. Confirm `NEXT_PUBLIC_API_URL` points to `https://voxa-api.madfam.io`.
+1. Confirm `NEXT_PUBLIC_API_URL` points to `https://voxa-api.madfam.io`. Page code calls the API through the web's `/api/v1/*` proxy; only the live-sync WebSocket goes to the API origin directly, opened with a single-use ticket from `POST /v1/ws-ticket`.
 2. Verify Cloudflare tunnel junction routes `voxa-api.*` to the API service (not web).
 3. Check CORS: browser origin must be `https://voxa.madfam.io` or staging equivalent.
 
 ### Janua auth errors (401)
 
-1. Confirm Janua OAuth client `voxa` is registered.
-2. Verify `OIDC_CLIENT_SECRET`, `JANUA_ISSUER_URL`, and `JANUA_AUDIENCE=voxa` in secrets.
+1. Confirm the Janua OAuth client is registered with the Auth.js callback (`/api/auth/callback/janua`) and the sign-in page as post-logout redirect, for each host.
+2. Web: `curl -sS https://voxa.madfam.io/api/health/ready` names any missing `AUTH_SECRET` / `AUTH_JANUA_*` setting (names only). API: verify `JANUA_ISSUER_URL` and `JANUA_AUDIENCE=voxa` in secrets.
 3. Set `VOXA_JANUA_AUTH_REQUIRED=true` on the API deployment (not only in secrets — `envFrom` can override `JANUA_AUTH_REQUIRED`). Verify rollout with `curl -sS https://voxa-api.madfam.io/health/ready | jq .authEnforced` (expect `true`).
 
 ### API auth not enforced after deploy (`authEnforced` missing)
@@ -71,7 +71,7 @@ Symptom: Argo shows **Synced** but `/health/ready` has no `authEnforced` field a
    curl -sS https://voxa-api.madfam.io/health/ready
    curl -sS -o /dev/null -w '%{http_code}\n' https://voxa-api.madfam.io/v1/boards
    ```
-5. Sign in at `https://voxa.madfam.io/auth/signin` and confirm `/api/auth/session` returns a token that succeeds against `/v1/boards`.
+5. Sign in at `https://voxa.madfam.io/auth/signin` and confirm `/api/v1/boards` on the web origin (the same-origin proxy, which adds the bearer on the server) answers 200. `/api/auth/session` returns identity and role only, never a token.
 
 ### GitHub → Enclii webhook returns 401 after secret rotation
 

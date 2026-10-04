@@ -53,16 +53,17 @@
     "title": "Sign in to Voxa",
     "subtitle": "Use your MADFAM account (Janua) to sync boards and collaborate with your team.",
     "continueJanua": "Continue with Janua",
-    "oidcNotConfigured": "OIDC is not configured. Set NEXT_PUBLIC_OIDC_ISSUER and NEXT_PUBLIC_OIDC_CLIENT_ID for production sign-in.",
+    "switchAccount": "Switch account",
+    "signInAsSomeoneElse": "Sign in as someone else",
+    "signOut": "Sign out",
+    "accountControls": "Account",
+    "sharedDeviceHint": "Sharing this tablet? When you switch accounts or sign out, Voxa deletes the previous account’s local board copies and pending changes from this device.",
+    "oidcNotConfigured": "Sign-in is not configured. Set AUTH_SECRET and the AUTH_JANUA_* variables to enable sign-in.",
     "errors": {
-      "missing_code_or_state": "Sign-in could not be completed. Try again.",
-      "token_exchange_failed": "Janua token exchange failed. Try again.",
-      "state_mismatch": "Sign-in session expired. Try again.",
-      "id_token_verification_failed": "Could not verify Janua identity token.",
-      "missing_tokens": "Janua did not return required tokens.",
-      "missing_required_claims": "Janua account is missing email or user id.",
-      "invalid_token_expiry": "Janua returned an invalid session expiry.",
-      "generic": "Authentication error: {code}"
+      "AccessDenied": "Janua did not allow access with that account. Try another account.",
+      "Configuration": "Sign-in is not available right now. Please try again later.",
+      "Verification": "The sign-in link expired or was already used. Please try again.",
+      "generic": "Sign-in could not be completed. Please try again."
     }
   },
   "landing": {
@@ -614,7 +615,8 @@
     "apiUnreachable": "API unreachable — using local demo board",
     "saveQueued": "Save queued — will sync when back online",
     "motorPlanRejected": "Not saved: this change moves a locked (motor-plan) button. Only an admin can override a lock; otherwise unlock the button first. The board was reloaded from the server.",
-    "saveRejected": "Not saved: the server refused this change ({detail}). It will not be retried."
+    "saveRejected": "Not saved: the server refused this change ({detail}). It will not be retried.",
+    "pendingDroppedOtherAccount": "Offline changes made under another account on this device were discarded and not sent."
   },
   "pwa": {
     "installApp": "Install app",

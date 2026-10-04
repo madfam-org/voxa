@@ -57,6 +57,13 @@
       "when": 1791099826786,
       "tag": "0007_board_layout_and_display",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791103129132,
+      "tag": "0008_ws_tickets",
+      "breakpoints": true
     }
   ]
 }

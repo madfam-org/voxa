@@ -93,6 +93,13 @@ jobs:
   a11y:
     runs-on: ubuntu-24.04
     needs: build
+    env:
+      # Test-only sign-in settings for the standalone server below: the
+      # Playwright helpers encrypt sessions with this secret
+      # (e2e/helpers/test-session.ts), and session-account.spec.ts serves a
+      # stand-in Janua on this port. Never deployed anywhere.
+      VOXA_E2E_AUTH_SECRET: voxa-e2e-test-only-auth-secret-not-for-deploy
+      VOXA_E2E_JANUA_PORT: "4455"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -127,6 +134,10 @@ jobs:
           # origin, is proxied as an external rewrite and redirects back to
           # itself (ERR_TOO_MANY_REDIRECTS): Spanish pages could not be scanned.
           HOSTNAME: 0.0.0.0
+          AUTH_SECRET: ${{ env.VOXA_E2E_AUTH_SECRET }}
+          AUTH_JANUA_ISSUER: http://127.0.0.1:${{ env.VOXA_E2E_JANUA_PORT }}
+          AUTH_JANUA_CLIENT_ID: voxa-e2e-client
+          AUTH_JANUA_CLIENT_SECRET: voxa-e2e-client-secret-not-for-deploy
       - name: Wait for web
         run: npx --yes wait-on http://127.0.0.1:3000/api/health --timeout 120000
       - name: Image optimizer is off (/_next/image -> 404)
@@ -169,6 +180,22 @@ jobs:
         # 36-cell es-MX board and scanning on; a returning user and /demo never
         # see the setup; a 402 offers the existing board. Same local API port.
         run: pnpm --filter @voxa/e2e test:first-run
+        env:
+          PLAYWRIGHT_BASE_URL: http://127.0.0.1:3000
+          VOXA_E2E_API_URL: http://localhost:4000
+      - name: Sessions, sign-out and account switching
+        # e2e/specs/session-account.spec.ts: no token reaches page scripts,
+        # POST-only sign-out with RP-initiated logout, both switching controls
+        # (prompt=select_account / prompt=login) with local data purged, and a
+        # write queued by one account never sent under another.
+        run: pnpm test:e2e:session
+        env:
+          PLAYWRIGHT_BASE_URL: http://127.0.0.1:3000
+      - name: Live sync over a ticketed WebSocket
+        # e2e/specs/live-sync.spec.ts: two signed-in sessions go Live, an edit
+        # saved through one reaches the other's socket; reused tickets and
+        # ?accessToken= are refused. Starts the built API itself.
+        run: pnpm test:e2e:live
         env:
           PLAYWRIGHT_BASE_URL: http://127.0.0.1:3000
           VOXA_E2E_API_URL: http://localhost:4000

@@ -13,7 +13,7 @@ function authRequiredFlag(): boolean {
 
 /**
  * Whether a caller may pick its identity with `X-Voxa-User-Id` / `X-Voxa-Role`
- * (or `?userId=&role=` on the WebSocket) instead of a Janua access token.
+ * instead of a Janua access token (HTTP only; the WebSocket accepts only tickets).
  *
  * Fails closed: only when `NODE_ENV` is not `production` AND `VOXA_DEV_AUTH` is
  * exactly `true` AND auth is not explicitly required. Anything else means

@@ -4,10 +4,13 @@ import { GET } from './route.js';
 
 describe('GET /api/health', () => {
   const savedSha = process.env.GIT_SHA;
+  const savedSecret = process.env.AUTH_SECRET;
 
   afterEach(() => {
     if (savedSha === undefined) delete process.env.GIT_SHA;
     else process.env.GIT_SHA = savedSha;
+    if (savedSecret === undefined) delete process.env.AUTH_SECRET;
+    else process.env.AUTH_SECRET = savedSecret;
   });
 
   it('returns service metadata for probes', async () => {
@@ -32,5 +35,21 @@ describe('GET /api/health', () => {
     delete process.env.GIT_SHA;
     const body = (await (await GET()).json()) as { build: string };
     assert.equal(body.build, 'unknown');
+  });
+
+  it('reports which sign-in settings are present as booleans, never values', async () => {
+    process.env.AUTH_SECRET = 'test-only-secret-value-xyz';
+    const res = await GET();
+    const text = await res.text();
+    assert.ok(!text.includes('test-only-secret-value-xyz'));
+    const body = JSON.parse(text) as { auth: Record<string, boolean>; oidcClientSecretSet?: unknown };
+    assert.deepEqual(Object.keys(body.auth).sort(), [
+      'AUTH_JANUA_CLIENT_ID',
+      'AUTH_JANUA_CLIENT_SECRET',
+      'AUTH_JANUA_ISSUER',
+      'AUTH_SECRET',
+    ]);
+    assert.equal(body.auth.AUTH_SECRET, true);
+    assert.equal(body.oidcClientSecretSet, undefined);
   });
 });

@@ -5,8 +5,7 @@ import { useTranslations } from 'next-intl';
 import type { BoardButton } from '@voxa/core';
 import { buttonLabel } from '@/lib/board-utils';
 import { neutral, status, surface } from '@/lib/tokens';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
+import { apiFetch } from '@/lib/api-client';
 
 export interface ActivationSummary {
   boardId: string;
@@ -17,7 +16,7 @@ export interface ActivationSummary {
 
 interface UsageReportPanelProps {
   boardId: string;
-  accessToken?: string;
+  signedIn: boolean;
   buttons: BoardButton[];
   onClose: () => void;
 }
@@ -29,7 +28,7 @@ function labelForButton(buttons: BoardButton[], buttonId: string): string {
 
 export function UsageReportPanel({
   boardId,
-  accessToken,
+  signedIn,
   buttons,
   onClose,
 }: UsageReportPanelProps): React.ReactNode {
@@ -41,18 +40,15 @@ export function UsageReportPanel({
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!accessToken) {
+    if (!signedIn) {
       setError(t('signIn'));
       return;
     }
     setBusy(true);
     setError(null);
     try {
-      const res = await fetch(
-        `${API_URL.replace(/\/$/, '')}/v1/events/activations/summary?boardId=${encodeURIComponent(boardId)}&days=${days}`,
-        {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        },
+      const res = await apiFetch(
+        `/v1/events/activations/summary?boardId=${encodeURIComponent(boardId)}&days=${days}`,
       );
       if (!res.ok) {
         const body = (await res.json().catch(() => ({}))) as { error?: string };
@@ -66,7 +62,7 @@ export function UsageReportPanel({
     } finally {
       setBusy(false);
     }
-  }, [accessToken, boardId, days, t]);
+  }, [signedIn, boardId, days, t]);
 
   useEffect(() => {
     void load();

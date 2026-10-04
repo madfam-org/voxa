@@ -66,8 +66,6 @@ jobs:
           build-args: |
             NEXT_PUBLIC_API_URL=https://voxa-api.madfam.io
             NEXT_PUBLIC_BASE_URL=https://voxa.madfam.io
-            NEXT_PUBLIC_OIDC_ISSUER=https://auth.madfam.io
-            NEXT_PUBLIC_OIDC_CLIENT_ID=${{ vars.NEXT_PUBLIC_OIDC_CLIENT_ID }}
             GIT_SHA=${{ github.sha }}
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
