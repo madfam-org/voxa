@@ -18,7 +18,7 @@ import {
 import { touchGuardActive } from '@voxa/access';
 import { AacButton, BoardGrid, CVI_THEMES } from '@voxa/ui';
 import { buttonBorderColor, buttonLabel, buttonSpeech, buttonSymbolUrl } from '@/lib/board-utils';
-import { ConversionGate, type ConversionGateVariant } from '@/components/conversion-gate';
+import { DemoCallToAction, type DemoCallToActionVariant } from '@/components/demo-call-to-action';
 import { SiteFooter, SiteNav } from '@/components/site-chrome';
 import { TouchGuardOverlay } from '@/components/touch-guard-overlay';
 import { VisualScheduleView } from '@/components/visual-schedule-view';
@@ -33,13 +33,20 @@ const DEMO_SCENE_IDS: DemoSceneId[] = ['communicate', 'literacy', 'schedule', 'a
 type GateKey = 'firstMessage' | 'templates' | 'access' | 'institution';
 
 interface GateConfig {
-  variant: ConversionGateVariant;
+  variant: DemoCallToActionVariant;
   title: string;
   body: string;
   id: string;
 }
 
-const GATE_VARIANTS: Record<GateKey, ConversionGateVariant> = {
+/**
+ * The call to action shows on its own only after real use: this many spoken
+ * messages (button taps and «Speak»). It never interrupts speech: it is a
+ * region below the board, not a dialog.
+ */
+export const DEMO_CTA_AFTER_SPOKEN = 5;
+
+const GATE_VARIANTS: Record<GateKey, DemoCallToActionVariant> = {
   firstMessage: 'parent',
   templates: 'feature',
   access: 'feature',
@@ -59,11 +66,14 @@ export function DemoBoardScreen(): React.ReactNode {
   // Per-message choice to say the words exactly as tapped (no Spanish agreement).
   const [keepBaseForm, setKeepBaseForm] = useState(false);
   const [completedStepIds, setCompletedStepIds] = useState<Set<string>>(() => new Set());
-  const [tapCount, setTapCount] = useState(0);
+  const [spokenCount, setSpokenCount] = useState(0);
   const [switchScanOn, setSwitchScanOn] = useState(false);
   const [touchGuardOn, setTouchGuardOn] = useState(false);
   const [shownGates, setShownGates] = useState<Set<string>>(() => new Set());
   const [activeGate, setActiveGate] = useState<GateConfig | null>(null);
+  // Set when the visitor asked for the call to action: focus moves to it then, never otherwise.
+  const focusGateRef = useRef(false);
+  const gateHeadingRef = useRef<HTMLHeadingElement>(null);
   const pendingTouchRef = useRef<string | null>(null);
 
   const literacyMode = isLiteracyKeyboardBoard(board);
@@ -90,10 +100,16 @@ export function DemoBoardScreen(): React.ReactNode {
     (a, b) => a.position.row - b.position.row || a.position.column - b.position.column,
   );
 
+  /**
+   * `requested`: the visitor pressed something that asks for it (plans,
+   * a suggestion, switch scanning), so it shows again and takes focus.
+   * Otherwise it shows once per visit and leaves focus where it is.
+   */
   const openGate = useCallback(
-    (key: GateKey) => {
-      if (shownGates.has(key)) return;
+    (key: GateKey, { requested = false }: { requested?: boolean } = {}) => {
+      if (!requested && shownGates.has(key)) return;
       setShownGates((prev) => new Set(prev).add(key));
+      focusGateRef.current = requested;
       setActiveGate({
         id: key,
         variant: GATE_VARIANTS[key],
@@ -103,6 +119,20 @@ export function DemoBoardScreen(): React.ReactNode {
     },
     [shownGates, t],
   );
+
+  useEffect(() => {
+    if (!activeGate || !focusGateRef.current) return;
+    focusGateRef.current = false;
+    gateHeadingRef.current?.scrollIntoView({ block: 'nearest' });
+    gateHeadingRef.current?.focus({ preventScroll: true });
+  }, [activeGate]);
+
+  // On its own: once per visit, after real use, and only if nothing was shown yet
+  // (it never replaces one the visitor asked for).
+  const anyGateShown = shownGates.size > 0;
+  useEffect(() => {
+    if (spokenCount >= DEMO_CTA_AFTER_SPOKEN && !anyGateShown) openGate('firstMessage');
+  }, [anyGateShown, openGate, spokenCount]);
 
   const activate = useCallback(
     (btn: BoardButton) => {
@@ -119,15 +149,9 @@ export function DemoBoardScreen(): React.ReactNode {
       }
 
       speakText(buttonSpeech(btn), btn.locale);
-
-      setTapCount((count) => {
-        const next = count + 1;
-        if (next === 2) openGate('firstMessage');
-        if (next === 6) openGate('templates');
-        return next;
-      });
+      setSpokenCount((count) => count + 1);
     },
-    [literacyMode, openGate, scheduleMode, utterance],
+    [literacyMode, scheduleMode, utterance],
   );
 
   const { isHighlighted, isGroupHighlighted, liveRef } = useSwitchScan({
@@ -156,6 +180,7 @@ export function DemoBoardScreen(): React.ReactNode {
   const composed = composeMessage(board, utterance, locale);
   const speakAll = () => {
     speakWholeMessage(board, utterance, locale, { agreement: !keepBaseForm });
+    setSpokenCount((count) => count + 1);
   };
 
   const themeKey = scene === 'communicate' ? 'classic-light' : 'cvi-dark';
@@ -213,7 +238,7 @@ export function DemoBoardScreen(): React.ReactNode {
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button
             type="button"
-            onClick={() => openGate('institution')}
+            onClick={() => openGate('institution', { requested: true })}
             style={classicScene ? classicChipBtnGold : chipBtnGold}
           >
             {t('institutionalPlans')}
@@ -265,7 +290,7 @@ export function DemoBoardScreen(): React.ReactNode {
             style={chipBtn}
             onClick={() => {
               setSwitchScanOn((value) => !value);
-              if (!switchScanOn) openGate('access');
+              if (!switchScanOn) openGate('access', { requested: true });
             }}
           >
             {switchScanOn ? t('switchOn') : t('switchOff')}
@@ -297,6 +322,7 @@ export function DemoBoardScreen(): React.ReactNode {
               fontWeight: classicScene ? 600 : undefined,
             }}
             aria-live="polite"
+            data-voxa-message-bar
           >
             {utteranceText}
           </div>
@@ -340,7 +366,7 @@ export function DemoBoardScreen(): React.ReactNode {
               <button
                 key={text}
                 type="button"
-                onClick={() => openGate('templates')}
+                onClick={() => openGate('templates', { requested: true })}
                 style={{ ...chipBtn, background: stone.surfaceRaised, cursor: 'pointer' }}
               >
                 {text}
@@ -431,6 +457,17 @@ export function DemoBoardScreen(): React.ReactNode {
         />
       </div>
 
+      {activeGate ? (
+        <DemoCallToAction
+          key={activeGate.id}
+          ref={gateHeadingRef}
+          variant={activeGate.variant}
+          title={activeGate.title}
+          body={activeGate.body}
+          onDismiss={() => setActiveGate(null)}
+        />
+      ) : null}
+
       <section style={ctaSectionStyle}>
         <h2 style={{ margin: '0 0 8px', fontSize: '1.25rem', color: neutral.text }}>{t('readyTitle')}</h2>
         <p style={{ margin: '0 0 16px', color: neutral.muted, maxWidth: 640, marginInline: 'auto' }}>
@@ -447,14 +484,6 @@ export function DemoBoardScreen(): React.ReactNode {
       </section>
 
       <SiteFooter />
-
-      <ConversionGate
-        open={activeGate !== null}
-        variant={activeGate?.variant ?? 'parent'}
-        title={activeGate?.title ?? ''}
-        body={activeGate?.body ?? ''}
-        onClose={() => setActiveGate(null)}
-      />
     </div>
   );
 }

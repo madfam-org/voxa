@@ -94,7 +94,9 @@ pnpm build
   (`e2e/specs/voice-choice.spec.ts`, no API: a stubbed `speechSynthesis`
   proves a button press, "Speak" and a prediction chip speak with the chosen
   `voiceURI`, rate, pitch, volume and the board's `lang`; axe on the Voice
-  settings section in a light and a dark theme) and `pnpm test:e2e:first-run`
+  settings section in a light and a dark theme; with
+  `e2e/specs/scan-pause.spec.ts`: switch scanning resumes after speech when
+  the engine never fires `end`) and `pnpm test:e2e:first-run`
   (`e2e/specs/first-run.spec.ts`, same local API as the offline spec: a new
   user picks switch scanning, 36 cells and a voice and lands on a 36-cell
   es-MX board with scanning on; a returning user and `/demo` never see the
@@ -318,7 +320,7 @@ rather than passing (each one asserts how much it read).
 | Service worker | `sw.js` must parse as plain JavaScript and never cache `/api/*` or other origins | `apps/web/src/service-worker.test.ts` | unit job | voxa#32 |
 | Image optimizer off | `/_next/image` must answer 404 | `apps/web/src/next-config.test.ts`; `scripts/launch/verify-prod-image-optimizer.sh` | unit job; axe job; after each production web deploy | voxa#13 |
 | Image smoke and build identity | images on Node 22 without package managers, health 200 under the Deployment's securityContext; deploys wait until `/health` serves the commit's `build` | `.github/workflows/image-smoke.yml`, `apps/*/src/lib/build-info.test.ts`, `scripts/launch/wait-for-build.sh` | image-smoke workflow (Dockerfile, lockfile or `package.json` changes); deploy workflows | voxa#33 |
-| Accessibility (axe) | serious or critical WCAG 2.2 AA violations on public pages, the editor panels, `/app` in four themes and the Spanish landing, `/demo`, `/app` and settings | `e2e/specs/a11y.spec.ts` (also the axe steps in `voice-choice`, `offline-media` and `first-run`) | axe job | voxa#4, voxa#36, voxa#40 (Spanish) |
+| Accessibility (axe) | serious or critical WCAG 2.2 AA violations on public pages, the editor panels, `/app` in four themes and the Spanish landing, `/demo`, `/app` and settings; the demo never opens a dialog over the board (20 taps, 20 utterances, the call to action below the board, axe with it visible) | `e2e/specs/a11y.spec.ts`, `e2e/specs/demo-cta.spec.ts` (also the axe steps in `voice-choice`, `offline-media` and `first-run`) | axe job | voxa#4, voxa#36, voxa#40 (Spanish) |
 
 Guard output is `file:line rule`, never the matched text, because CI logs of
 a public repository are public. To allowlist a file, add its path (not a

@@ -74,7 +74,7 @@ A Gestalt (GLP) video plays in a visible dialog (`role="dialog"`, `aria-modal`, 
 - Auditory scan highlight optional (screen reader live region)
 - Optional spoken scan voice for each focused cell (the chosen voice and tuning, slightly quieter)
 - **Scan-step beep** (880 Hz tone; 660 Hz for group scan) with optional spoken label
-- Scan pauses automatically while TTS or recorded speech plays (configurable)
+- Scan pauses automatically while TTS or recorded speech plays (configurable). The pause always ends: on the engine's `end` or `error`, when the engine reports it is idle, or after a bound estimated from the message length and speech rate (2 s to 15 s), so a voice that never reports the end of speech cannot leave scanning stuck (`apps/web/src/lib/play-button-speech.ts`, `e2e/specs/scan-pause.spec.ts`)
 - **Hardware USB/BT switches (web):** `@voxa/access` `HardwareSwitchAdapter` — keyboard keys (Space/Enter/Tab/Arrow/F13) + Gamepad API buttons 0/1 during switch scan
 - **Hardware USB/BT switches (mobile):** BT switches that emulate a keyboard drive scan via hidden focus capture (`MobileSwitchKeyCapture`, `classifySwitchNativeKey`); on-screen Next/Select/Tune always available
 
