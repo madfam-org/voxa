@@ -4,6 +4,7 @@ import app from '../app.js';
 import { closeSharedDb, dbClientsCreatedForTests } from '../db/client.js';
 import { initStore } from '../store/index.js';
 import { createOwnedBoard } from '../test-support/boards.js';
+import { putConsents } from '../test-support/consents.js';
 
 /**
  * Runs against a real PostgreSQL when VOXA_TEST_DATABASE_URL is set (it runs
@@ -36,6 +37,7 @@ describe('media and events on PostgreSQL share one database client', { skip }, (
 
   it(`serves ${ROUNDS} uploads, reads and activations without opening another pool`, async () => {
     await createOwnedBoard(app, OWNER_ID, BOARD_ID);
+    await putConsents(app, OWNER, { usage_analytics: true });
     const clientsAfterInit = dbClientsCreatedForTests();
 
     for (let i = 0; i < ROUNDS; i += 1) {
@@ -56,7 +58,7 @@ describe('media and events on PostgreSQL share one database client', { skip }, (
 
       const activation = await app.request('/v1/events/activations', {
         method: 'POST',
-        headers: { ...OWNER, 'Content-Type': 'application/json', 'X-Voxa-AI-Consent': 'true' },
+        headers: { ...OWNER, 'Content-Type': 'application/json' },
         body: JSON.stringify({ boardId: BOARD_ID, buttonId: 'want', speechText: 'want' }),
       });
       assert.equal(activation.status, 201);

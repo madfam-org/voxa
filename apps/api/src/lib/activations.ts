@@ -7,6 +7,11 @@ import { getStoreDriver } from '../store/index.js';
 export interface ActivationInput {
   boardId: string;
   buttonId: string;
+  /**
+   * Spoken text. The route passes it only when the caller granted
+   * `utterance_text` and their organization is on the DPA allow-list; by
+   * default activations are counts only.
+   */
   speechText?: string;
   recordedAt?: string;
 }
@@ -32,15 +37,34 @@ export async function recordActivation(
     return;
   }
 
+  const speechText = input.speechText ?? null;
   const { db } = getSharedDb(databaseUrl);
   await db.insert(activationEvents).values({
     id: randomUUID(),
     boardId: input.boardId,
     buttonId: input.buttonId,
     userId,
-    speechText: input.speechText ?? null,
+    speechText,
+    speechTextConsented: speechText !== null,
     recordedAt,
   });
+}
+
+/** Deletes a board's whole activation history. Returns the number of rows removed. */
+export async function deleteActivations(
+  databaseUrl: string | undefined,
+  boardId: string,
+): Promise<number> {
+  if (!databaseUrl || getStoreDriver() !== 'postgres') {
+    const before = fileActivations.length;
+    const kept = fileActivations.filter((event) => event.boardId !== boardId);
+    fileActivations.length = 0;
+    fileActivations.push(...kept);
+    return before - kept.length;
+  }
+  const { db } = getSharedDb(databaseUrl);
+  const result = await db.delete(activationEvents).where(eq(activationEvents.boardId, boardId));
+  return result.count;
 }
 
 export async function getActivationSummary(
@@ -97,4 +121,9 @@ export async function boardExists(databaseUrl: string | undefined, boardId: stri
 /** Test helper */
 export function resetFileActivationsForTests(): void {
   fileActivations.length = 0;
+}
+
+/** Test helper: what the file driver recorded (copies). */
+export function fileActivationsForTests(): ActivationInput[] {
+  return fileActivations.map((event) => ({ ...event }));
 }

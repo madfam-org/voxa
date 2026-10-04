@@ -80,10 +80,23 @@ export function dbClientsCreatedForTests(): number {
   return dbClientsCreated;
 }
 
+/**
+ * Session advisory lock key held while migrations run, so two processes that
+ * start at once (two replicas in a rollout, or two PostgreSQL test files) apply
+ * migrations one after the other instead of racing on the same DDL.
+ */
+export const MIGRATION_LOCK_KEY = '7598341872051634177';
+
 export async function runMigrations(databaseUrl: string): Promise<void> {
+  // max: 1 keeps the lock and the migration on the same connection.
   const { db, client } = createDb(databaseUrl, { max: 1 });
   try {
-    await migrate(db, { migrationsFolder: migrationsFolder() });
+    await client`select pg_advisory_lock(${MIGRATION_LOCK_KEY}::bigint)`;
+    try {
+      await migrate(db, { migrationsFolder: migrationsFolder() });
+    } finally {
+      await client`select pg_advisory_unlock(${MIGRATION_LOCK_KEY}::bigint)`;
+    }
   } finally {
     await client.end();
   }

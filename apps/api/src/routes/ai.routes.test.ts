@@ -14,8 +14,16 @@ const headers = {
   'Content-Type': 'application/json',
   'X-Voxa-User-Id': 'user-1',
   'X-Voxa-Role': 'communicator',
-  'X-Voxa-AI-Consent': 'true',
 };
+
+async function setAiConsent(granted: boolean): Promise<void> {
+  const res = await app.request('/v1/consents', {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify({ consents: { ai_processing: granted } }),
+  });
+  assert.equal(res.status, 200);
+}
 
 describe('AI prediction routes', () => {
   const realFetch = globalThis.fetch;
@@ -28,7 +36,8 @@ describe('AI prediction routes', () => {
     app = 'request' in mod.default ? mod.default : mod.default.default;
   });
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    await setAiConsent(true);
     outbound = [];
     globalThis.fetch = (async (input: RequestInfo | URL) => {
       outbound.push(String(input instanceof Request ? input.url : input));
@@ -72,10 +81,22 @@ describe('AI prediction routes', () => {
     assert.deepEqual(outbound, []);
   });
 
-  it('still requires AI consent', async () => {
+  it('answers 403 without an ai_processing consent record, whatever the client header says', async () => {
+    const body = JSON.stringify({ profileId: 'p1', recentUtterances: [], partialText: 'I', locale: 'en-US' });
+    const stranger = { ...headers, 'X-Voxa-User-Id': 'user-without-consent', 'X-Voxa-AI-Consent': 'true' };
+    for (const path of ['/v1/ai/predict/text', '/v1/ai/predict/symbols']) {
+      const res = await app.request(path, { method: 'POST', headers: stranger, body });
+      assert.equal(res.status, 403);
+      assert.deepEqual(await res.json(), { error: 'AI consent required', purpose: 'ai_processing' });
+    }
+    assert.deepEqual(outbound, []);
+  });
+
+  it('answers 403 again once the user revokes ai_processing', async () => {
+    await setAiConsent(false);
     const res = await app.request('/v1/ai/predict/text', {
       method: 'POST',
-      headers: { ...headers, 'X-Voxa-AI-Consent': 'false' },
+      headers,
       body: JSON.stringify({ profileId: 'p1', recentUtterances: [], partialText: 'I', locale: 'en-US' }),
     });
     assert.equal(res.status, 403);
