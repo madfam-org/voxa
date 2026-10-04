@@ -34,11 +34,27 @@ export function allowedHeaders(): string[] {
     : [...BASE_HEADERS, ...DEV_AUTH_HEADERS];
 }
 
-export function corsMiddleware(): MiddlewareHandler {
+function buildCors(headers: string[]): MiddlewareHandler {
   return honoCors({
     origin: (origin) => (origin && isAllowedOrigin(origin) ? origin : ''),
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowHeaders: allowedHeaders(),
+    allowHeaders: headers,
     maxAge: 86400,
   });
+}
+
+export function corsMiddleware(): MiddlewareHandler {
+  // One handler per header set, picked per request so the allow-list always
+  // follows the current NODE_ENV.
+  const handlers = new Map<string, MiddlewareHandler>();
+  return (c, next) => {
+    const headers = allowedHeaders();
+    const key = headers.join(',');
+    let handler = handlers.get(key);
+    if (!handler) {
+      handler = buildCors(headers);
+      handlers.set(key, handler);
+    }
+    return handler(c, next);
+  };
 }
