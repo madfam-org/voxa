@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { bodyLimit } from 'hono/body-limit';
 import {
   createBoardId,
   createStarterBoard,
@@ -170,7 +171,12 @@ boardRoutes.delete('/:boardId', async (c) => {
  * boards; remote URLs are never fetched (only Voxa's own Mulberry symbols are
  * kept) and are reported in `skipped`.
  */
-boardRoutes.post('/import/:format', async (c) => {
+const importBodyLimit = bodyLimit({
+  maxSize: MAX_IMPORT_BYTES,
+  onError: (c) => c.json({ error: 'The file is too large to import.', code: 'ARCHIVE_TOO_LARGE' }, 400),
+});
+
+boardRoutes.post('/import/:format', importBodyLimit, async (c) => {
   const format = c.req.param('format');
   if (!isImportFormat(format)) {
     return c.json({ error: `Unsupported import format: ${format.slice(0, 20)}`, code: 'UNSUPPORTED_FORMAT' }, 400);

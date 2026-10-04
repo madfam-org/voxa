@@ -167,8 +167,10 @@ pnpm build
     URLs are never fetched (only the vendored Mulberry set is kept). Grid 3,
     Snap and TouchChat imports are beta (one page, words only) and say so in
     the UI and public copy. Tested in `packages/obf/src/*.test.ts` (schemas in
-    `packages/obf/schema/`), `apps/api/src/routes/import.routes.test.ts` and
-    `apps/api/src/store/board-import.test.ts`.
+    `packages/obf/schema/`), `apps/api/src/routes/import.routes.test.ts`,
+    `apps/api/src/store/board-import.test.ts` and the browser spec
+    `e2e/specs/board-import.spec.ts` (`pnpm --filter @voxa/e2e test:import`,
+    run in the CI a11y job like `test:offline`).
 
 ## Deploy
 
