@@ -192,7 +192,7 @@
       },
       "access": {
         "title": "Clinical access modes built in",
-        "body": "Switch scanning with auditory cues, touch guard overlays, eye-dwell simulation, and touch-release activation — configurable per communicator in Settings."
+        "body": "Switch scanning with auditory cues, touch guard overlays, dwell selection (for head pointers and eye trackers that move the pointer), and touch-release activation — configurable per communicator in Settings."
       },
       "institution": {
         "title": "Plans for schools and clinics",
@@ -301,7 +301,7 @@
     "accessMethod": "Access method",
     "accessTouch": "Touch",
     "accessSwitch": "Switch scanning",
-    "accessEye": "Dwell selection",
+    "accessEye": "Dwell selection (eye gaze, head pointer)",
     "scanSpeed": "Scan speed ({ms} ms)",
     "scanOrder": "Scan order",
     "scanRow": "Row by row",
@@ -312,7 +312,7 @@
     "groupRows": "Row groups",
     "groupRegions": "Region groups (quadrants)",
     "scanHintNone": "Hardware: Space/Enter selects; Tab/Arrow Right advances. Bluetooth switches and USB adapters that emulate a keyboard work automatically. Gamepad button 0 selects; button 1 advances.",
-    "scanHintGroup": "Select a group, then a cell. Hardware keys and gamepad buttons work the same as single-level scan.",
+    "scanHintGroup": "Select a group, then a cell. After the last cell comes \"Back\", which returns to the groups; with no selection the scan also returns to the groups by itself.",
     "auditoryHighlight": "Auditory scan highlight",
     "auditoryHighlightHint": "Announce focused button (screen reader)",
     "auditoryBeep": "Auditory scan beep",
@@ -332,11 +332,9 @@
     "maskPerimeter": "Board edge only",
     "touchGuardHelp": "Semi-transparent overlays block accidental touches outside button holes.",
     "dwellTime": "Dwell time ({ms} ms)",
-    "gazeSource": "Gaze source",
-    "gazePointer": "Pointer hover (simulation)",
-    "gazeTobii": "External voxa:gaze events (experimental)",
-    "gazeHintTobii": "Lab inject: window.__voxaInjectGaze(x, y) or dispatch voxa:gaze CustomEvent.",
-    "gazeHintPointer": "Hold pointer over a button to activate (simulates eye dwell).",
+    "gazeSource": "Dwell input",
+    "gazePointer": "Pointer (mouse, head pointer, or an eye tracker that moves the pointer)",
+    "gazeHintPointer": "Hold the pointer over a button to select it. An eye tracker works when its own software moves the pointer; Voxa does not connect to eye-tracker hardware directly.",
     "whisperMode": "Whisper mode (build without speaking)",
     "whisperHint": "Add words to the message bar without TTS",
     "hideSymbols": "Hide symbols (text-only CVI mode)",
@@ -361,7 +359,19 @@
     "pinInvalid": "PIN must be 4–8 digits.",
     "pinStorageUnavailable": "This browser cannot store the PIN on the device.",
     "spanishAgreement": "Spanish agreement",
-    "spanishAgreementHint": "On Spanish boards, conjugate the verb to match the pronoun when the message is built (yo querer → yo quiero). The “Base form” button says the words exactly as tapped."
+    "spanishAgreementHint": "On Spanish boards, conjugate the verb to match the pronoun when the message is built (yo querer → yo quiero). The “Base form” button says the words exactly as tapped.",
+    "scanMode": "Scan mode",
+    "scanModeAuto": "Automatic (one switch)",
+    "scanModeStep": "Step (two switches: move, select)",
+    "scanModeHintAuto": "The highlight moves on its own; press the switch to select. A second switch (Tab or Arrow Right) also moves it.",
+    "scanModeHintStep": "Nothing moves on its own: switch 1 (Tab or Arrow Right, gamepad button 1) moves, switch 2 (Space or Enter, gamepad button 0) selects.",
+    "groupCycles": "Return to groups after {n} rounds without a selection",
+    "firstItemHold": "Extra time on the first item ({ms} ms)",
+    "acceptanceTime": "Acceptance time ({ms} ms)",
+    "acceptanceHint": "A switch press counts only after it is held this long, so brief or accidental presses are ignored. 0 counts every press at once.",
+    "postSelectionPause": "Pause after a selection ({ms} ms)",
+    "gazeBridge": "Gaze event bridge (voxa:gaze, for integrators)",
+    "gazeHintBridge": "For integrators: send screen coordinates with window.__voxaInjectGaze(x, y) or a voxa:gaze CustomEvent; Voxa applies the same dwell. No eye-tracker driver ships with Voxa."
   },
   "legal": {
     "shared": {
@@ -454,7 +464,7 @@
     },
     "accessibility": {
       "title": "Accessibility Statement",
-      "lastUpdated": "June 7, 2026",
+      "lastUpdated": "October 4, 2026",
       "intro": "Voxa targets WCAG 2.2 Level AA and AAC-specific accessibility beyond baseline web requirements. We welcome feedback from communicators, caregivers, and SLPs.",
       "sections": [
         {
@@ -463,7 +473,7 @@
         },
         {
           "title": "AAC-specific features",
-          "content": "Voxa includes CVI themes, switch scanning, eye-dwell selection, single-pointer alternatives to drag gestures, and motor-planning grid locks. See docs/accessibility.md in our repository for engineering details."
+          "content": "Voxa includes CVI themes; switch scanning (one or two switches, row and quadrant groups, acceptance time); dwell selection that works with any device that moves the pointer, including head pointers and eye trackers whose own software drives the pointer (Voxa has no direct eye-tracker hardware integration); a tap-to-move alternative to dragging buttons in the editor; and motor-planning grid locks. See docs/accessibility.md in our repository for engineering details."
         },
         {
           "title": "Known limitations",
@@ -471,7 +481,7 @@
         },
         {
           "title": "Assessment approach",
-          "content": "We combine automated checks and hardware testing with switch and eye-tracking devices where available."
+          "content": "Automated axe checks run in CI on the public pages and on the communicator in each board theme; switch scanning is tested with keyboard-emulating switches. We have not yet tested with eye-tracker hardware."
         },
         {
           "title": "Feedback",
@@ -543,7 +553,9 @@
     "versionConflictReload": "Version conflict — reload the page and try again.",
     "offlineCached": "Offline — using cached board",
     "apiUnreachable": "API unreachable — using local demo board",
-    "saveQueued": "Save queued — will sync when back online"
+    "saveQueued": "Save queued — will sync when back online",
+    "motorPlanRejected": "Not saved: this change moves a locked (motor-plan) button. Only an admin can override a lock; otherwise unlock the button first. The board was reloaded from the server.",
+    "saveRejected": "Not saved: the server refused this change ({detail}). It will not be retried."
   },
   "pwa": {
     "installApp": "Install app",
@@ -609,7 +621,15 @@
     "lockPosition": "Lock position (motor planning)",
     "hideFromCommunicator": "Hide from communicator view",
     "done": "Done",
-    "emptyCell": "Empty grid cell row {row} column {column}. Drop a button here or click to add."
+    "emptyCell": "Empty grid cell row {row} column {column}. Drop a button here or click to add.",
+    "moveSection": "Move this button",
+    "moveStart": "Move: then tap the destination",
+    "moveCancel": "Cancel move",
+    "moveUp": "Move up one cell",
+    "moveDown": "Move down one cell",
+    "moveLeft": "Move left one cell",
+    "moveRight": "Move right one cell",
+    "moveBanner": "Moving \"{label}\": tap or click the destination cell (a button there swaps places). Escape cancels."
   },
   "wordForms": {
     "title": "Word forms",
@@ -682,6 +702,8 @@
     "bottomLeft": "Bottom left",
     "bottomRight": "Bottom right",
     "region": "Region {n}",
-    "group": "Group {n}"
+    "group": "Group {n}",
+    "back": "Back",
+    "backToGroups": "↩ Back to groups"
   }
 }

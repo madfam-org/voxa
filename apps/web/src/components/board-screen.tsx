@@ -39,6 +39,8 @@ import { useEyeDwellByButton } from '@/hooks/use-eye-dwell';
 import { useGazeBridgeDwell } from '@/hooks/use-gaze-bridge-dwell';
 import { usePredictions } from '@/hooks/use-predictions';
 import { useSwitchScan } from '@/hooks/use-switch-scan';
+import { ScanBackTarget } from '@/components/scan-back-target';
+import { ButtonMoveControls, MoveModeBanner } from '@/components/editor-move-controls';
 import { useSyncedBoard, type BoardSummary } from '@/hooks/use-synced-board';
 import {
   editorPinIsConfigured,
@@ -108,6 +110,8 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
   // Per-message choice to say the words exactly as tapped (no Spanish agreement).
   const [keepBaseForm, setKeepBaseForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  // Single-pointer move: the button selected with "Move", waiting for a destination cell.
+  const [movingId, setMovingId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [usageOpen, setUsageOpen] = useState(false);
@@ -141,6 +145,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
     clearConflictNotice,
     retryPendingSave,
     saveBoard,
+    markMotorPlanningOverride,
     importObf,
     exportObf,
     importObz,
@@ -334,7 +339,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
   const eyeDwellEnabled = settings.accessMode === 'eye-tracking' && !isEditor;
   const scanPaused = settings.pauseScanWhileSpeaking && speechActive;
 
-  const { isHighlighted, isGroupHighlighted, liveRef } = useSwitchScan({
+  const { isHighlighted, isGroupHighlighted, scanBackActive, liveRef } = useSwitchScan({
     enabled: switchScanEnabled,
     paused: scanPaused,
     rows: board.grid.rows,
@@ -343,6 +348,11 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
     intervalMs: settings.switchIntervalMs,
     order: settings.switchOrder,
     groupStrategy: settings.switchGroupStrategy,
+    scanMode: settings.switchScanMode,
+    groupCycles: settings.switchGroupCycles,
+    firstItemHoldMs: settings.switchFirstItemHoldMs,
+    acceptanceMs: settings.switchAcceptanceMs,
+    postSelectionPauseMs: settings.switchPostSelectionPauseMs,
     auditoryHighlight: settings.auditoryScanHighlight,
     auditoryVoice: settings.auditoryScanVoice,
     auditoryBeep: settings.auditoryScanBeep,
@@ -360,7 +370,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
   );
 
   const { dwellProgressFor: bridgeDwellProgress } = useGazeBridgeDwell({
-    enabled: eyeDwellEnabled && settings.gazeSource === 'tobii-bridge',
+    enabled: eyeDwellEnabled && settings.gazeSource === 'event-bridge',
     dwellMs: settings.eyeDwellMs,
     onActivate: (buttonId) => {
       const btn = visibleButtons.find((b) => (b.id as string) === buttonId);
@@ -369,7 +379,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
   });
 
   const dwellProgressFor =
-    settings.gazeSource === 'tobii-bridge' ? bridgeDwellProgress : pointerDwellProgress;
+    settings.gazeSource === 'event-bridge' ? bridgeDwellProgress : pointerDwellProgress;
 
   const composed = composeMessage(viewBoard, utterance, uiLocale, { agreement: settings.spanishAgreement });
 
@@ -646,6 +656,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
           await dialogs.alert(tcx('slotLocked'));
           return;
         }
+        if (forceLocked) markMotorPlanningOverride();
         const result = moveButtonToCell(board.grid.buttons, buttonId, row, column, {
           forceLocked: forceLocked || undefined,
         });
@@ -654,7 +665,32 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
         void reportFailure(err);
       }
     },
-    [board, dialogs, reportFailure, role, setBoard, tcx],
+    [board, dialogs, markMotorPlanningOverride, reportFailure, role, setBoard, tcx],
+  );
+
+  useEffect(() => {
+    setMovingId(null);
+  }, [isEditor, boardId]);
+
+  const completeMove = useCallback(
+    async (row: number, column: number) => {
+      const id = movingId;
+      setMovingId(null);
+      if (id) await handleGridDrop(id, row, column);
+    },
+    [handleGridDrop, movingId],
+  );
+
+  const moveBy = useCallback(
+    (buttonId: string, rows: number, columns: number) => {
+      const btn = board.grid.buttons.find((b) => (b.id as string) === buttonId);
+      if (!btn) return;
+      const row = btn.position.row + rows;
+      const column = btn.position.column + columns;
+      if (row < 0 || column < 0 || row >= board.grid.rows || column >= board.grid.columns) return;
+      void handleGridDrop(buttonId, row, column);
+    },
+    [board, handleGridDrop],
   );
 
   const handleAddButtonAt = useCallback(
@@ -673,6 +709,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
 
   const theme = settings.cviTheme;
   const shellStyle = themeStyles(theme);
+  const chrome = CVI_THEMES[theme].chrome;
   const syncLabel =
     syncStatus === 'live'
       ? pendingSave
@@ -683,6 +720,10 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
         : tcx('syncOffline');
 
   const handleButtonPress = (btn: BoardButton) => {
+    if (isEditor && movingId) {
+      void completeMove(btn.position.row, btn.position.column);
+      return;
+    }
     if (isEditor) {
       setEditingId(btn.id as string);
       return;
@@ -735,7 +776,13 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
         {...touchReleaseHandlers(btn)}
         onPointerEnter={() => onEnter(btn.id as string)}
         onPointerLeave={onLeave}
-        style={revealedHidden ? { opacity: 0.72, outline: `2px dashed ${status.warningBorder}` } : undefined}
+        style={
+          isEditor && movingId === (btn.id as string)
+            ? { outline: `3px dashed ${brand.mid}`, outlineOffset: 2 }
+            : revealedHidden
+              ? { opacity: 0.72, outline: `2px dashed ${status.warningBorder}` }
+              : undefined
+        }
         aria-label={
           isEditor && btn.locked
             ? tb('buttonLocked', { label: buttonLabel(btn) })
@@ -798,7 +845,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
             row={row}
             column={col}
             onDropButton={handleGridDrop}
-            onAddButton={handleAddButtonAt}
+            onAddButton={movingId ? (r, c) => void completeMove(r, c) : handleAddButtonAt}
           />,
         );
       } else {
@@ -929,7 +976,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
         <span
           style={{
             fontSize: '0.75rem',
-            color: syncStatus === 'live' ? status.success : CVI_THEMES[theme].foreground,
+            color: syncStatus === 'live' ? chrome.statusLive : CVI_THEMES[theme].foreground,
           }}
         >
           {syncLabel} v{board.version}
@@ -1020,7 +1067,14 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
           </a>
         )}
 
-        <div style={utteranceBarStyle}>
+        <div
+          style={{
+            ...utteranceBarStyle,
+            background: chrome.messageBarBackground,
+            color: chrome.messageBarForeground,
+            border: `1px solid ${chrome.messageBarBorder}`,
+          }}
+        >
           {scheduleMode && !isEditor
             ? scheduleState.completed >= scheduleState.total && scheduleState.total > 0
               ? tcx('routineComplete')
@@ -1153,6 +1207,17 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
           onSelectSymbol={activate}
         />
       )}
+
+      {isEditor && movingId ? (
+        <MoveModeBanner
+          label={buttonLabel(sorted.find((b) => (b.id as string) === movingId) ?? sorted[0]!)}
+          onCancel={() => setMovingId(null)}
+        />
+      ) : null}
+
+      {switchScanEnabled && settings.switchGroupStrategy !== 'none' ? (
+        <ScanBackTarget active={scanBackActive} />
+      ) : null}
 
       <main style={{ flex: 1, minHeight: 0, display: 'flex' }}>
         <div style={{ position: 'relative', flex: 1, minHeight: 0, display: 'flex' }}>
@@ -1296,6 +1361,15 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
             contentLocale={settings.contentLocale}
             onClose={() => setEditingId(null)}
             onChange={(patch) => updateButton(editingId, patch)}
+            moveControls={
+              <ButtonMoveControls
+                moving={movingId === editingId}
+                canMove={!sorted.find((b) => (b.id as string) === editingId)?.locked || role === 'admin'}
+                onStartMove={() => setMovingId(editingId)}
+                onCancelMove={() => setMovingId(null)}
+                onMoveBy={(rows, columns) => moveBy(editingId, rows, columns)}
+              />
+            }
           />
         )}
       </main>
@@ -1304,20 +1378,20 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
         style={{
           padding: '10px 16px',
           fontSize: '0.75rem',
-          color: neutral.muted,
+          color: chrome.muted,
           borderTop: `1px solid ${surface.overlay}`,
           display: 'flex',
           gap: 12,
           flexWrap: 'wrap',
         }}
       >
-        <Link href="/legal/privacy" style={{ color: brand.link }}>
+        <Link href="/legal/privacy" style={{ color: chrome.link }}>
           {tn('privacy')}
         </Link>
-        <Link href="/legal/terms" style={{ color: brand.link }}>
+        <Link href="/legal/terms" style={{ color: chrome.link }}>
           {tn('terms')}
         </Link>
-        <Link href="/legal/accessibility" style={{ color: brand.link }}>
+        <Link href="/legal/accessibility" style={{ color: chrome.link }}>
           {tn('accessibility')}
         </Link>
         <SymbolCredit buttons={visibleButtons} hidden={literacyDisplay.hideSymbols} />
@@ -1336,6 +1410,7 @@ function EditorPanel({
   contentLocale,
   onClose,
   onChange,
+  moveControls,
 }: {
   button: BoardButton;
   boardId: string;
@@ -1346,6 +1421,7 @@ function EditorPanel({
   contentLocale: CommunicatorSettings['contentLocale'];
   onClose: () => void;
   onChange: (patch: Partial<BoardButton>) => void;
+  moveControls?: React.ReactNode;
 }) {
   const te = useTranslations('editor');
   const label = button.kind === 'analytic' ? button.label : button.phrase;
@@ -1364,6 +1440,8 @@ function EditorPanel({
       }}
     >
       <h2 style={{ margin: '0 0 12px', fontSize: '1rem' }}>{te('title')}</h2>
+
+      {moveControls}
 
       <SymbolSearchPanel
         boardId={boardId}

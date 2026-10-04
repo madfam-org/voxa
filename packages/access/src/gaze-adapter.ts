@@ -3,7 +3,11 @@ export interface GazePoint {
   y: number;
 }
 
-/** DOM event name for external gaze injectors (Tobii lab bridge, Windows helper). */
+/**
+ * Gaze event bridge: DOM event name an integrator dispatches with viewport
+ * coordinates (`{ x, y }`) so Voxa applies dwell at that point. A stable API;
+ * Voxa ships no eye-tracker driver or helper.
+ */
 export const VOXA_GAZE_EVENT = 'voxa:gaze';
 
 /** Resolve a board button id from viewport coordinates via data-voxa-button-id markers. */

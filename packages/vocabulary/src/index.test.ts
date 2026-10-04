@@ -41,4 +41,39 @@ describe('findMotorPlanningViolations', () => {
 
     assert.equal(findMotorPlanningViolations(previous, next).length, 0);
   });
+
+  it('allows a button unlocked and moved in the same save', () => {
+    const id = createButtonId('core-want');
+    const previous = [
+      {
+        id,
+        kind: 'analytic' as const,
+        label: 'want',
+        speechText: 'want',
+        locale: 'en-US',
+        position: { row: 0, column: 0 },
+        locked: true,
+      },
+    ];
+    const next = [{ ...previous[0]!, locked: false, position: { row: 0, column: 3 } }];
+    assert.equal(findMotorPlanningViolations(previous, next).length, 0);
+  });
+
+  it('keeps the lock when the next body omits the field', () => {
+    const id = createButtonId('core-more');
+    const previous = [
+      {
+        id,
+        kind: 'analytic' as const,
+        label: 'more',
+        speechText: 'more',
+        locale: 'en-US',
+        position: { row: 1, column: 1 },
+        locked: true,
+      },
+    ];
+    const { locked: _omitted, ...withoutLock } = previous[0]!;
+    const next = [{ ...withoutLock, position: { row: 2, column: 1 } }] as unknown as typeof previous;
+    assert.equal(findMotorPlanningViolations(previous, next).length, 1);
+  });
 });

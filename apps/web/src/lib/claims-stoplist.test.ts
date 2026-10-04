@@ -24,6 +24,10 @@ const STOP_LIST: Array<{ label: string; pattern: RegExp }> = [
   { label: 'offline-ready', pattern: /Listo sin conexi[oó]n|Offline-ready|Pr[êe]t hors ligne/i },
   { label: 'centrally enforced AI policy', pattern: /de forma centralizada|enforced centrally|s'appliquer centralement/i },
   { label: 'speech therapists review releases', pattern: /revisi[oó]n manual de logopedas|SLP review|revue orthophoniste/i },
+  {
+    label: 'eye-tracker hardware integration (none exists; dwell works through the pointer or the gaze event bridge)',
+    pattern: /Tobii|IrisBond|eye-dwell|permanencia ocular|fixation oculaire/i,
+  },
   { label: 'retired mailbox', pattern: new RegExp(RETIRED_MAILBOX.replace('.', '\\.'), 'i') },
   { label: 'upgrade dead end', pattern: new RegExp(['upgrade', 'family'].join('='), 'i') },
 ];

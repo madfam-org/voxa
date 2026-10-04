@@ -4,19 +4,22 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import type { BoardButton } from '@voxa/core';
 import {
-  buildGridScanPath,
-  buildGroupCellPath,
+  applyScanInput,
+  attachBrowserHardwareSwitch,
   cellKey,
   clampSwitchInterval,
-  attachBrowserHardwareSwitch,
+  createScanMachine,
   groupScanLabel,
   playScanBeepInBrowser,
-  resolveScanGroups,
+  scanStepDelay,
   SCAN_GROUP_BEEP,
   SCAN_STEP_BEEP,
   type GroupScanLabels,
+  type ScanInput,
   type ScanOrder,
+  type ScanState,
   type SwitchGroupStrategy,
+  type SwitchScanMode,
 } from '@voxa/access';
 import { announceScanLabel } from '@/lib/play-button-speech';
 
@@ -29,6 +32,13 @@ interface UseSwitchScanOptions {
   intervalMs: number;
   order: ScanOrder;
   groupStrategy: SwitchGroupStrategy;
+  /** 'auto' (timer moves, one switch) or 'step' (switch 1 moves, switch 2 selects). */
+  scanMode?: SwitchScanMode;
+  /** Full cycles inside a group without a selection before returning to group level. */
+  groupCycles?: number;
+  firstItemHoldMs?: number;
+  acceptanceMs?: number;
+  postSelectionPauseMs?: number;
   auditoryHighlight: boolean;
   auditoryVoice?: boolean;
   auditoryBeep?: boolean;
@@ -40,6 +50,12 @@ function findButtonAt(buttons: BoardButton[], row: number, column: number): Boar
   return buttons.find((b) => b.position.row === row && b.position.column === column);
 }
 
+/**
+ * Switch scanning for the board, driven by the pure state machine in
+ * `@voxa/access` (`createScanMachine`): empty cells are skipped, group scans
+ * offer a "back" position and return to the group level after
+ * `groupCycles` full cycles, step scan moves only on switch 1.
+ */
 export function useSwitchScan({
   enabled,
   paused = false,
@@ -49,6 +65,11 @@ export function useSwitchScan({
   intervalMs,
   order,
   groupStrategy,
+  scanMode = 'auto',
+  groupCycles = 2,
+  firstItemHoldMs = 0,
+  acceptanceMs = 0,
+  postSelectionPauseMs = 0,
   auditoryHighlight,
   auditoryVoice = false,
   auditoryBeep = true,
@@ -65,120 +86,108 @@ export function useSwitchScan({
     }),
     [ts],
   );
-  const groups = useMemo(
-    () => resolveScanGroups(rows, columns, groupStrategy),
-    [rows, columns, groupStrategy],
-  );
-  const linearPath = useMemo(() => buildGridScanPath(rows, columns, order), [rows, columns, order]);
 
-  const [step, setStep] = useState(0);
-  const [phase, setPhase] = useState<'groups' | 'cells'>('groups');
-  const [groupStep, setGroupStep] = useState(0);
-  const [cellStep, setCellStep] = useState(0);
+  const occupiedKey = useMemo(
+    () => buttons.map((b) => cellKey(b.position)).sort().join('|'),
+    [buttons],
+  );
+  const machine = useMemo(
+    () =>
+      createScanMachine({
+        rows,
+        columns,
+        order,
+        groupStrategy,
+        groupCycles,
+        occupied: new Set(occupiedKey ? occupiedKey.split('|') : []),
+      }),
+    [rows, columns, order, groupStrategy, groupCycles, occupiedKey],
+  );
+
+  const [state, setState] = useState<ScanState>(() => machine.initial());
+  const stateRef = useRef(state);
+  stateRef.current = state;
+  const [selectionPaused, setSelectionPaused] = useState(false);
   const liveRef = useRef<HTMLDivElement>(null);
   const beepReadyRef = useRef(false);
+  // Read through refs so a re-render (new arrays) never restarts the scan timer.
+  const buttonsRef = useRef(buttons);
+  buttonsRef.current = buttons;
+  const onSelectRef = useRef(onSelect);
+  onSelectRef.current = onSelect;
 
   useEffect(() => {
-    if (!enabled) {
-      beepReadyRef.current = false;
-      return;
-    }
-    setPhase('groups');
-    setStep(0);
-    setGroupStep(0);
-    setCellStep(0);
+    const fresh = machine.initial();
+    stateRef.current = fresh;
+    setState(fresh);
+    setSelectionPaused(false);
     beepReadyRef.current = false;
-  }, [enabled, rows, columns, order, groupStrategy]);
+  }, [enabled, machine]);
 
-  const activeGroupIndex = groups ? groupStep % groups.length : 0;
-  const activeGroup = groups?.[activeGroupIndex];
-  const cellPath = useMemo(
-    () => (activeGroup ? buildGroupCellPath(activeGroup, rows, columns, order) : []),
-    [activeGroup, rows, columns, order],
-  );
-
-  const activeCell = groups
-    ? phase === 'cells'
-      ? cellPath[cellStep % Math.max(cellPath.length, 1)]
-      : undefined
-    : linearPath[step % linearPath.length];
-
+  const highlight = machine.highlight(state);
+  const activeCell = highlight.kind === 'cell' ? highlight.cell : undefined;
   const activeButton = activeCell ? findButtonAt(buttons, activeCell.row, activeCell.column) : undefined;
+  const activeGroupKeys = new Set(highlight.kind === 'group' ? highlight.cells.map(cellKey) : []);
 
-  const activeGroupKeys = useMemo(
-    () => new Set(activeGroup?.map(cellKey) ?? []),
-    [activeGroup],
+  const scanAnnouncement =
+    highlight.kind === 'group'
+      ? groupScanLabel(
+          machine.groupSourceIndices[highlight.groupIndex] ?? highlight.groupIndex,
+          groupStrategy,
+          highlight.cells,
+          groupLabels,
+        )
+      : highlight.kind === 'back'
+        ? ts('back')
+        : activeButton
+          ? getLabel(activeButton)
+          : '';
+
+  const handleInput = useCallback(
+    (input: ScanInput) => {
+      if (!enabled || selectionPaused) return;
+      const result = applyScanInput(machine, scanMode, stateRef.current, input);
+      stateRef.current = result.state;
+      setState(result.state);
+      if (!result.selected) return;
+      const button = findButtonAt(buttonsRef.current, result.selected.row, result.selected.column);
+      if (button) onSelectRef.current(button);
+      if (postSelectionPauseMs > 0) setSelectionPaused(true);
+    },
+    [enabled, selectionPaused, machine, scanMode, postSelectionPauseMs],
   );
 
-  const scanAnnouncement = groups
-    ? phase === 'groups' && activeGroup
-      ? groupScanLabel(activeGroupIndex, groupStrategy, activeGroup, groupLabels)
-      : activeButton
-        ? getLabel(activeButton)
-        : ''
-    : activeButton
-      ? getLabel(activeButton)
-      : '';
-
-  const advance = useCallback(() => {
-    if (groups) {
-      if (phase === 'groups') {
-        setGroupStep((s) => s + 1);
-        return;
-      }
-      setCellStep((s) => s + 1);
-      return;
-    }
-    setStep((s) => s + 1);
-  }, [groups, phase]);
-
-  const select = useCallback(() => {
-    if (groups) {
-      if (phase === 'groups') {
-        setPhase('cells');
-        setCellStep(0);
-        return;
-      }
-      if (activeButton) onSelect(activeButton);
-      setPhase('groups');
-      return;
-    }
-    if (activeButton) onSelect(activeButton);
-  }, [groups, phase, activeButton, onSelect]);
+  const advance = useCallback(() => handleInput('advance'), [handleInput]);
+  const select = useCallback(() => handleInput('select'), [handleInput]);
 
   useEffect(() => {
-    if (!enabled || paused) return;
+    if (!selectionPaused) return;
+    const id = window.setTimeout(() => setSelectionPaused(false), postSelectionPauseMs);
+    return () => window.clearTimeout(id);
+  }, [selectionPaused, postSelectionPauseMs]);
 
-    const id = window.setInterval(() => {
-      if (groups) {
-        if (phase === 'groups') {
-          setGroupStep((s) => s + 1);
-        } else {
-          setCellStep((s) => s + 1);
-        }
-        return;
-      }
-      setStep((s) => s + 1);
-    }, clampSwitchInterval(intervalMs));
-
-    return () => window.clearInterval(id);
-  }, [enabled, paused, intervalMs, groups, phase]);
+  // Auto scan: one timed step at a time; the first item of a level is held longer.
+  useEffect(() => {
+    if (!enabled || paused || selectionPaused || scanMode !== 'auto' || machine.empty) return;
+    const delay = scanStepDelay(state, clampSwitchInterval(intervalMs), firstItemHoldMs);
+    const id = window.setTimeout(() => handleInput('tick'), delay);
+    return () => window.clearTimeout(id);
+  }, [enabled, paused, selectionPaused, scanMode, machine, state, intervalMs, firstItemHoldMs, handleInput]);
 
   useEffect(() => {
     if (!enabled || !auditoryHighlight || !scanAnnouncement || !liveRef.current) return;
     liveRef.current.textContent = scanAnnouncement;
-  }, [enabled, auditoryHighlight, scanAnnouncement, step, groupStep, cellStep, phase]);
+  }, [enabled, auditoryHighlight, scanAnnouncement, state]);
 
   useEffect(() => {
     if (!enabled || !auditoryVoice || !scanAnnouncement) return;
-    if (groups && phase === 'groups') {
-      announceScanLabel(scanAnnouncement);
-      return;
-    }
     if (activeButton) {
       announceScanLabel(getLabel(activeButton), activeButton.locale);
+      return;
     }
-  }, [enabled, auditoryVoice, scanAnnouncement, activeButton, phase, groups, getLabel, step, groupStep, cellStep]);
+    announceScanLabel(scanAnnouncement);
+    // `state` re-announces when the scan lands on the same label again.
+  }, [enabled, auditoryVoice, scanAnnouncement, activeButton, getLabel, state]);
 
   useEffect(() => {
     if (!enabled || paused || !auditoryBeep) return;
@@ -186,25 +195,20 @@ export function useSwitchScan({
       beepReadyRef.current = true;
       return;
     }
-    playScanBeepInBrowser(groups && phase === 'groups' ? SCAN_GROUP_BEEP : SCAN_STEP_BEEP);
-  }, [enabled, paused, auditoryBeep, step, groupStep, cellStep, phase, groups]);
+    playScanBeepInBrowser(state.level === 'groups' ? SCAN_GROUP_BEEP : SCAN_STEP_BEEP);
+  }, [enabled, paused, auditoryBeep, state]);
 
   useEffect(() => {
     return attachBrowserHardwareSwitch({
       enabled,
+      acceptanceMs,
       onAdvance: advance,
       onSelect: select,
     });
-  }, [enabled, advance, select]);
+  }, [enabled, acceptanceMs, advance, select]);
 
-  const isGroupHighlighted = useCallback(
-    (button: BoardButton) =>
-      enabled &&
-      groups !== null &&
-      phase === 'groups' &&
-      activeGroupKeys.has(cellKey(button.position)),
-    [enabled, groups, phase, activeGroupKeys],
-  );
+  const isGroupHighlighted = (button: BoardButton) =>
+    enabled && activeGroupKeys.has(cellKey(button.position));
 
   const isHighlighted = useCallback(
     (button: BoardButton) =>
@@ -215,5 +219,14 @@ export function useSwitchScan({
     [enabled, activeCell],
   );
 
-  return { isHighlighted, isGroupHighlighted, advance, select, liveRef, scanPhase: groups ? phase : 'cells' as const };
+  return {
+    isHighlighted,
+    isGroupHighlighted,
+    /** The group's "back" position is highlighted (render a visible back target). */
+    scanBackActive: enabled && highlight.kind === 'back',
+    advance,
+    select,
+    liveRef,
+    scanPhase: state.level === 'groups' ? ('groups' as const) : ('cells' as const),
+  };
 }

@@ -193,7 +193,7 @@
       },
       "access": {
         "title": "Modos clínicos de acceso integrados",
-        "body": "Escaneo con señales auditivas, guarda táctil, simulación de permanencia ocular y activación al soltar — configurables por comunicador en Ajustes."
+        "body": "Escaneo con señales auditivas, guarda táctil, selección por permanencia (para punteros de cabeza y seguidores oculares que mueven el puntero) y activación al soltar — configurables por comunicador en Ajustes."
       },
       "institution": {
         "title": "Planes para escuelas y clínicas",
@@ -302,7 +302,7 @@
     "accessMethod": "Método de acceso",
     "accessTouch": "Táctil",
     "accessSwitch": "Escaneo por interruptor",
-    "accessEye": "Selección por permanencia",
+    "accessEye": "Selección por permanencia (mirada, puntero de cabeza)",
     "scanSpeed": "Velocidad de escaneo ({ms} ms)",
     "scanOrder": "Orden de escaneo",
     "scanRow": "Fila por fila",
@@ -313,7 +313,7 @@
     "groupRows": "Grupos por filas",
     "groupRegions": "Grupos por regiones (cuadrantes)",
     "scanHintNone": "Hardware: Espacio/Intro selecciona; Tab/Flecha derecha avanza. Interruptores Bluetooth y adaptadores USB que emulan teclado funcionan automáticamente. Mando: botón 0 selecciona; botón 1 avanza.",
-    "scanHintGroup": "Selecciona un grupo, luego una celda. Las teclas y el mando funcionan igual que en escaneo de un nivel.",
+    "scanHintGroup": "Selecciona un grupo y luego una celda. Después de la última celda aparece «Volver», que regresa a los grupos; si no eliges nada, el escaneo también regresa a los grupos por sí solo.",
     "auditoryHighlight": "Resaltado auditivo de escaneo",
     "auditoryHighlightHint": "Anunciar botón enfocado (lector de pantalla)",
     "auditoryBeep": "Pitido auditivo de escaneo",
@@ -333,11 +333,9 @@
     "maskPerimeter": "Solo borde del tablero",
     "touchGuardHelp": "Superposiciones semitransparentes bloquean toques accidentales fuera de los huecos.",
     "dwellTime": "Tiempo de permanencia ({ms} ms)",
-    "gazeSource": "Fuente de mirada",
-    "gazePointer": "Hover del puntero (simulación)",
-    "gazeTobii": "Eventos externos voxa:gaze (experimental)",
-    "gazeHintTobii": "Lab: window.__voxaInjectGaze(x, y) o dispatch voxa:gaze CustomEvent.",
-    "gazeHintPointer": "Mantén el puntero sobre un botón para activar (simula permanencia ocular).",
+    "gazeSource": "Entrada de permanencia",
+    "gazePointer": "Puntero (ratón, puntero de cabeza o un seguidor ocular que mueve el puntero)",
+    "gazeHintPointer": "Mantén el puntero sobre un botón para seleccionarlo. Un seguidor ocular funciona cuando su propio software mueve el puntero; Voxa no se conecta directamente al hardware de seguimiento ocular.",
     "whisperMode": "Modo susurro (construir sin hablar)",
     "whisperHint": "Añadir palabras a la barra sin TTS",
     "hideSymbols": "Ocultar pictogramas (modo CVI solo texto)",
@@ -362,7 +360,19 @@
     "pinInvalid": "El PIN debe tener de 4 a 8 dígitos.",
     "pinStorageUnavailable": "Este navegador no permite guardar el PIN en el dispositivo.",
     "spanishAgreement": "Concordancia en español",
-    "spanishAgreementHint": "En tableros en español, conjuga el verbo según el pronombre al formar el mensaje (yo querer → yo quiero). El botón «Forma base» dice las palabras tal como se tocaron."
+    "spanishAgreementHint": "En tableros en español, conjuga el verbo según el pronombre al formar el mensaje (yo querer → yo quiero). El botón «Forma base» dice las palabras tal como se tocaron.",
+    "scanMode": "Modo de escaneo",
+    "scanModeAuto": "Automático (un interruptor)",
+    "scanModeStep": "Paso a paso (dos interruptores: mover, seleccionar)",
+    "scanModeHintAuto": "El resaltado avanza solo; pulsa el interruptor para seleccionar. Un segundo interruptor (Tab o Flecha derecha) también lo avanza.",
+    "scanModeHintStep": "Nada avanza solo: el interruptor 1 (Tab o Flecha derecha, botón 1 del mando) mueve y el interruptor 2 (Espacio o Intro, botón 0 del mando) selecciona.",
+    "groupCycles": "Volver a los grupos tras {n} vueltas sin seleccionar",
+    "firstItemHold": "Tiempo extra en el primer elemento ({ms} ms)",
+    "acceptanceTime": "Tiempo de aceptación ({ms} ms)",
+    "acceptanceHint": "Una pulsación cuenta solo si se mantiene este tiempo, así se ignoran pulsaciones breves o accidentales. Con 0 cuenta cada pulsación al instante.",
+    "postSelectionPause": "Pausa después de seleccionar ({ms} ms)",
+    "gazeBridge": "Puente de eventos de mirada (voxa:gaze, para integradores)",
+    "gazeHintBridge": "Para integradores: envía coordenadas de pantalla con window.__voxaInjectGaze(x, y) o un CustomEvent voxa:gaze; Voxa aplica la misma permanencia. Voxa no incluye controladores de seguimiento ocular."
   },
   "legal": {
     "shared": {
@@ -455,7 +465,7 @@
     },
     "accessibility": {
       "title": "Declaración de accesibilidad",
-      "lastUpdated": "7 de junio de 2026",
+      "lastUpdated": "4 de octubre de 2026",
       "intro": "Voxa apunta a WCAG 2.2 nivel AA y accesibilidad CAA específica más allá de los requisitos web básicos. Agradecemos comentarios de comunicadores, cuidadores y logopedas.",
       "sections": [
         {
@@ -464,7 +474,7 @@
         },
         {
           "title": "Funciones CAA específicas",
-          "content": "Voxa incluye temas CVI, escaneo por interruptor, selección por permanencia ocular, alternativas de un solo puntero a gestos de arrastre y bloqueos de planificación motora. Consulta docs/accessibility.md en nuestro repositorio."
+          "content": "Voxa incluye temas CVI; escaneo por interruptor (uno o dos interruptores, grupos por filas y cuadrantes, tiempo de aceptación); selección por permanencia que funciona con cualquier dispositivo que mueva el puntero, incluidos punteros de cabeza y seguidores oculares cuyo propio software mueve el puntero (Voxa no tiene integración directa con hardware de seguimiento ocular); una alternativa de tocar para mover en lugar de arrastrar botones en el editor; y bloqueos de planificación motora. Consulta docs/accessibility.md en nuestro repositorio."
         },
         {
           "title": "Limitaciones conocidas",
@@ -472,7 +482,7 @@
         },
         {
           "title": "Enfoque de evaluación",
-          "content": "Combinamos comprobaciones automatizadas y pruebas con interruptores y seguimiento ocular cuando está disponible."
+          "content": "En CI se ejecutan comprobaciones automáticas axe en las páginas públicas y en el comunicador con cada tema de tablero; el escaneo se prueba con interruptores que emulan teclado. Aún no hemos probado con hardware de seguimiento ocular."
         },
         {
           "title": "Comentarios",
@@ -544,7 +554,9 @@
     "versionConflictReload": "Conflicto de versiones: recarga la página e inténtalo de nuevo.",
     "offlineCached": "Sin conexión: se usa el tablero guardado en este dispositivo",
     "apiUnreachable": "No se pudo conectar con el servidor: se usa el tablero de demostración local",
-    "saveQueued": "Guardado en cola: se sincronizará cuando vuelva la conexión"
+    "saveQueued": "Guardado en cola: se sincronizará cuando vuelva la conexión",
+    "motorPlanRejected": "No se guardó: este cambio mueve un botón bloqueado (planificación motora). Solo un administrador puede anular un bloqueo; si no, desbloquea el botón primero. El tablero se recargó desde el servidor.",
+    "saveRejected": "No se guardó: el servidor rechazó este cambio ({detail}). No se reintentará."
   },
   "pwa": {
     "installApp": "Instalar app",
@@ -610,7 +622,15 @@
     "lockPosition": "Bloquear posición (plan motor)",
     "hideFromCommunicator": "Ocultar en la vista de la persona comunicadora",
     "done": "Listo",
-    "emptyCell": "Celda vacía, fila {row}, columna {column}. Suelta un botón aquí o haz clic para añadir uno."
+    "emptyCell": "Celda vacía, fila {row}, columna {column}. Suelta un botón aquí o haz clic para añadir uno.",
+    "moveSection": "Mover este botón",
+    "moveStart": "Mover: luego toca el destino",
+    "moveCancel": "Cancelar movimiento",
+    "moveUp": "Mover una celda arriba",
+    "moveDown": "Mover una celda abajo",
+    "moveLeft": "Mover una celda a la izquierda",
+    "moveRight": "Mover una celda a la derecha",
+    "moveBanner": "Moviendo «{label}»: toca o haz clic en la celda de destino (si hay un botón, intercambian lugar). Escape cancela."
   },
   "wordForms": {
     "title": "Formas de la palabra",
@@ -683,6 +703,8 @@
     "bottomLeft": "Abajo a la izquierda",
     "bottomRight": "Abajo a la derecha",
     "region": "Región {n}",
-    "group": "Grupo {n}"
+    "group": "Grupo {n}",
+    "back": "Volver",
+    "backToGroups": "↩ Volver a los grupos"
   }
 }

@@ -28,6 +28,10 @@ export function findMotorPlanningViolations(
   for (const button of next) {
     const prev = prevById.get(button.id);
     if (!prev?.locked) continue;
+    // Unlocking and moving in one save is the same as two saves (unlock, then
+    // move), which every editor may do. Only an explicit `locked: false`
+    // counts: a body that omits the field keeps the lock.
+    if (button.locked === false) continue;
 
     const moved =
       prev.position.row !== button.position.row ||
