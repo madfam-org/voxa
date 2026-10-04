@@ -3,13 +3,20 @@ name: Deploy Voxa API (Staging)
 on:
   workflow_dispatch:
   push:
-    branches: [staging]
+    branches: [main]
     paths:
       - "apps/api/**"
       - "packages/**"
       - "apps/api/Dockerfile"
+      - ".github/workflows/deploy-voxa-api-staging.yml"
       - "!k8s/staging/kustomization.yaml"
 
+# Staging rebuilds from main on every merge that touches this app, beside the
+# production workflow for the same paths. It never gates production: it has its
+# own concurrency group, its own build cache scope (it reads the production cache
+# but never writes to it), its own image tags and only ever writes k8s/staging/.
+# A staging failure shows as a red staging run and changes nothing else.
+#
 # One group per workflow: GitHub keeps only the newest pending run per group,
 # so a shared web+API group let one workflow's pending run displace the
 # other's. The digest pin step fetches, resets to origin/main and retries its
@@ -58,20 +65,58 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:staging-${{ github.sha }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:staging
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: |
+            type=gha,scope=voxa-api-staging
+            type=gha
+          cache-to: type=gha,mode=max,scope=voxa-api-staging
           provenance: false
           sbom: false
 
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+
+      # Retry the sign call: on 2026-08-26 crea-frontend run 33010085743 the
+      # GitHub OIDC endpoint transiently returned non-JSON ("invalid character
+      # 'u' looking for beginning of value"), the image was already pushed, and
+      # the chain stopped BEFORE the digest pin — main went green while the live
+      # host kept serving the previous build. Transient: a rerun succeeded.
+      - name: Sign image with cosign
+        id: sign
+        env:
+          IMAGE_REF: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build.outputs.digest }}
+        run: |
+          set -euo pipefail
+          signed=0
+          for wait in 0 20 60; do
+            if [ "$wait" -gt 0 ]; then
+              echo "::warning::cosign sign failed for ${IMAGE_REF} (transient OIDC/Fulcio/Rekor?); retrying in ${wait}s..."
+              sleep "$wait"
+            fi
+            if cosign sign --yes "${IMAGE_REF}"; then
+              signed=1
+              break
+            fi
+          done
+          if [ "$signed" -ne 1 ]; then
+            echo "::error::cosign sign failed 3 times for ${IMAGE_REF}."
+            echo "::error::The image was BUILT AND PUSHED but is NOT signed, so it will not be"
+            echo "::error::pinned and ArgoCD will not roll it: the live host is still serving the"
+            echo "::error::PREVIOUS build even though this commit is on main. Rerun the failed jobs."
+            exit 1
+          fi
+
       - name: Commit image digest
+        id: pin
         env:
           DIGEST: ${{ steps.build.outputs.digest }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          for ATTEMPT in 1 2 3; do
-            git fetch origin staging
-            git reset --hard origin/staging
+          # Four workflows pin into main (web/api x production/staging), so the
+          # staging pin retries more times than production, with jitter.
+          for ATTEMPT in 1 2 3 4 5; do
+            git fetch origin main
+            git reset --hard origin/main
             cd k8s/staging
             kustomize edit set image voxa-api=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${DIGEST}
             cd ../..
@@ -94,11 +139,11 @@ jobs:
             git add k8s/staging/kustomization.yaml k8s/staging/voxa-api-deployment.yaml
             git diff --staged --quiet && echo "No changes to commit" && exit 0
             git commit -m "deploy(api): update staging digest to ${GITHUB_SHA::8}"
-            git push origin staging && exit 0
+            git push origin main && exit 0
             echo "Retry $ATTEMPT..."
-            sleep $((ATTEMPT * 2))
+            sleep $((ATTEMPT * 3 + RANDOM % 5))
           done
-          echo "Failed after 3 attempts"
+          echo "Failed after 5 attempts"
           exit 1
 
       - name: Report lifecycle event
@@ -135,8 +180,29 @@ jobs:
         if: success()
         run: |
           for i in 1 2 3 4 5 6; do
-            code="$(curl -sS -o /dev/null -w '%{http_code}' https://voxa-api-staging.madfam.io/health || true)"
-            if [ "$code" = "200" ]; then exit 0; fi
+            code="$(curl -sS -o /tmp/voxa-health.json -w '%{http_code}' https://voxa-api-staging.madfam.io/health || true)"
+            if [ "$code" = "200" ]; then
+              cat /tmp/voxa-health.json
+              exit 0
+            fi
             sleep 20
           done
+          echo "Smoke test failed: https://voxa-api-staging.madfam.io/health" >&2
           exit 1
+
+      # Loud-stale guard (2026-08-26 crea-frontend OIDC incident): the failure
+      # mode that hurts is a pushed image whose digest pin never ran — main goes
+      # green while the cluster still runs the previous digest. Make that state
+      # name itself instead of hiding behind a green checkmark.
+      - name: Fail loudly if image was pushed but never pinned
+        if: always()
+        run: |
+          set -uo pipefail
+          BUILD='${{ steps.build.outcome }}'
+          SIGN='${{ steps.sign.outcome }}'
+          PIN='${{ steps.pin.outcome }}'
+          echo "build=${BUILD} sign=${SIGN} pin=${PIN}"
+          if [ "${BUILD}" = "success" ] && { [ "${SIGN}" != "success" ] || [ "${PIN}" != "success" ]; }; then
+            echo "::error title=Image pushed but NOT pinned/deployed::The image for ${GITHUB_SHA} was built and pushed to the registry, but signing and/or the digest pin did not complete. ArgoCD was never handed a new digest, so THE LIVE HOST IS STILL SERVING THE PREVIOUS BUILD even though this commit is green on main. Rerun the failed jobs (gh run rerun ${GITHUB_RUN_ID} --failed)."
+            exit 1
+          fi
