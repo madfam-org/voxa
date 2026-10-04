@@ -11,9 +11,10 @@ this repository; `CLAUDE.md` is only a pointer here. Human overview:
 [docs/accessibility.md](./docs/accessibility.md). Compact index for LLMs:
 [llms.txt](./llms.txt).
 
-Voxa is an open AAC (Augmentative and Alternative Communication) platform:
-a Next.js board app, an Expo mobile app and a Hono sync/AI API, in one pnpm +
-Turborepo monorepo. This repository is **public**: never commit secrets,
+**Augmentative & alternative communication.** A Spanish-first communication board that turns direct touch, switch scanning or pointer dwell into speech with the device voice you choose (es-MX first); core boards in 24, 36 and 60 cells on one stable motor plan, offline use after the first visit, and Open Board Format (OBF/OBZ) exchange — at home, in therapy, and in class.
+
+The code: a Next.js board app, an Expo mobile app and a Hono sync/AI API, in
+one pnpm + Turborepo monorepo. This repository is **public**: never commit secrets,
 internal hostnames, cluster or database identifiers, or user data, and keep
 fixtures free of real names and health information.
 
