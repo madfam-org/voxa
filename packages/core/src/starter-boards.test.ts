@@ -3,12 +3,12 @@ import { describe, it } from 'node:test';
 import { createStarterBoard, listStarterTemplates } from './starter-boards.js';
 
 describe('starter board templates', () => {
-  it('lists core-47 and core-100 templates', () => {
+  it('lists the sized core templates first, then core-47, core-100, keyboard and schedule', () => {
     const templates = listStarterTemplates();
-    assert.equal(templates.length, 4);
-    assert.equal(templates[0]?.id, 'core-47');
-    assert.equal(templates[2]?.id, 'literacy-keyboard');
-    assert.equal(templates[3]?.id, 'visual-schedule');
+    assert.deepEqual(
+      templates.map((t) => t.id),
+      ['core-24', 'core-36', 'core-60', 'core-47', 'core-100', 'literacy-keyboard', 'visual-schedule'],
+    );
   });
 
   it('builds a 6x8 core-47 board with locked motor-plan slots', () => {

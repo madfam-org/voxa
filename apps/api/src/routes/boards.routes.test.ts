@@ -184,4 +184,52 @@ describe('board routes', () => {
     const invalid = await create({ id: 'tpl-bad', name: 'Bad', templateId: 'core-47', contentLocale: 'de-DE' });
     assert.equal(invalid.status, 400);
   });
+
+  it('creates the 24, 36 and 60 cell core boards with one motor plan, and refuses an unknown template with 400', async () => {
+    const create = (id: string, body: Record<string, unknown>) =>
+      app.request('/v1/boards', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Voxa-User-Id': `owner-${id}`, 'X-Voxa-Role': 'editor' },
+        body: JSON.stringify({
+          id,
+          name: id,
+          profileId: 'default',
+          version: 1,
+          updatedAt: new Date().toISOString(),
+          grid: { rows: 1, columns: 1, buttons: [] },
+          ...body,
+        }),
+      });
+    type Created = { board: { grid: { rows: number; columns: number; buttons: Array<{ id: string; locale: string; label: string; position: { row: number; column: number } }> } } };
+    const boards: Created['board'][] = [];
+    for (const [templateId, rows, columns] of [
+      ['core-24', 4, 6],
+      ['core-36', 6, 6],
+      ['core-60', 6, 10],
+    ] as const) {
+      const res = await create(`sized-${templateId}`, { templateId });
+      assert.equal(res.status, 201, templateId);
+      const { board } = (await res.json()) as Created;
+      assert.equal(board.grid.rows, rows);
+      assert.equal(board.grid.columns, columns);
+      assert.equal(board.grid.buttons.length, rows * columns);
+      assert.ok(board.grid.buttons.every((button) => button.locale === 'es-MX'));
+      boards.push(board);
+    }
+    const at = (board: Created['board']) => new Map(board.grid.buttons.map((b) => [b.id, `${b.position.row},${b.position.column}`]));
+    const large = at(boards[2]!);
+    for (const [id, cell] of at(boards[0]!)) assert.equal(large.get(id), cell, `${id} moved`);
+
+    const templates = (await (await app.request('/v1/boards/templates/list', { headers: devHeaders('lister') })).json()) as {
+      templates: Array<{ id: string; vocabularyReview?: string }>;
+    };
+    for (const id of ['core-24', 'core-36', 'core-60']) {
+      assert.equal(templates.templates.find((t) => t.id === id)?.vocabularyReview, 'pending-clinical-review');
+    }
+
+    for (const bad of ['core-84', '__proto__', 42]) {
+      const res = await create(`bad-${String(bad)}`, { templateId: bad });
+      assert.equal(res.status, 400, String(bad));
+    }
+  });
 });
