@@ -119,6 +119,21 @@ pnpm build
    billing system, a request header or a body field that sets the tier.
    Tested in `src/lib/entitlement.test.ts` and
    `src/routes/entitlement.routes.test.ts` (real RS256 tokens).
+9. **Model predictions go only through Selva, as `restricted`.** Text
+   predictions call no model vendor directly. With `SELVA_ENABLED=true`,
+   `src/lib/selva.ts` sends the current partial utterance (last 200
+   characters, nothing else) to Selva's `/v1/chat/completions` with
+   `X-Sensitivity: restricted` and a Janua `client_credentials` token cached
+   until 60 s before expiry. Any failure (unset configuration, token error,
+   HTTP error including Selva's 503 when it has no local model, timeout,
+   malformed answer) answers 200 from the local predictor with
+   `source: "local"`. It runs only after the `ai_processing` consent check,
+   and logs carry reason codes, never utterance text or tokens. The local
+   predictor (`packages/ai`) has English and Spanish continuation tables,
+   selected by the board locale; the Spanish table awaits review by a
+   credentialed speech-language pathologist. Tested in
+   `src/lib/selva.test.ts`, `src/routes/ai.routes.test.ts` and
+   `packages/ai/src/predict.test.ts`.
 
 ## Deploy
 
@@ -151,6 +166,7 @@ blocks production use, **P1** next, **P2** planned, **P3** cleanup.
 | **Paid tiers are not grantable yet.** The API reads the plan tier from the Janua `voxa_tier` claim, but the push that writes the claim for user subscriptions (billing → Janua) is not built. | Nobody can hold `family` or `clinic`, so every user gets the free limits (one board). Fails safe: no one gets a paid tier they did not buy. | P1 | Ecosystem work outside this repo; no Voxa change is needed once tokens carry the claim | Y1 |
 | **Staging images are unsigned.** Only the production deploy workflows run cosign.                                                                                                                                            | Staging cannot be verified the same way as production.                                                                                                                                  | P2       | Engineering work                                                                | —        |
 | **Prettier is not enforced.** `pnpm format` exists but CI does not check it, and several files predate it.                                                                                                                   | Formatting drifts and creates noise in unrelated PRs.                                                                                                                                   | P3       | Engineering work (one reformat, then a CI check)                                | —        |
+| **Selva predictions are off.** `SELVA_ENABLED` defaults to `false`, so every text suggestion comes from the local predictor. Turning it on needs a Janua service client for this edge, its id and secret delivered to the API, and a local model behind Selva for `restricted` requests. | Until then suggestions are rule-based only. Turning it on early is safe (every failure falls back to local) but pointless. | P2 | Ecosystem and operator work; no Voxa code change is needed | — |
 | **Two internal literals left in deploy-functional or app files.** The Kubernetes web deployments still carry the OAuth client id as a literal, and a code comment in `apps/web/src/lib/pricing.ts` points at a pricing document that is now private. | The operational and commercial docs moved out on 2026-10-03; these two need a deploy-touching change, so they were left for a separate PR. | P2       | Engineering work (read the client id from configuration; reword the comment)    | —        |
 
 The Next image optimizer gap listed here before 2026-10-02 is closed (#13,
@@ -182,4 +198,13 @@ invariant 6).
   A tier change reaches Voxa when the user's next token is minted. The push
   that writes the claim for user subscriptions is not built yet (gate Y1), so
   paid tiers are not grantable and every user resolves to `free`.
+- **Selva (model gateway).** Text predictions use Selva's OpenAI-compatible
+  `/v1/chat/completions` (`src/lib/selva.ts`), authenticated by a Janua
+  `client_credentials` token for this service's own client (scope
+  `SELVA_SCOPE`, default `selva:infer`; audience is Selva's). Settings:
+  `SELVA_ENABLED` (default `false`), `SELVA_BASE_URL`, `SELVA_CLIENT_ID`,
+  `SELVA_CLIENT_SECRET` (secret), `JANUA_TOKEN_URL`, optional
+  `SELVA_TIMEOUT_MS` (default 2000). Every request is `X-Sensitivity:
+  restricted`, which Selva serves only from a local model and otherwise
+  refuses with 503.
 - **Enclii (deploy).** [Zero-touch contract](https://github.com/madfam-org/enclii/blob/main/docs/guides/ZERO_TOUCH_CONTRACT.md).

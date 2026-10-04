@@ -4,6 +4,11 @@ All notable changes to Voxa are documented here.
 
 ## [Unreleased]
 
+### Added
+
+- API: text predictions can come from Selva, the ecosystem model gateway, when `SELVA_ENABLED=true` (default `false`). Requests carry `X-Sensitivity: restricted` and only the current partial utterance, authenticate with a cached Janua `client_credentials` token, and fall back to the local predictor on any failure (`source: "local"`; `source: "selva"` when Selva answered). The `ai_processing` consent check still runs first. Symbol predictions stay local.
+- Local predictor: a Spanish (es-MX) core-vocabulary continuation table, chosen by the board locale, so Spanish boards get Spanish suggestions instead of English "please"/"now". Pending review by a credentialed speech-language pathologist. Languages without a table (French) get no text suggestions rather than English ones.
+
 ### Changed
 
 - Consent is a server-side record per user and purpose (`GET/PUT /v1/consents`, tables `consents` and `consent_events`), replacing the client-supplied `X-Voxa-AI-Consent` header, which no longer grants anything. Prediction routes need `ai_processing`; activations need `usage_analytics` and store counts only. Spoken text is kept only under a separate `utterance_text` consent for organizations on the `VOXA_UTTERANCE_TEXT_DPA_ORG_IDS` allow-list (empty by default), and opted-in text is cleared after 90 days. The web banner and Settings show two separate choices (word suggestions, usage counts) and save them to the server; `localStorage` is an offline cache.
@@ -24,6 +29,7 @@ All notable changes to Voxa are documented here.
 
 ### Fixed
 
+- Local predictor: a continuation is appended to the whole message ("I want" → "I want more") instead of replacing its last word ("i more").
 - CI: each deploy workflow has its own concurrency group. The shared web+API group let one workflow's pending run displace the other's, so a merge could leave production web without the change while its API deploy succeeded.
 - CI: the daily smoke (`e2e-smoke.yml`, now "Daily smoke") runs only checks that mean something today: production GA gate, production demo, Redis readiness (warning), and Playwright smoke plus axe on production public pages.
 - Web: paid-plan calls to action (Family, Institutional, demo gate) go to a discovery call at `https://kalya.app/madfam` until a checkout exists; the `/app?upgrade=family` dead end and the unused checkout URL builder are removed. Prices stay visible.

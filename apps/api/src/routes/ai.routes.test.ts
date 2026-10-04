@@ -90,6 +90,104 @@ describe('AI prediction routes', () => {
     assert.deepEqual(outbound, []);
   });
 
+  it('makes no outbound request for a Spanish board with Selva off and answers in Spanish', async () => {
+    delete process.env.SELVA_ENABLED;
+    const res = await app.request('/v1/ai/predict/text', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ profileId: 'p1', recentUtterances: [], partialText: 'yo', locale: 'es-MX', maxSuggestions: 3 }),
+    });
+    assert.equal(res.status, 200);
+    const body = (await res.json()) as { predictions: Array<{ text: string }>; source: string };
+    assert.equal(body.source, 'local');
+    assert.deepEqual(
+      body.predictions.map((p) => p.text),
+      ['yo quiero', 'yo necesito', 'yo voy'],
+    );
+    assert.deepEqual(outbound, []);
+  });
+
+  describe('with Selva enabled', () => {
+    const selvaEnv = {
+      SELVA_ENABLED: 'true',
+      SELVA_BASE_URL: 'https://selva.test',
+      SELVA_CLIENT_ID: 'test-client',
+      SELVA_CLIENT_SECRET: 'test-secret',
+      JANUA_TOKEN_URL: 'https://janua.test/api/v1/oauth/token',
+    };
+    let completionStatus = 200;
+    let sensitivity: Array<string | null> = [];
+
+    beforeEach(async () => {
+      Object.assign(process.env, selvaEnv);
+      const { defaultSelvaTokenCache } = await import('../lib/selva.js');
+      defaultSelvaTokenCache.clear();
+      completionStatus = 200;
+      sensitivity = [];
+      globalThis.fetch = (async (input: RequestInfo | URL, init: RequestInit = {}) => {
+        const url = String(input instanceof Request ? input.url : input);
+        outbound.push(url);
+        if (url === selvaEnv.JANUA_TOKEN_URL) {
+          return Response.json({ access_token: 'token-1', expires_in: 300 });
+        }
+        sensitivity.push(new Headers(init.headers).get('X-Sensitivity'));
+        if (completionStatus !== 200) return new Response('{}', { status: completionStatus });
+        return Response.json({ choices: [{ message: { role: 'assistant', content: '["agua", "jugar"]' } }] });
+      }) as typeof fetch;
+    });
+
+    afterEach(() => {
+      for (const key of Object.keys(selvaEnv)) delete process.env[key];
+    });
+
+    const predict = (user = 'user-1') =>
+      app.request('/v1/ai/predict/text', {
+        method: 'POST',
+        headers: { ...headers, 'X-Voxa-User-Id': user },
+        body: JSON.stringify({ profileId: 'p1', recentUtterances: [], partialText: 'yo quiero', locale: 'es-MX' }),
+      });
+
+    it('answers from Selva with source selva and X-Sensitivity: restricted', async () => {
+      const res = await predict();
+      assert.equal(res.status, 200);
+      const body = (await res.json()) as { predictions: Array<{ text: string }>; source: string };
+      assert.equal(body.source, 'selva');
+      assert.deepEqual(
+        body.predictions.map((p) => p.text),
+        ['yo quiero agua', 'yo quiero jugar'],
+      );
+      assert.deepEqual(sensitivity, ['restricted']);
+    });
+
+    it('answers 200 from the local predictor when Selva has no local model (503)', async () => {
+      completionStatus = 503;
+      const res = await predict();
+      assert.equal(res.status, 200);
+      const body = (await res.json()) as { predictions: Array<{ text: string }>; source: string };
+      assert.equal(body.source, 'local');
+      assert.equal(body.predictions[0]?.text, 'yo quiero más');
+      assert.deepEqual(sensitivity, ['restricted']);
+    });
+
+    it('still answers 403 without ai_processing consent and calls nothing', async () => {
+      const res = await predict('user-without-consent');
+      assert.equal(res.status, 403);
+      assert.deepEqual(await res.json(), { error: 'AI consent required', purpose: 'ai_processing' });
+      assert.deepEqual(outbound, []);
+    });
+
+    it('keeps symbol predictions local', async () => {
+      const res = await app.request('/v1/ai/predict/symbols', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ profileId: 'p1', recentSymbolIds: [], boardButtons: [], maxSuggestions: 3 }),
+      });
+      assert.equal(res.status, 200);
+      assert.equal(((await res.json()) as { source: string }).source, 'local');
+      assert.deepEqual(outbound, []);
+    });
+  });
+
   it('answers 403 again once the user revokes ai_processing', async () => {
     await setAiConsent(false);
     const res = await app.request('/v1/ai/predict/text', {
