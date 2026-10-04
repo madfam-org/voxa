@@ -7,9 +7,6 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "scheme": "voxa",
-    "splash": {
-      "backgroundColor": "#0a0a0a"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "io.madfam.voxa",
@@ -23,14 +20,21 @@
       "package": "io.madfam.voxa",
       "versionCode": 1
     },
-    "plugins": ["expo-router", "expo-secure-store"],
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0a0a0a"
+        }
+      ]
+    ],
     "extra": {
       "apiUrl": "http://localhost:4000",
+      "webUrl": "http://localhost:3000",
       "oidcIssuer": "https://auth.madfam.io",
-      "oidcClientId": "voxa",
-      "eas": {
-        "projectId": "REPLACE_WITH_EAS_PROJECT_ID"
-      }
+      "oidcClientId": "voxa"
     }
   }
 }

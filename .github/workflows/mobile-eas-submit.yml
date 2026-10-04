@@ -29,6 +29,16 @@ jobs:
   submit:
     runs-on: ubuntu-24.04
     if: github.repository == 'madfam-org/voxa'
+    env:
+      # Identifiers live in repository variables, never in the repo. See
+      # docs/launch/MOBILE_GA.md for the names and how to set them.
+      EAS_PROJECT_ID: ${{ vars.EAS_PROJECT_ID }}
+      EAS_PROJECT_OWNER: ${{ vars.EAS_PROJECT_OWNER }}
+      VOXA_REQUIRE_EAS_PROJECT: '1'
+      ASC_APP_ID: ${{ vars.ASC_APP_ID }}
+      APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+      ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+      ASC_API_KEY_ISSUER_ID: ${{ secrets.ASC_API_KEY_ISSUER_ID }}
     steps:
       - uses: actions/checkout@v4
 
@@ -57,11 +67,18 @@ jobs:
             exit 1
           fi
 
-      - name: Verify TestFlight readiness
+      - name: Write store submission keys
+        env:
+          ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        run: ./scripts/mobile/write-store-keys.sh
+
+      - name: Verify EAS project and store settings
         env:
           REQUIRE_LINKED: '1'
-          REQUIRE_SUBMIT: '1'
-        run: ./scripts/mobile/verify-testflight-readiness.sh
+        run: |
+          ./scripts/mobile/verify-eas-config.sh
+          node scripts/mobile/eas-submit-env.mjs --apply --profile "${{ inputs.profile }}" --platform "${{ inputs.platform }}"
 
       - uses: expo/expo-github-action@v8
         with:

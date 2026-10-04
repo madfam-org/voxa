@@ -1,4 +1,4 @@
-import type { MobileSession } from './session.js';
+import type { MobileSession } from './session';
 
 export function isSessionExpired(session: MobileSession, skewSeconds = 0): boolean {
   return session.expiresAt * 1000 <= Date.now() + skewSeconds * 1000;

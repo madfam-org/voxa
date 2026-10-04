@@ -11,6 +11,15 @@ jobs:
   preview:
     runs-on: ubuntu-24.04
     if: github.repository == 'madfam-org/voxa'
+    env:
+      # Identifiers live in repository variables, never in the repo. See
+      # docs/launch/MOBILE_GA.md for the names and how to set them.
+      EAS_PROJECT_ID: ${{ vars.EAS_PROJECT_ID }}
+      EAS_PROJECT_OWNER: ${{ vars.EAS_PROJECT_OWNER }}
+      ASC_APP_ID: ${{ vars.ASC_APP_ID }}
+      APPLE_TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+      ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+      ASC_API_KEY_ISSUER_ID: ${{ secrets.ASC_API_KEY_ISSUER_ID }}
     steps:
       - uses: actions/checkout@v4
 
@@ -29,14 +38,16 @@ jobs:
         run: ./scripts/mobile/verify-eas-config.sh
 
       - name: TestFlight readiness summary
-        run: ./scripts/mobile/verify-testflight-readiness.sh || true
+        run: ./scripts/mobile/verify-testflight-readiness.sh
 
       - name: Typecheck mobile app
-        continue-on-error: true
-        run: pnpm --filter @voxa/mobile typecheck
+        run: pnpm turbo typecheck --filter=@voxa/mobile
 
       - name: Test mobile app
         run: pnpm --filter @voxa/mobile test
+
+      - name: Bundle check (Android JS export, no credentials)
+        run: pnpm --filter @voxa/mobile exec expo export --platform android --output-dir "${RUNNER_TEMP}/expo-export"
 
       # The `secrets` context is NOT available in step-level `if:` expressions.
       # Referencing it there makes GitHub reject the whole workflow at parse
@@ -65,6 +76,13 @@ jobs:
         if: steps.eas_creds.outputs.configured == 'true'
         run: REQUIRE_LINKED=1 ./scripts/mobile/verify-eas-config.sh
 
+      - name: Write store submission keys
+        if: steps.eas_creds.outputs.configured == 'true' && vars.EAS_AUTO_SUBMIT == 'true'
+        env:
+          ASC_API_KEY_P8: ${{ secrets.ASC_API_KEY_P8 }}
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        run: ./scripts/mobile/write-store-keys.sh
+
       - name: EAS preview build (staging API)
         if: steps.eas_creds.outputs.configured == 'true'
         working-directory: apps/mobile
@@ -72,8 +90,10 @@ jobs:
           args=(build --profile preview --platform all --non-interactive)
           if [[ "${{ vars.EAS_AUTO_SUBMIT }}" == 'true' ]]; then
             REQUIRE_SUBMIT=1 "${GITHUB_WORKSPACE}/scripts/mobile/verify-testflight-readiness.sh"
+            node "${GITHUB_WORKSPACE}/scripts/mobile/eas-submit-env.mjs" --apply --profile preview --platform all
             args+=(--auto-submit)
           fi
           eas "${args[@]}"
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          VOXA_REQUIRE_EAS_PROJECT: '1'

@@ -15,6 +15,7 @@
       "autoIncrement": true,
       "env": {
         "EXPO_PUBLIC_API_URL": "https://voxa-api-staging.madfam.io",
+        "EXPO_PUBLIC_WEB_URL": "https://voxa.madfam.io",
         "EXPO_PUBLIC_OIDC_ISSUER": "https://auth.madfam.io",
         "EXPO_PUBLIC_OIDC_CLIENT_ID": "voxa"
       },
@@ -26,6 +27,7 @@
       "channel": "production",
       "env": {
         "EXPO_PUBLIC_API_URL": "https://voxa-api.madfam.io",
+        "EXPO_PUBLIC_WEB_URL": "https://voxa.madfam.io",
         "EXPO_PUBLIC_OIDC_ISSUER": "https://auth.madfam.io",
         "EXPO_PUBLIC_OIDC_CLIENT_ID": "voxa"
       }
@@ -34,25 +36,17 @@
   "submit": {
     "preview": {
       "ios": {
-        "appleId": "REPLACE_WITH_APPLE_ID",
-        "ascAppId": "REPLACE_WITH_ASC_APP_ID",
-        "appleTeamId": "REPLACE_WITH_TEAM_ID"
+        "ascApiKeyPath": "$ASC_API_KEY_PATH",
+        "ascApiKeyIssuerId": "$ASC_API_KEY_ISSUER_ID",
+        "ascApiKeyId": "$ASC_API_KEY_ID"
       },
       "android": {
-        "serviceAccountKeyPath": "./secrets/google-play-service-account.json",
+        "serviceAccountKeyPath": "$GOOGLE_PLAY_SERVICE_ACCOUNT_KEY_PATH",
         "track": "internal"
       }
     },
     "production": {
-      "ios": {
-        "appleId": "REPLACE_WITH_APPLE_ID",
-        "ascAppId": "REPLACE_WITH_ASC_APP_ID",
-        "appleTeamId": "REPLACE_WITH_TEAM_ID"
-      },
-      "android": {
-        "serviceAccountKeyPath": "./secrets/google-play-service-account.json",
-        "track": "internal"
-      }
+      "extends": "preview"
     }
   }
 }

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { parseMobileSettings } from './mobile-settings.js';
+import { parseMobileSettings } from './mobile-settings';
 
 describe('mobile settings', () => {
   it('returns defaults when storage is empty', () => {

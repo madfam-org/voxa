@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { isSessionExpired, isSessionExpiring } from './session-expiry.js';
-import type { MobileSession } from './session.js';
+import { isSessionExpired, isSessionExpiring } from './session-expiry';
+import type { MobileSession } from './session';
 
 function session(expiresAt: number, refreshToken?: string): MobileSession {
   return {
