@@ -1,6 +1,8 @@
 # Backup and restore — Voxa PostgreSQL
 
-Voxa board data lives in PostgreSQL when `DATABASE_URL` is bound via Enclii CloudNativePG addon.
+> Public-safe summary. Concrete hosts, database roles and the operator's backup and restore commands live in MADFAM's private operations repository, not here.
+
+Voxa board data lives in PostgreSQL when `DATABASE_URL` is set (the platform's shared PostgreSQL server or an Enclii-managed addon).
 
 ## What is backed up
 
@@ -22,26 +24,13 @@ CloudNativePG on Enclii typically provides scheduled backups to object storage. 
 
 ## Manual logical backup
 
-From a bastion with cluster access:
-
-```bash
-kubectl exec -it voxa-postgres-1 -n data -- \
-  pg_dump -U voxa -d voxa --format=custom -f /tmp/voxa.dump
-
-kubectl cp data/voxa-postgres-1:/tmp/voxa.dump ./voxa-$(date +%F).dump
-```
-
-Store dumps encrypted at rest; never commit dumps to git.
+A platform operator takes an on-demand logical backup (`pg_dump --format=custom` of the Voxa database) through the platform's documented procedure. Store dumps encrypted at rest; never commit dumps to git.
 
 ## Restore procedure
 
 1. **Announce maintenance** — sync will be read-only or unavailable.
-2. Scale API to zero: `kubectl scale deployment/voxa-api -n voxa --replicas=0`.
-3. Restore into a fresh database or drop/recreate schema in maintenance window:
-
-```bash
-pg_restore -U voxa -d voxa --clean --if-exists voxa-YYYY-MM-DD.dump
-```
+2. Scale `voxa-api` to zero replicas through Enclii.
+3. Restore into a fresh database, or drop and recreate the schema in the maintenance window, with `pg_restore --clean --if-exists` against the dump (operator procedure).
 
 4. Run migrations if restoring to empty DB without dump schema:
 

@@ -8,14 +8,18 @@
 #   ENCLII_TOKEN='…' ./scripts/deploy/restart-voxa-web.sh
 #   ENCLII_TOKEN='…' ./scripts/deploy/restart-voxa-web.sh staging
 #   ENCLII_TOKEN='…' ./scripts/deploy/restart-voxa-web.sh all
+#
+# Requires the Enclii service ids of the targets you restart:
+#   VOXA_WEB_SERVICE_ID          (prod; repository variable of the same name in CI)
+#   VOXA_STAGING_WEB_SERVICE_ID  (staging)
 
 set -euo pipefail
 
 API="${ENCLII_API_URL:-https://api.enclii.dev}"
 TOKEN="${ENCLII_TOKEN:?Set ENCLII_TOKEN}"
 
-PROD_SERVICE_ID="${VOXA_WEB_SERVICE_ID:-3bbcb7f7-ebf2-4c89-bb42-a8953831312c}"
-STAGING_SERVICE_ID="${VOXA_STAGING_WEB_SERVICE_ID:-80560128-37a7-462e-a053-bac495241f47}"
+PROD_SERVICE_ID="${VOXA_WEB_SERVICE_ID:-}"
+STAGING_SERVICE_ID="${VOXA_STAGING_WEB_SERVICE_ID:-}"
 
 target="${1:-all}"
 
@@ -23,6 +27,10 @@ restart_service() {
   local id="$1"
   local label="$2"
   local body
+  if [ -z "${id}" ]; then
+    echo "FAIL ${label} voxa-web Enclii service id is not set (VOXA_WEB_SERVICE_ID for prod, VOXA_STAGING_WEB_SERVICE_ID for staging)" >&2
+    exit 1
+  fi
   body="$(python3 -c "import json; print(json.dumps({'env':'production','reason':'Voxa web rollout restart (${label})'}))")"
   echo "Restarting ${label} voxa-web (${id})…"
   curl -sS -X POST "${API}/v1/services/${id}/restart" \

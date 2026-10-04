@@ -16,6 +16,9 @@ concurrency:
 
 env:
   REGISTRY: ghcr.io
+  # Do not publish Docker build-record artifacts from this public repo
+  # (repo-boundary contract, class 7: public Actions artifacts).
+  DOCKER_BUILD_RECORD_UPLOAD: "false"
   IMAGE_NAME: madfam-org/voxa/voxa-web
 
 jobs:
@@ -179,6 +182,7 @@ jobs:
         env:
           JANUA_ADMIN_EMAIL: ${{ secrets.MADFAM_ADMIN_EMAIL }}
           JANUA_ADMIN_PASSWORD: ${{ secrets.MADFAM_ADMIN_PASSWORD }}
+          VOXA_WEB_SERVICE_ID: ${{ vars.VOXA_WEB_SERVICE_ID }}
         run: |
           if [ -z "${JANUA_ADMIN_EMAIL}" ] || [ -z "${JANUA_ADMIN_PASSWORD}" ]; then
             echo "MADFAM_ADMIN_* secrets not configured — skipping Argo sync + web restart"
@@ -202,6 +206,7 @@ jobs:
         if: success()
         env:
           ENCLII_TOKEN: ${{ secrets.ENCLII_TOKEN }}
+          VOXA_WEB_SERVICE_ID: ${{ vars.VOXA_WEB_SERVICE_ID }}
         run: |
           if [ -z "${ENCLII_TOKEN}" ]; then
             exit 0

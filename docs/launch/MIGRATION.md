@@ -112,7 +112,7 @@ Create a **Literacy Keyboard** board from the editor template picker for literat
 |--------|--------|--------|
 | Proloquo2Go | Backup export | Partner migration service |
 
-Track progress in [FEATURE_PARITY.md](./FEATURE_PARITY.md).
+Progress is tracked in the feature roadmap ([GA_ROADMAP.md](./GA_ROADMAP.md), Phase 6).
 
 ## Multi-board accounts
 
@@ -132,4 +132,3 @@ VOXA_TEST_ACCESS_TOKEN='…' \
 
 - Architecture: [../architecture.md](../architecture.md)
 - Auth setup: [../auth/JANUA.md](../auth/JANUA.md)
-- Competitive benchmark: [AAC_PLATFORM_BENCHMARK.md](./AAC_PLATFORM_BENCHMARK.md)

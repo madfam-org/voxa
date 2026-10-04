@@ -1,6 +1,6 @@
 # Voxa
 
-> Open, cross-platform AAC (Augmentative and Alternative Communication) platform: a Next.js board app, an Expo mobile app and a Hono sync/AI API in one pnpm + Turborepo monorepo. Apache-2.0. Public repository.
+> Open, cross-platform AAC (Augmentative and Alternative Communication) platform: a Next.js board app, an Expo mobile app and a Hono sync/AI API in one pnpm + Turborepo monorepo. Apache-2.0. Public repository: operational detail and commercial research live in MADFAM's private operations repository, not here.
 
 ## Read first
 
@@ -29,7 +29,7 @@
 - [docs/ops/RUNBOOK.md](./docs/ops/RUNBOOK.md): on-call incidents.
 - [docs/ops/BACKUP_RESTORE.md](./docs/ops/BACKUP_RESTORE.md): backups.
 - [docs/accessibility.md](./docs/accessibility.md), [docs/linguistic-framework.md](./docs/linguistic-framework.md), [docs/ai-roadmap.md](./docs/ai-roadmap.md).
-- [docs/launch/](./docs/launch/): GA roadmap (product and launch phases), checklist, status, parity and pricing records. Engineering pending work is in AGENTS.md.
+- [docs/launch/](./docs/launch/): GA roadmap (product and launch phases), checklist, soak, sign-off and migration records. Engineering pending work is in AGENTS.md.
 - [docs/legal/](./docs/legal/): privacy, terms, data handling.
 
 ## Contracts with other repositories

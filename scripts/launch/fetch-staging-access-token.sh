@@ -5,7 +5,7 @@
 # unless --print is passed.
 #
 # Usage:
-#   OIDC_CLIENT_ID='jnc_…' OIDC_CLIENT_SECRET='jns_…' \
+#   OIDC_CLIENT_ID='<client-id>' OIDC_CLIENT_SECRET='<client-secret>' \
 #     ./scripts/launch/fetch-staging-access-token.sh --print
 #
 #   VOXA_TEST_ACCESS_TOKEN="$(./scripts/launch/fetch-staging-access-token.sh)" \

@@ -1,5 +1,7 @@
 # Janua authentication
 
+> Public-safe summary. Janua admin procedures and client identifiers live in MADFAM's private operations repository; this repo carries the mechanism and the variable names only.
+
 Voxa uses [Janua](https://auth.madfam.io) for MADFAM SSO — the same identity provider as Tulana, forj, and madfam-site. Do not implement custom username/password auth in this repo.
 
 ## Web (Next.js)
@@ -85,8 +87,8 @@ grant endpoint (`app` = `voxa`, `role` = `admin` / `editor` / `slp`).
 
 ## Operator checklist
 
-1. Register OAuth client `voxa` in Janua with production + staging redirect URIs.
-2. Add client id/secret to web build args and Enclii secrets.
+1. Register the Voxa OAuth client in Janua with production + staging redirect URIs.
+2. Put the client id in the `NEXT_PUBLIC_OIDC_CLIENT_ID` repository variable and the secret in Enclii secrets.
 3. Deploy web with OIDC env vars set.
 4. Set API `JANUA_*` secrets via Enclii onboard.
 5. Keep `VOXA_JANUA_AUTH_REQUIRED=true` on the API deployments; header auth is never available in production.
@@ -111,36 +113,10 @@ Set in `app.json` / EAS `extra`:
 }
 ```
 
-### Register OAuth client
+### Operator procedures
 
-```bash
-JANUA_ADMIN_EMAIL='…' JANUA_ADMIN_PASSWORD='…' ./scripts/deploy/register-janua-oauth-client.sh
-```
-
-### Bind managed Postgres
-
-Prefer shared Postgres for GA:
-
-```bash
-ENCLII_TOKEN='…' ./scripts/deploy/provision-shared-postgres.sh
-```
-
-Dedicated CloudNativePG addon (when provisioning succeeds):
-
-```bash
-ENCLII_TOKEN='…' ./scripts/deploy/bind-database-addon.sh \
-  voxa <addon_id> <voxa-api-service-id> voxa-services
-```
-
-Full operator sweep:
-
-```bash
-ENCLII_TOKEN='…' JANUA_ADMIN_EMAIL='…' JANUA_ADMIN_PASSWORD='…' \
-  ENCLII_CALLBACK_TOKEN='…' ENCLII_WEBHOOK_SECRET='…' \
-  ./scripts/deploy/complete-ga-operator.sh
-```
+Registering the OAuth client, binding PostgreSQL and the full GA operator pass are platform-operator steps run with admin credentials. Their scripts and runbooks live in MADFAM's private operations repository.
 
 ## References
 
-- Tulana reference: `tulana/apps/web/src/lib/auth.ts`
 - MADFAM canon: Janua is the only auth provider

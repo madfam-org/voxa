@@ -28,7 +28,7 @@ fi
 
 if [[ "${REQUIRE_REDIS}" == "1" ]]; then
   echo "FAIL Production syncHub is '${sync_hub}' — set REDIS_URL in cluster secrets" >&2
-  echo "  See deploy/secrets-template.yaml and docs/launch/GA_STATUS.md" >&2
+  echo "  See deploy/secrets-template.yaml (operator rollout procedure is private)" >&2
   exit 1
 fi
 

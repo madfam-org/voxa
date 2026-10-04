@@ -81,10 +81,10 @@ if missing:
     print(f"Next action: ensure CI e2e-smoke cron passes on {missing[0]} (UTC)")
 else:
     print("")
-    print("All window days logged — ready for verify-declaration-day.sh")
+    print("All window days logged — ready for the declaration-day checks")
 PY
 
 echo ""
 echo "== Quick commands =="
 echo "  ./scripts/launch/soak-daily-check.sh --log ${LOG_FILE}"
-echo "  ./scripts/launch/verify-declaration-day.sh --required ${REQUIRED} --start ${START_DATE}"
+echo "  ./scripts/launch/verify-soak-window.sh --required ${REQUIRED} --start ${START_DATE}"

@@ -39,9 +39,7 @@ curl -sS -o /dev/null -w '%{http_code}\n' https://voxa-api-staging.madfam.io/v1/
 # expect: 401 without Bearer token
 ```
 
-# GitHub Actions deploy workflows include post-deploy smoke steps on push to `staging`.
-# Authenticated soak + CI: `JANUA_ADMIN_EMAIL=… JANUA_ADMIN_PASSWORD=… ./scripts/launch/bootstrap-authenticated-soak.sh`
-# then `gh workflow run e2e-smoke.yml --repo madfam-org/voxa`
+GitHub Actions deploy workflows include post-deploy smoke steps on push to `staging`. The authenticated soak in CI needs the `VOXA_STAGING_*` repository secrets, which a platform operator bootstraps with admin credentials (private procedure).
 
 ## Soak log
 

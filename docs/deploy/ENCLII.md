@@ -1,8 +1,10 @@
 # Enclii deployment runbook for Voxa
 
+> Public-safe summary. Operator procedures, platform identifiers and break-glass steps live in MADFAM's private operations repository, not here.
+
 Voxa deploys to **madfam.io** via Enclii using the [zero-touch contract](https://github.com/madfam-org/enclii/blob/main/docs/guides/ZERO_TOUCH_CONTRACT.md): Dockerfiles, `k8s/`, CI, and `enclii.yaml` live in this repo. ArgoCD apps are registered by Enclii runtime onboarding (`onboard/ensure`); tunnel routing uses junctions on `voxa-web` / `voxa-api` services.
 
-**Commercial GA:** [GA_ROADMAP.md](../launch/GA_ROADMAP.md) · [GA_CHECKLIST.md](../launch/GA_CHECKLIST.md) · [GA_STATUS.md](../launch/GA_STATUS.md)
+**Commercial GA:** [GA_ROADMAP.md](../launch/GA_ROADMAP.md) · [GA_CHECKLIST.md](../launch/GA_CHECKLIST.md)
 
 ## Architecture
 
@@ -21,7 +23,7 @@ Enclii (ArgoCD + Cloudflare Tunnel)
   └── voxa-api-staging.madfam.io  → voxa-api (staging)
 ```
 
-Routing uses Cloudflare Tunnel to cluster services (`http://voxa-web.{namespace}.svc.cluster.local:80`). There is **no Ingress** in this repo.
+Routing uses Cloudflare Tunnel routes (Enclii junctions) to the `voxa-web` and `voxa-api` services. There is **no Ingress** in this repo.
 
 ## Prerequisites
 
@@ -29,12 +31,7 @@ Routing uses Cloudflare Tunnel to cluster services (`http://voxa-web.{namespace}
    - **Webhook** → `https://api.enclii.dev/v1/webhooks/github` (HMAC secret = the platform's GitHub webhook secret)
    - **`ENCLII_CALLBACK_TOKEN`** — lifecycle events from Actions to Enclii (the platform's callback token)
 
-   Setup scripts (values come from the platform operator, never from this repo):
-
-   ```bash
-   ENCLII_WEBHOOK_SECRET='…' ./scripts/deploy/setup-github-webhook.sh
-   ENCLII_CALLBACK_TOKEN='…' ./scripts/deploy/setup-github-secrets.sh
-   ```
+   The platform operator registers the webhook and sets the repository secret; the values never come from this repo.
 
    Deploy workflows use the built-in `GITHUB_TOKEN` for GHCR push and digest commits (`contents: write`, `packages: write`). No `MADFAM_BOT_PAT` is required unless you prefer a dedicated bot account.
 
@@ -59,7 +56,7 @@ Routing uses Cloudflare Tunnel to cluster services (`http://voxa-web.{namespace}
    enclii onboard --repo madfam-org/voxa --project voxa \
      --manifest-path k8s/production \
      --secret-name voxa-secrets \
-     --db-name voxa \
+     --db-name <database-name> \
      --db-password "$(openssl rand -base64 32)" \
      --secrets-file ./deploy/secrets.env.example
    ```
@@ -110,9 +107,9 @@ The repo is missing secrets. Deploy workflows use `GITHUB_TOKEN` (no `MADFAM_BOT
 
 ### Onboarding fails on `argocd_config` (forbidden: create applications)
 
-Production Enclii uses **runtime** ArgoCD registration. If `switchyard-api` lacks RBAC to create `applications.argoproj.io` in namespace `argocd`, onboarding partially completes (namespace, domains, network policies) but workloads never sync.
+Production Enclii uses **runtime** ArgoCD registration. If the platform cannot create Argo CD applications, onboarding partially completes (namespace, domains, network policies) but workloads never sync.
 
-**Platform fix:** grant `switchyard-api` `create`/`update` on ArgoCD Applications (same class of fix as [PHYND RBAC runbook](https://github.com/madfam-org/enclii/blob/main/docs/runbooks/PHYND_APP_ENCLII_BLOCKERS_2026-05-14.md)), then re-run:
+**Platform fix:** a platform operator grants the missing permission, then re-run:
 
 ```bash
 enclii onboard --repo madfam-org/voxa --project voxa --manifest-path k8s/production
@@ -138,7 +135,7 @@ Until `ghcr.io/madfam-org/voxa/voxa-web` and `voxa-api` are **public** GitHub Pa
 
 Multi-service apps must use **Enclii junctions** for tunnel routes (see Tulana). Do not declare `spec.domains` in `enclii.yaml` — onboarding yaml provisioning targets the single `metadata.name` service and can overwrite `voxa-api.*` routes to the web backend.
 
-**Fix:** `providers.cloudflare.tunnels-apply` for project `voxa` with target `voxa-api.madfam.io`.
+**Fix:** ask the platform operator to re-apply the junction route for `voxa-api.madfam.io` (a platform operation, never run from this repo).
 
 ### Staging HTTPS handshake failure
 
@@ -146,20 +143,14 @@ Cloudflare Universal SSL covers `*.madfam.io` only (one label). Nested names lik
 
 ### Lifecycle callbacks no-op
 
-Set `ENCLII_CALLBACK_TOKEN` on the repo (ArgoCD webhook secret — see [DEPLOYMENT_TRACKING.md](https://github.com/madfam-org/enclii/blob/main/docs/guides/DEPLOYMENT_TRACKING.md)):
-
-```bash
-ENCLII_CALLBACK_TOKEN='<token>' ./scripts/deploy/setup-github-secrets.sh
-```
+The repository secret `ENCLII_CALLBACK_TOKEN` is missing or stale. The platform operator sets it (see [DEPLOYMENT_TRACKING.md](https://github.com/madfam-org/enclii/blob/main/docs/guides/DEPLOYMENT_TRACKING.md)).
 
 ### GitHub push webhook 401 on Enclii
 
-GitHub deliveries show `Invalid signature` when the cluster secret and `switchyard-api` pod env diverge, or after a platform secret rotation without recycling pods.
+GitHub deliveries show `Invalid signature` when the repository's webhook secret and the platform's copy diverge, typically after a platform secret rotation.
 
-1. Ensure repo webhook secret matches `enclii/enclii-github-webhook` (update via `setup-github-webhook.sh` or Enclii `POST /v1/admin/provision/secrets`).
-2. Roll `switchyard-api` — Enclii service restart alone may not recycle pods under Argo self-heal. Use `scripts/deploy/rollout-switchyard-api.sh --via-enclii-scale`; a direct cluster restart is platform break-glass only.
-
-3. Redeliver a hook `ping`; expect **200**. Details: [RUNBOOK.md](../ops/RUNBOOK.md), [GA_STATUS.md](../launch/GA_STATUS.md).
+1. The platform operator re-aligns the webhook secret and reloads the platform API (a platform procedure, not run from this repo).
+2. Redeliver a hook `ping`; expect **200**. Details: [RUNBOOK.md](../ops/RUNBOOK.md).
 
 ## Storage
 
@@ -174,7 +165,7 @@ Without `DATABASE_URL`, pods fall back to the file store on the `/app/data` `emp
 
 ### How the API reaches Postgres
 
-Production and staging connect **directly** to a shared PostgreSQL server on port 5432 (not through a connection pooler). `DATABASE_URL` lives in the `voxa-secrets` Secret; never commit it. `scripts/deploy/provision-shared-postgres.sh` creates the databases and writes the URL. Templates: `deploy/secrets-template.yaml`, `deploy/secrets.env.example`.
+Production and staging connect **directly** to a shared PostgreSQL server on port 5432 (not through a connection pooler). `DATABASE_URL` lives in the `voxa-secrets` Secret; never commit it. The platform operator provisions the database and writes the URL into that Secret through Enclii. Templates: `deploy/secrets-template.yaml`, `deploy/secrets.env.example`.
 
 On startup the API runs the Drizzle migrations (`apps/api/drizzle/migrations`, journaled in `meta/_journal.json`) on a dedicated single connection, closes it, seeds the demo board when the database is empty, and only then listens. A pod whose first connection is refused, reset, times out or cannot resolve the host (a transient connection refusal at startup, e.g. before the pod's network is ready) retries with backoff (0.5 s doubling to 5 s) for up to `DATABASE_STARTUP_RETRY_MS` (default 30 s), logging the error code only. After that, or on any SQL or migration error, it exits as before. Then verify readiness:
 
@@ -209,7 +200,7 @@ enclii addon bind <addon_id> --service <voxa-api-service-id> --env-var DATABASE_
 enclii ops apps sync --application voxa-services
 ```
 
-`scripts/deploy/bind-database-addon.sh` automates the poll-and-bind. Keep the connection budget above in mind for any target.
+Keep the connection budget above in mind for any target.
 
 Schema reference: [docs/data-model.md](../data-model.md).
 
