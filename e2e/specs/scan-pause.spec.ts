@@ -16,7 +16,7 @@
  * Run: `pnpm test:e2e:voices` (PLAYWRIGHT_BASE_URL = the standalone web server).
  */
 import { expect, test, type Page } from '@playwright/test';
-import { seedLocalState } from '../helpers/test-session';
+import { seedLocalState, seedTestSession } from '../helpers/test-session';
 
 test.use({ locale: 'en-US' });
 
@@ -153,7 +153,13 @@ const moves = (page: Page) =>
 const spoken = (page: Page) =>
   page.evaluate(() => (window as unknown as { __voxaSpoken: Array<{ text: string; at: number }> }).__voxaSpoken.slice());
 
-test('switch scanning resumes after speech when the engine never fires end or error', async ({ page }) => {
+test('switch scanning resumes after speech when the engine never fires end or error', async ({
+  page,
+  context,
+  baseURL,
+}) => {
+  // /app is gated on a valid session (the CI server has sign-in configured).
+  await seedTestSession(context, baseURL!, { role: 'communicator' });
   await stubStuckSpeech(page);
   await page.goto('/app');
   await expect(page.locator('[data-voxa-button-id="yo"]')).toBeVisible({ timeout: 30_000 });
