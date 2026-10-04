@@ -87,8 +87,12 @@ NEXT_PUBLIC_API_URL=https://voxa-api.madfam.io
 `/api/health/ready` answers 503 and names (never shows) whichever of
 `AUTH_SECRET` and `AUTH_JANUA_*` is missing, so a rollout without them stalls on
 the previous pods. In the Kubernetes manifests the client secret comes from the
-existing `OIDC_CLIENT_SECRET` key of `voxa-secrets` and the session secret from
-its `AUTH_SECRET` key.
+existing `OIDC_CLIENT_SECRET` key of `voxa-secrets`, and the session secret
+from the dedicated Secret `voxa-web-session`, which the ExternalSecret of the
+same name fills from the platform's secret store (`secret/voxa`, property
+`auth_secret`; `secret/voxa-staging` on staging). The value is generated
+inside the store by the secret intake (`--generate auth_secret`); nobody
+types or sees it.
 
 Janua client registration, per host: redirect URI
 `https://<host>/api/auth/callback/janua` (exact match) and post-logout redirect
@@ -156,7 +160,7 @@ grant endpoint (`app` = `voxa`, `role` = `admin` / `editor` / `slp`).
 ## Operator checklist
 
 1. Register, for production and staging, the Auth.js callback `https://<host>/api/auth/callback/janua` and the post-logout redirect `https://<host>/auth/signin` on the Voxa Janua client.
-2. Deliver the client secret (`OIDC_CLIENT_SECRET` key) and a server-generated `AUTH_SECRET` to `voxa-secrets` through Enclii.
+2. Generate the session secret in the platform's secret store with the Enclii secret intake (targets `voxa/web-session` and `voxa-staging/web-session`, key `auth_secret`); the `voxa-web-session` ExternalSecret delivers it.
 3. Deploy web; `/api/health/ready` must answer 200.
 4. Set API `JANUA_*` secrets via Enclii onboard.
 5. Keep `VOXA_JANUA_AUTH_REQUIRED=true` on the API deployments; header auth is never available in production.

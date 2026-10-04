@@ -179,3 +179,36 @@ describe('same-origin API proxy', () => {
     assert.equal(res.status, 502);
   });
 });
+
+describe('isSameOriginRequest', () => {
+  const env = { NEXT_PUBLIC_BASE_URL: 'https://voxa.example.test' };
+
+  it('accepts an Origin that matches the Host the browser used (server bound to 0.0.0.0)', () => {
+    const req = new Request('http://0.0.0.0:3000/api/v1/boards', {
+      method: 'POST',
+      headers: { Origin: 'http://127.0.0.1:3000', Host: '127.0.0.1:3000' },
+    });
+    assert.equal(isSameOriginRequest(req, env), true);
+  });
+
+  it('accepts the forwarded host behind a proxy', () => {
+    const req = new Request('http://0.0.0.0:3000/api/v1/boards', {
+      method: 'POST',
+      headers: { Origin: 'https://app.example.test', Host: '10.0.0.5:3000', 'X-Forwarded-Host': 'app.example.test' },
+    });
+    assert.equal(isSameOriginRequest(req, env), true);
+  });
+
+  it('refuses another site even when it reaches the same host', () => {
+    const req = new Request('http://0.0.0.0:3000/api/v1/boards', {
+      method: 'POST',
+      headers: { Origin: 'https://evil.example', Host: '127.0.0.1:3000' },
+    });
+    assert.equal(isSameOriginRequest(req, env), false);
+  });
+
+  it('refuses Origin: null', () => {
+    const req = new Request('http://127.0.0.1:3000/api/v1/boards', { method: 'POST', headers: { Origin: 'null' } });
+    assert.equal(isSameOriginRequest(req, env), false);
+  });
+});

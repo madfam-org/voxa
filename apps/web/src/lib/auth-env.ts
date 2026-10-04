@@ -83,7 +83,17 @@ export function sessionCookieName(env: Env = process.env): string {
   return useSecureAuthCookies(env) ? '__Secure-authjs.session-token' : 'authjs.session-token';
 }
 
-/** Where Janua sends the browser after RP-initiated logout: the sign-in page. */
-export function postLogoutRedirectUri(env: Env = process.env): string {
-  return `${appBaseUrl(env)}/auth/signin`;
+/** Whether the public origin is configured (AUTH_URL or NEXT_PUBLIC_BASE_URL). */
+export function hasConfiguredBaseUrl(env: Env = process.env): boolean {
+  return Boolean(value(env, 'AUTH_URL') ?? value(env, 'NEXT_PUBLIC_BASE_URL'));
+}
+
+/**
+ * Where Janua sends the browser after RP-initiated logout: the sign-in page of
+ * the configured public origin. Without one (local runs, CI), the origin the
+ * request was addressed to; Janua accepts only registered URIs either way.
+ */
+export function postLogoutRedirectUri(env: Env = process.env, requestOrigin?: string): string {
+  const base = !hasConfiguredBaseUrl(env) && requestOrigin ? requestOrigin : appBaseUrl(env);
+  return `${base}/auth/signin`;
 }

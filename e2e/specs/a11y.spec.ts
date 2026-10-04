@@ -196,7 +196,9 @@ test.describe('Voxa accessibility (axe) — Spanish (default locale)', () => {
     });
   }
 
-  test('/app communicator in Spanish has no serious or critical WCAG 2.2 AA violations', async ({ page }) => {
+  test('/app communicator in Spanish has no serious or critical WCAG 2.2 AA violations', async ({ page, context, baseURL }) => {
+    // /app is gated on a valid session (the CI server has sign-in configured).
+    await seedTestSession(context, baseURL!, { role: 'communicator' });
     await seedLocalState(page);
     await page.goto('/app');
     await page.locator('[data-voxa-button-id]').first().waitFor({ timeout: 30_000 });
@@ -204,7 +206,9 @@ test.describe('Voxa accessibility (axe) — Spanish (default locale)', () => {
     await expectNoBlocking(page);
   });
 
-  test('/app settings in Spanish has no serious or critical WCAG 2.2 AA violations', async ({ page }) => {
+  test('/app settings in Spanish has no serious or critical WCAG 2.2 AA violations', async ({ page, context, baseURL }) => {
+    // /app is gated on a valid session (the CI server has sign-in configured).
+    await seedTestSession(context, baseURL!, { role: 'communicator' });
     await seedLocalState(page);
     await page.goto('/app');
     await page.locator('[data-voxa-button-id]').first().waitFor({ timeout: 30_000 });

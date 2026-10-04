@@ -31,7 +31,7 @@ spec:
       annotations:
         kubectl.kubernetes.io/restartedAt: "2026-10-04T22:27:10Z"
         reloader.stakater.com/match: "true"
-        secret.reloader.stakater.com/reload: "voxa-secrets"
+        secret.reloader.stakater.com/reload: "voxa-secrets,voxa-web-session"
       labels:
         app: voxa-web
         app.kubernetes.io/name: voxa-web
@@ -94,13 +94,15 @@ spec:
                   key: OIDC_CLIENT_SECRET
                   optional: true
             # Encrypts the session cookie: this app's own secret, never the Janua
-            # client secret (R42). Optional here so a missing key shows up as
+            # client secret (R42). Delivered by the voxa-web-session
+            # ExternalSecret (secret intake, --generate). Optional here so a
+            # missing key shows up as
             # /api/health/ready 503 (missing: AUTH_SECRET) and the rollout stalls on
             # the previous pods (maxUnavailable: 0).
             - name: AUTH_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: voxa-secrets
+                  name: voxa-web-session
                   key: AUTH_SECRET
                   optional: true
           resources:
