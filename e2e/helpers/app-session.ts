@@ -24,7 +24,19 @@ export async function openAccessibilitySettings(page: Page): Promise<void> {
 export async function enterEditorMode(page: Page): Promise<void> {
   const roleSelect = page.getByLabel('Team role');
   if (await roleSelect.isDisabled()) {
-    await createBoardNamed(page, `E2E board ${Date.now()}`);
+    // Reuse a board from an earlier run (plan board limits), else create one.
+    const boardSelect = page.getByLabel('Board');
+    const ownedBoard =
+      (await boardSelect.count()) > 0
+        ? await boardSelect.locator('option').evaluateAll((options) =>
+            options.map((o) => (o as HTMLOptionElement).value).find((v) => v && v !== 'demo-core'),
+          )
+        : undefined;
+    if (ownedBoard) {
+      await boardSelect.selectOption(ownedBoard);
+    } else {
+      await createBoardNamed(page, `E2E board ${Date.now()}`);
+    }
     await expect(roleSelect).toBeEnabled();
   }
   await roleSelect.selectOption('editor');
