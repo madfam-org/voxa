@@ -84,3 +84,12 @@ describe('@voxa/symbols Mulberry keyword index', () => {
     assert.equal(searchLanguage(undefined), 'es');
   });
 });
+
+describe('@voxa/symbols Mulberry search precision', () => {
+  it('does not surface partial matches from another language', () => {
+    const files = searchMulberryIndex('agua', { locale: 'es', limit: 24 }).map((hit) => hit.file);
+    assert.ok(!files.some((file) => /paraguay|nicaragua/i.test(file)), files.join(','));
+    const perro = searchMulberryIndex('perro', { locale: 'es', limit: 24 }).map((hit) => hit.file);
+    assert.deepEqual(perro, ['EN/dog.svg']);
+  });
+});

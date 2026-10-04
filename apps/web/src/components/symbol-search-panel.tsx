@@ -143,7 +143,7 @@ export function SymbolSearchPanel({
           <img
             src={currentUrl}
             alt=""
-            style={{ width: 48, height: 48, objectFit: 'contain', background: surface.base, borderRadius: 6 }}
+            style={{ width: 48, height: 48, objectFit: 'contain', background: surface.white, borderRadius: 6 }}
           />
           <button type="button" onClick={onClear} disabled={disabled} style={smallBtn}>
             {t('remove')}
@@ -227,7 +227,7 @@ export function SymbolSearchPanel({
               }}
             >
               <img src={hit.imageUrl} alt={hit.keyword} style={{ width: '100%', height: 56, objectFit: 'contain' }} />
-              <span style={{ display: 'block', fontSize: '0.6875rem', color: neutral.textSecondary }}>{hit.keyword}</span>
+              <span style={{ display: 'block', fontSize: '0.6875rem', color: surface.base }}>{hit.keyword}</span>
             </button>
           ))}
         </div>

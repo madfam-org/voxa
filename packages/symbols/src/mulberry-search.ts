@@ -82,15 +82,22 @@ const PREPARED: PreparedEntry[] = MULBERRY_INDEX.map((entry) => ({
   tags: (entry.tags ?? []).map(normalizeKeyword),
 }));
 
-/** Score of one keyword against the query; 0 when it does not match. */
-function keywordScore(keyword: string, query: string): number {
+/**
+ * Score of one keyword against the query; 0 when it does not match. Other
+ * languages count only for exact or whole-word matches, so a Spanish "agua"
+ * does not surface the English "flag paraguay" nor "perro" the French
+ * "perroquet".
+ */
+function keywordScore(keyword: string, query: string, primary: boolean): number {
   if (!keyword) return 0;
   if (keyword === query) return 100;
   const words = keyword.split(' ');
   if (words.includes(query) || keyword.startsWith(`${query} `)) return 70;
+  if (!primary) return 0;
   if (keyword.startsWith(query)) return 50;
-  if (query.length >= 3 && words.some((word) => word.startsWith(query))) return 40;
-  if (query.length >= 3 && keyword.includes(query)) return 20;
+  if (query.length < 3) return 0;
+  if (words.some((word) => word.startsWith(query))) return 40;
+  if (keyword.includes(query)) return 20;
   return 0;
 }
 
@@ -106,7 +113,7 @@ function scoreEntry(prepared: PreparedEntry, query: string, order: MulberryLangu
   order.forEach((lang, langIndex) => {
     const weight = LANGUAGE_WEIGHT[langIndex] ?? 0.5;
     prepared.keywords[lang].forEach((keyword, keywordIndex) => {
-      const raw = keywordScore(keyword, query);
+      const raw = keywordScore(keyword, query, langIndex === 0);
       if (raw === 0) return;
       // The first keyword is the symbol's primary label.
       const score = raw * weight + (keywordIndex === 0 ? 5 : 0);
