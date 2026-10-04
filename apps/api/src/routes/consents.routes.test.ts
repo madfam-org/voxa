@@ -57,7 +57,12 @@ describe('consent routes (file store)', () => {
     assert.equal(res.status, 200);
     const body = (await res.json()) as ConsentView;
     assert.equal(body.policyVersion, CONSENT_POLICY_VERSION);
-    assert.deepEqual(body.purposes, ['ai_processing', 'usage_analytics', 'utterance_text']);
+    assert.deepEqual(body.purposes, [
+      'ai_processing',
+      'usage_analytics',
+      'utterance_text',
+      'settings_sync',
+    ]);
     assert.deepEqual(body.consents, []);
     assert.equal(body.utteranceTextAvailable, false);
   });

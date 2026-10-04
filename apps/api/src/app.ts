@@ -11,6 +11,7 @@ import { boardRoutes } from './routes/boards.js';
 import { consentRoutes } from './routes/consents.js';
 import { eventRoutes } from './routes/events.js';
 import { mediaRoutes } from './routes/media.js';
+import { meSettingsRoutes } from './routes/me-settings.js';
 import { symbolRoutes } from './routes/symbols.js';
 import { canAccessBoard } from './lib/board-access.js';
 import { buildSha } from './lib/build-info.js';
@@ -106,6 +107,7 @@ app.route('/v1/billing', billingRoutes);
 app.route('/v1/consents', consentRoutes);
 app.route('/v1/events', eventRoutes);
 app.route('/v1/media', mediaRoutes);
+app.route('/v1/me/settings', meSettingsRoutes);
 app.route('/v1/symbols', symbolRoutes);
 app.route('/v1/ai', aiRoutes);
 

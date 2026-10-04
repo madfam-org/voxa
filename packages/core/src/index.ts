@@ -286,3 +286,19 @@ export {
   scheduleProgress,
 } from './visual-schedule.js';
 export { mapTeamRoleFromClaims, VOXA_APP_ROLE_PREFIX } from './team-role.js';
+export {
+  isSyncedSettingKey,
+  isValidSyncedSettingValue,
+  isValidSyncTimestamp,
+  parseSyncedSettingsDocument,
+  SYNCED_SETTING_KEYS,
+  SYNCED_SETTING_RULES,
+  SYNCED_SETTINGS_MAX_BYTES,
+  validateSyncedFields,
+  type SyncedFieldsProblem,
+  type SyncedSettingEntry,
+  type SyncedSettingFields,
+  type SyncedSettingKey,
+  type SyncedSettingsDocument,
+  type SyncedSettingValue,
+} from './synced-settings.js';

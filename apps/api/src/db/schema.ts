@@ -119,6 +119,19 @@ export const consentEvents = pgTable(
   (table) => [index('consent_events_user_recorded_idx').on(table.userId, table.recordedAt)],
 );
 
+/**
+ * Communicator settings that follow the user between devices (one versioned
+ * document per user, only with the `settings_sync` consent; see
+ * src/lib/user-settings.ts). `fields` holds allow-listed entries only
+ * (`@voxa/core` synced-settings); revoking the consent deletes the row.
+ */
+export const userSettings = pgTable('user_settings', {
+  userId: text('user_id').primaryKey(),
+  version: integer('version').notNull(),
+  fields: jsonb('fields').notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'string' }).notNull(),
+});
+
 export const mediaAssets = pgTable(
   'media_assets',
   {

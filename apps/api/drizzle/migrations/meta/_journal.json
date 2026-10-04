@@ -64,6 +64,13 @@
       "when": 1791103129132,
       "tag": "0008_ws_tickets",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791155520263,
+      "tag": "0009_user_settings",
+      "breakpoints": true
     }
   ]
 }
