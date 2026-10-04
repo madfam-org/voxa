@@ -106,7 +106,9 @@ pnpm build
   [AGENTS.md › Tests](./AGENTS.md#tests).
 - The PostgreSQL suites (`*.pg.test.ts`) run when `VOXA_TEST_DATABASE_URL`
   points at a throwaway database, and the cross-replica sync test also needs
-  `VOXA_TEST_REDIS_URL`; without them they skip. CI provides both.
+  `VOXA_TEST_REDIS_URL`; without them they skip locally (the runner says
+  which and why). With `CI` set they are required: CI provides both, and a
+  missing or unreachable service fails the run.
 - **Browser specs** (Playwright, `e2e/`): `pnpm test:e2e:a11y`,
   `test:e2e:offline`, `test:e2e:access`, `test:e2e:voices`,
   `test:e2e:first-run`, `pnpm --filter @voxa/e2e test:import` run in the CI

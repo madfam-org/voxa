@@ -19,7 +19,7 @@
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/scripts/run-unit-tests.mjs"],
       "outputs": ["coverage/**"],
-      "passThroughEnv": ["VOXA_TEST_DATABASE_URL", "VOXA_TEST_REDIS_URL"]
+      "passThroughEnv": ["CI", "VOXA_TEST_DATABASE_URL", "VOXA_TEST_REDIS_URL"]
     },
     "clean": {
       "cache": false

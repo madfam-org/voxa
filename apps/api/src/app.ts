@@ -16,6 +16,7 @@ import { canAccessBoard } from './lib/board-access.js';
 import { buildSha } from './lib/build-info.js';
 import { unwrapDbError } from './lib/db-errors.js';
 import { devAuthEnabled } from './lib/dev-auth.js';
+import { closeSockets, isShuttingDown } from './lib/graceful-shutdown.js';
 import { resolveWsTeam } from './lib/ws-auth.js';
 import { checkStoreReady, getStore, getStoreDriver, storeIsAcceptable } from './store/index.js';
 import { getSyncHubStatus, presenceCount, registerClient, unregisterClient } from './ws/sync-hub.js';
@@ -23,7 +24,7 @@ import { getSyncHubStatus, presenceCount, registerClient, unregisterClient } fro
 export const API_VERSION = '1.0.0';
 
 const app = new Hono();
-const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({ app });
+const { injectWebSocket, upgradeWebSocket, wss } = createNodeWebSocket({ app });
 
 // Same contract as Hono's default error handler (HTTPException responses pass
 // through, anything else is a plain 500), except that the logged error goes
@@ -65,7 +66,8 @@ app.get('/health', (c) =>
 
 // Readiness: the store answers, and it is a durable one (the JSON file store
 // is never ready in production). An unreachable Redis does not make a replica
-// unready (it degrades to local fan-out); it shows as `syncHubWarning`.
+// unready (it degrades to local fan-out); it shows as `syncHubWarning`. A
+// replica that is shutting down is never ready (src/lib/graceful-shutdown.ts).
 app.get('/health/ready', async (c) => {
   const store = getStoreDriver();
   const hub = getSyncHubStatus();
@@ -76,6 +78,9 @@ app.get('/health/ready', async (c) => {
     syncHub: hub.mode,
     ...(hub.warning ? { syncHubWarning: hub.warning } : {}),
   };
+  if (isShuttingDown()) {
+    return c.json({ status: 'unavailable', ...details, reason: 'Shutting down' }, 503);
+  }
   if (!storeIsAcceptable()) {
     return c.json(
       { status: 'unavailable', ...details, reason: 'The file store is not allowed in production' },
@@ -150,6 +155,14 @@ app.get(
     };
   }),
 );
+
+/**
+ * Closes every open WebSocket with 1001 (going away), so clients reconnect to
+ * another replica; resolves once all of them are closed. Used on shutdown.
+ */
+export function closeWebSockets(reason = 'Server shutting down'): Promise<void> {
+  return closeSockets(wss.clients, reason);
+}
 
 export { injectWebSocket };
 export default app;

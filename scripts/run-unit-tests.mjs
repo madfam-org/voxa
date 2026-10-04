@@ -15,12 +15,20 @@
 //   broken root or a moved directory cannot pass as "0 tests, all green".
 // - `--list` prints the discovered files (repo-relative) and exits; the guard
 //   scripts/guards/test-discovery.test.mjs uses it.
+// - Service suites (A-032): `*.pg.test.*` need VOXA_TEST_DATABASE_URL and
+//   `*.redis.test.*` need VOXA_TEST_REDIS_URL and VOXA_TEST_DATABASE_URL.
+//   Locally, without them, those files skip themselves and this runner says
+//   so. With CI set (GitHub Actions always sets CI=true), a missing variable
+//   fails the run before any test starts, so a CI job without its database
+//   cannot pass as a clean run. Whenever a variable is set, its host must
+//   accept a TCP connection within 5 s, or the run fails (CI and local).
 //
 // Rule for contributors: a new `*.test.ts` under a package's `src/` runs
 // without any registration. To keep a file out of the unit job, add it to
 // EXCLUDED with the reason; never delete a test to make CI green.
 import { spawnSync } from 'node:child_process';
 import { readdirSync, statSync } from 'node:fs';
+import { createConnection } from 'node:net';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -38,7 +46,8 @@ const SKIP_DIRS = new Set(['node_modules', 'dist', 'build', '.next', '.turbo', '
  * which was simply never added (an oversight, not a choice: it passes and has
  * no external dependency), so it now runs. The suites that need something
  * outside the process gate themselves instead of being left off a list:
- * `*.pg.test.ts` skip without `VOXA_TEST_DATABASE_URL`, and browser specs live
+ * `*.pg.test.ts` skip without `VOXA_TEST_DATABASE_URL` (locally; CI fails, see
+ * SERVICE_SUITES), and browser specs live
  * in `e2e/specs/*.spec.ts` (Playwright), which this runner never picks up.
  *
  * @type {Map<string, string>}
@@ -90,6 +99,100 @@ export function discoverTestFiles(packageDir, roots = ['src']) {
     .sort();
 }
 
+/**
+ * Suites that need a service outside the process, by file name. A file
+ * matching `pattern` skips itself unless every variable in `vars` is set.
+ */
+export const SERVICE_SUITES = [
+  { pattern: /\.pg\.test\./, service: 'PostgreSQL', vars: ['VOXA_TEST_DATABASE_URL'] },
+  { pattern: /\.redis\.test\./, service: 'Redis', vars: ['VOXA_TEST_REDIS_URL', 'VOXA_TEST_DATABASE_URL'] },
+];
+
+/** True when `env.CI` is set to anything but an explicit false. */
+export function isCi(env = process.env) {
+  const value = (env.CI ?? '').trim().toLowerCase();
+  return value !== '' && value !== 'false' && value !== '0';
+}
+
+/**
+ * What the discovered files need from the environment:
+ * `[{ service, files, missing }]` for each service with at least one file,
+ * where `missing` lists the unset variables.
+ * @param {string[]} files
+ * @param {Record<string, string | undefined>} env
+ */
+export function serviceNeeds(files, env = process.env) {
+  const needs = [];
+  for (const suite of SERVICE_SUITES) {
+    const count = files.filter((file) => suite.pattern.test(file)).length;
+    if (count === 0) continue;
+    const missing = suite.vars.filter((name) => !env[name]?.trim());
+    needs.push({ service: suite.service, files: count, vars: suite.vars, missing });
+  }
+  return needs;
+}
+
+const DEFAULT_PORTS = { 'postgres:': 5432, 'postgresql:': 5432, 'redis:': 6379, 'rediss:': 6380 };
+
+/** `{ host, port }` of a service URL, or null when it does not parse. */
+export function serviceAddress(url) {
+  let parsed;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return null;
+  }
+  const host = parsed.hostname.replace(/^\[|\]$/g, '');
+  const port = Number(parsed.port || DEFAULT_PORTS[parsed.protocol]);
+  if (!host || !Number.isInteger(port) || port <= 0) return null;
+  return { host, port };
+}
+
+/** Resolves true when `host:port` accepts a TCP connection within `timeoutMs`. */
+export function canConnect({ host, port }, timeoutMs = 5000) {
+  return new Promise((resolve) => {
+    const socket = createConnection({ host, port });
+    const done = (ok) => {
+      socket.removeAllListeners();
+      socket.destroy();
+      resolve(ok);
+    };
+    socket.setTimeout(timeoutMs, () => done(false));
+    socket.once('connect', () => done(true));
+    socket.once('error', () => done(false));
+  });
+}
+
+/**
+ * Problems that must fail the run, and notes to print, for the service
+ * suites among `files`. Never prints a URL (it can carry a password).
+ */
+export async function checkServiceSuites(files, env = process.env, connect = canConnect) {
+  const problems = [];
+  const notes = [];
+  const ci = isCi(env);
+  const probed = new Map();
+  for (const need of serviceNeeds(files, env)) {
+    const suites = `${need.files} ${need.service} suite${need.files === 1 ? '' : 's'}`;
+    if (need.missing.length > 0) {
+      const unset = `${need.missing.join(' and ')} ${need.missing.length === 1 ? 'is' : 'are'} not set`;
+      if (ci) problems.push(`${suites} cannot run: ${unset} (CI requires them; a skipped suite is not a pass)`);
+      else notes.push(`skipping ${suites}: ${unset} (CI fails instead)`);
+      continue;
+    }
+    for (const name of need.vars) {
+      if (!probed.has(name)) {
+        const address = serviceAddress(env[name].trim());
+        probed.set(name, address ? await connect(address) : false);
+      }
+      if (!probed.get(name)) {
+        problems.push(`${suites} cannot run: ${name} does not parse or its host refuses connections`);
+      }
+    }
+  }
+  return { problems: [...new Set(problems)], notes };
+}
+
 function parseArgs(argv) {
   const opts = { imports: [], roots: [], tsx: true, list: false };
   for (let i = 0; i < argv.length; i += 1) {
@@ -111,7 +214,7 @@ function parseArgs(argv) {
   return opts;
 }
 
-function main() {
+async function main() {
   const opts = parseArgs(process.argv.slice(2));
   const packageDir = process.cwd();
   const files = discoverTestFiles(packageDir, opts.roots);
@@ -128,6 +231,13 @@ function main() {
   }
   console.log(`run-unit-tests: ${files.length} test files in ${where}`);
 
+  const services = await checkServiceSuites(files);
+  for (const note of services.notes) console.log(`run-unit-tests: ${note}`);
+  if (services.problems.length > 0) {
+    for (const problem of services.problems) console.error(`run-unit-tests: FAIL ${problem}`);
+    process.exit(1);
+  }
+
   const nodeArgs = [];
   if (opts.tsx) nodeArgs.push('--import', 'tsx');
   for (const mod of opts.imports) nodeArgs.push('--import', mod);
@@ -139,5 +249,8 @@ function main() {
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  main();
+  main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
 }

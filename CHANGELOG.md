@@ -14,6 +14,12 @@ capability: [docs/capabilities.md](./docs/capabilities.md).
 - Copy (es/en/fr): the classic light theme is described by what it is, without a competitor's product name; the Spanish catalog says "terapeutas de lenguaje" (Mexican Spanish) instead of Spain's "logopedas". The claims stop-list now rejects both. A code comment with commercial pricing research is reworded.
 - `LICENSE`: the copyright holder is Innovaciones MADFAM S.A.S. de C.V., as in `NOTICE`.
 
+### Operations
+
+- API rollouts drain instead of cutting connections: on `SIGTERM` readiness turns 503, WebSockets get a 1001 close frame, requests in flight finish, then Redis and the database pool close; a second signal or the 20 s deadline (`SHUTDOWN_DEADLINE_MS`) exits 1.
+- CI fails when the PostgreSQL or Redis suites cannot run (unset or unreachable service) instead of passing with them skipped; locally they still skip, and the test runner says which and why.
+- Workflows: read-only token by default with per-job grants only where used, CI cancels a pull request's superseded runs, every action is pinned to a commit SHA (kept current by Dependabot), and a repository guard enforces both.
+
 ## 2026-10-04 — Stabilization and compliance wave
 
 Pull requests [#8](https://github.com/madfam-org/voxa/pull/8)–[#41](https://github.com/madfam-org/voxa/pull/41), merged 2026-10-01 to 2026-10-04 (UTC). Every change below is on `main` and deployed to production (staging pins land too, and roll out once the staging Argo CD app tracks `main`).

@@ -1,0 +1,16 @@
+# Keeps the commit SHAs that pin every action in .github/workflows current.
+# Each `uses:` carries its version in a trailing comment (`@<sha> # v4.4.0`);
+# Dependabot updates both. scripts/guards/workflows.mjs fails CI on an action
+# that is not pinned to a full commit SHA.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+    commit-message:
+      prefix: ci

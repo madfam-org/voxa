@@ -1,7 +1,8 @@
 import { serve } from '@hono/node-server';
-import app, { injectWebSocket } from './app.js';
+import app, { closeWebSockets, injectWebSocket } from './app.js';
 import { closeSharedDb } from './db/client.js';
 import { unwrapDbError } from './lib/db-errors.js';
+import { createShutdown, markShuttingDown, shutdownDeadlineFromEnv } from './lib/graceful-shutdown.js';
 import { initObservability } from './lib/observability.js';
 import { startUtteranceRetentionTimer } from './lib/utterance-retention.js';
 import { initStore } from './store/index.js';
@@ -27,19 +28,21 @@ async function main(): Promise<void> {
 
   injectWebSocket(server);
 
-  const shutdown = async () => {
-    stopRetention();
-    await shutdownSyncHub();
-    server.close();
-    try {
-      await closeSharedDb();
-    } catch (err) {
-      console.error('Failed to close the database client on shutdown', err);
-    }
-    process.exit(0);
-  };
-  process.on('SIGINT', () => void shutdown());
-  process.on('SIGTERM', () => void shutdown());
+  // Drain before exiting (A-029): see src/lib/graceful-shutdown.ts.
+  const shutdown = createShutdown({
+    server,
+    markNotReady: markShuttingDown,
+    stopBackground: stopRetention,
+    closeWebSockets: () => closeWebSockets(),
+    closeResources: [
+      { name: 'sync hub', close: shutdownSyncHub },
+      { name: 'database client', close: closeSharedDb },
+    ],
+    deadlineMs: shutdownDeadlineFromEnv(),
+    exit: (code) => process.exit(code),
+  });
+  process.on('SIGINT', () => void shutdown('SIGINT'));
+  process.on('SIGTERM', () => void shutdown('SIGTERM'));
 }
 
 main().catch((err) => {

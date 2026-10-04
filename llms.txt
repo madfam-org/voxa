@@ -12,14 +12,14 @@
 ## Code map
 
 - `apps/api/src/app.ts`: Hono app; middleware order on `/v1/*` (address rate limit, body limits, auth-failure limit, `teamAuth`, user rate limit); routes under `/v1/*`, `/health`, `/health/ready`, WebSocket `/v1/ws`; `app.onError` scrubs database errors.
-- `apps/api/src/index.ts`: startup (store, migrations under an advisory lock, sync hub, utterance-retention timer), fail-closed without `DATABASE_URL` in production, graceful shutdown.
+- `apps/api/src/index.ts`: startup (store, migrations under an advisory lock, sync hub, utterance-retention timer), fail-closed without `DATABASE_URL` in production, graceful shutdown (`src/lib/graceful-shutdown.ts`: readiness 503, WebSockets closed with 1001, in-flight requests drained, exit within `SHUTDOWN_DEADLINE_MS`).
 - `apps/api/src/db/`: `client.ts` (`getSharedDb()`, one pool per process), `startup-retry.ts`, `schema.ts`; migrations in `apps/api/drizzle/migrations/` (`0000`–`0007`, `meta/_journal.json`, snapshots).
 - `apps/api/src/store/`: PostgreSQL store (compare-and-set writes, scoped queries) and the atomic JSON file store; `board-import.ts` (imports create new boards).
 - `apps/api/src/lib/`: `janua.ts` (JWKS verification), `board-access.ts` (roles and org scope), `entitlement.ts` (`voxa_tier` claim), `consents.ts` and `utterance-retention.ts`, `selva.ts` (optional model gateway, off), `media-store.ts` and `media-sniff.ts`, `build-info.ts`.
 - `apps/api/src/middleware/`: rate limits, body limits, security headers, `teamAuth`. `apps/api/src/ws/`: sync hub (local or Redis).
 - `apps/web/src/components/`: board screen, editor, settings, voice settings, first-run setup, landing and demo. `apps/web/src/lib/`: speech (`play-button-speech.ts`, `speech-voices.ts`), communicator settings, consent, crawling files, media proxy URLs. `apps/web/public/sw.js`: service worker (plain JavaScript).
 - `packages/core` (board model, templates, core sizes), `packages/obf` (OBF 0.1, schemas), `packages/import-adapters` (beta), `packages/vocabulary` (motor plan, Spanish morphology), `packages/symbols` (Mulberry index and search), `packages/access` (scan machine, switches, dwell, keyguard), `packages/sync`, `packages/ai` (local predictor), `packages/i18n` (es/en/fr), `packages/ui`.
-- `scripts/run-unit-tests.mjs` (test discovery), `scripts/guards/` (licence, LLM egress, hygiene, test discovery), `scripts/launch/` (deploy smokes), `e2e/specs/` (Playwright), `k8s/` (digest-pinned manifests).
+- `scripts/run-unit-tests.mjs` (test discovery; with `CI` set, a PostgreSQL or Redis suite without its service fails the run), `scripts/guards/` (licence, LLM egress, hygiene, test discovery, workflow permissions and SHA-pinned actions), `scripts/launch/` (deploy smokes), `e2e/specs/` (Playwright), `k8s/` (digest-pinned manifests).
 
 ## Docs
 
