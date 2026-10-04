@@ -132,9 +132,17 @@ export function buildSitemapXml(origin: string): string {
 
 const REPOSITORY = 'https://github.com/madfam-org/voxa';
 
-/** One-paragraph summary shared by llms.txt and llms-full.txt. */
-const SUMMARY =
-  '> Augmentative and alternative communication (AAC): a communication board that turns taps, switch presses and pointer dwell into spoken language, at home, in therapy and in class. By MADFAM. Spanish first (es-MX), also in English and French. Open source (Apache-2.0).';
+/**
+ * The canonical one-liner (registry tagline and value proposition), word for
+ * word as in README.md, AGENTS.md, the repository llms.txt and the
+ * `description` of the root and web package.json; crawling.test.ts fails when
+ * they drift apart.
+ */
+export const PRODUCT_ONE_LINER =
+  'Augmentative & alternative communication. A Spanish-first communication board that turns direct touch, switch scanning or pointer dwell into speech with the device voice you choose (es-MX first); core boards in 24, 36 and 60 cells on one stable motor plan, offline use after the first visit, and Open Board Format (OBF/OBZ) exchange — at home, in therapy, and in class.';
+
+/** One-paragraph summary shared by llms.txt and llms-full.txt: the one-liner, then the README's second sentence. */
+const SUMMARY = `> ${PRODUCT_ONE_LINER} Voxa is open source (Apache-2.0); its interface is also in English and French. Built by MADFAM.`;
 
 function pageLines(origin: string): string[] {
   return [
