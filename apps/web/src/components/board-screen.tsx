@@ -277,7 +277,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
           speechText: text,
         });
         if (!settings.whisperMode) {
-          void speakButton(btn, { accessToken, speechText: text });
+          void speakButton(btn, { speechText: text, closeLabel: tc('close') });
         }
         return;
       }
@@ -291,7 +291,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
         speechText: text,
       });
       if (!settings.whisperMode) {
-        void speakButton(btn, { accessToken, speechText: text });
+        void speakButton(btn, { speechText: text, closeLabel: tc('close') });
       }
     },
     [
@@ -306,6 +306,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
       setBoardId,
       settings.whisperMode,
       speechLocale,
+      tc,
     ],
   );
 

@@ -157,20 +157,21 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const request = event.request;
-  if (request.method !== 'GET') return;
-
   const url = new URL(request.url);
   // API origin, identity provider and any other origin: straight to the network.
   if (url.origin !== self.location.origin) return;
+
+  if (isSignOutPath(url.pathname)) {
+    // Signing out forgets the cached shell; the network handles the request.
+    event.waitUntil(caches.delete(SHELL_CACHE));
+    return;
+  }
+
+  if (request.method !== 'GET') return;
   // Session and private media answers are per user: never cached here.
   if (url.pathname.startsWith('/api/')) return;
 
   if (request.mode === 'navigate') {
-    if (isSignOutPath(url.pathname)) {
-      // Signing out forgets the cached shell; the network handles the request.
-      event.waitUntil(caches.delete(SHELL_CACHE));
-      return;
-    }
     if (isShellPath(url.pathname)) {
       event.respondWith(networkFirstShell(request));
     }
