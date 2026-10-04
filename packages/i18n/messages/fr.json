@@ -11,7 +11,8 @@
     "save": "Enregistrer",
     "settings": "Réglages",
     "loading": "Chargement…",
-    "trySaying": "Essayez de dire"
+    "trySaying": "Essayez de dire",
+    "symbolCredit": "Pictogrammes : <symbols>Mulberry Symbols</symbols> © Steve Lee (mulberrysymbols.org), licence <license>CC BY-SA 4.0</license>."
   },
   "language": {
     "label": "Langue de l'interface",
@@ -160,7 +161,7 @@
     "scenes": {
       "communicate": {
         "name": "Vocabulaire de base",
-        "description": "Grille CAA classique — symboles ARASAAC, couleurs Fitzgerald, barre de phrase"
+        "description": "Grille CAA classique — symboles Mulberry, couleurs Fitzgerald, barre de phrase"
       },
       "literacy": {
         "name": "Clavier littératie",

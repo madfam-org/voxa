@@ -148,4 +148,44 @@ describe('board routes', () => {
     assert.ok(body.events.length >= 1);
     assert.equal(body.events[0]?.actorUserId, 'slp-remote');
   });
+  it('creates starter templates in the requested content locale (es-MX by default)', async () => {
+    // One owner per board: a free plan allows a single owned board.
+    const headersFor = (id: unknown) => ({
+      'Content-Type': 'application/json',
+      'X-Voxa-User-Id': `owner-${String(id)}`,
+      'X-Voxa-Role': 'editor',
+    });
+    const base = {
+      profileId: 'default',
+      version: 1,
+      updatedAt: new Date().toISOString(),
+      grid: { rows: 1, columns: 1, buttons: [] },
+    };
+    const create = (body: Record<string, unknown>) =>
+      app.request('/v1/boards', {
+        method: 'POST',
+        headers: headersFor(body.id),
+        body: JSON.stringify({ ...base, ...body }),
+      });
+
+    const spanish = await create({ id: 'tpl-es', name: 'Núcleo', templateId: 'core-47', contentLocale: 'es-MX' });
+    assert.equal(spanish.status, 201);
+    const es = (await spanish.json()) as { board: { grid: { buttons: Array<{ locale: string; label: string }> } } };
+    assert.equal(es.board.grid.buttons.length, 47);
+    assert.ok(es.board.grid.buttons.every((button) => button.locale === 'es-MX'));
+    assert.ok(es.board.grid.buttons.some((button) => button.label === 'querer'));
+
+    const unspecified = await create({ id: 'tpl-default', name: 'Default', templateId: 'core-47' });
+    assert.equal(unspecified.status, 201);
+    const def = (await unspecified.json()) as { board: { grid: { buttons: Array<{ locale: string }> } } };
+    assert.ok(def.board.grid.buttons.every((button) => button.locale === 'es-MX'));
+
+    const english = await create({ id: 'tpl-en', name: 'Core', templateId: 'core-47', contentLocale: 'en-US' });
+    const en = (await english.json()) as { board: { grid: { buttons: Array<{ locale: string; label: string }> } } };
+    assert.ok(en.board.grid.buttons.every((button) => button.locale === 'en-US'));
+    assert.ok(en.board.grid.buttons.some((button) => button.label === 'want'));
+
+    const invalid = await create({ id: 'tpl-bad', name: 'Bad', templateId: 'core-47', contentLocale: 'de-DE' });
+    assert.equal(invalid.status, 400);
+  });
 });

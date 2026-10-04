@@ -1,6 +1,5 @@
 import type { BoardButton } from '@voxa/core';
-import { buttonMediaVideo, buttonRecordedSpeech } from '@voxa/core';
-import { buttonSpeech } from '@/lib/board-utils';
+import { buttonMediaVideo, buttonRecordedSpeech, resolveButtonSpeech } from '@voxa/core';
 
 type SpeechActivityListener = (active: boolean) => void;
 
@@ -122,10 +121,16 @@ export async function speakButton(
     return;
   }
 
-  speakWithTts(options?.speechText ?? buttonSpeech(btn), btn.locale);
+  speakWithTts(options?.speechText ?? resolveButtonSpeech(btn), btn.locale);
 }
 
-export function speakText(text: string, locale = 'en-US'): void {
+/**
+ * Speak free text (whole message, prediction, keyboard sentence) with the
+ * voice for `locale`. The locale is required: callers pass the board's content
+ * locale (see `speechLocaleForBoard`) so Spanish text is never read with an
+ * English voice.
+ */
+export function speakText(text: string, locale: string): void {
   speakWithTts(text, locale);
 }
 

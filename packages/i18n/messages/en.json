@@ -11,7 +11,8 @@
     "save": "Save",
     "settings": "Settings",
     "loading": "Loading…",
-    "trySaying": "Try saying"
+    "trySaying": "Try saying",
+    "symbolCredit": "Symbols: <symbols>Mulberry Symbols</symbols> © Steve Lee (mulberrysymbols.org), licensed under <license>CC BY-SA 4.0</license>."
   },
   "language": {
     "label": "Interface language",
@@ -160,7 +161,7 @@
     "scenes": {
       "communicate": {
         "name": "Core vocabulary",
-        "description": "Classic AAC grid — ARASAAC symbols, Fitzgerald colors, sentence bar"
+        "description": "Classic AAC grid — Mulberry symbols, Fitzgerald colors, sentence bar"
       },
       "literacy": {
         "name": "Literacy keyboard",

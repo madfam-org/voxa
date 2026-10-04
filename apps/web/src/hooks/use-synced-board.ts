@@ -388,7 +388,7 @@ export function useSyncedBoard(role: TeamRole) {
   }, [boardId, client]);
 
   const createBoard = useCallback(
-    async (name: string, templateId?: StarterTemplateId) => {
+    async (name: string, templateId?: StarterTemplateId, contentLocale?: string) => {
       const id = `board-${Date.now()}`;
       const template: Board = {
         id: createBoardId(id),
@@ -398,7 +398,7 @@ export function useSyncedBoard(role: TeamRole) {
         updatedAt: new Date().toISOString(),
         grid: { rows: 4, columns: 4, buttons: [] },
       };
-      const result = await client.createBoard(template, templateId);
+      const result = await client.createBoard(template, templateId, contentLocale);
       const summary = { id: result.board.id as string, name: result.board.name };
       setBoardCatalog((prev) => [...prev.filter((b) => b.id !== summary.id), summary]);
       setBoardId(summary.id);
