@@ -18,6 +18,7 @@ import path from 'node:path';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Browser, type BrowserContext, type Page } from '@playwright/test';
 import { WCAG_TAGS, formatViolations } from '../helpers/a11y';
+import { ui } from '../helpers/i18n';
 import { startLocalApi, type LocalApi } from '../helpers/local-api';
 import { seedLocalState, seedTestSession } from '../helpers/test-session';
 
@@ -289,7 +290,7 @@ test.describe('uploaded media', () => {
     expect(box!.width).toBeGreaterThanOrEqual(100);
     expect(box!.height).toBeGreaterThanOrEqual(100);
     await expect(page.getByRole('dialog', { name: 'vamos al parque' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Close' })).toBeFocused();
+    await expect(page.getByRole('button', { name: ui('common.close') })).toBeFocused();
     const scan = await new AxeBuilder({ page })
       .include('[data-voxa-glp-video]')
       .withTags([...WCAG_TAGS])
