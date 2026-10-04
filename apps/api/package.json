@@ -25,10 +25,10 @@
     "ioredis": "^5.4.2",
     "jose": "^5.9.6",
     "postgres": "^3.4.5",
-    "@sentry/node": "^8.47.0"
+    "@sentry/node": "^10.76.0"
   },
   "devDependencies": {
-    "drizzle-kit": "^0.30.4",
+    "drizzle-kit": "^0.31.11",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"
   }
