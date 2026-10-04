@@ -433,6 +433,18 @@
     "missingNoticeDefault": "La voix choisie n'est plus sur cet appareil. Voxa parle maintenant avec la voix par défaut du navigateur. Vous pouvez en choisir une autre dans les réglages.",
     "dismiss": "Compris"
   },
+  "settingsSync": {
+    "title": "Réglages sur vos appareils",
+    "label": "Synchroniser mes réglages entre appareils",
+    "help": "Si vous l’activez, Voxa conserve sur son serveur une copie de vos réglages de communication et d’accès (mode d’accès, défilement, temps de fixation, guide-doigts, thème, et débit, hauteur et volume de la voix) pour les appliquer lorsque vous vous connectez sur un autre appareil. Ces réglages peuvent révéler des informations sur un handicap, qui sont des données sensibles : la synchronisation reste donc désactivée tant que vous ne l’activez pas. La voix choisie reste sur chaque appareil. La désactiver arrête la synchronisation et supprime la copie du serveur.",
+    "statusSignedOut": "Connectez-vous pour synchroniser vos réglages entre appareils.",
+    "statusOff": "Synchronisation désactivée : vos réglages sont conservés sur cet appareil uniquement.",
+    "statusSyncing": "Synchronisation des réglages…",
+    "statusSynced": "Réglages synchronisés.",
+    "statusPending": "Hors ligne : les modifications seront envoyées au retour de la connexion.",
+    "statusError": "Les réglages n’ont pas pu être synchronisés. Ils s’appliquent toujours sur cet appareil.",
+    "saveError": "La synchronisation n’a pas pu être modifiée. Vérifiez votre connexion et réessayez."
+  },
   "legal": {
     "shared": {
       "back": "← Retour à Voxa",

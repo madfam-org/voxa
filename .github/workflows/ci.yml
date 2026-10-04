@@ -199,3 +199,12 @@ jobs:
         env:
           PLAYWRIGHT_BASE_URL: http://127.0.0.1:3000
           VOXA_E2E_API_URL: http://localhost:4000
+      - name: Settings sync between devices (opt-in; two contexts, consent off sends nothing, axe)
+        # e2e/specs/settings-sync.spec.ts: with the settings_sync consent on, a
+        # scan speed changed in one browser context appears in another after a
+        # reload; with it off no request reaches /v1/me/settings; turning it
+        # off deletes the server copy. Same local API port.
+        run: pnpm --filter @voxa/e2e test:settings-sync
+        env:
+          PLAYWRIGHT_BASE_URL: http://127.0.0.1:3000
+          VOXA_E2E_API_URL: http://localhost:4000

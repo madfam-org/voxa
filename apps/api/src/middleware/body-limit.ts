@@ -16,24 +16,29 @@ import { MAX_MEDIA_BYTES } from '../lib/media-store.js';
  *   route itself refuses anything over its own `MAX_IMPORT_BYTES` (30 MB) with
  *   400 `ARCHIVE_TOO_LARGE`; this ceiling only stops bodies far past that.
  *   (`POST /v1/boards/:id/import/:format` answers 410 and gets the JSON limit.)
+ * - `PUT /v1/me/settings`: 16 KB. The settings document is allow-listed and
+ *   stays far below its own 8 KB ceiling (`SYNCED_SETTINGS_MAX_BYTES`).
  */
 export const MAX_JSON_BODY_BYTES = 1024 * 1024;
 const HEADROOM_BYTES = 1024 * 1024;
 export const MAX_MEDIA_UPLOAD_BODY_BYTES = MAX_MEDIA_BYTES + HEADROOM_BYTES;
 export const MAX_IMPORT_ARCHIVE_BYTES = 50 * 1024 * 1024;
 export const MAX_IMPORT_ARCHIVE_BODY_BYTES = MAX_IMPORT_ARCHIVE_BYTES + HEADROOM_BYTES;
+export const MAX_SETTINGS_BODY_BYTES = 16 * 1024;
 
 /** Machine-readable code for clients to translate. */
 export const PAYLOAD_TOO_LARGE_CODE = 'PAYLOAD_TOO_LARGE';
 
 const IMPORT_PATH = /^\/v1\/boards\/import\/[^/]+\/?$/;
 const MEDIA_UPLOAD_PATH = /^\/v1\/media\/?$/;
+const SETTINGS_PATH = /^\/v1\/me\/settings\/?$/;
 
 export function maxBodyBytesFor(method: string, path: string): number {
   if (method === 'POST') {
     if (MEDIA_UPLOAD_PATH.test(path)) return MAX_MEDIA_UPLOAD_BODY_BYTES;
     if (IMPORT_PATH.test(path)) return MAX_IMPORT_ARCHIVE_BODY_BYTES;
   }
+  if (method === 'PUT' && SETTINGS_PATH.test(path)) return MAX_SETTINGS_BODY_BYTES;
   return MAX_JSON_BODY_BYTES;
 }
 
@@ -49,7 +54,12 @@ function limiter(maxSize: number): MiddlewareHandler {
 }
 
 const limiters = new Map<number, MiddlewareHandler>(
-  [MAX_JSON_BODY_BYTES, MAX_MEDIA_UPLOAD_BODY_BYTES, MAX_IMPORT_ARCHIVE_BODY_BYTES].map((size) => [
+  [
+    MAX_JSON_BODY_BYTES,
+    MAX_MEDIA_UPLOAD_BODY_BYTES,
+    MAX_IMPORT_ARCHIVE_BODY_BYTES,
+    MAX_SETTINGS_BODY_BYTES,
+  ].map((size) => [
     size,
     limiter(size),
   ]),

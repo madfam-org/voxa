@@ -9,6 +9,7 @@ import {
   type ConsentPurpose,
   type ConsentRecord,
 } from '../lib/consents.js';
+import { deleteUserSettings } from '../lib/user-settings.js';
 
 /**
  * The signed-in user's own consent records. There is no way to read or change
@@ -61,5 +62,10 @@ consentRoutes.put('/', async (c) => {
 
   const { userId, orgId } = c.get('team');
   const records = await setConsents(process.env.DATABASE_URL, userId, decisions);
+  // Turning settings sync off stops it and deletes the stored copy at once
+  // (also when it was already off, so a retry always ends with no copy).
+  if (decisions.settings_sync === false) {
+    await deleteUserSettings(process.env.DATABASE_URL, userId);
+  }
   return c.json(view(records, orgId));
 });

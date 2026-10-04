@@ -101,8 +101,22 @@ One row per user and purpose in `consents` (`user_id`, `purpose`, `granted`, `po
 | `ai_processing` | `POST /v1/ai/predict/*` (403 without it) |
 | `usage_analytics` | `POST /v1/events/activations` (counts, no text) |
 | `utterance_text` | keeping `speech_text`, honoured only for organizations in `VOXA_UTTERANCE_TEXT_DPA_ORG_IDS` |
+| `settings_sync` | `GET/PUT /v1/me/settings` (403 without it); revoking it deletes the user's `user_settings` row |
 
 `GET /v1/consents` and `PUT /v1/consents` (`{ "consents": { "ai_processing": true, "usage_analytics": false } }`) act on the signed-in user only. No record means not granted. No request header grants consent. Without `DATABASE_URL` the API keeps these records in `consents.json` under `VOXA_DATA_DIR`, replaced atomically like `boards.json`. The web app keeps a copy in `localStorage` (`voxa-consent`) as an offline cache only; a signed-out visitor's choice stays on the device.
+
+### `user_settings`
+
+Communicator settings that follow the user between devices (migration 0009), one row per user, written only with the `settings_sync` consent.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `user_id` | `text` PK | Janua user id |
+| `version` | `integer` | 1 on the first write, +1 on every accepted write |
+| `fields` | `jsonb` | `{ "<field>": { "value": …, "updatedAt": "<ISO time>" } }`, allow-listed fields only |
+| `updated_at` | `timestamptz` | Server time of the last write |
+
+`GET /v1/me/settings` answers `{ version, updatedAt, fields }` (version 0 and no fields when nothing is stored) for the signed-in user only; no route names another user. `PUT /v1/me/settings` with `{ "version": <n>, "fields": { … } }` (or `If-Match: "<n>"`) replaces the document when `n` is still the stored version, else 409 `VERSION_CONFLICT` with `current`; a missing version is 428. The allow-list and value rules are `SYNCED_SETTING_RULES` in `packages/core/src/synced-settings.ts` (an unknown field or bad value is 400); the body ceiling is 16 KB and the document's own 8 KB (413). Field times later than the server clock are stored as the server time. The chosen voice (`voiceURIByLocale`), the interface language and one-time notices are never stored. Without `DATABASE_URL` the API keeps the documents in `user-settings.json` under `VOXA_DATA_DIR`. The web app merges per field (the newer change wins) and keeps its device state in `localStorage` (`voxa-settings-sync-state`, `voxa-settings-sync:<userId>`).
 
 **Board files (OBF 0.1):** `POST /v1/boards/import/:format` (`obf`, `obz`, beta `gridset`/`snap`/`touchchat`) always creates NEW boards owned by the caller (embedded media becomes `media_assets` rows of the new boards; remote picture URLs are never fetched); `GET /v1/boards/:id/export/obf` and `/export/obz` write spec OBF 0.1 (`.obz`: `manifest.json`, `boards/*.obf`, `images/*`, `sounds/*`) per `@voxa/obf`. See [MIGRATION.md](./launch/MIGRATION.md).
 

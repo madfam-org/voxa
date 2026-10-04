@@ -34,6 +34,8 @@ import {
 } from '@/lib/editor-pin';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { PrivacySettingsSection } from '@/components/consent-choices';
+import { SettingsSyncSection } from '@/components/settings-sync-section';
+import type { SettingsSyncControl } from '@/hooks/use-settings-sync';
 import { useAppDialog } from '@/components/app-dialog';
 import { VoiceSettingsSection } from '@/components/voice-settings-section';
 import type { DeviceVoices } from '@/hooks/use-device-voices';
@@ -53,6 +55,8 @@ interface SettingsPanelProps {
   deviceVoices: DeviceVoices;
   /** Reopen the first-run setup (signed-in communicator screen only). */
   onOpenFirstRun?: () => void;
+  /** Opt-in settings sync between the user's devices (communicator screen). */
+  settingsSync?: SettingsSyncControl;
 }
 
 export function SettingsPanel({
@@ -66,6 +70,7 @@ export function SettingsPanel({
   speechLocale,
   deviceVoices,
   onOpenFirstRun,
+  settingsSync,
 }: SettingsPanelProps): React.ReactNode {
   const t = useTranslations('settings');
   const tc = useTranslations('common');
@@ -478,6 +483,8 @@ export function SettingsPanel({
           </Field>
         </section>
       ) : null}
+
+      {settingsSync ? <SettingsSyncSection control={settingsSync} /> : null}
 
       <PrivacySettingsSection signedIn={signedIn} />
 

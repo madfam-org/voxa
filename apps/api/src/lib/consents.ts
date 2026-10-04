@@ -19,14 +19,24 @@ import { getStoreDriver } from '../store/index.js';
  *   organization is on the DPA allow-list (`VOXA_UTTERANCE_TEXT_DPA_ORG_IDS`,
  *   empty by default), and stored text is purged after
  *   UTTERANCE_TEXT_RETENTION_DAYS.
+ * - `settings_sync`: the API may keep a copy of the user's communicator and
+ *   access settings so they follow the user between devices
+ *   (`GET/PUT /v1/me/settings`). Access settings can reveal a disability, so
+ *   this is opt-in; revoking it deletes the stored copy
+ *   (src/lib/user-settings.ts).
  *
  * No record means "not decided", which is treated as not granted.
  */
-export const CONSENT_PURPOSES = ['ai_processing', 'usage_analytics', 'utterance_text'] as const;
+export const CONSENT_PURPOSES = [
+  'ai_processing',
+  'usage_analytics',
+  'utterance_text',
+  'settings_sync',
+] as const;
 export type ConsentPurpose = (typeof CONSENT_PURPOSES)[number];
 
 /** Version of the consent wording the API records with every decision. */
-export const CONSENT_POLICY_VERSION = '2026-10-03';
+export const CONSENT_POLICY_VERSION = '2026-10-04';
 
 export interface ConsentRecord {
   purpose: ConsentPurpose;
