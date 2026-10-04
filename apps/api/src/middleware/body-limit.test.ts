@@ -115,7 +115,10 @@ describe('request body limits (A-016)', () => {
   it('routes get their documented ceilings', () => {
     assert.equal(maxBodyBytesFor('POST', '/v1/media'), MAX_MEDIA_UPLOAD_BODY_BYTES);
     assert.equal(maxBodyBytesFor('POST', '/v1/boards/import/obz'), MAX_IMPORT_ARCHIVE_BODY_BYTES);
-    assert.equal(maxBodyBytesFor('POST', '/v1/boards/import/touchchat'), MAX_IMPORT_ARCHIVE_BODY_BYTES);
+    assert.equal(
+      maxBodyBytesFor('POST', '/v1/boards/import/touchchat'),
+      MAX_IMPORT_ARCHIVE_BODY_BYTES,
+    );
     // The old in-place import path answers 410; it gets the JSON ceiling.
     assert.equal(maxBodyBytesFor('POST', '/v1/boards/b1/import/obz'), MAX_JSON_BODY_BYTES);
     assert.equal(maxBodyBytesFor('PUT', '/v1/boards/b1'), MAX_JSON_BODY_BYTES);

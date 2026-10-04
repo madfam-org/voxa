@@ -92,7 +92,10 @@ export function createPgBoardStore(databaseUrl: string): BoardStore {
    * writers that read the same version, exactly one updates a row; the other
    * gets a 409 carrying the version that won.
    */
-  async function commitBoardChange(previousVersion: number, result: BoardUpdateResult): Promise<void> {
+  async function commitBoardChange(
+    previousVersion: number,
+    result: BoardUpdateResult,
+  ): Promise<void> {
     const board = result.board;
     await db.transaction(async (tx) => {
       const updated = await tx

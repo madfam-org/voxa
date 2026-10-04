@@ -54,7 +54,9 @@ export async function spawnApi(env: Record<string, string | undefined>): Promise
   let log = '';
   child.stdout?.on('data', (chunk) => (log += String(chunk)));
   child.stderr?.on('data', (chunk) => (log += String(chunk)));
-  const exited = new Promise<number | null>((resolve) => child.once('exit', (code) => resolve(code)));
+  const exited = new Promise<number | null>((resolve) =>
+    child.once('exit', (code) => resolve(code)),
+  );
   const killOnExit = () => child.kill('SIGKILL');
   process.once('exit', killOnExit);
   void exited.then(() => {
@@ -79,7 +81,9 @@ export async function waitReady(api: ApiProcess, timeoutMs = 30_000): Promise<vo
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     if (api.child.exitCode !== null) {
-      throw new Error(`API exited early (code ${api.child.exitCode}):\n${api.output().slice(-2000)}`);
+      throw new Error(
+        `API exited early (code ${api.child.exitCode}):\n${api.output().slice(-2000)}`,
+      );
     }
     try {
       const res = await fetch(`${api.url}/health/ready`);

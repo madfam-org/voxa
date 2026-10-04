@@ -16,7 +16,9 @@ import { connectTestWs, type TestWsClient } from '../test-support/ws-client.js';
 const redisUrl = process.env.VOXA_TEST_REDIS_URL?.trim();
 const databaseUrl = process.env.VOXA_TEST_DATABASE_URL?.trim();
 const skip =
-  redisUrl && databaseUrl ? false : 'VOXA_TEST_REDIS_URL and VOXA_TEST_DATABASE_URL are not both set';
+  redisUrl && databaseUrl
+    ? false
+    : 'VOXA_TEST_REDIS_URL and VOXA_TEST_DATABASE_URL are not both set';
 
 const OWNER = `owner-${randomUUID()}`;
 const BOARD_ID = `xreplica-${randomUUID()}`;
@@ -80,7 +82,9 @@ describe('sync hub across two replicas with Redis', { skip }, () => {
       }),
     });
     assert.equal(created.status, 201, await created.clone().text());
-    const { board } = (await created.json()) as { board: Record<string, unknown> & { version: number } };
+    const { board } = (await created.json()) as {
+      board: Record<string, unknown> & { version: number };
+    };
 
     const onB = await connectTestWs(wsUrl(replicaB), ownerHeaders);
     sockets.push(onB);

@@ -83,9 +83,15 @@ Symptom: GitHub hook deliveries show `Invalid HTTP Response: 401`; Enclii respon
 
 ### Rate limit spikes (429)
 
+Two limiters answer 429 `{"code":"RATE_LIMITED"}` with `Retry-After: 60`: per client address (`CF-Connecting-IP`, `RATE_LIMIT_IP_PER_MINUTE`, default 600) before authentication, and per signed-in user (`RATE_LIMIT_PER_MINUTE`, default 120) after it. Both are per replica.
+
 1. Identify abusive IP or user via ingress logs.
-2. Temporarily lower `RATE_LIMIT_PER_MINUTE` on API deployment if needed.
+2. Temporarily lower `RATE_LIMIT_IP_PER_MINUTE` or `RATE_LIMIT_PER_MINUTE` on the API deployment if needed (a clinic or school behind one address shares the address limit).
 3. Escalate repeat offenders through MADFAM security channel.
+
+### Co-editors do not see each other's changes
+
+`curl -sS https://voxa-api.madfam.io/health/ready`: `"syncHub":"local"` means changes reach only clients on the same replica. With a `syncHubWarning`, `REDIS_URL` is set but Redis is unreachable (the API reconnects by itself; check the shared Redis and the `allow-data-egress` policy). Without one, `REDIS_URL` is not bound: see [ENCLII.md](../deploy/ENCLII.md#real-time-co-editing-across-replicas-redis).
 
 ## Rollback
 

@@ -67,6 +67,17 @@ spec:
               value: "true"
             - name: CORS_ALLOWED_ORIGINS
               value: "https://voxa.madfam.io,https://voxa-app.madfam.io"
+            # Cross-replica co-editing (WebSocket fan-out and presence). The URL
+            # carries the shared Redis password and this app's DB index, so it is
+            # a key of voxa-secrets, never a literal here. Optional: without it
+            # (or with Redis unreachable) the API runs the local hub and
+            # /health/ready reports syncHub=local plus a syncHubWarning.
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: voxa-secrets
+                  key: REDIS_URL
+                  optional: true
           envFrom:
             - secretRef:
                 name: voxa-secrets

@@ -119,7 +119,15 @@ describe('PostgreSQL board store', { skip }, () => {
         grid: {
           rows: 1,
           columns: 2,
-          buttons: [{ id: 'yes', label: 'yes', speechText: 'yes', locked: true, position: { row: 0, column: 0 } }],
+          buttons: [
+            {
+              id: 'yes',
+              label: 'yes',
+              speechText: 'yes',
+              locked: true,
+              position: { row: 0, column: 0 },
+            },
+          ],
         },
       }),
     });
@@ -130,7 +138,15 @@ describe('PostgreSQL board store', { skip }, () => {
       grid: {
         rows: 1,
         columns: 2,
-        buttons: [{ id: 'yes', label: 'yes', speechText: 'yes', locked: true, position: { row: 0, column: 1 } }],
+        buttons: [
+          {
+            id: 'yes',
+            label: 'yes',
+            speechText: 'yes',
+            locked: true,
+            position: { row: 0, column: 1 },
+          },
+        ],
       },
       expectedVersion: current.version,
     };
@@ -142,7 +158,8 @@ describe('PostgreSQL board store', { skip }, () => {
 
   it('listing and the plan limit run scoped SQL, never a full boards scan', async () => {
     // Boards of other people the list must not load.
-    for (let i = 0; i < 5; i += 1) await createOwnedBoard(app, id(`stranger-${i}`), id(`stranger-board-${i}`));
+    for (let i = 0; i < 5; i += 1)
+      await createOwnedBoard(app, id(`stranger-${i}`), id(`stranger-board-${i}`));
     const owner = id('owner-list');
     const mine = await createOwnedBoard(app, owner, id('mine'));
 
@@ -154,7 +171,10 @@ describe('PostgreSQL board store', { skip }, () => {
     });
     assert.ok(listQueries.length > 0);
     assert.deepEqual(listQueries.filter(isFullBoardsScan), []);
-    assert.ok(listQueries.some((q) => /"owner_user_id" = \$/.test(q)), listQueries.join('\n'));
+    assert.ok(
+      listQueries.some((q) => /"owner_user_id" = \$/.test(q)),
+      listQueries.join('\n'),
+    );
 
     // The free plan allows one board: the second create is refused by a count.
     const limitQueries = await captureQueries(async () => {
@@ -173,7 +193,10 @@ describe('PostgreSQL board store', { skip }, () => {
       assert.equal(res.status, 402);
     });
     assert.deepEqual(limitQueries.filter(isFullBoardsScan), []);
-    assert.ok(limitQueries.some((q) => /count\(\*\)/i.test(q)), limitQueries.join('\n'));
+    assert.ok(
+      limitQueries.some((q) => /count\(\*\)/i.test(q)),
+      limitQueries.join('\n'),
+    );
   });
 
   it('writes never load the whole boards table, and trim events in one statement', async () => {
@@ -181,7 +204,11 @@ describe('PostgreSQL board store', { skip }, () => {
     const boardId = await createOwnedBoard(app, owner, id('write'));
     const current = await readBoard(boardId, owner);
     const writeQueries = await captureQueries(async () => {
-      const res = await put(boardId, owner, { ...current, name: 'renamed', expectedVersion: current.version });
+      const res = await put(boardId, owner, {
+        ...current,
+        name: 'renamed',
+        expectedVersion: current.version,
+      });
       assert.equal(res.status, 200);
     });
     assert.deepEqual(writeQueries.filter(isFullBoardsScan), []);
@@ -208,16 +235,32 @@ describe('PostgreSQL board store', { skip }, () => {
     assert.equal(res.status, 201);
     // Dev headers carry no org id, so place the board in orgA directly.
     const store = getStore();
-    const listed = await store.listBoardsForActor({ userId: id('editor'), role: 'editor', orgId: orgA });
+    const listed = await store.listBoardsForActor({
+      userId: id('editor'),
+      role: 'editor',
+      orgId: orgA,
+    });
     assert.ok(!listed.some((b) => b.id === id('org-board')));
     const { getSharedDb } = await import('../db/client.js');
     const { client } = getSharedDb(testDatabaseUrl!);
     await client`update boards set org_id = ${orgA} where id = ${id('org-board')}`;
-    const editorView = await store.listBoardsForActor({ userId: id('editor'), role: 'editor', orgId: orgA });
+    const editorView = await store.listBoardsForActor({
+      userId: id('editor'),
+      role: 'editor',
+      orgId: orgA,
+    });
     assert.ok(editorView.some((b) => b.id === id('org-board')));
-    const otherOrg = await store.listBoardsForActor({ userId: id('editor'), role: 'editor', orgId: id('org-b') });
+    const otherOrg = await store.listBoardsForActor({
+      userId: id('editor'),
+      role: 'editor',
+      orgId: id('org-b'),
+    });
     assert.ok(!otherOrg.some((b) => b.id === id('org-board')));
-    const communicator = await store.listBoardsForActor({ userId: id('member'), role: 'communicator', orgId: orgA });
+    const communicator = await store.listBoardsForActor({
+      userId: id('member'),
+      role: 'communicator',
+      orgId: orgA,
+    });
     assert.ok(!communicator.some((b) => b.id === id('org-board')));
   });
 
@@ -230,9 +273,12 @@ describe('PostgreSQL board store', { skip }, () => {
       actorUserId: 'x',
       timestamp: new Date().toISOString(),
     }));
-    await assert.rejects(getStore().appendSyncEvents(events), (err: Error & { status?: number }) => {
-      assert.equal(err.status, 413);
-      return true;
-    });
+    await assert.rejects(
+      getStore().appendSyncEvents(events),
+      (err: Error & { status?: number }) => {
+        assert.equal(err.status, 413);
+        return true;
+      },
+    );
   });
 });

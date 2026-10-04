@@ -14,7 +14,8 @@ const CONNECT_TIMEOUT_MS = 3_000;
 let publisher: Redis | null = null;
 let subscriber: Redis | null = null;
 let messageHandler: ((payload: string) => void) | null = null;
-let lastErrorLogged: string | null = null;
+/** Last failure logged per connection role, so a reconnect loop logs once. */
+const lastErrorLogged = new Map<string, string>();
 
 /** Both connections are up: publish, subscribe and presence work. */
 export function isRedisConnected(): boolean {
@@ -29,10 +30,11 @@ export function isRedisConfigured(): boolean {
 function logConnectionError(role: string, err: Error): void {
   // One line per distinct failure, not one per reconnect attempt.
   const code = (err as Error & { code?: string }).code ?? err.name;
-  const key = `${role}:${code}`;
-  if (key === lastErrorLogged) return;
-  lastErrorLogged = key;
-  console.warn(`[voxa] Redis ${role} connection error (${code}); sync hub falls back to this replica only`);
+  if (lastErrorLogged.get(role) === code) return;
+  lastErrorLogged.set(role, code);
+  console.warn(
+    `[voxa] Redis ${role} connection error (${code}); sync hub falls back to this replica only`,
+  );
 }
 
 function createClient(redisUrl: string, role: string, offlineQueue: boolean): Redis {
@@ -46,8 +48,8 @@ function createClient(redisUrl: string, role: string, offlineQueue: boolean): Re
   });
   redis.on('error', (err: Error) => logConnectionError(role, err));
   redis.on('ready', () => {
-    if (lastErrorLogged) console.log(`[voxa] Redis ${role} connection ready`);
-    lastErrorLogged = null;
+    if (lastErrorLogged.has(role)) console.log(`[voxa] Redis ${role} connection ready`);
+    lastErrorLogged.delete(role);
   });
   return redis;
 }
@@ -101,7 +103,11 @@ export async function publishSyncMessage(payload: string): Promise<void> {
 }
 
 /** Adds or refreshes presence members of one board until `expiresAt` (ms). */
-export async function refreshPresence(boardId: string, members: string[], expiresAt: number): Promise<void> {
+export async function refreshPresence(
+  boardId: string,
+  members: string[],
+  expiresAt: number,
+): Promise<void> {
   if (!publisher || publisher.status !== 'ready' || members.length === 0) return;
   const key = `${PRESENCE_KEY_PREFIX}${boardId}`;
   const args: (string | number)[] = [];
@@ -122,11 +128,7 @@ export async function removePresence(boardId: string, member: string): Promise<v
 export async function countPresence(boardId: string, now: number): Promise<number | null> {
   if (!publisher || publisher.status !== 'ready') return null;
   const key = `${PRESENCE_KEY_PREFIX}${boardId}`;
-  const results = await publisher
-    .multi()
-    .zremrangebyscore(key, '-inf', now)
-    .zcard(key)
-    .exec();
+  const results = await publisher.multi().zremrangebyscore(key, '-inf', now).zcard(key).exec();
   const card = results?.[1]?.[1];
   return typeof card === 'number' ? card : null;
 }
@@ -137,7 +139,7 @@ export async function disconnectRedis(): Promise<void> {
   publisher = null;
   subscriber = null;
   messageHandler = null;
-  lastErrorLogged = null;
+  lastErrorLogged.clear();
 
   const close = async (client: Redis | null) => {
     if (!client) return;

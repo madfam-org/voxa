@@ -41,7 +41,14 @@ describe('media hardening (A-025)', () => {
 
   it('a WAV labelled audio/mpeg → 415; the same bytes as audio/wav → 201', async () => {
     await createOwnedBoard(app, 'owner-wav', 'wav-board');
-    const wav = new Uint8Array([...new TextEncoder().encode('RIFF'), 4, 0, 0, 0, ...new TextEncoder().encode('WAVEfmt ')]);
+    const wav = new Uint8Array([
+      ...new TextEncoder().encode('RIFF'),
+      4,
+      0,
+      0,
+      0,
+      ...new TextEncoder().encode('WAVEfmt '),
+    ]);
     assert.equal((await upload('wav-board', 'owner-wav', wav, 'a.mp3', 'audio/mpeg')).status, 415);
     assert.equal((await upload('wav-board', 'owner-wav', wav, 'a.wav', 'audio/wav')).status, 201);
   });
@@ -61,8 +68,14 @@ describe('media hardening (A-025)', () => {
   it('an upload past the per-user quota → 413 MEDIA_QUOTA_EXCEEDED', async () => {
     process.env.MEDIA_QUOTA_BYTES_PER_USER = String(PNG.byteLength * 2);
     await createOwnedBoard(app, 'owner-quota', 'quota-board');
-    assert.equal((await upload('quota-board', 'owner-quota', PNG, '1.png', 'image/png')).status, 201);
-    assert.equal((await upload('quota-board', 'owner-quota', PNG, '2.png', 'image/png')).status, 201);
+    assert.equal(
+      (await upload('quota-board', 'owner-quota', PNG, '1.png', 'image/png')).status,
+      201,
+    );
+    assert.equal(
+      (await upload('quota-board', 'owner-quota', PNG, '2.png', 'image/png')).status,
+      201,
+    );
     const third = await upload('quota-board', 'owner-quota', PNG, '3.png', 'image/png');
     assert.equal(third.status, 413);
     const body = (await third.json()) as { code: string; usedBytes: number; quotaBytes: number };
@@ -71,7 +84,10 @@ describe('media hardening (A-025)', () => {
     assert.equal(body.quotaBytes, PNG.byteLength * 2);
     // The quota is per user: someone else still uploads.
     await createOwnedBoard(app, 'owner-quota-2', 'quota-board-2');
-    assert.equal((await upload('quota-board-2', 'owner-quota-2', PNG, '1.png', 'image/png')).status, 201);
+    assert.equal(
+      (await upload('quota-board-2', 'owner-quota-2', PNG, '1.png', 'image/png')).status,
+      201,
+    );
   });
 
   it('a file over its type limit → 413 MEDIA_TOO_LARGE', async () => {
@@ -111,7 +127,10 @@ describe('media hardening (A-025)', () => {
     for (const [type, bytes] of cases) {
       assert.ok(mediaBytesMatchType(new Uint8Array(bytes), type), type);
     }
-    assert.equal(mediaBytesMatchType(new Uint8Array([0, 0, 0, 8, ...ascii('wide')]), 'video/mp4'), false);
+    assert.equal(
+      mediaBytesMatchType(new Uint8Array([0, 0, 0, 8, ...ascii('wide')]), 'video/mp4'),
+      false,
+    );
     assert.equal(mediaBytesMatchType(PNG, 'image/svg+xml'), false);
   });
 });

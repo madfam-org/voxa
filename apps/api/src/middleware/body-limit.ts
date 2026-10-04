@@ -41,16 +41,18 @@ function limiter(maxSize: number): MiddlewareHandler {
   return bodyLimit({
     maxSize,
     onError: (c: Context) =>
-      c.json({ error: 'Request body too large', code: PAYLOAD_TOO_LARGE_CODE, maxBytes: maxSize }, 413),
+      c.json(
+        { error: 'Request body too large', code: PAYLOAD_TOO_LARGE_CODE, maxBytes: maxSize },
+        413,
+      ),
   });
 }
 
 const limiters = new Map<number, MiddlewareHandler>(
-  [
-    MAX_JSON_BODY_BYTES,
-    MAX_MEDIA_UPLOAD_BODY_BYTES,
-    MAX_IMPORT_ARCHIVE_BODY_BYTES,
-  ].map((size) => [size, limiter(size)]),
+  [MAX_JSON_BODY_BYTES, MAX_MEDIA_UPLOAD_BODY_BYTES, MAX_IMPORT_ARCHIVE_BODY_BYTES].map((size) => [
+    size,
+    limiter(size),
+  ]),
 );
 
 /** Applies the ceiling for the request's route (see the table above). */

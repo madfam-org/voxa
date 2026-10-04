@@ -16,7 +16,10 @@ export interface TestWsClient {
   close(): void;
 }
 
-export function connectTestWs(url: string, headers: Record<string, string> = {}): Promise<TestWsClient> {
+export function connectTestWs(
+  url: string,
+  headers: Record<string, string> = {},
+): Promise<TestWsClient> {
   const target = new URL(url);
   return new Promise((resolve, reject) => {
     const req = request({
@@ -31,7 +34,9 @@ export function connectTestWs(url: string, headers: Record<string, string> = {})
         'Sec-WebSocket-Key': randomBytes(16).toString('base64'),
       },
     });
-    req.on('response', (res) => reject(new Error(`WebSocket upgrade refused: HTTP ${res.statusCode}`)));
+    req.on('response', (res) =>
+      reject(new Error(`WebSocket upgrade refused: HTTP ${res.statusCode}`)),
+    );
     req.on('error', reject);
     req.on('upgrade', (_res, socket: Socket, head: Buffer) => {
       const messages: unknown[] = [];
@@ -74,7 +79,10 @@ export function connectTestWs(url: string, headers: Record<string, string> = {})
               deliver(text);
             }
           } else if (opcode === 0x8) {
-            deliver({ type: '__close', code: payload.length >= 2 ? payload.readUInt16BE(0) : undefined });
+            deliver({
+              type: '__close',
+              code: payload.length >= 2 ? payload.readUInt16BE(0) : undefined,
+            });
           }
         }
       };
@@ -94,7 +102,9 @@ export function connectTestWs(url: string, headers: Record<string, string> = {})
           return new Promise((resolveWait, rejectWait) => {
             const timer = setTimeout(() => {
               rejectWait(
-                new Error(`No matching WebSocket message within ${timeoutMs} ms; got ${JSON.stringify(messages)}`),
+                new Error(
+                  `No matching WebSocket message within ${timeoutMs} ms; got ${JSON.stringify(messages)}`,
+                ),
               );
             }, timeoutMs);
             waiters.push({

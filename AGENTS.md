@@ -23,7 +23,7 @@ fixtures free of real names and health information.
 | `apps/mobile`                   | `@voxa/mobile` — Expo SDK 57 communicator app (EAS builds).                                                                         |
 | `packages/*`                    | `core` (domain model), `obf` (Open Board Format), `import-adapters`, `vocabulary`, `symbols`, `sync`, `access`, `ai`, `i18n`, `ui`. |
 | `e2e`                           | Playwright smoke, accessibility (axe) and staging specs.                                                                            |
-| `apps/api/drizzle/migrations`   | SQL migrations, `meta/_journal.json` and snapshots `0000`–`0003`.                                                                   |
+| `apps/api/drizzle/migrations`   | SQL migrations, `meta/_journal.json` and their snapshots (`0000`–`0006`).                                                           |
 | `k8s/production`, `k8s/staging` | Kustomize manifests (digest-pinned images).                                                                                         |
 | `enclii.yaml`                   | Enclii network and status declarations.                                                                                             |
 | `docs/`                         | Architecture, data model, auth, deploy, ops, launch and legal docs.                                                                 |
@@ -50,10 +50,16 @@ pnpm build
   every test process its own temporary `VOXA_DATA_DIR`, so test files never
   share the file store. `src/store/file-board-store.test.ts` guards that
   wiring. Never point tests at `apps/api/data/`.
-- `apps/api/src/routes/media.pg.test.ts` runs against a real PostgreSQL when
-  `VOXA_TEST_DATABASE_URL` is set (it migrates and writes there, so use a
-  throwaway database) and skips itself otherwise. CI provides a `postgres:16`
-  service container for it; `turbo.json` passes the variable through.
+- The API's `*.pg.test.ts` files (`routes/media.pg.test.ts`,
+  `routes/consent.pg.test.ts`, `db/legacy-utterance-purge.pg.test.ts`,
+  `store/pg-board-store.pg.test.ts`) run against a real PostgreSQL when
+  `VOXA_TEST_DATABASE_URL` is set (they migrate and write there, so use a
+  throwaway database; ids are unique per run because the files share it) and
+  skip themselves otherwise. `src/ws/sync-hub.redis.test.ts` also needs
+  `VOXA_TEST_REDIS_URL`: it starts two API processes on that database and
+  Redis and proves cross-replica delivery and global presence. CI provides
+  `postgres:16` and `redis:7` service containers; `turbo.json` passes both
+  variables through.
 - CI (`.github/workflows/ci.yml`, on pushes and PRs to `main`): typecheck,
   `pnpm test`, the Drizzle drift step (`drizzle-kit generate` must produce no
   changes), the EAS config check, `pnpm build`, then an axe job against the
@@ -108,9 +114,12 @@ pnpm build
    `errorMessage`) and `app.onError` strip them; use them for any error that
    reaches a response body or a log line. Tested in
    `src/lib/db-errors.test.ts`.
-5. **Atomic file store.** Without `DATABASE_URL` the API keeps boards in
-   `boards.json` under `VOXA_DATA_DIR` (default `./data`) and replaces it with
-   temp file + `fsync` + `rename`. Do not reintroduce in-place writes.
+5. **Atomic file store, never in production.** Without `DATABASE_URL` the API
+   keeps boards in `boards.json` under `VOXA_DATA_DIR` (default `./data`) and
+   replaces it with temp file + `fsync` + `rename`. Do not reintroduce
+   in-place writes. With `NODE_ENV=production` and no `DATABASE_URL` the API
+   exits 1 at startup, and `/health/ready` answers 503 on the file store in
+   production (`src/store/fail-closed.test.ts`).
 6. **Next image optimizer off.** `apps/web/next.config.ts` sets
    `images.unoptimized: true` with `remotePatterns: []`, so `/_next/image`
    answers 404 (GHSA-2xp9-vwfh-vxw4 defence in depth). Nothing imports
@@ -191,6 +200,37 @@ pnpm build
     `apps/web/src/lib/play-button-speech.test.ts` and
     `e2e/specs/voice-choice.spec.ts`.
 
+11. **Board writes are compare-and-set; reads are scoped.** The PostgreSQL
+    store reads one board by id, applies the change, and updates the row only
+    `WHERE id = $1 AND version = $2`, with the sync event in the same
+    transaction: of two writers on one version exactly one wins and the other
+    gets 409 `VERSION_CONFLICT` with `currentVersion` (a PUT without
+    `expectedVersion` retries up to three times). The motor-planning 422 is
+    unchanged. `listBoardsForActor` filters in SQL with the `canAccessBoard`
+    rule, `countBoardsOwnedBy` uses `count(*)`, events are trimmed per board in
+    one statement. Never load every board (`select … from boards` without a
+    `WHERE`) on a request path. Tested in `src/store/pg-board-store.pg.test.ts`
+    (a test-only SQL observer in `src/db/client.ts` sees query text, never
+    parameters).
+12. **Request limits and media checks.** On `/v1/*`: a per-address limit
+    (`CF-Connecting-IP`, else the socket peer; never `X-Forwarded-For`) runs
+    before `teamAuth`, a per-user limit after it, both in memory per replica
+    with pruned, bounded buckets; body ceilings (`src/middleware/body-limit.ts`:
+    1 MB JSON, media and archive imports at their maxima plus 1 MB, OBF 10 MB)
+    answer 413 `PAYLOAD_TOO_LARGE` without buffering past the limit. Uploads
+    must match their declared type by magic bytes (`src/lib/media-sniff.ts`,
+    415 `MEDIA_TYPE_MISMATCH`), count against `MEDIA_QUOTA_BYTES_PER_USER`
+    (default 500 MB, 413 `MEDIA_QUOTA_EXCEEDED`, summed from `size_bytes`
+    under a per-user advisory lock), and are served with `nosniff` and
+    `Content-Disposition: inline`. Tested in `src/middleware/rate-limit.test.ts`,
+    `src/middleware/body-limit.test.ts` and
+    `src/routes/media-hardening.routes.test.ts`.
+13. **Co-editing across replicas needs Redis, and degrades loudly.** With
+    `REDIS_URL` reachable the sync hub relays board events between replicas and
+    counts presence globally (`syncHub: "redis"`). Without it, or with Redis
+    down, it serves locally, keeps reconnecting, and `/health/ready` stays 200
+    with a `syncHubWarning`; Redis never blocks startup or readiness. Tested in
+    `src/ws/sync-hub.test.ts` and `src/ws/sync-hub.redis.test.ts`.
 ## Deploy
 
 | Workflow                                                     | Trigger                                                        | Effect                                                                           |
@@ -237,6 +277,8 @@ blocks production use, **P1** next, **P2** planned, **P3** cleanup.
 | **Three mobile build-tool advisories have no compatible fix.** `node-forge` (Expo CLI code signing; no patched release), `braces` (Metro file watcher and the shadcn CLI; no patched release) and `decode-uri-component` 0.2 under `expo-router`'s `query-string` 7 (the fix, 0.5, is ESM-only and `query-string` 7 loads it with `require`). | Dev and build tooling, except `decode-uri-component`, which ships in the app and only parses the app's own deep links. | P3 | Upstream (re-check on each Expo SDK release) | — |
 | **Staging's Argo CD app still tracks the deleted `staging` branch.** The staging workflows now pin `k8s/staging` on `main`, but `voxa-staging-services` reads branch `staging`, which no longer exists, so it cannot compare (ComparisonError) and staging keeps a June build. | Until the app tracks `main`, staging does not move and the daily signed-in specs test an old build. | P1 | Platform operator (point the app's source revision at `main`); then confirm the `VOXA_STAGING_*` test account still signs in and holds `voxa:slp` | — |
 | **Paid tiers are not grantable yet.** The API reads the plan tier from the Janua `voxa_tier` claim, but the push that writes the claim for user subscriptions (billing → Janua) is not built. | Nobody can hold `family` or `clinic`, so every user gets the free limits (one board). Fails safe: no one gets a paid tier they did not buy. | P1 | Ecosystem work outside this repo; no Voxa change is needed once tokens carry the claim | Y1 |
+| **Production and staging do not bind `REDIS_URL` yet.** Both API Deployments read it from `voxa-secrets` (optional), but production's `/health/ready` reports `syncHub: local`, so the key is not set there (staging unverified). | With two production replicas, a co-editor on the other pod sees no live change and presence counts one pod. Data is safe (writes are compare-and-set). | P1 | Platform operator: add `REDIS_URL` (shared Redis with AUTH, this app's own DB index) to `voxa-secrets` for each environment, then `REQUIRE_REDIS=1 ./scripts/launch/verify-prod-redis.sh` | — |
+| **Media bytes live in the shared PostgreSQL.** Uploads are size-capped, type-checked and quota-bound per user, but the bytes are stored in `media_assets.data`. | Large media grows the shared database, its backups and WAL. | P2 | Owner ruling (object storage behind signed URLs) | — |
 | **Prettier is not enforced.** `pnpm format` exists but CI does not check it, and several files predate it.                                                                                                                   | Formatting drifts and creates noise in unrelated PRs.                                                                                                                                   | P3       | Engineering work (one reformat, then a CI check)                                | —        |
 | **Selva predictions are off.** `SELVA_ENABLED` defaults to `false`, so every text suggestion comes from the local predictor. Turning it on needs a Janua service client for this edge, its id and secret delivered to the API, and a local model behind Selva for `restricted` requests. | Until then suggestions are rule-based only. Turning it on early is safe (every failure falls back to local) but pointless. | P2 | Ecosystem and operator work; no Voxa code change is needed | — |
 | **Real-time board sync never connects for a signed-in user.** The API's `teamAuth()` runs on `/v1/*` and answers the `/v1/ws` upgrade with 401, because a browser WebSocket cannot send the bearer header and the token travels as `?accessToken=` (which only `src/lib/ws-auth.ts` reads, after the middleware). | The sync badge reads offline for every signed-in user, an editor's edits are queued locally instead of saved live, and changes from another device arrive only on reload. Found by `e2e/specs/access-methods.spec.ts`. | P1 | Engineering work (exempt `/v1/ws` from `teamAuth`, which `resolveWsTeam` already authenticates; or a short-lived WS ticket) | — |
