@@ -14,11 +14,16 @@ metadata:
     reloader.stakater.com/match: "true"
 spec:
   replicas: 1
+  # Surge-first rollouts: a new pod must pass readiness before an old one is
+  # removed, so a rollout never leaves the Service without a ready endpoint.
+  # If the surge pod cannot schedule, the rollout stalls on the old pods
+  # (still serving) instead of taking the site down.
+  minReadySeconds: 5
   strategy:
     type: RollingUpdate
     rollingUpdate:
-      maxSurge: 0
-      maxUnavailable: 1
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
       app: voxa-web
@@ -36,6 +41,14 @@ spec:
         enclii.dev/managed-by: switchyard
         enclii.dev/environment: staging
     spec:
+      terminationGracePeriodSeconds: 30
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: voxa-web
       imagePullSecrets:
         - name: ghcr-credentials
       securityContext:
@@ -93,24 +106,36 @@ spec:
             capabilities:
               drop:
                 - ALL
+          # Liveness: the process answers at all (no config or dependency checks,
+          # so a config problem never crash-loops the pod).
           livenessProbe:
             httpGet:
               path: /api/health
               port: http
             initialDelaySeconds: 20
             periodSeconds: 10
+          # Readiness: the server can serve what it advertises (sign-in config
+          # present). Gates traffic to new pods during rollouts.
           readinessProbe:
             httpGet:
-              path: /api/health
+              path: /api/health/ready
               port: http
-            initialDelaySeconds: 10
+            initialDelaySeconds: 5
             periodSeconds: 5
+            failureThreshold: 3
           startupProbe:
             httpGet:
               path: /api/health
               port: http
             failureThreshold: 12
             periodSeconds: 5
+          # Let the endpoint removal reach the Service and tunnel before the
+          # process gets SIGTERM, so in-flight and new requests do not hit a
+          # closing socket (node:20-alpine ships /bin/sleep).
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sleep", "5"]
           volumeMounts:
             - name: tmp
               mountPath: /tmp

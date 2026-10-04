@@ -85,10 +85,20 @@ ArgoCD auto-syncs after digest commits (automated sync with self-heal); the web 
 
 ## Health checks
 
-| Service | Probe path | Test |
-|---------|------------|------|
-| Web | `GET /api/health` | `apps/web/src/app/api/health/route.test.ts` |
-| API | `GET /health` | `apps/api/src/health.test.ts` |
+| Service | Probe | Path | Test |
+|---------|-------|------|------|
+| Web | liveness, startup | `GET /api/health` | `apps/web/src/app/api/health/route.test.ts` |
+| Web | readiness | `GET /api/health/ready` (503 without OIDC issuer and client id) | `apps/web/src/app/api/health/ready/route.test.ts` |
+| API | liveness | `GET /health` | `apps/api/src/health.test.ts` |
+| API | readiness, startup, status page | `GET /health/ready` (503 when the store is unreachable) | `apps/api/src/health.test.ts` |
+
+### Availability during rollouts and node drains
+
+- Production runs 2 web and 2 API replicas, spread across nodes when possible (`topologySpreadConstraints`, `ScheduleAnyway`). Staging runs 1 of each.
+- Rollouts are surge-first (`maxSurge: 1`, `maxUnavailable: 0`, `minReadySeconds: 5`): a new pod must pass readiness before an old one stops. If the surge pod cannot be scheduled, the rollout waits on the old pods, which keep serving.
+- A `preStop` sleep of 5 s lets the endpoint removal reach the Service before the container gets `SIGTERM`.
+- `k8s/*/pod-disruption-budgets.yaml`: production keeps `minAvailable: 1` per Deployment; staging (1 replica) allows one disruption so node drains are never blocked.
+- Capacity: a production rollout briefly runs 3 pods of the Deployment being updated (web requests 50m CPU / 128Mi per pod, API 100m / 256Mi).
 
 Run locally: `pnpm test`
 
@@ -179,7 +189,7 @@ curl -sS https://voxa-api.madfam.io/health/ready
 The Postgres server is shared with other services under a fixed connection limit, so the API's share is bounded:
 
 - Each API process opens **one** pool (`getSharedDb` in `apps/api/src/db/client.ts`), shared by the board store, the media store and `POST /v1/events/activations`. Request handlers must never open their own pool (`createDb` is for owners that close what they open, such as migrations).
-- `DATABASE_POOL_MAX` (default `5`) caps that pool. Two production replicas hold at most 10 connections, plus 1 per pod while startup migrations run. Raise it only after checking the server's budget.
+- `DATABASE_POOL_MAX` (default `5`) caps that pool. Two production replicas hold at most 10 connections, plus 1 per pod while startup migrations run; during a rollout the surge pod adds one more pool (at most 15). Raise it only after checking the server's budget.
 - Idle pooled connections close after 30 s. `closeSharedDb()` ends the pool on `SIGTERM`/`SIGINT`.
 - The `/health/ready` probe pings through the same shared pool (`SELECT 1`); it opens no connection of its own.
 
