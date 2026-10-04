@@ -1,4 +1,4 @@
-import type { BoardImportFormat } from '@voxa/sync';
+import { VoxaSyncError, type BoardImportFormat } from '@voxa/sync';
 
 export type { BoardImportFormat };
 
@@ -13,4 +13,22 @@ const CONTENT_LOCALE_BY_UI: Record<string, string> = { es: 'es-MX', en: 'en-US',
 /** Content locale sent with an import, used only for files that carry none (Spanish-first). */
 export function contentLocaleForUi(uiLocale: string): string {
   return CONTENT_LOCALE_BY_UI[uiLocale.slice(0, 2).toLowerCase()] ?? 'es-MX';
+}
+
+/**
+ * How an import failure is shown. A 402 means the plan's board limit is
+ * reached (imports always create a board): the import UI explains the limit
+ * and offers export and delete, instead of a generic error. `limit` is the
+ * number of boards the plan allows, when the API said so.
+ */
+export type ImportFailure = { kind: 'board-limit'; limit?: number } | { kind: 'error'; message: string };
+
+export function classifyImportFailure(err: unknown): ImportFailure {
+  if (err instanceof VoxaSyncError && err.status === 402) {
+    const limit = err.body.limit;
+    return typeof limit === 'number' && Number.isInteger(limit) && limit > 0
+      ? { kind: 'board-limit', limit }
+      : { kind: 'board-limit' };
+  }
+  return { kind: 'error', message: err instanceof Error ? err.message : String(err) };
 }

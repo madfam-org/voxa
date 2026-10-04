@@ -42,7 +42,8 @@ import { useSwitchScan } from '@/hooks/use-switch-scan';
 import { ScanBackTarget } from '@/components/scan-back-target';
 import { ButtonMoveControls, MoveModeBanner } from '@/components/editor-move-controls';
 import { useSyncedBoard, type BoardSummary } from '@/hooks/use-synced-board';
-import { BETA_IMPORT_FORMATS, contentLocaleForUi, type BoardImportFormat } from '@/lib/board-import';
+import { BETA_IMPORT_FORMATS, classifyImportFailure, contentLocaleForUi, type BoardImportFormat } from '@/lib/board-import';
+import { ImportLimitNotice } from '@/components/import-limit-notice';
 import {
   editorPinIsConfigured,
   isEditorUnlocked,
@@ -389,6 +390,9 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
     [dialogs, tcx],
   );
 
+  // Plan board limit reached on import (402): explained with export/delete actions, not a generic error.
+  const [importLimit, setImportLimit] = useState<{ limit?: number } | null>(null);
+
   // Imports always create a new board and open it; the board on screen is never replaced.
   const runImport = useCallback(
     async (format: BoardImportFormat, payload: string | ArrayBuffer) => {
@@ -399,12 +403,15 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
       );
       if (!confirmed) return;
       setBusy(true);
+      setImportLimit(null);
       try {
         const result = await importBoards(format, payload, contentLocaleForUi(uiLocale));
         const skipped = result.skipped.images + result.skipped.sounds;
         if (skipped > 0) void dialogs.alert(tcx('importSkippedMedia', { count: skipped }));
       } catch (err) {
-        void reportFailure(err);
+        const failure = classifyImportFailure(err);
+        if (failure.kind === 'board-limit') setImportLimit({ limit: failure.limit });
+        else void reportFailure(err);
       } finally {
         setBusy(false);
       }
@@ -1126,6 +1133,21 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
         >
           {tcx('babbleBanner')}
         </div>
+      ) : null}
+
+      {importLimit ? (
+        <ImportLimitNotice
+          limit={importLimit.limit}
+          canDelete={accountCanEdit}
+          busy={busy}
+          onExportObf={() => void handleExport()}
+          onExportObz={() => void handleExportObz()}
+          onDelete={() => {
+            setImportLimit(null);
+            void handleDeleteBoard();
+          }}
+          onClose={() => setImportLimit(null)}
+        />
       ) : null}
 
       <SyncStatusBanner

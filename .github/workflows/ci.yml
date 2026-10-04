@@ -113,7 +113,7 @@ jobs:
           VOXA_E2E_API_URL: http://localhost:4000
       - name: Board import creates a new board and leaves the open one untouched
         # e2e/specs/board-import.spec.ts: confirm, import as a NEW board, open
-        # it; the board on screen keeps its version; beta labels on Grid 3,
+        # it; the board on screen keeps its version; a 402 shows the plan-limit notice; beta labels on Grid 3,
         # Snap and TouchChat. Same local API port as the offline step.
         run: pnpm --filter @voxa/e2e test:import
         env:

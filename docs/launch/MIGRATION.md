@@ -4,7 +4,7 @@ Voxa uses **Open Board Format (OBF)** as the primary interchange format. This gu
 
 ## Supported today
 
-Every import creates **new boards** owned by you (in your organization) and opens them; the board you are viewing, and the shared `demo-core` demo board, are never changed. Imports count against your plan's board limit (`402` when it is reached).
+Every import creates **new boards** owned by you (in your organization) and opens them; the board you are viewing, and the shared `demo-core` demo board, are never changed. Imports count against your plan's board limit: when it is reached the API answers `402` with `{ code: "BOARD_LIMIT", tier, limit }` and the editor explains the limit and offers to export the board on screen (OBF/OBZ) or delete a board you no longer need.
 
 ### Open Board Format (`.obf` JSON, `.obz` packages)
 

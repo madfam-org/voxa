@@ -44,8 +44,8 @@ function teamHeaders(options: VoxaClientOptions): HeadersInit {
 }
 
 async function throwApiError(res: Response, fallback: string): Promise<never> {
-  const err = (await res.json().catch(() => ({}))) as { error?: string };
-  throw new VoxaSyncError(err.error ?? `${fallback}: ${res.status}`, res.status);
+  const err = (await res.json().catch(() => ({}))) as { error?: string } & Record<string, unknown>;
+  throw new VoxaSyncError(err.error ?? `${fallback}: ${res.status}`, res.status, err);
 }
 
 export class VoxaClient {

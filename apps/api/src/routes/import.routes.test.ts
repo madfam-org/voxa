@@ -228,7 +228,14 @@ describe('POST /v1/boards/import/:format', () => {
 
     const free = await issuer.bearer({ sub: 'free-user', roles: [] });
     assert.equal((await importFile('obf', SPEC_BOARD, free)).status, 201, 'free plan: first board');
-    assert.equal((await importFile('obf', SPEC_BOARD, free)).status, 402, 'free plan: board limit');
+    const limited = await importFile('obf', SPEC_BOARD, free);
+    assert.equal(limited.status, 402, 'free plan: board limit');
+    assert.deepEqual(await limited.json(), {
+      error: 'Board limit reached for your plan',
+      code: 'BOARD_LIMIT',
+      tier: 'free',
+      limit: 1,
+    });
   });
 
   it('rejects zip-slip, oversized and too-many-entries archives with 400', async () => {

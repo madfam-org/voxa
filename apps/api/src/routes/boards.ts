@@ -224,7 +224,10 @@ boardRoutes.post('/import/:format', importBodyLimit, async (c) => {
     });
   } catch (err) {
     if (err instanceof BoardLimitError) {
-      return c.json({ error: 'Board limit reached for your plan', tier: entitlement.tier }, 402);
+      return c.json(
+        { error: 'Board limit reached for your plan', code: 'BOARD_LIMIT', tier: entitlement.tier, limit: maxBoardCount(entitlement) },
+        402,
+      );
     }
     if (isObfImportError(err)) return c.json({ error: err.message, code: err.code }, 400);
     return c.json({ error: errorMessage(err) }, 400);

@@ -112,3 +112,55 @@ test('importing an OBF file confirms, creates a new board and opens it; the boar
   expect(imported.ownerUserId).toBe(OWNER_ID);
   expect(imported.name).toBe('Spec board');
 });
+
+test('an import over the plan board limit (402) explains the limit and offers export and delete, not a generic error', async ({
+  page,
+  context,
+}) => {
+  const freeUser = 'e2e-import-free';
+  const freeToken = api.token({ sub: freeUser, email: 'free@voxa.test', name: 'E2E Free' });
+  const call = (method: string, route: string, body?: unknown) =>
+    fetch(`${api.url}${route}`, {
+      method,
+      headers: { Authorization: `Bearer ${freeToken}`, 'Content-Type': 'application/json' },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+  expect((await call('PUT', '/v1/consents', { consents: { ai_processing: false, usage_analytics: false } })).status).toBe(200);
+  const freeBoard = 'e2e-import-free-board';
+  expect((await call('POST', '/v1/boards', { id: freeBoard, name: 'Free board', profileId: 'default', templateId: 'core-47' })).status).toBe(201);
+
+  await seedTestSession(context, BASE_URL, { userId: freeUser, role: 'communicator', accessToken: freeToken });
+  await seedLocalState(page);
+  await page.addInitScript(({ key, boardId }) => localStorage.setItem(key, boardId), {
+    key: SELECTED_BOARD_KEY,
+    boardId: freeBoard,
+  });
+  await page.goto('/app');
+  await expect(page.locator('[data-voxa-button-id]')).toHaveCount(47, { timeout: 30_000 });
+  await page.getByLabel(ui('communicator.teamRole')).selectOption('editor');
+
+  const chooser = page.waitForEvent('filechooser');
+  await page.getByRole('button', { name: ui('communicator.importObf') }).click();
+  await (await chooser).setFiles({ name: 'spec-board.obf', mimeType: 'application/json', buffer: SPEC_BOARD });
+  await page.getByRole('dialog').getByRole('button', { name: ui('communicator.importConfirmAction') }).click();
+
+  const notice = page.locator('[data-voxa-import-limit]');
+  await expect(notice).toBeVisible();
+  await expect(notice).toHaveAttribute('role', 'alert');
+  await expect(notice).toContainText('Your plan allows 1 board and you have reached that limit');
+  await expect(notice).toContainText(ui('communicator.importBoardLimitHelp', { exact: false }));
+  await expect(notice.getByRole('button', { name: ui('communicator.exportObf') })).toBeVisible();
+  await expect(notice.getByRole('button', { name: ui('communicator.exportObz') })).toBeVisible();
+  await expect(notice.getByRole('button', { name: ui('communicator.importBoardLimitDelete') })).toBeVisible();
+  // Not the generic failure dialog, not an offline/queued notice.
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.getByText(/could not be completed|queued/i)).toHaveCount(0);
+
+  // The export action works from the notice.
+  const download = page.waitForEvent('download');
+  await notice.getByRole('button', { name: ui('communicator.exportObz') }).click();
+  expect((await download).suggestedFilename()).toBe(`${freeBoard}.obz`);
+
+  const boards = (await (await call('GET', '/v1/boards')).json()) as { boards: Array<{ ownerUserId?: string }> };
+  expect(boards.boards.filter((board) => board.ownerUserId === freeUser)).toHaveLength(1);
+});
