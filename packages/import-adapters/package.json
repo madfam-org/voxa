@@ -14,7 +14,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "node --import tsx --test src/gridset.test.ts src/snap.test.ts src/touchchat.test.ts",
+    "test": "node ../../scripts/run-unit-tests.mjs",
     "clean": "rm -rf dist"
   },
   "dependencies": {

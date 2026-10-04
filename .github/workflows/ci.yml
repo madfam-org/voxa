@@ -49,6 +49,13 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
+      - name: Repository guards (test discovery, licence R86, LLM egress R88, public-repo hygiene)
+        # scripts/guards/check.mjs prints a read-proof and file:line per finding,
+        # never the matched text. The second command unit-tests each matcher
+        # against bad fixtures and its allowlist. See AGENTS.md "Guards".
+        run: |
+          pnpm guards
+          pnpm test:guards
       - run: pnpm turbo typecheck
       - run: pnpm test
         env:
@@ -99,7 +106,13 @@ jobs:
         run: node apps/web/server.js &
         env:
           PORT: 3000
-          HOSTNAME: 127.0.0.1
+          # Same bind as production (apps/web/Dockerfile, k8s). With a specific
+          # address such as 127.0.0.1, Next 15's standalone server hands
+          # middleware a request URL on `localhost`, so next-intl's internal
+          # rewrite of an unprefixed Spanish path (/ -> /es) carries another
+          # origin, is proxied as an external rewrite and redirects back to
+          # itself (ERR_TOO_MANY_REDIRECTS): Spanish pages could not be scanned.
+          HOSTNAME: 0.0.0.0
       - name: Wait for web
         run: npx --yes wait-on http://127.0.0.1:3000/api/health --timeout 120000
       - name: Image optimizer is off (/_next/image -> 404)
