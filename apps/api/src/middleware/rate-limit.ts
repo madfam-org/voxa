@@ -4,14 +4,26 @@ import type { Context, MiddlewareHandler } from 'hono';
 /**
  * Fixed-window request limits, in memory, per API replica.
  *
- * Two limiters run on `/v1/*`:
+ * Browser traffic can reach the API through the web server (the media proxy
+ * `/api/media/:id`, and more routes over time), and then every user arrives
+ * with the SAME client address: the cluster's egress. So no limiter counts
+ * authenticated traffic per address. Four limiters on `/v1/*`:
  *
- * - `ipRateLimit()` runs BEFORE authentication and keys on the client address
- *   (`clientAddress()`): every request counts, including ones that fail with
- *   401. Its default is generous because several people can share one address
- *   (a school or a clinic behind one NAT).
- * - `userRateLimit()` runs AFTER `teamAuth()` and keys on the verified user id,
- *   so a signed-in caller cannot escape it by changing addresses.
+ * | Limiter | Key | Counts | Default (env) |
+ * |---|---|---|---|
+ * | `ipRateLimit()`, before auth | client address | requests WITHOUT `Authorization: Bearer` | 600/min (`RATE_LIMIT_IP_PER_MINUTE`) |
+ * | `authFailureLimit()`, around auth | client address | requests that end in 401; beyond the limit a failing request gets 429 | 60/min (`RATE_LIMIT_AUTH_FAILURES_PER_MINUTE`) |
+ * | `userRateLimit()`, after auth | verified user id | every request except media reads | 300/min (`RATE_LIMIT_PER_MINUTE`) |
+ * | `userRateLimit()`, after auth | verified user id | `GET /v1/media/:id` only | 600/min (`RATE_LIMIT_MEDIA_PER_MINUTE`) |
+ *
+ * A request with a valid token is never refused because of its address, so a
+ * proxy carrying many users' sessions is limited per user, not as one client.
+ * Random-token spraying from one address is bounded by the failure limiter.
+ * The general per-user default allows a fast typist: each selection while
+ * signed in can cost about three requests (two prediction calls and one
+ * activation), and a literacy keyboard reaches roughly 100 selections a minute.
+ * Media reads have their own budget because opening a board loads all of its
+ * pictures at once (47 on the core board) and browsers cache them afterwards.
  *
  * Limits stay per replica: with N replicas a caller can reach at most N times
  * the configured rate. That is acceptable for abuse protection (Cloudflare sits
@@ -35,6 +47,8 @@ interface Bucket {
 export interface RateLimiter {
   /** Counts one hit for `key`; true when the key is over its limit. */
   hit(key: string, now?: number): boolean;
+  /** Hits counted for `key` in its current window (0 when none or expired). */
+  count(key: string, now?: number): number;
   /** Removes expired buckets; returns how many were removed. */
   prune(now?: number): number;
   size(): number;
@@ -87,6 +101,10 @@ export function createRateLimiter(options: {
       bucket.count += 1;
       return bucket.count > options.limit();
     },
+    count(key, now = Date.now()) {
+      const bucket = buckets.get(key);
+      return bucket && now < bucket.resetAt ? bucket.count : 0;
+    },
     prune,
     size: () => buckets.size,
     reset: () => buckets.clear(),
@@ -114,13 +132,19 @@ export function clientAddress(c: Context): string {
 const ipLimiter = createRateLimiter({
   limit: () => positiveIntFromEnv('RATE_LIMIT_IP_PER_MINUTE', 600),
 });
-const userLimiter = createRateLimiter({
-  limit: () => positiveIntFromEnv('RATE_LIMIT_PER_MINUTE', 120),
+const authFailureLimiter = createRateLimiter({
+  limit: () => positiveIntFromEnv('RATE_LIMIT_AUTH_FAILURES_PER_MINUTE', 60),
 });
+const userLimiter = createRateLimiter({
+  limit: () => positiveIntFromEnv('RATE_LIMIT_PER_MINUTE', 300),
+});
+const mediaLimiter = createRateLimiter({
+  limit: () => positiveIntFromEnv('RATE_LIMIT_MEDIA_PER_MINUTE', 600),
+});
+const allLimiters = [ipLimiter, authFailureLimiter, userLimiter, mediaLimiter];
 
 const pruneTimer = setInterval(() => {
-  ipLimiter.prune();
-  userLimiter.prune();
+  for (const limiter of allLimiters) limiter.prune();
 }, PRUNE_INTERVAL_MS);
 pruneTimer.unref();
 
@@ -130,30 +154,79 @@ function tooMany(c: Context) {
   });
 }
 
-/** Per-address limit; runs before authentication. */
+function hasBearer(c: Context): boolean {
+  const authorization = c.req.header('Authorization');
+  return Boolean(authorization?.startsWith('Bearer ') && authorization.length > 'Bearer '.length);
+}
+
+const MEDIA_READ_PATH = /^\/v1\/media\/[^/]+\/?$/;
+
+/**
+ * Per-address limit for requests without credentials; runs before
+ * authentication. Requests carrying a bearer token are limited per verified
+ * user (`userRateLimit`) or, if the token fails, by `authFailureLimit`.
+ */
 export function ipRateLimit(): MiddlewareHandler {
   return async (c, next) => {
-    if (ipLimiter.hit(`ip:${clientAddress(c)}`)) return tooMany(c);
+    if (!hasBearer(c) && ipLimiter.hit(`ip:${clientAddress(c)}`)) return tooMany(c);
     await next();
   };
 }
 
-/** Per-user limit; runs after `teamAuth()`, keyed on the verified user id. */
+/**
+ * Per-address limit on failed authentication; wraps `teamAuth()`. Every 401
+ * counts against the caller's address. Once an address has failed
+ * RATE_LIMIT_AUTH_FAILURES_PER_MINUTE times in the window, further requests
+ * from it that would fail get 429 instead of 401. A request whose token
+ * verifies is never refused here, whatever its address.
+ */
+export function authFailureLimit(): MiddlewareHandler {
+  return async (c, next) => {
+    await next();
+    if (c.res.status !== 401) return;
+    const key = `auth:${clientAddress(c)}`;
+    const limit = positiveIntFromEnv('RATE_LIMIT_AUTH_FAILURES_PER_MINUTE', 60);
+    if (authFailureLimiter.count(key) >= limit) {
+      c.res = tooMany(c);
+      return;
+    }
+    authFailureLimiter.hit(key);
+  };
+}
+
+/**
+ * Per-user limits; run after `teamAuth()`, keyed on the verified user id.
+ * `GET /v1/media/:id` draws on its own budget, everything else on the
+ * general one.
+ */
 export function userRateLimit(): MiddlewareHandler {
   return async (c, next) => {
     const team = c.get('team');
-    if (team?.userId && userLimiter.hit(`user:${team.userId}`)) return tooMany(c);
+    if (team?.userId) {
+      const media = c.req.method === 'GET' && MEDIA_READ_PATH.test(c.req.path);
+      const limiter = media ? mediaLimiter : userLimiter;
+      if (limiter.hit(`${media ? 'media' : 'user'}:${team.userId}`)) return tooMany(c);
+    }
     await next();
   };
 }
 
-/** Test helper: clears both limiters. */
+/** Test helper: clears every limiter. */
 export function resetRateLimitsForTests(): void {
-  ipLimiter.reset();
-  userLimiter.reset();
+  for (const limiter of allLimiters) limiter.reset();
 }
 
-/** Test helper: bucket counts of both limiters. */
-export function rateLimitBucketCountsForTests(): { ip: number; user: number } {
-  return { ip: ipLimiter.size(), user: userLimiter.size() };
+/** Test helper: bucket counts of the limiters. */
+export function rateLimitBucketCountsForTests(): {
+  ip: number;
+  authFailures: number;
+  user: number;
+  media: number;
+} {
+  return {
+    ip: ipLimiter.size(),
+    authFailures: authFailureLimiter.size(),
+    user: userLimiter.size(),
+    media: mediaLimiter.size(),
+  };
 }

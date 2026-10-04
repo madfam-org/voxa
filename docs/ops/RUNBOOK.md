@@ -83,10 +83,10 @@ Symptom: GitHub hook deliveries show `Invalid HTTP Response: 401`; Enclii respon
 
 ### Rate limit spikes (429)
 
-Two limiters answer 429 `{"code":"RATE_LIMITED"}` with `Retry-After: 60`: per client address (`CF-Connecting-IP`, `RATE_LIMIT_IP_PER_MINUTE`, default 600) before authentication, and per signed-in user (`RATE_LIMIT_PER_MINUTE`, default 120) after it. Both are per replica.
+Four limiters answer 429 `{"code":"RATE_LIMITED"}` with `Retry-After: 60`, all per replica: per client address for requests without a bearer token (`RATE_LIMIT_IP_PER_MINUTE`, 600); per client address for failed authentication (`RATE_LIMIT_AUTH_FAILURES_PER_MINUTE`, 60 401s, after which failing requests get 429); per signed-in user (`RATE_LIMIT_PER_MINUTE`, 300); and per signed-in user for media reads (`RATE_LIMIT_MEDIA_PER_MINUTE`, 600). Authenticated requests are never limited per address, because the web server's proxy makes every user share its address.
 
 1. Identify abusive IP or user via ingress logs.
-2. Temporarily lower `RATE_LIMIT_IP_PER_MINUTE` or `RATE_LIMIT_PER_MINUTE` on the API deployment if needed (a clinic or school behind one address shares the address limit).
+2. Temporarily lower the matching variable on the API deployment if needed. Never re-key authenticated traffic by address: behind the web proxy that throttles every user together.
 3. Escalate repeat offenders through MADFAM security channel.
 
 ### Co-editors do not see each other's changes

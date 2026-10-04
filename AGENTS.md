@@ -220,10 +220,18 @@ pnpm build
     `WHERE`) on a request path. Tested in `src/store/pg-board-store.pg.test.ts`
     (a test-only SQL observer in `src/db/client.ts` sees query text, never
     parameters).
-13. **Request limits and media checks.** On `/v1/*`: a per-address limit
-    (`CF-Connecting-IP`, else the socket peer; never `X-Forwarded-For`) runs
-    before `teamAuth`, a per-user limit after it, both in memory per replica
-    with pruned, bounded buckets; body ceilings (`src/middleware/body-limit.ts`:
+13. **Request limits and media checks.** On `/v1/*`, in memory per replica
+    with pruned, bounded buckets (`src/middleware/rate-limit.ts`). The web
+    server proxies browser calls, so every user can arrive from one address:
+    **authenticated traffic is never limited per address.** A per-address
+    limit (`CF-Connecting-IP`, else the socket peer; never `X-Forwarded-For`)
+    counts only requests without a bearer token (`RATE_LIMIT_IP_PER_MINUTE`,
+    600); a per-address failure limit counts 401s and answers 429 past
+    `RATE_LIMIT_AUTH_FAILURES_PER_MINUTE` (60), never to a token that
+    verifies; per verified user, `GET /v1/media/:id` has its own budget
+    (`RATE_LIMIT_MEDIA_PER_MINUTE`, 600) and everything else shares
+    `RATE_LIMIT_PER_MINUTE` (300: a signed-in selection costs about three
+    requests, two predictions and one activation). Body ceilings (`src/middleware/body-limit.ts`:
     1 MB JSON, media uploads at their maximum plus 1 MB, an outer 51 MB
     ceiling on `POST /v1/boards/import/:format`, whose own 30 MB limit answers
     400 `ARCHIVE_TOO_LARGE`) answer 413 `PAYLOAD_TOO_LARGE` without buffering past the limit. Uploads
@@ -231,7 +239,9 @@ pnpm build
     415 `MEDIA_TYPE_MISMATCH`), count against `MEDIA_QUOTA_BYTES_PER_USER`
     (default 500 MB, 413 `MEDIA_QUOTA_EXCEEDED`, summed from `size_bytes`
     under a per-user advisory lock), and are served with `nosniff` and
-    `Content-Disposition: inline`. Tested in `src/middleware/rate-limit.test.ts`,
+    `Content-Disposition: inline`. Tested in `src/middleware/rate-limit.test.ts`
+    (5 users × 150 requests from one address: no 429; the 61st bad token from
+    one address: 429; 300 media reads by one user: no 429),
     `src/middleware/body-limit.test.ts` and
     `src/routes/media-hardening.routes.test.ts`.
 14. **Co-editing across replicas needs Redis, and degrades loudly.** With

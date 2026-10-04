@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
-import { afterEach, beforeEach, describe, it } from 'node:test';
+import { after, afterEach, before, beforeEach, describe, it } from 'node:test';
 import app from '../app.js';
 import { createFileBoardStore } from '../store/file-board-store.js';
 import { useTestStore } from '../store/index.js';
 import { devHeaders } from '../test-support/boards.js';
+import { startTestTokenIssuer, type TestTokenIssuer } from '../test-support/janua-tokens.js';
 import {
   createRateLimiter,
   rateLimitBucketCountsForTests,
@@ -14,8 +15,18 @@ describe('rate limits (A-016)', () => {
   const saved = {
     ip: process.env.RATE_LIMIT_IP_PER_MINUTE,
     user: process.env.RATE_LIMIT_PER_MINUTE,
+    media: process.env.RATE_LIMIT_MEDIA_PER_MINUTE,
     devAuth: process.env.VOXA_DEV_AUTH,
   };
+  let issuer: TestTokenIssuer;
+
+  before(async () => {
+    issuer = await startTestTokenIssuer();
+  });
+
+  after(async () => {
+    await issuer.close();
+  });
 
   beforeEach(() => {
     useTestStore(createFileBoardStore());
@@ -26,6 +37,7 @@ describe('rate limits (A-016)', () => {
     for (const [name, value] of [
       ['RATE_LIMIT_IP_PER_MINUTE', saved.ip],
       ['RATE_LIMIT_PER_MINUTE', saved.user],
+      ['RATE_LIMIT_MEDIA_PER_MINUTE', saved.media],
       ['VOXA_DEV_AUTH', saved.devAuth],
     ] as const) {
       if (value === undefined) delete process.env[name];
@@ -98,6 +110,112 @@ describe('rate limits (A-016)', () => {
   });
 
   it('the app limiters start empty in this process', () => {
-    assert.deepEqual(rateLimitBucketCountsForTests(), { ip: 0, user: 0 });
+    assert.deepEqual(rateLimitBucketCountsForTests(), {
+      ip: 0,
+      authFailures: 0,
+      user: 0,
+      media: 0,
+    });
+  });
+
+  // The web server proxies browser calls to the API, so every user arrives
+  // from the same address. Defaults only: no limit is raised for these tests.
+  const PROXY = '198.51.100.200';
+
+  it('5 users × 150 authenticated requests from one address (a proxy) get no 429', async () => {
+    const statuses = new Map<number, number>();
+    for (let user = 0; user < 5; user += 1) {
+      const headers = {
+        ...(await issuer.bearer({ sub: `proxied-${user}` })),
+        'CF-Connecting-IP': PROXY,
+      };
+      for (let i = 0; i < 150; i += 1) {
+        const res = await app.request('/v1/boards', { headers });
+        statuses.set(res.status, (statuses.get(res.status) ?? 0) + 1);
+      }
+    }
+    assert.deepEqual([...statuses], [[200, 750]]);
+    // Nothing was counted against the shared address.
+    assert.equal(rateLimitBucketCountsForTests().ip, 0);
+  });
+
+  it('from one address the 61st bad-token request gets 429; a valid token still gets 200', async () => {
+    const statuses: number[] = [];
+    for (let i = 0; i < 61; i += 1) {
+      const res = await app.request('/v1/boards', {
+        headers: { Authorization: `Bearer not-a-jwt-${i}`, 'CF-Connecting-IP': PROXY },
+      });
+      statuses.push(res.status);
+    }
+    assert.deepEqual(statuses.slice(0, 60), Array(60).fill(401));
+    assert.equal(statuses[60], 429);
+    // A session that verifies is never refused because of its address.
+    const valid = await app.request('/v1/boards', {
+      headers: {
+        ...(await issuer.bearer({ sub: 'valid-behind-proxy' })),
+        'CF-Connecting-IP': PROXY,
+      },
+    });
+    assert.equal(valid.status, 200);
+    // Another address is unaffected.
+    const elsewhere = await app.request('/v1/boards', {
+      headers: { Authorization: 'Bearer nope', 'CF-Connecting-IP': '198.51.100.201' },
+    });
+    assert.equal(elsewhere.status, 401);
+  });
+
+  it('one user reading 300 media items within the window gets no 429, and keeps the general budget', async () => {
+    const auth = await issuer.bearer({ sub: 'media-reader' });
+    const headers = { ...auth, 'CF-Connecting-IP': PROXY };
+    const board = await app.request('/v1/boards', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        id: 'media-reader-board',
+        name: 'Pictures',
+        profileId: 'default',
+        version: 1,
+        updatedAt: new Date().toISOString(),
+        grid: { rows: 1, columns: 1, buttons: [] },
+      }),
+    });
+    assert.equal(board.status, 201);
+    const form = new FormData();
+    form.set('boardId', 'media-reader-board');
+    form.set(
+      'file',
+      new File([new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0, 0])], 'p.png', { type: 'image/png' }),
+    );
+    const Authorization = auth.Authorization ?? '';
+    const upload = await app.request('/v1/media', {
+      method: 'POST',
+      headers: { Authorization, 'CF-Connecting-IP': PROXY },
+      body: form,
+    });
+    assert.equal(upload.status, 201);
+    const { id } = (await upload.json()) as { id: string };
+
+    const statuses = new Map<number, number>();
+    for (let i = 0; i < 300; i += 1) {
+      const res = await app.request(`/v1/media/${id}`, { headers });
+      statuses.set(res.status, (statuses.get(res.status) ?? 0) + 1);
+    }
+    assert.deepEqual([...statuses], [[200, 300]]);
+    assert.equal((await app.request('/v1/boards', { headers })).status, 200);
+  });
+
+  it('media reads have their own budget, separate from the general one', async () => {
+    process.env.RATE_LIMIT_MEDIA_PER_MINUTE = '3';
+    process.env.RATE_LIMIT_PER_MINUTE = '3';
+    const headers = await issuer.bearer({ sub: 'budget-user' });
+    const media = [];
+    for (let i = 0; i < 4; i += 1)
+      media.push((await app.request('/v1/media/does-not-exist', { headers })).status);
+    // 404 three times (the read was allowed), then the media budget is spent.
+    assert.deepEqual(media, [404, 404, 404, 429]);
+    const general = [];
+    for (let i = 0; i < 4; i += 1)
+      general.push((await app.request('/v1/boards', { headers })).status);
+    assert.deepEqual(general, [200, 200, 200, 429]);
   });
 });

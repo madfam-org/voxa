@@ -2,7 +2,7 @@ import { createNodeWebSocket } from '@hono/node-ws';
 import { Hono } from 'hono';
 import { corsMiddleware } from './middleware/cors.js';
 import { requestBodyLimits } from './middleware/body-limit.js';
-import { ipRateLimit, userRateLimit } from './middleware/rate-limit.js';
+import { authFailureLimit, ipRateLimit, userRateLimit } from './middleware/rate-limit.js';
 import { API_ROBOTS_TXT, securityHeaders } from './middleware/security-headers.js';
 import { teamAuth } from './middleware/team-auth.js';
 import { aiRoutes } from './routes/ai.js';
@@ -40,11 +40,14 @@ app.onError((err, c) => {
 
 app.use('*', securityHeaders());
 app.use('*', corsMiddleware());
-// Order matters: the address limit counts every request (also ones that fail
-// authentication), the body ceiling refuses oversized bodies before anything
-// reads them, and the user limit keys on the identity teamAuth verified.
+// Order matters: the address limit counts requests without credentials (a
+// proxy carrying many users' tokens shares one address), the body ceiling
+// refuses oversized bodies before anything reads them, the failure limit
+// counts 401s per address around teamAuth, and the user limits key on the
+// identity teamAuth verified. See src/middleware/rate-limit.ts.
 app.use('/v1/*', ipRateLimit());
 app.use('/v1/*', requestBodyLimits());
+app.use('/v1/*', authFailureLimit());
 app.use('/v1/*', teamAuth());
 app.use('/v1/*', userRateLimit());
 
