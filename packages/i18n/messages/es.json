@@ -1,7 +1,7 @@
 {
   "metadata": {
     "title": "Voxa — Plataforma de comunicación aumentativa",
-    "description": "Comunicación aumentativa y alternativa (CAA) moderna para familias e instituciones. Demo en vivo, temas CVI, predicciones con IA y sincronización en la nube."
+    "description": "Comunicación aumentativa y alternativa (CAA) moderna para familias e instituciones. Demo en vivo, temas CVI, sugerencias de palabras y sincronización en la nube."
   },
   "common": {
     "brand": "Voxa",
@@ -35,7 +35,7 @@
   },
   "consent": {
     "ariaLabel": "Opciones de privacidad",
-    "body": "Voxa puede usar frases recientes para mejorar predicciones con IA. Es opcional y permanece en la infraestructura MADFAM. Consulta nuestra",
+    "body": "Voxa puede usar tus frases recientes para ofrecer sugerencias de palabras. Es opcional y permanece en la infraestructura MADFAM. Consulta nuestra",
     "privacyLink": "Política de privacidad",
     "allow": "Permitir predicciones",
     "essential": "Solo esencial"
@@ -59,7 +59,7 @@
   "landing": {
     "heroEyebrow": "Comunicación aumentativa y alternativa",
     "heroTitle": "Toda persona merece una voz que acompañe su vida.",
-    "heroBody": "Las apps de CAA convierten toques, interruptores o mirada en lenguaje hablado — en casa, en terapia y en clase. Voxa es un tablero moderno con planificación motora, temas accesibles para CVI, predicciones con IA, escaneo por interruptor, agendas visuales y sincronización segura — diseñado para que las familias empiecen gratis y las instituciones escalen con confianza.",
+    "heroBody": "Las apps de CAA convierten toques, interruptores o mirada en lenguaje hablado — en casa, en terapia y en clase. Voxa es un tablero moderno con planificación motora, temas accesibles para CVI, sugerencias de palabras, escaneo por interruptor, agendas visuales y sincronización segura — diseñado para que las familias empiecen gratis y las instituciones escalen con confianza.",
     "tryDemo": "Probar demo en vivo",
     "signInFree": "Entrar gratis (padres)",
     "whyChangingTitle": "Por qué la CAA cambia vidas",
@@ -69,7 +69,7 @@
     "whyChangingList4": "Ofrece a cuidadores y clínicos una herramienta compartida y basada en evidencia",
     "whyChangingNote": "La investigación muestra que el acceso temprano y robusto a la CAA mejora los resultados comunicativos — no retrasa el habla.",
     "humanRightTitle": "Comunicar es un derecho humano",
-    "humanRightBody": "La CAA digital sustituye tableros de papel con voz, vocabulario que crece con la persona y métodos de acceso acordes a su capacidad física. Voxa se centra en lo que familias y profesionales piden: planes motores estables, diseños visualmente accesibles y herramientas que funcionan sin red.",
+    "humanRightBody": "La CAA digital sustituye tableros de papel con voz, vocabulario que crece con la persona y métodos de acceso acordes a su capacidad física. Voxa se centra en lo que familias y profesionales piden: planes motores estables y diseños visualmente accesibles.",
     "demoCtaTitle": "Demo interactiva en cuatro escenas",
     "demoCtaBody": "Explora vocabulario núcleo con pictogramas, teclado de alfabetización, agendas visuales y modos de acceso (escaneo e interruptor y guarda táctil) — sin registro.",
     "openDemo": "Abrir demo interactiva →",
@@ -81,30 +81,26 @@
     "priceIvaNote": "Precios con IVA (16%) incluido",
     "priceFreeForever": "Gratis para siempre — sin IVA",
     "priceAnnualOption": "o {annual}/año",
-    "priceClinicDetail": "{base}/mes org + {seat}/asiento (mín. {minSeats})",
+    "priceClinicDetail": "{base} org + {seat}/asiento antes de IVA (mín. {minSeats})",
     "parentsLabel": "PADRES Y CUIDADORES",
     "free": "Gratis",
     "parentsBody": "Gratis para siempre para familias que apoyan a un comunicador en casa.",
     "parentsLi1": "Sincronización y copia en la nube",
     "parentsLi2": "Importar/exportar OBF",
     "parentsLi3": "Temas CVI y métodos de acceso",
-    "parentsLi4": "Predicciones IA iniciales",
+    "parentsLi4": "Sugerencias básicas de palabras",
     "createAccount": "Crear cuenta gratis",
     "familyLabel": "FAMILIA EXTENDIDA",
     "family": "Familia",
-    "familyBody": "Más tableros y edición compartida para hermanos, abuelos y copadres.",
+    "familyBody": "Más tableros para distintos lugares y rutinas.",
     "familyLi1": "Varios tableros y perfiles",
-    "familyLi2": "Equipo de cuidado pequeño (editores)",
-    "familyLi3": "Sincronización prioritaria",
-    "signInUpgrade": "Entrar para mejorar plan",
+    "everythingFree": "Todo lo del plan gratuito",
+    "bookCall": "Agenda una llamada",
     "instLabel": "ESCUELAS, CLÍNICAS Y DISTRITOS",
     "institutional": "Institucional",
-    "instBody": "Planes de pago para organizaciones que necesitan cumplimiento, roles e información agregada de uso por comunicador — sin exponer mensajes privados.",
-    "instLi1": "Tableros ilimitados y roles de equipo",
-    "instLi2": "IA completa y flujos GLP",
-    "instLi3": "Paneles de uso por usuario final",
-    "instLi4": "Onboarding dedicado y SLA",
-    "contactSales": "Contactar ventas",
+    "instBody": "Plan de pago para escuelas, clínicas y distritos que necesitan tableros ilimitados. Agenda una llamada para planear el despliegue.",
+    "instLi1": "Tableros ilimitados",
+    "instLi2": "Informe de uso por tablero",
     "footerCtaTitle": "Empieza donde estés. Crece cuando lo necesites.",
     "footerCtaBody": "Prueba la demo como visitante, crea una cuenta gratuita en minutos o háblanos para desplegar Voxa en tu organización.",
     "tryDemoShort": "Probar demo",
@@ -116,19 +112,19 @@
       },
       "cvi": {
         "title": "CVI y modos de acceso",
-        "body": "Temas de alto contraste, escaneo por interruptor y permanencia ocular adaptan el mismo tablero a CVI y distintos accesos físicos."
+        "body": "Temas de alto contraste, escaneo por interruptor y selección por permanencia del puntero adaptan el mismo tablero a CVI y distintos accesos físicos."
       },
       "ai": {
-        "title": "IA con consentimiento",
-        "body": "Predicciones opcionales aceleran mensajes; las familias controlan el consentimiento de IA y las políticas institucionales pueden aplicarse de forma centralizada."
+        "title": "Sugerencias con consentimiento",
+        "body": "Sugerencias opcionales de palabras aceleran los mensajes; las familias deciden si se activan."
       },
       "obf": {
         "title": "Open Board Format",
         "body": "Importa y exporta OBF para colaborar con logopedas y migrar desde otras apps sin dependencia."
       },
       "offline": {
-        "title": "Listo sin conexión",
-        "body": "Los tableros se guardan en caché local para comunicar con Wi‑Fi inestable o en viajes."
+        "title": "Tolera cortes de red",
+        "body": "Con el tablero ya abierto puedes seguir usándolo si se cae el Wi‑Fi; los cambios se sincronizan al volver la conexión. Abrir la app sin conexión aún no está disponible."
       },
       "janua": {
         "title": "Identidad Janua",
@@ -147,7 +143,7 @@
     "guardOff": "Guarda táctil: desactivada",
     "switchHint": "Flecha derecha avanza · Espacio selecciona",
     "readyTitle": "¿Listo para la plataforma completa?",
-    "readyBody": "Inicia sesión para sincronización en la nube, editor para logopedas, búsqueda ARASAAC con rasgos de diversidad, voz grabada, predicciones IA e importación/exportación OBF.",
+    "readyBody": "Inicia sesión para sincronización en la nube, editor para logopedas, búsqueda ARASAAC con rasgos de diversidad, voz grabada, sugerencias de palabras e importación/exportación OBF.",
     "startFree": "Empezar gratis — padres",
     "schoolsClinics": "Escuelas y clínicas",
     "classicBannerTitle": "Prueba Voxa como una app CAA clásica",
@@ -165,7 +161,7 @@
       },
       "literacy": {
         "name": "Teclado de alfabetización",
-        "description": "Escritura QWERTY para usuarios alfabetizados con sugerencias IA en la app completa"
+        "description": "Escritura QWERTY para usuarios alfabetizados con sugerencias de palabras en la app completa"
       },
       "schedule": {
         "name": "Agenda visual",
@@ -190,8 +186,8 @@
         "body": "Escaneo con señales auditivas, guarda táctil, simulación de permanencia ocular y activación al soltar — configurables por comunicador en Ajustes."
       },
       "institution": {
-        "title": "Información de uso por comunicador",
-        "body": "Los planes institucionales añaden roles, tableros ilimitados, IA completa e informes agregados — engagement por alumno o paciente protegiendo la privacidad."
+        "title": "Planes para escuelas y clínicas",
+        "body": "El plan institucional añade tableros ilimitados. Agenda una llamada para planear el despliegue en tu organización."
       }
     },
     "suggestions": {
@@ -226,7 +222,9 @@
     "auditLog": "Auditoría",
     "newBoard": "Nuevo tablero",
     "importObf": "Importar OBF",
-    "exportObf": "Exportar OBF"
+    "exportObf": "Exportar OBF",
+    "suggestionsLabel": "Sugerencias básicas:",
+    "suggestionsAria": "Sugerencias básicas de palabras"
   },
   "cviThemes": {
     "default": "Predeterminado",
@@ -241,7 +239,7 @@
     "accessMethod": "Método de acceso",
     "accessTouch": "Táctil",
     "accessSwitch": "Escaneo por interruptor",
-    "accessEye": "Seguimiento ocular (permanencia)",
+    "accessEye": "Selección por permanencia",
     "scanSpeed": "Velocidad de escaneo ({ms} ms)",
     "scanOrder": "Orden de escaneo",
     "scanRow": "Fila por fila",
@@ -274,7 +272,7 @@
     "dwellTime": "Tiempo de permanencia ({ms} ms)",
     "gazeSource": "Fuente de mirada",
     "gazePointer": "Hover del puntero (simulación)",
-    "gazeTobii": "Puente Tobii (eventos voxa:gaze)",
+    "gazeTobii": "Eventos externos voxa:gaze (experimental)",
     "gazeHintTobii": "Lab: window.__voxaInjectGaze(x, y) o dispatch voxa:gaze CustomEvent.",
     "gazeHintPointer": "Mantén el puntero sobre un botón para activar (simula permanencia ocular).",
     "symbolDiversity": "Diversidad de pictogramas (tono de piel predeterminado)",
@@ -344,7 +342,7 @@
         },
         {
           "title": "Seguridad",
-          "content": "Usamos TLS en tránsito, controles de acceso y prácticas de seguridad de la plataforma MADFAM. Ningún método es 100% seguro; reporta inquietudes a security@madfam.io."
+          "content": "Usamos TLS en tránsito, controles de acceso y prácticas de seguridad de la plataforma MADFAM. Ningún método es 100% seguro; reporta inquietudes a hola@madfam.io."
         },
         {
           "title": "Cambios",
@@ -414,11 +412,11 @@
         },
         {
           "title": "Enfoque de evaluación",
-          "content": "Combinamos comprobaciones automatizadas, revisión manual de logopedas antes de lanzamientos y pruebas con interruptores y seguimiento ocular cuando está disponible."
+          "content": "Combinamos comprobaciones automatizadas y pruebas con interruptores y seguimiento ocular cuando está disponible."
         },
         {
           "title": "Comentarios",
-          "content": "Escribe a accessibility@madfam.io con la página o función, tecnología de asistencia usada y pasos para reproducir barreras. Respondemos en un plazo de cinco días hábiles."
+          "content": "Escribe a hola@madfam.io con la página o función, tecnología de asistencia usada y pasos para reproducir barreras. Respondemos en un plazo de cinco días hábiles."
         }
       ]
     }
@@ -436,7 +434,7 @@
     "installApp": "Instalar app",
     "ariaLabel": "Instalar Voxa",
     "title": "Instalar Voxa",
-    "body": "Añade el comunicador a tu pantalla de inicio para acceso a pantalla completa y sin conexión — sin tienda de apps.",
+    "body": "Añade el comunicador a tu pantalla de inicio para acceso a pantalla completa — sin tienda de apps.",
     "install": "Instalar",
     "notNow": "Ahora no"
   },
@@ -444,7 +442,7 @@
     "institutionEyebrow": "Escuelas y clínicas",
     "parentEyebrow": "Gratis para padres",
     "featureEyebrow": "Desbloquea con Voxa",
-    "requestDemo": "Solicitar demo institucional",
+    "requestDemo": "Agenda una llamada",
     "createAccount": "Crear cuenta gratuita",
     "representInstitution": "Represento una escuela o clínica",
     "keepExploring": "Seguir explorando la demo"

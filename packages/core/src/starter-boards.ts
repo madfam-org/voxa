@@ -181,7 +181,7 @@ export function listStarterTemplates(): StarterTemplateMeta[] {
     {
       id: 'literacy-keyboard',
       name: 'Literacy Keyboard',
-      description: 'QWERTY text keyboard for literate users with AI word suggestions',
+      description: 'QWERTY text keyboard for literate users with word suggestions',
       rows: literacy.grid.rows,
       columns: literacy.grid.columns,
       wordCount: literacy.grid.buttons.length,

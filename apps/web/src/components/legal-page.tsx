@@ -96,8 +96,8 @@ export function LegalPage({
         <hr style={{ borderColor: neutral.border, margin: '32px 0' }} />
         <p style={{ color: neutral.muted, fontSize: '0.875rem' }}>
           {questionsLabel}{' '}
-          <a href="mailto:legal@madfam.io" style={linkStyle}>
-            legal@madfam.io
+          <a href="mailto:hola@madfam.io" style={linkStyle}>
+            hola@madfam.io
           </a>
         </p>
       </article>

@@ -2,11 +2,11 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import {
-  buildCheckoutUrl,
   clinicListMonthly,
   clinicListMonthlyGross,
   formatMxn,
   formatMxnGross,
+  DISCOVERY_CALL_URL,
   PRICING,
   withMxnIva,
 } from './pricing';
@@ -41,15 +41,47 @@ describe('pricing', () => {
     assert.equal(clinicListMonthlyGross(), 2954);
   });
 
-  it('builds Dhanam checkout URL with product slug', () => {
-    const url = buildCheckoutUrl({
-      plan: 'voxa_family',
-      userId: '00000000-0000-4000-8000-000000000001',
-      returnUrl: 'https://voxa.madfam.io/app',
-    });
-    assert.match(url, /^https:\/\/api\.dhan\.am\/billing\/checkout\?/);
-    assert.match(url, /plan=voxa_family/);
-    assert.match(url, /product=voxa/);
+  // IVA-inclusive ceil rule (MXN): gross = ceil(net × 1.16) on the whole
+  // net total. Expected values are written out, not recomputed, so a change
+  // to the rule or to the list prices has to change this table too.
+  it('institutional totals for 3–10 seats follow the ceil rule on the whole total', () => {
+    // [seats, net, gross]
+    const expected: Array<[number, number, number]> = [
+      [3, 2546, 2954],
+      [4, 2895, 3359],
+      [5, 3244, 3764],
+      [6, 3593, 4168],
+      [7, 3942, 4573],
+      [8, 4291, 4978],
+      [9, 4640, 5383],
+      [10, 4989, 5788],
+    ];
+    assert.deepEqual(
+      expected.map(([seats]) => seats),
+      [3, 4, 5, 6, 7, 8, 9, 10],
+    );
+    for (const [seats, net, gross] of expected) {
+      assert.equal(clinicListMonthly(seats), net, `net @ ${seats} seats`);
+      assert.equal(clinicListMonthlyGross(seats), gross, `gross @ ${seats} seats`);
+      // Integer form of the rule: smallest whole peso >= net × 116 / 100.
+      assert.equal(gross, Math.ceil((net * 116) / 100));
+    }
+    // Adding separately ceiled parts (1,739 + 405 × seats) overstates 6+ seats.
+    assert.notEqual(clinicListMonthlyGross(6), withMxnIva(1499) + withMxnIva(349) * 6);
+  });
+
+  it('rejects seat counts below the minimum', () => {
+    assert.throws(() => clinicListMonthly(2), RangeError);
+    assert.throws(() => clinicListMonthlyGross(3.5), RangeError);
+  });
+
+  it('ceil never tips an exact peso up', () => {
+    assert.equal(withMxnIva(2500), 2900);
+    assert.equal(withMxnIva(25), 29);
+  });
+
+  it('paid-plan calls to action go to the discovery call (no checkout yet)', () => {
+    assert.equal(DISCOVERY_CALL_URL, 'https://kalya.app/madfam');
   });
 
   it('anchors family tier at Tulana recommendation (net catalog)', () => {

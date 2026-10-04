@@ -4,7 +4,7 @@ import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { SiteFooter, SiteNav } from '@/components/site-chrome';
 import { PwaInstallBanner } from '@/components/pwa-install-banner';
-import { formatMxnGross, PRICING, clinicListMonthly } from '@/lib/pricing';
+import { DISCOVERY_CALL_URL, formatMxn, formatMxnGross, PRICING, clinicListMonthlyGross } from '@/lib/pricing';
 import { brand, neutral, status, surface } from '@/lib/tokens';
 
 const section: React.CSSProperties = {
@@ -26,7 +26,7 @@ export function LandingPage(): React.ReactNode {
   const t = useTranslations('landing');
   const familyMonthly = formatMxnGross(PRICING.family.monthly);
   const familyAnnual = formatMxnGross(PRICING.family.annual);
-  const clinicFrom = formatMxnGross(clinicListMonthly());
+  const clinicFrom = formatMxn(clinicListMonthlyGross());
 
   return (
     <div style={{ minHeight: '100dvh', background: surface.base, color: neutral.text }}>
@@ -190,12 +190,12 @@ export function LandingPage(): React.ReactNode {
               <p style={{ margin: '0 0 16px', color: neutral.muted, fontSize: '0.9375rem' }}>{t('familyBody')}</p>
               <ul style={{ margin: '0 0 20px', paddingLeft: 18, color: neutral.textSecondary, lineHeight: 1.7, fontSize: '0.9375rem' }}>
                 <li>{t('familyLi1')}</li>
-                <li>{t('familyLi2')}</li>
-                <li>{t('familyLi3')}</li>
+                <li>{t('everythingFree')}</li>
               </ul>
-              <Link href="/auth/signin?redirect_to=%2Fapp%3Fupgrade%3Dfamily" style={secondaryCta}>
-                {t('signInUpgrade')}
-              </Link>
+              {/* No checkout exists yet: paid plans route to a discovery call. */}
+              <a href={DISCOVERY_CALL_URL} style={secondaryCta} rel="noopener">
+                {t('bookCall')}
+              </a>
             </div>
             <div id="institutions" style={{ ...card, borderColor: status.premiumBorder }}>
               <p style={{ margin: '0 0 4px', color: status.warning, fontWeight: 700, fontSize: '0.8125rem' }}>
@@ -208,8 +208,9 @@ export function LandingPage(): React.ReactNode {
               </p>
               <p style={{ margin: '0 0 16px', color: neutral.muted, fontSize: '0.8125rem' }}>
                 {t('priceClinicDetail', {
-                  base: formatMxnGross(PRICING.clinic.baseMonthly),
-                  seat: formatMxnGross(PRICING.clinic.seatMonthly),
+                  // Net parts: IVA is applied to the whole total, then ceiled.
+                  base: formatMxn(PRICING.clinic.baseMonthly),
+                  seat: formatMxn(PRICING.clinic.seatMonthly),
                   minSeats: PRICING.clinic.minSeats,
                 })}
                 {' · '}
@@ -219,14 +220,14 @@ export function LandingPage(): React.ReactNode {
               <ul style={{ margin: '0 0 20px', paddingLeft: 18, color: neutral.textSecondary, lineHeight: 1.7, fontSize: '0.9375rem' }}>
                 <li>{t('instLi1')}</li>
                 <li>{t('instLi2')}</li>
-                <li>{t('instLi3')}</li>
-                <li>{t('instLi4')}</li>
+                <li>{t('everythingFree')}</li>
               </ul>
               <a
-                href="mailto:hello@madfam.io?subject=Voxa%20institutional%20plan"
+                href={DISCOVERY_CALL_URL}
+                rel="noopener"
                 style={{ ...secondaryCta, borderColor: status.premiumBorder, color: status.premium }}
               >
-                {t('contactSales')}
+                {t('bookCall')}
               </a>
             </div>
           </div>

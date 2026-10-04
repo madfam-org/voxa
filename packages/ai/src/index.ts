@@ -69,8 +69,12 @@ export interface AiService {
   synthesizeSpeech(req: SpeakRequest): Promise<ArrayBuffer>;
 }
 
-/** Context-aware stub until cloud LLM / PictoBERT backends are wired */
-export const stubAiService: AiService = {
+/**
+ * Local, rule-based predictor. It runs in-process and makes no network
+ * request: suggestions come from the board's own vocabulary and a small
+ * continuation table. No third-party model is called.
+ */
+export const localAiService: AiService = {
   async predictText(req) {
     return buildTextPredictions(req.partialText, req.maxSuggestions ?? 3);
   },
@@ -94,5 +98,14 @@ export const stubAiService: AiService = {
   },
 };
 
+/** Where predictions come from. Only the local predictor exists today. */
+export type PredictionSource = 'local';
+
+export const PREDICTION_SOURCE: PredictionSource = 'local';
+
+/** Returns the prediction service. Always the local predictor. */
+export function createAiService(): AiService {
+  return localAiService;
+}
+
 export { buildSymbolPredictions, buildTextPredictions } from './predict.js';
-export { createAiService } from './llm.js';

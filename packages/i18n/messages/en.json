@@ -1,7 +1,7 @@
 {
   "metadata": {
     "title": "Voxa — AAC Communication Platform",
-    "description": "Modern augmentative and alternative communication (AAC) for families and institutions. Live demo, CVI themes, AI predictions, and cloud sync."
+    "description": "Modern augmentative and alternative communication (AAC) for families and institutions. Live demo, CVI themes, word suggestions, and cloud sync."
   },
   "common": {
     "brand": "Voxa",
@@ -35,7 +35,7 @@
   },
   "consent": {
     "ariaLabel": "Privacy choices",
-    "body": "Voxa can use recent utterances to improve AI predictions. This is optional and stays on MADFAM infrastructure. See our",
+    "body": "Voxa can use recent utterances to offer word suggestions. This is optional and stays on MADFAM infrastructure. See our",
     "privacyLink": "Privacy Policy",
     "allow": "Allow predictions",
     "essential": "Essential only"
@@ -59,7 +59,7 @@
   "landing": {
     "heroEyebrow": "Augmentative & alternative communication",
     "heroTitle": "Every person deserves a voice that keeps up with their life.",
-    "heroBody": "AAC apps turn taps, switches, or gaze into spoken language — at home, in therapy, and in class. Voxa is a modern communication board with motor planning, CVI-friendly themes, AI-assisted predictions, switch scanning, visual schedules, and secure cloud sync — designed so families start free and institutions scale with confidence.",
+    "heroBody": "AAC apps turn taps, switches, or gaze into spoken language — at home, in therapy, and in class. Voxa is a modern communication board with motor planning, CVI-friendly themes, word suggestions, switch scanning, visual schedules, and secure cloud sync — designed so families start free and institutions scale with confidence.",
     "tryDemo": "Try the live demo",
     "signInFree": "Sign in free (parents)",
     "whyChangingTitle": "Why AAC is life-changing",
@@ -69,7 +69,7 @@
     "whyChangingList4": "Gives caregivers and clinicians a shared, evidence-aligned tool",
     "whyChangingNote": "Research consistently shows early, robust AAC access improves communication outcomes — not delays speech.",
     "humanRightTitle": "Communication is a human right",
-    "humanRightBody": "Digital AAC replaces paper boards with speech output, vocabulary that grows with the user, and access methods matched to physical ability. Voxa focuses on what practitioners and families ask for most: stable motor plans, visually accessible layouts, and tools that work offline when the network does not.",
+    "humanRightBody": "Digital AAC replaces paper boards with speech output, vocabulary that grows with the user, and access methods matched to physical ability. Voxa focuses on what practitioners and families ask for most: stable motor plans and visually accessible layouts.",
     "demoCtaTitle": "Four-scene interactive demo",
     "demoCtaBody": "Explore core vocabulary with symbols, literacy keyboard, visual schedules, and access modes (switch scan + touch guard) — no signup required.",
     "openDemo": "Open interactive demo →",
@@ -81,30 +81,26 @@
     "priceIvaNote": "Prices include 16% IVA",
     "priceFreeForever": "Free forever — no tax",
     "priceAnnualOption": "or {annual}/yr",
-    "priceClinicDetail": "{base}/mo org + {seat}/seat (min. {minSeats})",
+    "priceClinicDetail": "{base}/mo org + {seat}/seat before IVA (min. {minSeats})",
     "parentsLabel": "PARENTS & CAREGIVERS",
     "free": "Free",
     "parentsBody": "Forever free for individual families supporting one communicator at home.",
     "parentsLi1": "Cloud sync & backup",
     "parentsLi2": "OBF import/export",
     "parentsLi3": "CVI themes & access methods",
-    "parentsLi4": "Starter AI predictions",
+    "parentsLi4": "Basic word suggestions",
     "createAccount": "Create free account",
     "familyLabel": "EXTENDED FAMILY",
     "family": "Family",
-    "familyBody": "More boards and shared editing for siblings, grandparents, and co-parents.",
+    "familyBody": "More boards for different places and routines.",
     "familyLi1": "Multiple boards & profiles",
-    "familyLi2": "Small care team (editors)",
-    "familyLi3": "Priority sync",
-    "signInUpgrade": "Sign in to upgrade",
+    "everythingFree": "Everything in the free plan",
+    "bookCall": "Book a call",
     "instLabel": "SCHOOLS, CLINICS & DISTRICTS",
     "institutional": "Institutional",
-    "instBody": "Paid plans for organizations that need compliance, roles, and aggregate usage insight by communicator — without exposing private message content.",
-    "instLi1": "Unlimited boards & team roles",
-    "instLi2": "Full AI & GLP workflows",
-    "instLi3": "Usage dashboards by final user",
-    "instLi4": "Dedicated onboarding & SLA",
-    "contactSales": "Contact sales",
+    "instBody": "Paid plan for schools, clinics, and districts that need unlimited boards. Book a call to plan the rollout.",
+    "instLi1": "Unlimited boards",
+    "instLi2": "Usage report per board",
     "footerCtaTitle": "Start where you are. Grow when you need to.",
     "footerCtaBody": "Try the demo as a visitor, create a free parent account in minutes, or talk with us about rolling Voxa out across your organization.",
     "tryDemoShort": "Try demo",
@@ -116,19 +112,19 @@
       },
       "cvi": {
         "title": "CVI & access modes",
-        "body": "High-contrast themes, switch scanning, and eye-dwell support mean the same board adapts to cortical visual impairment and different physical access."
+        "body": "High-contrast themes, switch scanning, and pointer dwell selection mean the same board adapts to cortical visual impairment and different physical access."
       },
       "ai": {
-        "title": "AI that respects consent",
-        "body": "Optional predictions speed multi-word messages; families control AI consent, and institutional policies can be enforced centrally."
+        "title": "Suggestions with consent",
+        "body": "Optional word suggestions speed up multi-word messages; families decide whether to turn them on."
       },
       "obf": {
         "title": "Open Board Format",
         "body": "Import and export OBF to collaborate with SLPs and migrate from other apps without lock-in."
       },
       "offline": {
-        "title": "Offline-ready",
-        "body": "Boards cache locally so communication continues on unreliable school Wi‑Fi or during travel."
+        "title": "Rides out network drops",
+        "body": "With a board already open you can keep using it if the Wi‑Fi drops; changes sync when the connection returns. Opening the app offline is not available yet."
       },
       "janua": {
         "title": "Janua identity",
@@ -147,7 +143,7 @@
     "guardOff": "Touch guard: off",
     "switchHint": "Press Arrow Right to advance · Space to select",
     "readyTitle": "Ready for the full platform?",
-    "readyBody": "Sign in for cloud sync, SLP editor, ARASAAC symbol search with diversity traits, recorded speech, AI predictions, and OBF import/export.",
+    "readyBody": "Sign in for cloud sync, SLP editor, ARASAAC symbol search with diversity traits, recorded speech, word suggestions, and OBF import/export.",
     "startFree": "Start free — parents",
     "schoolsClinics": "Schools & clinics",
     "classicBannerTitle": "Try Voxa like a classic AAC app",
@@ -165,7 +161,7 @@
       },
       "literacy": {
         "name": "Literacy keyboard",
-        "description": "QWERTY typing for literate AAC users with AI word suggestions in the full app"
+        "description": "QWERTY typing for literate AAC users with word suggestions in the full app"
       },
       "schedule": {
         "name": "Visual schedule",
@@ -190,8 +186,8 @@
         "body": "Switch scanning with auditory cues, touch guard overlays, eye-dwell simulation, and touch-release activation — configurable per communicator in Settings."
       },
       "institution": {
-        "title": "Usage insight for every communicator",
-        "body": "Institutional plans add team roles, unlimited boards, full AI, and high-level usage reports — see engagement by student or patient while protecting individual privacy."
+        "title": "Plans for schools and clinics",
+        "body": "The institutional plan adds unlimited boards. Book a call to plan a rollout in your organization."
       }
     },
     "suggestions": {
@@ -226,7 +222,9 @@
     "auditLog": "Audit",
     "newBoard": "New board",
     "importObf": "Import OBF",
-    "exportObf": "Export OBF"
+    "exportObf": "Export OBF",
+    "suggestionsLabel": "Basic suggestions:",
+    "suggestionsAria": "Basic word suggestions"
   },
   "cviThemes": {
     "default": "Default",
@@ -241,7 +239,7 @@
     "accessMethod": "Access method",
     "accessTouch": "Touch",
     "accessSwitch": "Switch scanning",
-    "accessEye": "Eye tracking (dwell)",
+    "accessEye": "Dwell selection",
     "scanSpeed": "Scan speed ({ms} ms)",
     "scanOrder": "Scan order",
     "scanRow": "Row by row",
@@ -274,7 +272,7 @@
     "dwellTime": "Dwell time ({ms} ms)",
     "gazeSource": "Gaze source",
     "gazePointer": "Pointer hover (simulation)",
-    "gazeTobii": "Tobii bridge (voxa:gaze events)",
+    "gazeTobii": "External voxa:gaze events (experimental)",
     "gazeHintTobii": "Lab inject: window.__voxaInjectGaze(x, y) or dispatch voxa:gaze CustomEvent.",
     "gazeHintPointer": "Hold pointer over a button to activate (simulates eye dwell).",
     "symbolDiversity": "Symbol diversity (default skin tone)",
@@ -344,7 +342,7 @@
         },
         {
           "title": "Security",
-          "content": "We use TLS in transit, access controls, and MADFAM platform security practices. No method is 100% secure; report concerns to security@madfam.io."
+          "content": "We use TLS in transit, access controls, and MADFAM platform security practices. No method is 100% secure; report concerns to hola@madfam.io."
         },
         {
           "title": "Changes",
@@ -414,11 +412,11 @@
         },
         {
           "title": "Assessment approach",
-          "content": "We combine automated checks, manual SLP review before releases, and hardware testing with switch and eye-tracking devices where available."
+          "content": "We combine automated checks and hardware testing with switch and eye-tracking devices where available."
         },
         {
           "title": "Feedback",
-          "content": "Email accessibility@madfam.io with the page or feature, assistive technology used, and steps to reproduce barriers. We aim to respond within five business days."
+          "content": "Email hola@madfam.io with the page or feature, assistive technology used, and steps to reproduce barriers. We aim to respond within five business days."
         }
       ]
     }
@@ -436,7 +434,7 @@
     "installApp": "Install app",
     "ariaLabel": "Install Voxa",
     "title": "Install Voxa",
-    "body": "Add the communicator to your home screen for fullscreen, offline-ready access — no app store required.",
+    "body": "Add the communicator to your home screen for fullscreen access — no app store required.",
     "install": "Install",
     "notNow": "Not now"
   },
@@ -444,7 +442,7 @@
     "institutionEyebrow": "Schools & clinics",
     "parentEyebrow": "Free for parents",
     "featureEyebrow": "Unlock with Voxa",
-    "requestDemo": "Request institutional demo",
+    "requestDemo": "Book a call",
     "createAccount": "Create free parent account",
     "representInstitution": "I represent a school or clinic",
     "keepExploring": "Keep exploring demo"

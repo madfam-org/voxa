@@ -2,7 +2,7 @@
   "name": "@voxa/ai",
   "version": "0.1.0",
   "private": true,
-  "description": "AI service contracts — LLM prediction, PictoBERT, symbol generation, TTS",
+  "description": "Prediction service contracts and the local rule-based predictor",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {

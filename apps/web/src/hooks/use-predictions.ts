@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { getAiConsent } from '@/components/consent-banner';
 import type { Board, BoardButton } from '@voxa/core';
-import { stubAiService, type SymbolPrediction, type TextPrediction } from '@voxa/ai';
+import { localAiService, type SymbolPrediction, type TextPrediction } from '@voxa/ai';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
 
@@ -56,14 +56,14 @@ async function fetchPredictions(
   }
 
   const [text, symbols] = await Promise.all([
-    stubAiService.predictText({
+    localAiService.predictText({
       profileId: board.profileId as string,
       recentUtterances: [],
       partialText,
-      locale: 'en-US',
+      locale: contentLocale,
       maxSuggestions: 3,
     }),
-    stubAiService.predictSymbols({
+    localAiService.predictSymbols({
       profileId: board.profileId as string,
       recentSymbolIds: recentButtonIds,
       boardButtons: board.grid.buttons,
