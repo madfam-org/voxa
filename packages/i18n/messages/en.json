@@ -433,6 +433,18 @@
     "missingNoticeDefault": "The voice you chose is no longer on this device. Voxa now speaks with the browser's default voice. You can choose another in settings.",
     "dismiss": "OK"
   },
+  "settingsSync": {
+    "title": "Settings on your devices",
+    "label": "Sync my settings between devices",
+    "help": "When on, Voxa keeps a copy of your communication and access settings on its server (access method, scanning, dwell time, keyguard, theme, and voice rate, pitch and volume) so they apply when you sign in on another device. These settings can reveal information about a disability, which is sensitive data, so this stays off until you turn it on. The chosen voice stays on each device. Turning it off stops syncing and deletes the server copy.",
+    "statusSignedOut": "Sign in to sync your settings between devices.",
+    "statusOff": "Sync is off: your settings are kept on this device only.",
+    "statusSyncing": "Syncing settings…",
+    "statusSynced": "Settings synced.",
+    "statusPending": "Offline: changes will be sent when the connection is back.",
+    "statusError": "Settings could not be synced. They still apply on this device.",
+    "saveError": "Sync could not be changed. Check your connection and try again."
+  },
   "legal": {
     "shared": {
       "back": "← Back to Voxa",

@@ -36,6 +36,7 @@ import {
 import { effectiveDisplaySettings } from '@/lib/communicator-settings';
 import type { CommunicatorSettings } from '@/lib/communicator-settings';
 import { useCommunicatorSettings } from '@/hooks/use-communicator-settings';
+import { useSettingsSync } from '@/hooks/use-settings-sync';
 import { useSpeechSettings } from '@/hooks/use-device-voices';
 import { VoiceMissingNotice } from '@/components/voice-missing-notice';
 import { useEyeDwellByButton } from '@/hooks/use-eye-dwell';
@@ -134,7 +135,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
 
   const [recentButtonIds, setRecentButtonIds] = useState<string[]>([]);
   const formTapRef = useRef<{ buttonId: string; at: number; index: number } | null>(null);
-  const { settings, setSettings } = useCommunicatorSettings();
+  const { settings, setSettings, applyRemoteSettings, loaded: settingsLoaded } = useCommunicatorSettings();
   const {
     board,
     boardId,
@@ -165,6 +166,15 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
     sessionUserId,
     sessionTeamRole,
   } = useSyncedBoard(role);
+  // Opt-in (consent `settings_sync`): the communicator's settings follow the
+  // user between devices. Not on the remote editor (/app/edit).
+  const settingsSync = useSettingsSync({
+    settings,
+    loaded: settingsLoaded,
+    applyRemote: applyRemoteSettings,
+    signedIn: isAuthenticated && !remoteEditor,
+    userId: sessionUserId,
+  });
 
   const editorAccess = {
     boardId,
@@ -1374,6 +1384,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
             signedIn={isAuthenticated}
             speechLocale={speechLocale}
             deviceVoices={deviceVoices}
+            settingsSync={remoteEditor ? undefined : settingsSync}
             onOpenFirstRun={
               !remoteEditor && isAuthenticated
                 ? () => {

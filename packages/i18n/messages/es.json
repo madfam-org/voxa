@@ -434,6 +434,18 @@
     "missingNoticeDefault": "La voz que elegiste ya no está en este dispositivo. Ahora Voxa habla con la voz predeterminada del navegador. Puedes elegir otra en los ajustes.",
     "dismiss": "Entendido"
   },
+  "settingsSync": {
+    "title": "Ajustes en tus dispositivos",
+    "label": "Sincronizar mis ajustes entre dispositivos",
+    "help": "Si lo activas, Voxa guarda en su servidor una copia de tus ajustes de comunicación y acceso (método de acceso, barrido, tiempo de permanencia, protector de teclado, tema y velocidad, tono y volumen de la voz) para aplicarlos cuando inicies sesión en otro dispositivo. Estos ajustes pueden revelar información sobre una discapacidad, que es un dato sensible, por eso está desactivado hasta que lo actives. La voz elegida se queda en cada dispositivo. Si lo desactivas, se deja de sincronizar y se borra la copia del servidor.",
+    "statusSignedOut": "Inicia sesión para sincronizar tus ajustes entre dispositivos.",
+    "statusOff": "Sincronización desactivada: tus ajustes se guardan solo en este dispositivo.",
+    "statusSyncing": "Sincronizando ajustes…",
+    "statusSynced": "Ajustes sincronizados.",
+    "statusPending": "Sin conexión: los cambios se enviarán cuando vuelva la conexión.",
+    "statusError": "No se pudieron sincronizar los ajustes. En este dispositivo siguen aplicándose.",
+    "saveError": "No se pudo cambiar la sincronización. Revisa tu conexión e inténtalo de nuevo."
+  },
   "legal": {
     "shared": {
       "back": "← Volver a Voxa",
