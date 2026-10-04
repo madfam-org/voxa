@@ -7,9 +7,7 @@ import {
   type SyncEvent,
 } from '@voxa/core';
 import { findMotorPlanningViolations } from '@voxa/vocabulary';
-import { gridsetArchiveToBoardUpdate, snapArchiveToBoardUpdate, touchChatArchiveToBoardUpdate } from '@voxa/import-adapters';
-import { obfToVoxaButtons, obzToVoxaButtons, parseObfJson, unpackObz, voxaBoardToObf, voxaBoardToObz } from '@voxa/obf';
-import type { ImportObfResult } from './types.js';
+import { serializeObf, voxaBoardToObf, voxaBoardToObz } from '@voxa/obf';
 import { obzExportOptions, webBaseUrl } from '../lib/symbol-assets.js';
 
 export function createSyncEvent(
@@ -94,168 +92,6 @@ export function applyUpdateBoard(
   return { board: stored, event };
 }
 
-export function applyImportObfBoard(
-  boards: Record<string, Board>,
-  boardId: string,
-  rawObf: string,
-  actorUserId: string,
-): ImportObfResult {
-  const current = boards[boardId];
-  if (!current) {
-    throw new Error(`Board not found: ${boardId}`);
-  }
-
-  const { board: obf, warnings } = parseObfJson(rawObf);
-  const buttons = obfToVoxaButtons(obf);
-
-  const next: Board = {
-    ...current,
-    name: obf.name || current.name,
-    grid: {
-      rows: obf.grid.rows,
-      columns: obf.grid.columns,
-      buttons,
-    },
-  };
-
-  const result = applyUpdateBoard(boards, boardId, next, actorUserId, {
-    expectedVersion: current.version,
-    forceMotorPlanning: true,
-  });
-  result.event.payload = { action: 'import.obf' };
-
-  return { ...result, warnings };
-}
-
-export function applyImportObzBoard(
-  boards: Record<string, Board>,
-  boardId: string,
-  archive: Uint8Array,
-  actorUserId: string,
-): ImportObfResult {
-  const current = boards[boardId];
-  if (!current) {
-    throw new Error(`Board not found: ${boardId}`);
-  }
-
-  const unpacked = unpackObz(archive);
-  const buttons = obzToVoxaButtons(unpacked);
-
-  const next: Board = {
-    ...current,
-    name: unpacked.board.name || current.name,
-    grid: {
-      rows: unpacked.board.grid.rows,
-      columns: unpacked.board.grid.columns,
-      buttons,
-    },
-  };
-
-  const result = applyUpdateBoard(boards, boardId, next, actorUserId, {
-    expectedVersion: current.version,
-    forceMotorPlanning: true,
-  });
-  result.event.payload = { action: 'import.obz' };
-
-  return { ...result, warnings: unpacked.warnings };
-}
-
-export function applyImportGridsetBoard(
-  boards: Record<string, Board>,
-  boardId: string,
-  archive: Uint8Array,
-  actorUserId: string,
-): ImportObfResult {
-  const current = boards[boardId];
-  if (!current) {
-    throw new Error(`Board not found: ${boardId}`);
-  }
-
-  const { page, buttons, warnings } = gridsetArchiveToBoardUpdate(archive, boardId);
-
-  const next: Board = {
-    ...current,
-    name: page.name || current.name,
-    grid: {
-      rows: page.rows,
-      columns: page.columns,
-      buttons,
-    },
-  };
-
-  const result = applyUpdateBoard(boards, boardId, next, actorUserId, {
-    expectedVersion: current.version,
-    forceMotorPlanning: true,
-  });
-  result.event.payload = { action: 'import.gridset' };
-
-  return { ...result, warnings };
-}
-
-export async function applyImportSnapBoard(
-  boards: Record<string, Board>,
-  boardId: string,
-  archive: Uint8Array,
-  actorUserId: string,
-): Promise<ImportObfResult> {
-  const current = boards[boardId];
-  if (!current) {
-    throw new Error(`Board not found: ${boardId}`);
-  }
-
-  const { page, buttons, warnings } = await snapArchiveToBoardUpdate(archive, boardId);
-
-  const next: Board = {
-    ...current,
-    name: page.name || current.name,
-    grid: {
-      rows: page.rows,
-      columns: page.columns,
-      buttons,
-    },
-  };
-
-  const result = applyUpdateBoard(boards, boardId, next, actorUserId, {
-    expectedVersion: current.version,
-    forceMotorPlanning: true,
-  });
-  result.event.payload = { action: 'import.snap' };
-
-  return { ...result, warnings };
-}
-
-export async function applyImportTouchChatBoard(
-  boards: Record<string, Board>,
-  boardId: string,
-  archive: Uint8Array,
-  actorUserId: string,
-): Promise<ImportObfResult> {
-  const current = boards[boardId];
-  if (!current) {
-    throw new Error(`Board not found: ${boardId}`);
-  }
-
-  const { page, buttons, warnings } = await touchChatArchiveToBoardUpdate(archive, boardId);
-
-  const next: Board = {
-    ...current,
-    name: page.name || current.name,
-    grid: {
-      rows: page.rows,
-      columns: page.columns,
-      buttons,
-    },
-  };
-
-  const result = applyUpdateBoard(boards, boardId, next, actorUserId, {
-    expectedVersion: current.version,
-    forceMotorPlanning: true,
-  });
-  result.event.payload = { action: 'import.touchchat' };
-
-  return { ...result, warnings };
-}
-
 export async function exportBoardObz(boards: Record<string, Board>, boardId: string): Promise<Uint8Array> {
   const board = boards[boardId];
   if (!board) {
@@ -269,7 +105,7 @@ export function exportBoardObf(boards: Record<string, Board>, boardId: string): 
   if (!board) {
     throw new Error(`Board not found: ${boardId}`);
   }
-  return JSON.stringify(voxaBoardToObf(board, { assetBaseUrl: webBaseUrl() }), null, 2);
+  return serializeObf(voxaBoardToObf(board, { assetBaseUrl: webBaseUrl() }));
 }
 
 /** Sync/audit events kept per board; older ones are trimmed on write. */

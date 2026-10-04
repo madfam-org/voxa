@@ -38,6 +38,12 @@ describe('symbol credits and notices (es/en/fr)', () => {
       assert.ok(messages.nav.symbolCredits);
     });
 
+    it(`${locale}: no message advertises the removed non-commercial symbol library (R86)`, () => {
+      const raw = readFileSync(path.join(messagesDir, `${locale}.json`), 'utf8').toLowerCase();
+      assert.equal(raw.includes('arasaac'), false);
+      assert.match(load(locale).demo.readyBody, /Mulberry/);
+    });
+
     it(`${locale}: editor notice for unavailable symbols and credit line`, () => {
       const messages = load(locale);
       assert.equal(messages.symbols.unavailable, UNAVAILABLE[locale]);

@@ -14,7 +14,7 @@ import {
   type SyncEvent,
   type TeamRole,
 } from '@voxa/core';
-import { createVoxaClient, isVersionConflictError } from '@voxa/sync';
+import { createVoxaClient, isVersionConflictError, type BoardImportFormat } from '@voxa/sync';
 import { initialBoardId } from '@/lib/editor-access';
 import { exportBoardObfJson } from '@/lib/local-obf-export';
 import { BOARD_CACHE_KEY, SELECTED_BOARD_KEY } from '@/lib/communicator-settings';
@@ -400,14 +400,24 @@ export function useSyncedBoard(role: TeamRole) {
     }
   }, [applyVersionConflict, boardId, client, dropRejectedSave, setBoard]);
 
-  const importObf = useCallback(
-    async (raw: string) => {
-      const result = await client.importObf(boardId, raw);
-      setBoard(result.board);
+  /**
+   * Import a board file as NEW boards (the server never writes into the board
+   * being viewed), then open the imported root board.
+   */
+  const importBoards = useCallback(
+    async (format: BoardImportFormat, payload: string | ArrayBuffer, locale?: string) => {
+      const result = await client.importBoards(format, payload, { locale });
+      const summaries = result.boards.map((item) => ({ id: item.id as string, name: item.name }));
+      setBoardCatalog((prev) => [...prev.filter((b) => !summaries.some((s) => s.id === b.id)), ...summaries]);
+      const root = result.boards.find((item) => (item.id as string) === result.rootBoardId) ?? result.boards[0];
+      if (root) {
+        cacheBoard(root.id as string, root);
+        setBoardId(root.id as string);
+      }
       setWarnings(result.warnings);
       return result;
     },
-    [boardId, client, setBoard],
+    [client, setBoardId],
   );
 
   const exportObf = useCallback(async () => {
@@ -417,46 +427,6 @@ export function useSyncedBoard(role: TeamRole) {
       return exportBoardObfJson(boardRef.current);
     }
   }, [boardId, client]);
-
-  const importObz = useCallback(
-    async (archive: ArrayBuffer) => {
-      const result = await client.importObz(boardId, archive);
-      setBoard(result.board);
-      setWarnings(result.warnings);
-      return result;
-    },
-    [boardId, client, setBoard],
-  );
-
-  const importGridset = useCallback(
-    async (archive: ArrayBuffer) => {
-      const result = await client.importGridset(boardId, archive);
-      setBoard(result.board);
-      setWarnings(result.warnings);
-      return result;
-    },
-    [boardId, client, setBoard],
-  );
-
-  const importSnap = useCallback(
-    async (archive: ArrayBuffer) => {
-      const result = await client.importSnap(boardId, archive);
-      setBoard(result.board);
-      setWarnings(result.warnings);
-      return result;
-    },
-    [boardId, client, setBoard],
-  );
-
-  const importTouchChat = useCallback(
-    async (archive: ArrayBuffer) => {
-      const result = await client.importTouchChat(boardId, archive);
-      setBoard(result.board);
-      setWarnings(result.warnings);
-      return result;
-    },
-    [boardId, client, setBoard],
-  );
 
   const exportObz = useCallback(async () => {
     return client.exportObz(boardId);
@@ -551,12 +521,8 @@ export function useSyncedBoard(role: TeamRole) {
     retryPendingSave: flushPendingSave,
     saveBoard,
     markMotorPlanningOverride,
-    importObf,
+    importBoards,
     exportObf,
-    importObz,
-    importGridset,
-    importSnap,
-    importTouchChat,
     exportObz,
     isEditor,
     isAuthenticated: Boolean(accessToken),

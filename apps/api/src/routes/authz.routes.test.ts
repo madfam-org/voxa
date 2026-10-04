@@ -104,16 +104,17 @@ describe('board authorization with Janua access tokens', () => {
     assert.equal((await putBoard('victim-board', headers)).status, 403);
   });
 
-  it('(4) an editor gets 403 on PUT, import and media upload for the demo board', async () => {
+  it('(4) an editor gets 403 on PUT and media upload for the demo board, and cannot import into it', async () => {
     const headers = await bearer({ sub: 'slp-1', roles: ['voxa:editor'], org_id: 'org-1' });
     assert.equal((await putBoard(DEMO_BOARD_ID, headers)).status, 403);
 
+    // Imports never write into an existing board: the old in-place endpoint is gone.
     const imported = await app.request(`/v1/boards/${DEMO_BOARD_ID}/import/obf`, {
       method: 'POST',
       headers: { ...headers, 'Content-Type': 'text/plain' },
       body: '{}',
     });
-    assert.equal(imported.status, 403);
+    assert.equal(imported.status, 410);
 
     const form = new FormData();
     form.set('boardId', DEMO_BOARD_ID);

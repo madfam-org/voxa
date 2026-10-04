@@ -24,17 +24,12 @@ import { canEditBoard } from '../lib/board-access.js';
 import {
   applyCreateBoard,
   applyDeleteBoard,
-  applyImportObfBoard,
-  applyImportObzBoard,
-  applyImportGridsetBoard,
-  applyImportSnapBoard,
-  applyImportTouchChatBoard,
   applyUpdateBoard,
   exportBoardObf,
   exportBoardObz,
   trimSyncEvents,
 } from './board-operations.js';
-import type { BoardStore, ImportObfResult } from './types.js';
+import type { BoardStore } from './types.js';
 
 interface StoreState {
   boards: Record<string, Board>;
@@ -127,41 +122,6 @@ export function createFileBoardStore(initialState?: StoreState): BoardStore {
 
     async updateBoard(boardId, next, actorUserId, options) {
       const result = applyUpdateBoard(state.boards, boardId, next, actorUserId, options);
-      recordEvent(result.event);
-      persist();
-      return result;
-    },
-
-    async importObfBoard(boardId, rawObf, actorUserId): Promise<ImportObfResult> {
-      const result = applyImportObfBoard(state.boards, boardId, rawObf, actorUserId);
-      recordEvent(result.event);
-      persist();
-      return result;
-    },
-
-    async importObzBoard(boardId, archive, actorUserId): Promise<ImportObfResult> {
-      const result = applyImportObzBoard(state.boards, boardId, archive, actorUserId);
-      recordEvent(result.event);
-      persist();
-      return result;
-    },
-
-    async importGridsetBoard(boardId, archive, actorUserId): Promise<ImportObfResult> {
-      const result = applyImportGridsetBoard(state.boards, boardId, archive, actorUserId);
-      recordEvent(result.event);
-      persist();
-      return result;
-    },
-
-    async importSnapBoard(boardId, archive, actorUserId): Promise<ImportObfResult> {
-      const result = await applyImportSnapBoard(state.boards, boardId, archive, actorUserId);
-      recordEvent(result.event);
-      persist();
-      return result;
-    },
-
-    async importTouchChatBoard(boardId, archive, actorUserId): Promise<ImportObfResult> {
-      const result = await applyImportTouchChatBoard(state.boards, boardId, archive, actorUserId);
       recordEvent(result.event);
       persist();
       return result;

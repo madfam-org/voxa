@@ -19,7 +19,7 @@ Current market-leading AAC apps are siloed on iOS, have steep learning curves, l
 | Area | What Voxa delivers |
 |------|-------------------|
 | **Platform** | Web, iOS, Android, Windows, Chromebook — one cloud-synced ecosystem |
-| **Interoperability** | Native Open Board Format (`.obf` / `.obz`) import and export |
+| **Interoperability** | Open Board Format 0.1 (`.obf` / `.obz`) import and export; imports always create new boards. Grid 3, Snap and TouchChat import in beta (the words of one page) |
 | **Accessibility** | Targets WCAG 2.2 Level AA — 1 cm minimum touch targets, one- and two-switch scanning, dwell selection for pointer-driving devices (head pointers, eye trackers in mouse mode) |
 | **Linguistics** | Motor-planning grids, GLP phrase chunks, Modified Fitzgerald Key color coding |
 | **AI** | LLM predictive text, PictoBERT symbol prediction, guarded symbol generation, bilingual neural TTS |
@@ -36,7 +36,7 @@ voxa/
 │   ├── core/         # Domain models — boards, buttons, profiles
 │   ├── ui/           # WCAG 2.2 accessible UI primitives
 │   ├── obf/          # Open Board Format parser & exporter
-│   ├── import-adapters/ # Imports from other AAC formats (Gridset, Snap, TouchChat)
+│   ├── import-adapters/ # Beta one-page imports from other AAC formats (Grid 3, Snap, TouchChat)
 │   ├── vocabulary/   # GLP, Fitzgerald Key, motor planning
 │   ├── symbols/      # Symbol sources and search
 │   ├── access/       # Switch scanning state machine, hardware switches, dwell and gaze event bridge

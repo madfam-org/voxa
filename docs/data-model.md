@@ -102,7 +102,7 @@ One row per user and purpose in `consents` (`user_id`, `purpose`, `granted`, `po
 
 `GET /v1/consents` and `PUT /v1/consents` (`{ "consents": { "ai_processing": true, "usage_analytics": false } }`) act on the signed-in user only. No record means not granted. No request header grants consent. Without `DATABASE_URL` the API keeps these records in `consents.json` under `VOXA_DATA_DIR`, replaced atomically like `boards.json`. The web app keeps a copy in `localStorage` (`voxa-consent`) as an offline cache only; a signed-out visitor's choice stays on the device.
 
-**OBZ bundles:** `POST /v1/boards/:id/import/obz` (zip), `GET /v1/boards/:id/export/obz` — embeds `board.json` plus `images/*` per `@voxa/obf`.
+**Board files (OBF 0.1):** `POST /v1/boards/import/:format` (`obf`, `obz`, beta `gridset`/`snap`/`touchchat`) always creates NEW boards owned by the caller (embedded media becomes `media_assets` rows of the new boards; remote picture URLs are never fetched); `GET /v1/boards/:id/export/obf` and `/export/obz` write spec OBF 0.1 (`.obz`: `manifest.json`, `boards/*.obf`, `images/*`, `sounds/*`) per `@voxa/obf`. See [MIGRATION.md](./launch/MIGRATION.md).
 
 ### `media_assets`
 

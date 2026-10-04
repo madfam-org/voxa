@@ -1,8 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { createBoardId, createDemoBoard, DEMO_BOARD_ID } from '@voxa/core';
-import { buildSampleGridsetArchive, buildSampleSnapArchive, buildSampleTouchChatArchive } from '@voxa/import-adapters';
-import { applyCreateBoard, applyImportGridsetBoard, applyImportSnapBoard, applyImportTouchChatBoard, applyUpdateBoard, trimSyncEvents } from './board-operations.js';
+import { applyCreateBoard, applyUpdateBoard, trimSyncEvents } from './board-operations.js';
 import type { BoardId, SyncEvent } from '@voxa/core';
 
 describe('board operations', () => {
@@ -95,35 +94,6 @@ describe('board operations', () => {
     const stored = result.board.grid.buttons.find((b) => b.id === locked!.id);
     assert.deepEqual(stored?.position, free);
     assert.equal(stored?.locked, false);
-  });
-
-  it('imports a Grid 3 gridset archive into a board', () => {
-    const boards: Record<string, ReturnType<typeof createDemoBoard>> = {};
-    applyCreateBoard(boards, createDemoBoard(), 'editor-1');
-    const archive = buildSampleGridsetArchive();
-    const result = applyImportGridsetBoard(boards, DEMO_BOARD_ID, archive, 'editor-1');
-    assert.equal(result.board.name, 'Core');
-    assert.equal(result.board.grid.buttons.length, 3);
-    assert.equal(result.event.payload?.action, 'import.gridset');
-  });
-
-  it('imports a TD Snap sqlite archive into a board', async () => {
-    const boards: Record<string, ReturnType<typeof createDemoBoard>> = {};
-    applyCreateBoard(boards, createDemoBoard(), 'editor-1');
-    const archive = await buildSampleSnapArchive();
-    const result = await applyImportSnapBoard(boards, DEMO_BOARD_ID, archive, 'editor-1');
-    assert.equal(result.board.grid.buttons.length, 3);
-    assert.equal(result.event.payload?.action, 'import.snap');
-  });
-
-  it('imports a TouchChat .ce archive into a board', async () => {
-    const boards: Record<string, ReturnType<typeof createDemoBoard>> = {};
-    applyCreateBoard(boards, createDemoBoard(), 'editor-1');
-    const archive = await buildSampleTouchChatArchive();
-    const result = await applyImportTouchChatBoard(boards, DEMO_BOARD_ID, archive, 'editor-1');
-    assert.equal(result.board.name, 'Core');
-    assert.equal(result.board.grid.buttons.length, 3);
-    assert.equal(result.event.payload?.action, 'import.touchchat');
   });
 
   it('keeps the stored owner and organization on update', () => {

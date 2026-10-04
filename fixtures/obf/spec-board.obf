@@ -1,0 +1,4 @@
+{"format":"open-board-0.1","id":"spec-1","locale":"es","name":"Spec board",
+ "buttons":[{"id":"b1","label":"agua","image_id":"img1"},{"id":"b2","label":"más","vocalization":"quiero más"},{"id":"b3","label":"comida","load_board":{"id":"food","path":"boards/food.obf"}}],
+ "grid":{"rows":2,"columns":2,"order":[[null,"b3"],["b2","b1"]]},
+ "images":[{"id":"img1","url":"https://example.org/agua.png","width":300,"height":300,"content_type":"image/png"}],"sounds":[]}

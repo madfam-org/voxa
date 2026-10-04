@@ -31,7 +31,8 @@ describe('TouchChat .ce import', () => {
 
   it('produces a board update payload', async () => {
     const archive = await buildSampleTouchChatArchive();
-    const update = await touchChatArchiveToBoardUpdate(archive, 'board-test');
+    const update = await touchChatArchiveToBoardUpdate(archive);
+    assert.equal(update.locale, 'es-MX');
     assert.equal(update.page.rows, 2);
     assert.equal(update.page.columns, 2);
     assert.equal(update.buttons.length, 3);

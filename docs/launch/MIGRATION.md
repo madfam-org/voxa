@@ -4,90 +4,57 @@ Voxa uses **Open Board Format (OBF)** as the primary interchange format. This gu
 
 ## Supported today
 
-### Open Board Format (`.obf` JSON)
+Every import creates **new boards** owned by you (in your organization) and opens them; the board you are viewing, and the shared `demo-core` demo board, are never changed. Imports count against your plan's board limit: when it is reached the API answers `402` with `{ code: "BOARD_LIMIT", tier, limit }` and the editor explains the limit and offers to export the board on screen (OBF/OBZ) or delete a board you no longer need.
 
-1. Sign in at [voxa.madfam.io](https://voxa.madfam.io) (Janua SSO).
+### Open Board Format (`.obf` JSON, `.obz` packages)
+
+Voxa reads and writes [Open Board Format 0.1](https://www.openboardformat.org/docs) (`format: "open-board-0.1"`), the format Cboard, CoughDrop and other OpenAAC tools exchange.
+
+1. Sign in at [voxa.madfam.io](https://voxa.madfam.io).
 2. Switch role to **Editor (SLP)** or **Admin**.
-3. Open your board from the **Board** dropdown (or use the default `demo-core` starter).
-4. Click **Import OBF** and select a `.obf` or `.json` file.
-5. Click **Save** to persist to your account.
+3. Click **Import OBF** or **Import OBZ**, select the file and confirm. The imported board opens.
 
-**API import** (automation):
+What Voxa imports:
+
+- buttons at the cells of `grid.order` (2-D array of button ids, `null` for empty cells), labels and `vocalization`;
+- pictures referenced by `image_id` through `images[]`: embedded `data` and, in `.obz` packages, `path` entries (PNG, JPEG, GIF, WebP) are stored as media of the new board; Mulberry symbols of Voxa's vendored set are kept; **pictures at other web addresses are not downloaded** — the button imports without them and Voxa tells you how many were skipped;
+- recordings referenced by `sound_id` through `sounds[]` (embedded or in-package MP3, WAV, Ogg, WebM, MP4);
+- every board listed in an `.obz` `manifest.json`, with `load_board` links between them remapped to the new boards (a link to a board outside the file is kept only when it names one of your boards);
+- part of speech from `border_color` (`rgb()` or hex, Modified Fitzgerald Key), `hidden`, and the board `locale`.
+
+Files exported by earlier Voxa versions (`format: "open-board-format"`, `.obz` with a single `board.json`) still import.
+
+**API import** (automation): `POST /v1/boards/import/{obf|obz|gridset|snap|touchchat}`, optional `?locale=es-MX|en-US|fr-FR` for files without a locale. The answer (`201`) lists the new `boards`, the `rootBoardId`, `warnings` and `skipped` counts.
 
 ```bash
-curl -X POST "https://voxa-api.madfam.io/v1/boards/{boardId}/import/obf" \
+curl -X POST "https://voxa-api.madfam.io/v1/boards/import/obz" \
   -H "Authorization: Bearer ${VOXA_ACCESS_TOKEN}" \
-  -H "Content-Type: application/json" \
-  --data-binary @my-board.obf
+  -H "Content-Type: application/zip" \
+  --data-binary @my-boards.obz
 ```
 
-**Export:**
+The former `POST /v1/boards/{boardId}/import/*` endpoints, which replaced a board in place, answer `410 Gone`.
+
+**Export:** `GET /v1/boards/{boardId}/export/obf` (spec OBF 0.1) and `GET /v1/boards/{boardId}/export/obz` (`manifest.json`, `boards/<id>.obf`, `images/`, `sounds/`). Mulberry pictures carry their CC BY-SA 4.0 licence object; Voxa-only data (motor-plan locks, part of speech, Gestalt phrases, word forms) travels as `ext_voxa_*` properties, so a Voxa → OBF → Voxa round trip is exact. JSON Schemas of what Voxa writes: `packages/obf/schema/`.
 
 ```bash
-curl "https://voxa-api.madfam.io/v1/boards/{boardId}/export/obf" \
-  -H "Authorization: Bearer ${VOXA_ACCESS_TOKEN}"
+curl "https://voxa-api.madfam.io/v1/boards/{boardId}/export/obz" \
+  -H "Authorization: Bearer ${VOXA_ACCESS_TOKEN}" -o my-board.obz
 ```
 
-### From Cboard / CoughDrop / OpenAAC tools
+**Not supported:** `button.action` / `actions` (spelling and clear actions), absolute button placement (`top`/`left`), board `url`/`data_url` downloads.
 
-Export **OBF 3.x JSON** from the source app, then import via Voxa Editor. Voxa maps:
+### Grid 3, TD Snap and TouchChat — beta, imports the words of one page
 
-- Button labels and vocalization text
-- Grid rows/columns
-- Background colors (when present)
-- Basic symbol URLs (when inline HTTP URLs)
+These adapters were built from the documented file structures and are tested on synthetic archives only.
 
-**Supported (2026-06-08):** `.obz` zip bundles with embedded images (`Import OBZ` / `Export OBZ` in editor), board navigation via OBF `load_board_id`.
+| Format | What is imported |
+|--------|------------------|
+| Grid 3 `.gridset` | The **home grid** (the `<StartGrid>` of `Settings0/settings.xml`): captions at their X/Y cells. Locale from the gridset settings when present. |
+| TD Snap `.spb` / `.sps` | Button labels and messages of the primary page at their grid positions. |
+| TouchChat `.ce` | The Home page's button labels and messages. |
 
-**Not yet supported:** hierarchical `parent_id` folder trees inside a single board view.
-
-### Grid 3 (`.gridset`)
-
-1. Editor → **Import Grid** and select a `.gridset` archive exported from Grid 3.
-2. Voxa imports the primary grid (first alphabetically) with button positions preserved.
-
-**API import:**
-
-```bash
-curl -X POST "https://voxa-api.madfam.io/v1/boards/{boardId}/import/gridset" \
-  -H "Authorization: Bearer ${VOXA_ACCESS_TOKEN}" \
-  -H "Content-Type: application/octet-stream" \
-  --data-binary @my-board.gridset
-```
-
-Multi-grid gridsets import one page today; link targets map to `navigateToBoardId` when present.
-
-### TD Snap (`.spb` / `.sps`)
-
-1. Editor → **Import Snap** and select a Snap backup SQLite archive.
-2. Button labels and messages import with grid positions when available.
-
-**API import:**
-
-```bash
-curl -X POST "https://voxa-api.madfam.io/v1/boards/{boardId}/import/snap" \
-  -H "Authorization: Bearer ${VOXA_ACCESS_TOKEN}" \
-  -H "Content-Type: application/octet-stream" \
-  --data-binary @my-board.spb
-```
-
-Symbols and multi-page navigation are not migrated in this MVP adapter.
-
-### TouchChat (`.ce` / `.touchChat`)
-
-1. Editor → **Import TouchChat** and select a vocabulary file exported from TouchChat or Chat Editor (`.ce` zip archive).
-2. The Home page imports with button labels, messages, and grid positions when available.
-
-**API import:**
-
-```bash
-curl -X POST "https://voxa-api.madfam.io/v1/boards/{boardId}/import/touchchat" \
-  -H "Authorization: Bearer ${VOXA_ACCESS_TOKEN}" \
-  -H "Content-Type: application/octet-stream" \
-  --data-binary @my-vocab.ce
-```
-
-Custom images (`Images.c4s`) and multi-page navigation are not migrated in this MVP adapter.
+No pictures, no recordings and no links to other pages are imported (links are removed and counted); boards without a locale in the file take your interface language (`es-MX` by default).
 
 ### Starter templates
 

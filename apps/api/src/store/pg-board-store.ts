@@ -13,17 +13,12 @@ import { getSharedDb } from '../db/client.js';
 import { boards, syncEvents } from '../db/schema.js';
 import {
   applyCreateBoard,
-  applyImportObfBoard,
-  applyImportObzBoard,
-  applyImportGridsetBoard,
-  applyImportSnapBoard,
-  applyImportTouchChatBoard,
   applyUpdateBoard,
   exportBoardObf,
   exportBoardObz,
   MAX_SYNC_EVENTS_PER_BOARD,
 } from './board-operations.js';
-import type { BoardStore, ImportObfResult } from './types.js';
+import type { BoardStore } from './types.js';
 
 function rowToBoard(row: typeof boards.$inferSelect): Board {
   return {
@@ -132,46 +127,6 @@ export function createPgBoardStore(databaseUrl: string): BoardStore {
     async updateBoard(boardId, next, actorUserId, options) {
       const map = await loadBoardMap();
       const result = applyUpdateBoard(map, boardId, next, actorUserId, options);
-      await persistBoard(result.board);
-      await recordEvent(result.event);
-      return result;
-    },
-
-    async importObfBoard(boardId, rawObf, actorUserId): Promise<ImportObfResult> {
-      const map = await loadBoardMap();
-      const result = applyImportObfBoard(map, boardId, rawObf, actorUserId);
-      await persistBoard(result.board);
-      await recordEvent(result.event);
-      return result;
-    },
-
-    async importObzBoard(boardId, archive, actorUserId): Promise<ImportObfResult> {
-      const map = await loadBoardMap();
-      const result = applyImportObzBoard(map, boardId, archive, actorUserId);
-      await persistBoard(result.board);
-      await recordEvent(result.event);
-      return result;
-    },
-
-    async importGridsetBoard(boardId, archive, actorUserId): Promise<ImportObfResult> {
-      const map = await loadBoardMap();
-      const result = applyImportGridsetBoard(map, boardId, archive, actorUserId);
-      await persistBoard(result.board);
-      await recordEvent(result.event);
-      return result;
-    },
-
-    async importSnapBoard(boardId, archive, actorUserId): Promise<ImportObfResult> {
-      const map = await loadBoardMap();
-      const result = await applyImportSnapBoard(map, boardId, archive, actorUserId);
-      await persistBoard(result.board);
-      await recordEvent(result.event);
-      return result;
-    },
-
-    async importTouchChatBoard(boardId, archive, actorUserId): Promise<ImportObfResult> {
-      const map = await loadBoardMap();
-      const result = await applyImportTouchChatBoard(map, boardId, archive, actorUserId);
       await persistBoard(result.board);
       await recordEvent(result.event);
       return result;
