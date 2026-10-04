@@ -10,10 +10,14 @@
  *
  * Run: build web (with NEXT_PUBLIC_API_URL = VOXA_E2E_API_URL) and the API,
  * start the web server, then `pnpm test:e2e:offline` with PLAYWRIGHT_BASE_URL.
+ * One worker only (the script passes --workers=1): the API port is fixed by
+ * the web build.
  */
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { expect, test, type BrowserContext, type Page } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
+import { expect, test, type Browser, type BrowserContext, type Page } from '@playwright/test';
+import { WCAG_TAGS, formatViolations } from '../helpers/a11y';
 import { startLocalApi, type LocalApi } from '../helpers/local-api';
 import { seedLocalState, seedTestSession } from '../helpers/test-session';
 
@@ -36,6 +40,12 @@ test.use({ locale: 'en-US' });
 
 let api: LocalApi;
 let ownerToken: string;
+/**
+ * One API and one seeded board per worker: with `--repeat-each` Playwright
+ * may run the next repetition's beforeAll before this one's afterAll, and
+ * the API port is fixed by the web build.
+ */
+let shared: { ready: Promise<void>; users: number } | null = null;
 
 async function apiCall(method: string, route: string, body?: unknown): Promise<Response> {
   return fetch(`${api.url}${route}`, {
@@ -70,7 +80,7 @@ async function recordWebm(page: Page): Promise<Buffer> {
     recorder.ondataavailable = (e) => chunks.push(e.data);
     const stopped = new Promise((resolve) => (recorder.onstop = resolve));
     recorder.start(250);
-    for (let frame = 0; frame < 40; frame += 1) {
+    for (let frame = 0; frame < 80; frame += 1) {
       ctx.fillStyle = `hsl(${frame * 9}, 70%, 50%)`;
       ctx.fillRect(0, 0, 320, 240);
       await new Promise((resolve) => setTimeout(resolve, 100));
@@ -114,6 +124,20 @@ async function openOwnedBoard(page: Page, context: BrowserContext): Promise<void
 }
 
 test.beforeAll(async ({ browser }) => {
+  if (!shared) shared = { ready: seed(browser), users: 0 };
+  shared.users += 1;
+  await shared.ready;
+});
+
+test.afterAll(async () => {
+  if (!shared) return;
+  shared.users -= 1;
+  if (shared.users > 0) return;
+  shared = null;
+  await api?.stop();
+});
+
+async function seed(browser: Browser): Promise<void> {
   api = await startLocalApi(API_URL);
   ownerToken = api.token({ sub: OWNER_ID, email: 'owner@voxa.test', name: 'E2E Owner' });
 
@@ -181,11 +205,7 @@ test.beforeAll(async ({ browser }) => {
     expectedVersion: board.version,
   });
   expect(saved.status).toBe(200);
-});
-
-test.afterAll(async () => {
-  await api?.stop();
-});
+}
 
 test.describe('offline start', () => {
   test('reloading /app offline renders the board from the service worker cache', async ({ page, context }) => {
@@ -195,23 +215,22 @@ test.describe('offline start', () => {
     const buttons = page.locator('[data-voxa-button-id]');
     await expect.poll(() => buttons.count(), { timeout: 30_000 }).toBeGreaterThanOrEqual(47);
 
-    // The worker controls the page and holds the shell and every loaded chunk.
-    await page.waitForFunction(
-      async () => {
-        if (!navigator.serviceWorker.controller) return false;
-        if (!(await caches.match(location.origin + location.pathname))) return false;
-        const chunks = performance
-          .getEntriesByType('resource')
-          .map((entry) => entry.name)
-          .filter((name) => new URL(name).pathname.startsWith('/_next/static/'));
-        for (const chunk of chunks) {
-          if (!(await caches.match(chunk))) return false;
-        }
-        return chunks.length > 0;
-      },
-      undefined,
-      { timeout: 30_000, polling: 500 },
-    );
+    // The worker confirms it stored the shell and what the page loaded...
+    await page.waitForSelector('html[data-voxa-offline="ready"]', { state: 'attached', timeout: 30_000 });
+    // ...and it controls the page and holds the shell and every loaded chunk.
+    const cached = await page.evaluate(async () => {
+      if (!navigator.serviceWorker.controller) return 'no controller';
+      if (!(await caches.match(location.origin + location.pathname))) return 'no shell';
+      const chunks = performance
+        .getEntriesByType('resource')
+        .map((entry) => entry.name)
+        .filter((name) => new URL(name).pathname.startsWith('/_next/static/'));
+      for (const chunk of chunks) {
+        if (!(await caches.match(chunk))) return `missing ${chunk}`;
+      }
+      return chunks.length > 0 ? 'ok' : 'no chunks';
+    });
+    expect(cached).toBe('ok');
 
     await context.setOffline(true);
     await page.reload();
@@ -252,6 +271,12 @@ test.describe('uploaded media', () => {
     expect(box!.width).toBeGreaterThanOrEqual(100);
     expect(box!.height).toBeGreaterThanOrEqual(100);
     await expect(page.getByRole('dialog', { name: 'vamos al parque' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Close' })).toBeFocused();
+    const scan = await new AxeBuilder({ page })
+      .include('[data-voxa-glp-video]')
+      .withTags([...WCAG_TAGS])
+      .analyze();
+    expect(formatViolations(scan.violations)).toEqual([]);
     // Keyboard and key-emulating switches dismiss it.
     await page.keyboard.press('Escape');
     await expect(page.locator('[data-voxa-glp-video]')).toHaveCount(0);

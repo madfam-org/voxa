@@ -67,8 +67,19 @@ export async function startLocalApi(apiUrl: string): Promise<LocalApi> {
   await new Promise<void>((resolve) => jwks.listen(0, '127.0.0.1', resolve));
   const { port: jwksPort } = jwks.address() as AddressInfo;
 
-  const dataDir = mkdtempSync(path.join(tmpdir(), 'voxa-e2e-api-'));
   const api = new URL(apiUrl);
+  // Another process already answers on this URL (a stale run): fail visibly
+  // instead of minting tokens it would reject.
+  const stale = await fetch(`${api.origin}/health`).then(
+    () => true,
+    () => false,
+  );
+  if (stale) {
+    jwks.close();
+    throw new Error(`Something already listens on ${api.origin}; stop it before running this spec`);
+  }
+
+  const dataDir = mkdtempSync(path.join(tmpdir(), 'voxa-e2e-api-'));
   const env: NodeJS.ProcessEnv = {
     PATH: process.env.PATH,
     NODE_ENV: 'test',
@@ -80,6 +91,11 @@ export async function startLocalApi(apiUrl: string): Promise<LocalApi> {
     JANUA_AUDIENCE: AUDIENCE,
   };
   const child = spawn(process.execPath, [entry], { env, stdio: ['ignore', 'pipe', 'pipe'] });
+  // Never outlive the test worker, even when it ends without running afterAll.
+  const killChild = () => {
+    if (child.exitCode === null) child.kill('SIGTERM');
+  };
+  process.once('exit', killChild);
   let log = '';
   child.stdout?.on('data', (chunk) => (log += String(chunk)));
   child.stderr?.on('data', (chunk) => (log += String(chunk)));
@@ -98,6 +114,7 @@ export async function startLocalApi(apiUrl: string): Promise<LocalApi> {
     url,
     token: (claims) => signJwt(privateKey, claims),
     async stop() {
+      process.removeListener('exit', killChild);
       if (child.exitCode === null) {
         await new Promise<void>((resolve) => {
           child.once('exit', () => resolve());
