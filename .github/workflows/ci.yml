@@ -150,3 +150,11 @@ jobs:
         env:
           PLAYWRIGHT_BASE_URL: http://127.0.0.1:3000
           VOXA_E2E_API_URL: http://localhost:4000
+      - name: First-run setup (switch scanning + 36 cells + a voice -> 36-cell es-MX board; axe on every step, light and dark)
+        # e2e/specs/first-run.spec.ts: a new signed-in user ends on /app with a
+        # 36-cell es-MX board and scanning on; a returning user and /demo never
+        # see the setup; a 402 offers the existing board. Same local API port.
+        run: pnpm --filter @voxa/e2e test:first-run
+        env:
+          PLAYWRIGHT_BASE_URL: http://127.0.0.1:3000
+          VOXA_E2E_API_URL: http://localhost:4000

@@ -11,6 +11,18 @@ export async function prepareAuthenticatedApp(page: Page): Promise<void> {
   });
   await signInViaJanua(page);
   await grantConsentIfAsked(page);
+  await skipFirstRunIfShown(page);
+}
+
+/**
+ * A test account without a board gets the first-run setup on /app; the
+ * workflow specs make their own boards, so they skip it.
+ */
+export async function skipFirstRunIfShown(page: Page): Promise<void> {
+  const setup = page.getByRole('dialog', { name: ui('firstRun.title') });
+  if (!(await setup.isVisible({ timeout: 5000 }).catch(() => false))) return;
+  await setup.getByRole('button', { name: ui('firstRun.skipAll') }).click();
+  await expect(setup).toBeHidden({ timeout: 15000 });
 }
 
 /**

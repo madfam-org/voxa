@@ -85,7 +85,12 @@ pnpm build
   (`e2e/specs/voice-choice.spec.ts`, no API: a stubbed `speechSynthesis`
   proves a button press, "Speak" and a prediction chip speak with the chosen
   `voiceURI`, rate, pitch, volume and the board's `lang`; axe on the Voice
-  settings section in a light and a dark theme). The axe job scans `/app`
+  settings section in a light and a dark theme) and `pnpm test:e2e:first-run`
+  (`e2e/specs/first-run.spec.ts`, same local API as the offline spec: a new
+  user picks switch scanning, 36 cells and a voice and lands on a 36-cell
+  es-MX board with scanning on; a returning user and `/demo` never see the
+  setup; a 402 offers the existing board; axe on every step in a light and a
+  dark theme). The axe job scans `/app`
   in all four board themes and, in Spanish (the default, unprefixed locale),
   the landing, `/demo`, `/app` and its settings panel; both fail on serious
   or critical violations. The standalone server binds `HOSTNAME=0.0.0.0` as
@@ -93,7 +98,7 @@ pnpm build
   request URL and every unprefixed Spanish path redirects to itself.
 - Playwright: `pnpm test:e2e:smoke`, `pnpm test:e2e:a11y`,
   `pnpm test:e2e:offline`, `pnpm test:e2e:access`, `pnpm test:e2e:voices`,
-  `pnpm test:e2e:staging`,
+  `pnpm test:e2e:first-run`, `pnpm test:e2e:staging`,
   `pnpm test:e2e:staging:signed-in` (the five
   signed-in specs, one worker). Authenticated specs skip themselves without
   `JANUA_TEST_EMAIL`/`JANUA_TEST_PASSWORD` (or `VOXA_TEST_ACCESS_TOKEN`).
@@ -266,6 +271,25 @@ pnpm build
     down, it serves locally, keeps reconnecting, and `/health/ready` stays 200
     with a `syncHubWarning`; Redis never blocks startup or readiness. Tested in
     `src/ws/sync-hub.test.ts` and `src/ws/sync-hub.redis.test.ts`.
+15. **Core sizes keep one motor plan.** The `core-24` (4×6), `core-36` (6×6)
+    and `core-60` (6×10) templates come from ONE ordered core list per
+    locale (`packages/core/src/core-grid-sizes.ts`) laid along a fixed growth
+    order, and each size is the top-left block of the next: a smaller board
+    is exactly the part of a larger one inside its block, so growing never
+    moves a word the user learned (same row and column, same label). Only
+    word-bank words, Fitzgerald part of speech kept, Mulberry symbol from the
+    allow-map or label-only, no duplicate label in any locale. The vocabulary
+    is pending clinical review: the template metadata says
+    `vocabularyReview: "pending-clinical-review"` and the UI says so where a
+    template is chosen; never claim a review that has not happened (R89).
+    Changing the order or the sizes means keeping the rule, which
+    `packages/core/src/core-grid-sizes.test.ts` checks for every locale and
+    size. The first-run setup (`apps/web/src/components/first-run-setup.tsx`)
+    builds the first board from these templates; it shows once per user and
+    device on `/app` for a signed-in user with no board (never `/app/edit` or
+    `/demo`), writes the existing communicator settings, and offers an
+    existing board instead of a second one (no 402 dead end). Tested in
+    `apps/web/src/lib/first-run.test.ts` and `e2e/specs/first-run.spec.ts`.
 
 ## Guards
 

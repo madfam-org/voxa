@@ -33,6 +33,7 @@
     "test:e2e:offline": "pnpm --filter @voxa/e2e test:offline",
     "test:e2e:access": "pnpm --filter @voxa/e2e test:access",
     "test:e2e:voices": "pnpm --filter @voxa/e2e test:voices",
+    "test:e2e:first-run": "pnpm --filter @voxa/e2e test:first-run",
     "test:e2e:staging": "pnpm --filter @voxa/e2e test:staging",
     "test:e2e:staging:signed-in": "pnpm --filter @voxa/e2e test:staging:signed-in"
   },
