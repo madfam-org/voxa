@@ -47,7 +47,7 @@ export const CVI_THEMES = {
       muted: '#d4d4d4',
     },
   },
-  /** Light grid inspired by classic AAC apps (e.g. Proloquo2Go-style layouts). */
+  /** Light grey grid with white cells and symbol-first buttons. */
   'classic-light': {
     background: '#e5e7eb',
     foreground: '#111827',
@@ -99,7 +99,7 @@ export const CVI_THEME_LABELS: Record<CviTheme, string> = {
   default: 'Default',
   'cvi-dark': 'CVI dark',
   'cvi-high-contrast': 'CVI high contrast',
-  'classic-light': 'Classic light (Proloquo-style)',
+  'classic-light': 'Classic light',
 };
 
 export function targetSizePx(scale = 1): number {

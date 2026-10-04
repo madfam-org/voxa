@@ -160,7 +160,7 @@
     "startFree": "Start free — parents",
     "schoolsClinics": "Schools & clinics",
     "classicBannerTitle": "Try Voxa like a classic AAC app",
-    "classicBannerSubtitle": "Light grid, symbol-first buttons, and a sentence bar — the same motor-plan Core 47 as Proloquo-style layouts.",
+    "classicBannerSubtitle": "Light grid, symbol-first buttons, and a sentence bar — the same motor-plan Core 47 in a familiar light layout.",
     "platformBannerTitle": "Interactive platform demo",
     "scenesAriaLabel": "Demo scenes",
     "scheduleStep": "Step {current} of {total}",
@@ -308,7 +308,7 @@
     "default": "Default",
     "cvi-dark": "CVI dark",
     "cvi-high-contrast": "CVI high contrast",
-    "classic-light": "Classic light (Proloquo-style)"
+    "classic-light": "Classic light"
   },
   "settings": {
     "title": "Accessibility",

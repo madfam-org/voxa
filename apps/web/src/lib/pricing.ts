@@ -1,10 +1,7 @@
-// Pricing anchored on Tulana competitive intel (v0.1, 2026-06-12):
-// - AAC subscription median ~221 MXN/mo (Proloquo/TD Snap ~$9.99 USD).
-// - Tulana mechanical ceiling ~177 MXN/mo; operator anchored Family at 199
-//   MXN net (MADFAM consumer SaaS peer: Tezca Essentials, Dhanam Copilot).
-// - Institutional: 1,499 MXN/mo base + 349/seat (min 3), Dhanam Teams peer.
-// - Catalog/Dhanam amounts are net of IVA; public MXN display adds 16% IVA
-//   per MADFAM convention (see docs/launch/PRICING_STRATEGY.md).
+// List prices shown on the landing. Amounts are net of IVA and match the
+// billing catalog; the public MXN display adds 16% IVA and rounds up to the
+// peso (withMxnIva). Institutional: an organization base plus a per-seat
+// price, minimum 3 seats.
 export const MXN_IVA_RATE = 0.16;
 
 /** Net-of-IVA list prices synced to Dhanam catalog (centavos / 100). */

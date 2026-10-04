@@ -9,6 +9,11 @@ capability: [docs/capabilities.md](./docs/capabilities.md).
 
 - Public docs match what ships: a capabilities page with status and evidence per row ([docs/capabilities.md](./docs/capabilities.md)), a rewritten README and architecture, the accessibility statement updated for switch scanning, voices and the first-run setup, `AGENTS.md` with its invariants numbered once and a "How a change ships" section, a `CLAUDE.md` pointer, and the served `llms.txt` plus a new `llms-full.txt` on the landing host. The June 2026 "SLP sign-off" is withdrawn: it was an internal product check, not a clinical review (ruling R89); launch records are marked historical.
 
+### Changed
+
+- Copy (es/en/fr): the classic light theme is described by what it is, without a competitor's product name; the Spanish catalog says "terapeutas de lenguaje" (Mexican Spanish) instead of Spain's "logopedas". The claims stop-list now rejects both. A code comment with commercial pricing research is reworded.
+- `LICENSE`: the copyright holder is Innovaciones MADFAM S.A.S. de C.V., as in `NOTICE`.
+
 ## 2026-10-04 — Stabilization and compliance wave
 
 Pull requests [#8](https://github.com/madfam-org/voxa/pull/8)–[#41](https://github.com/madfam-org/voxa/pull/41), merged 2026-10-01 to 2026-10-04 (UTC). Every change below is on `main` and deployed to production (staging pins land too, and roll out once the staging Argo CD app tracks `main`).
