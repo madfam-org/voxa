@@ -46,6 +46,9 @@ import { ButtonMoveControls, MoveModeBanner } from '@/components/editor-move-con
 import { useSyncedBoard, type BoardSummary } from '@/hooks/use-synced-board';
 import { BETA_IMPORT_FORMATS, classifyImportFailure, contentLocaleForUi, type BoardImportFormat } from '@/lib/board-import';
 import { ImportLimitNotice } from '@/components/import-limit-notice';
+import { FirstRunSetup, type FirstRunCreateResult } from '@/components/first-run-setup';
+import { existingBoardFor, isFirstRunDone, markFirstRunDone, shouldOfferFirstRun } from '@/lib/first-run';
+import { VoxaSyncError } from '@voxa/sync';
 import {
   editorPinIsConfigured,
   isEditorUnlocked,
@@ -124,6 +127,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
   const [babbleActive, setBabbleActive] = useState(false);
   const [speechActive, setSpeechActive] = useState(false);
   const [newBoardTemplate, setNewBoardTemplate] = useState<'' | StarterTemplateId>('core-47');
+  const [firstRunOpen, setFirstRunOpen] = useState(false);
   const [completedStepIds, setCompletedStepIds] = useState<Set<string>>(() => new Set());
   const pendingTouchRef = useRef<string | null>(null);
 
@@ -134,6 +138,8 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
     board,
     boardId,
     boardCatalog,
+    catalogStatus,
+    reloadCatalog,
     setBoardId,
     createBoard,
     renameBoard,
@@ -473,6 +479,48 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
       setBusy(false);
     }
   }, [createBoard, dialogs, newBoardTemplate, reportFailure, settings.contentLocale, tcx]);
+
+  // First-run setup: once per user and device, for a signed-in user with no
+  // board yet, on the communicator screen only (never /app/edit or /demo).
+  useEffect(() => {
+    if (
+      shouldOfferFirstRun({
+        communicatorScreen: !remoteEditor,
+        signedIn: isAuthenticated,
+        catalogLoaded: catalogStatus === 'ready',
+        catalog: boardCatalog,
+        userId: sessionUserId,
+        done: isFirstRunDone(sessionUserId),
+      })
+    ) {
+      setFirstRunOpen(true);
+    }
+  }, [boardCatalog, catalogStatus, isAuthenticated, remoteEditor, sessionUserId]);
+
+  const handleFirstRunCreate = useCallback(
+    async (templateId: StarterTemplateId, contentLocale: string, name: string): Promise<FirstRunCreateResult> => {
+      try {
+        await createBoard(name, templateId, contentLocale);
+        return { kind: 'created' };
+      } catch (err) {
+        if (err instanceof VoxaSyncError && err.status === 402) {
+          // The plan's board limit: refresh the list so the setup offers the existing board.
+          reloadCatalog();
+          return { kind: 'board-limit' };
+        }
+        return { kind: 'error', message: err instanceof Error ? err.message : String(err) };
+      }
+    },
+    [createBoard, reloadCatalog],
+  );
+
+  const handleFirstRunClose = useCallback(
+    (outcome: 'completed' | 'skipped') => {
+      markFirstRunDone(sessionUserId, outcome);
+      setFirstRunOpen(false);
+    },
+    [sessionUserId],
+  );
 
   const handleRenameBoard = useCallback(async () => {
     const name = await dialogs.prompt(tcx('boardNamePrompt'), { defaultValue: board.name });
@@ -831,6 +879,17 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
       {snapInput}
       {touchChatInput}
       {dialogs.dialog}
+      {firstRunOpen ? (
+        <FirstRunSetup
+          settings={settings}
+          onChange={setSettings}
+          deviceVoices={deviceVoices}
+          existingBoard={existingBoardFor(boardCatalog, sessionUserId)}
+          onCreate={handleFirstRunCreate}
+          onOpenBoard={setBoardId}
+          onClose={handleFirstRunClose}
+        />
+      ) : null}
       <div ref={liveRef} aria-live="polite" aria-atomic="true" style={visuallyHidden} />
 
       {remoteEditor ? (
@@ -915,6 +974,9 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
                 style={{ background: surface.overlay, color: neutral.textSubtle, border: `1px solid ${neutral.border}`, borderRadius: 6 }}
               >
                 <option value="">{tcx('templateBlank')}</option>
+                <option value="core-24">{tcx('templateCore24')}</option>
+                <option value="core-36">{tcx('templateCore36')}</option>
+                <option value="core-60">{tcx('templateCore60')}</option>
                 <option value="core-47">{tcx('templateCore47')}</option>
                 <option value="core-100">{tcx('templateCore100')}</option>
                 <option value="literacy-keyboard">{tcx('templateLiteracyKeyboard')}</option>
@@ -1314,6 +1376,14 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
             accessToken={accessToken}
             speechLocale={speechLocale}
             deviceVoices={deviceVoices}
+            onOpenFirstRun={
+              !remoteEditor && isAuthenticated
+                ? () => {
+                    setSettingsOpen(false);
+                    setFirstRunOpen(true);
+                  }
+                : undefined
+            }
           />
         )}
 

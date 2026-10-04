@@ -51,6 +51,8 @@ interface SettingsPanelProps {
   /** The board's speech locale (the voice choice is stored per locale). */
   speechLocale: string;
   deviceVoices: DeviceVoices;
+  /** Reopen the first-run setup (signed-in communicator screen only). */
+  onOpenFirstRun?: () => void;
 }
 
 export function SettingsPanel({
@@ -63,6 +65,7 @@ export function SettingsPanel({
   accessToken,
   speechLocale,
   deviceVoices,
+  onOpenFirstRun,
 }: SettingsPanelProps): React.ReactNode {
   const t = useTranslations('settings');
   const tc = useTranslations('common');
@@ -90,6 +93,17 @@ export function SettingsPanel({
           {tc('close')}
         </button>
       </div>
+
+      {onOpenFirstRun ? (
+        <button
+          type="button"
+          onClick={onOpenFirstRun}
+          data-voxa-open-first-run=""
+          style={{ ...closeBtn, width: '100%', marginBottom: 16 }}
+        >
+          {t('firstRun')}
+        </button>
+      ) : null}
 
       <div style={{ marginBottom: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
         <LanguageSwitcher />

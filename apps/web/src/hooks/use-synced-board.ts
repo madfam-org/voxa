@@ -33,7 +33,11 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
 export interface BoardSummary {
   id: string;
   name: string;
+  ownerUserId?: string;
 }
+
+/** Whether the board list came from the API ('ready'), is loading, failed, or there is no session ('idle'). */
+export type BoardCatalogStatus = 'idle' | 'loading' | 'ready' | 'error';
 
 function boardCacheKey(boardId: string): string {
   return `${BOARD_CACHE_KEY}:${boardId}`;
@@ -68,6 +72,9 @@ export function useSyncedBoard(role: TeamRole) {
   tRef.current = t;
   const [boardId, setBoardIdState] = useState<string>(DEMO_BOARD_ID);
   const [boardCatalog, setBoardCatalog] = useState<BoardSummary[]>([]);
+  const [catalogStatus, setCatalogStatus] = useState<BoardCatalogStatus>('idle');
+  const [catalogNonce, setCatalogNonce] = useState(0);
+  const reloadCatalog = useCallback(() => setCatalogNonce((n) => n + 1), []);
   const [board, setBoardState] = useState<Board>(() => createDemoBoard());
   const [syncStatus, setSyncStatus] = useState<'offline' | 'connecting' | 'live'>('connecting');
   const [error, setError] = useState<string | null>(null);
@@ -163,24 +170,29 @@ export function useSyncedBoard(role: TeamRole) {
   useEffect(() => {
     if (!accessToken) {
       setBoardCatalog([]);
+      setCatalogStatus('idle');
       return;
     }
     let cancelled = false;
+    setCatalogStatus('loading');
     (async () => {
       try {
         const boards = await client.listBoards();
         if (cancelled) return;
         setBoardCatalog(
-          boards.map((item) => ({ id: item.id as string, name: item.name })),
+          boards.map((item) => ({ id: item.id as string, name: item.name, ownerUserId: item.ownerUserId })),
         );
+        setCatalogStatus('ready');
       } catch {
-        if (!cancelled) setBoardCatalog([]);
+        if (cancelled) return;
+        setBoardCatalog([]);
+        setCatalogStatus('error');
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [accessToken, client]);
+  }, [accessToken, client, catalogNonce]);
 
   const refreshPendingFlag = useCallback(async () => {
     setPendingSave(await hasPendingBoardSave(boardId));
@@ -444,7 +456,7 @@ export function useSyncedBoard(role: TeamRole) {
         grid: { rows: 4, columns: 4, buttons: [] },
       };
       const result = await client.createBoard(template, templateId, contentLocale);
-      const summary = { id: result.board.id as string, name: result.board.name };
+      const summary = { id: result.board.id as string, name: result.board.name, ownerUserId: result.board.ownerUserId };
       setBoardCatalog((prev) => [...prev.filter((b) => b.id !== summary.id), summary]);
       setBoardId(summary.id);
       setBoard(result.board);
@@ -504,6 +516,8 @@ export function useSyncedBoard(role: TeamRole) {
     board,
     boardId,
     boardCatalog,
+    catalogStatus,
+    reloadCatalog,
     setBoardId,
     createBoard,
     renameBoard,

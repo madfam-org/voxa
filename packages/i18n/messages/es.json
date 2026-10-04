@@ -1,5 +1,5 @@
 {
-  "_review": "Las cadenas en español añadidas en W2-B (2026-10-04) y las tablas de conjugación están pendientes de revisión por una persona terapeuta del lenguaje con cédula (ruling R89). Pending review by a credentialed SLP.",
+  "_review": "Las cadenas en español añadidas en W2-B (2026-10-04) y las tablas de conjugación están pendientes de revisión por una persona terapeuta del lenguaje con cédula (ruling R89). También las de la configuración inicial (`firstRun`) y las plantillas de núcleo de 24, 36 y 60 celdas (2026-10-04). Pending review by a credentialed SLP.",
   "metadata": {
     "title": "Voxa — Plataforma de comunicación aumentativa",
     "description": "Comunicación aumentativa y alternativa (CAA) moderna para familias e instituciones. Demo en vivo, temas CVI, sugerencias de palabras y sincronización en la nube."
@@ -268,6 +268,9 @@
     "boardSelect": "Tablero",
     "template": "Plantilla",
     "templateBlank": "En blanco 4×4",
+    "templateCore24": "Núcleo 24 (4×6) · pendiente de revisión clínica",
+    "templateCore36": "Núcleo 36 (6×6) · pendiente de revisión clínica",
+    "templateCore60": "Núcleo 60 (6×10) · pendiente de revisión clínica",
     "templateCore47": "Vocabulario núcleo 47",
     "templateCore100": "Vocabulario núcleo 100",
     "templateLiteracyKeyboard": "Teclado de alfabetización",
@@ -385,7 +388,8 @@
     "acceptanceHint": "Una pulsación cuenta solo si se mantiene este tiempo, así se ignoran pulsaciones breves o accidentales. Con 0 cuenta cada pulsación al instante.",
     "postSelectionPause": "Pausa después de seleccionar ({ms} ms)",
     "gazeBridge": "Puente de eventos de mirada (voxa:gaze, para integradores)",
-    "gazeHintBridge": "Para integradores: envía coordenadas de pantalla con window.__voxaInjectGaze(x, y) o un CustomEvent voxa:gaze; Voxa aplica la misma permanencia. Voxa no incluye controladores de seguimiento ocular."
+    "gazeHintBridge": "Para integradores: envía coordenadas de pantalla con window.__voxaInjectGaze(x, y) o un CustomEvent voxa:gaze; Voxa aplica la misma permanencia. Voxa no incluye controladores de seguimiento ocular.",
+    "firstRun": "Abrir la configuración inicial"
   },
   "voice": {
     "title": "Voz",
@@ -761,5 +765,48 @@
     "group": "Grupo {n}",
     "back": "Volver",
     "backToGroups": "↩ Volver a los grupos"
+  },
+  "firstRun": {
+    "title": "Configura Voxa",
+    "stepOf": "Paso {step} de {total}",
+    "skipAll": "Saltar la configuración",
+    "skipStep": "Omitir este paso",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "languageTitle": "¿En qué idioma habla el tablero?",
+    "languageHint": "Las palabras del tablero y la voz usan este idioma. El idioma de los menús no cambia.",
+    "languageEsMx": "Español (México)",
+    "languageEnUs": "Inglés (Estados Unidos)",
+    "languageFrFr": "Francés (Francia)",
+    "accessTitle": "¿Cómo se eligen las celdas?",
+    "accessTouch": "Tocar la pantalla",
+    "accessTouchHint": "Un toque sobre la celda la elige.",
+    "accessSwitch": "Escaneo por interruptor",
+    "accessSwitchHint": "Voxa resalta las celdas una por una y un interruptor elige la resaltada.",
+    "accessDwell": "Permanencia del puntero",
+    "accessDwellHint": "Dejar el puntero sobre una celda la elige: ratón, puntero de cabeza o un seguidor de mirada que mueve el puntero.",
+    "accessKeyguard": "Tocar con guarda táctil (keyguard)",
+    "accessKeyguardHint": "Para usar una rejilla física sobre la pantalla: los toques entre celdas y en los bordes no cuentan.",
+    "accessMore": "La velocidad del escaneo, los tiempos y los demás ajustes de acceso se cambian después en Ajustes.",
+    "sizeTitle": "¿Cuántas celdas tiene el tablero?",
+    "sizeOption": "{cells} celdas ({rows} × {columns})",
+    "sizeHint24": "Para empezar: las palabras más frecuentes en celdas grandes.",
+    "sizeHint36": "Intermedio: más palabras, celdas todavía grandes.",
+    "sizeHint60": "Más palabras en celdas más pequeñas.",
+    "motorPlanNote": "Al pasar a un tablero más grande ninguna palabra cambia de lugar: cada una conserva su fila y su columna.",
+    "reviewNote": "Vocabulario pendiente de revisión clínica por una persona terapeuta del lenguaje con cédula.",
+    "previewLabel": "Vista previa: tablero de {cells} celdas, {rows} filas por {columns} columnas",
+    "voiceTitle": "Elige la voz",
+    "voiceHint": "Las voces son las que tiene este dispositivo. Puedes escucharlas antes de elegir.",
+    "createTitle": "Crear el primer tablero",
+    "createSummary": "Tablero de {cells} celdas ({rows} × {columns}) en {language}.",
+    "createAction": "Crear y abrir el tablero",
+    "creating": "Creando el tablero…",
+    "boardName": "Mi tablero",
+    "existingTitle": "Ya tienes un tablero",
+    "existingBody": "Tus ajustes quedaron guardados. Abre «{name}» para seguir con él.",
+    "openExisting": "Abrir «{name}»",
+    "limitReached": "Tu plan no permite otro tablero. Abre el que ya tienes.",
+    "createFailed": "No se pudo crear el tablero: {detail}"
   }
 }
