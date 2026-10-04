@@ -1,7 +1,8 @@
 import createMiddleware from 'next-intl/middleware';
-import { NextResponse, type NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { routing } from '@/i18n/routing';
 import { isOidcConfigured } from '@/lib/auth';
+import { buildContentSecurityPolicy, generateNonce } from '@/lib/security-headers';
 
 const intlMiddleware = createMiddleware(routing);
 
@@ -36,6 +37,23 @@ function bypassIntlMiddleware(pathname: string): boolean {
   );
 }
 
+function contentSecurityPolicy(nonce: string): string {
+  const isDev = process.env.NODE_ENV === 'development';
+  return buildContentSecurityPolicy(nonce, {
+    // The same expression the browser code uses for the API base (inlined at
+    // build time), so the policy allows exactly the origin the app calls.
+    // Production images always set NEXT_PUBLIC_API_URL (apps/web/Dockerfile).
+    apiUrl: process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000',
+    oidcIssuers: [process.env.NEXT_PUBLIC_OIDC_ISSUER, process.env.OIDC_ISSUER],
+    isDev,
+  });
+}
+
+function withCsp(response: NextResponse, csp: string): NextResponse {
+  response.headers.set('Content-Security-Policy', csp);
+  return response;
+}
+
 export function middleware(request: NextRequest) {
   const pathname = stripLocalePrefix(request.nextUrl.pathname);
 
@@ -49,7 +67,18 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const intlResponse = intlMiddleware(request);
+  // Next.js reads the nonce from the request's CSP header and stamps it on the
+  // scripts it renders; next-intl forwards these request headers.
+  const nonce = generateNonce();
+  const csp = contentSecurityPolicy(nonce);
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-nonce', nonce);
+  requestHeaders.set('Content-Security-Policy', csp);
+
+  const intlResponse = withCsp(
+    intlMiddleware(new NextRequest(request, { headers: requestHeaders })),
+    csp,
+  );
 
   if (!isOidcConfigured() || isPublicPath(pathname)) {
     return intlResponse;
@@ -67,7 +96,7 @@ export function middleware(request: NextRequest) {
         ? '/auth/signin'
         : `/${localePrefix}/auth/signin`;
     url.searchParams.set('redirect_to', pathname);
-    return NextResponse.redirect(url);
+    return withCsp(NextResponse.redirect(url), csp);
   }
 
   return intlResponse;
@@ -75,6 +104,8 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|sw.js|manifest.json|manifest.webmanifest|icons/|symbols/).*)',
+    // Crawling files are route handlers at the app root (app/robots.txt etc.):
+    // no locale rewrite and no sign-in redirect.
+    '/((?!api|_next/static|_next/image|favicon.ico|sw.js|manifest.json|manifest.webmanifest|robots.txt|sitemap.xml|llms.txt|icons/|symbols/).*)',
   ],
 };

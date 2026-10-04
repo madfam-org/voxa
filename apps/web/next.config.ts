@@ -3,8 +3,45 @@ import createNextIntlPlugin from 'next-intl/plugin';
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
+/**
+ * Static security headers on every response (A-005). The per-request
+ * Content-Security-Policy is set in src/middleware.ts (it needs a nonce).
+ * Camera and microphone stay available to this origin only: recorded speech
+ * (GLP) captures audio and video. Everything else is off. Guarded by
+ * src/next-config.test.ts.
+ */
+export const STATIC_SECURITY_HEADERS: Array<{ key: string; value: string }> = [
+  { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+  {
+    key: 'Permissions-Policy',
+    value: [
+      'camera=(self)',
+      'microphone=(self)',
+      'geolocation=()',
+      'payment=()',
+      'usb=()',
+      'serial=()',
+      'bluetooth=()',
+      'hid=()',
+      'midi=()',
+      'magnetometer=()',
+      'gyroscope=()',
+      'accelerometer=()',
+      'display-capture=()',
+      'browsing-topics=()',
+    ].join(', '),
+  },
+  { key: 'X-Frame-Options', value: 'DENY' },
+];
+
 const nextConfig: NextConfig = {
   output: 'standalone',
+  poweredByHeader: false,
+  async headers() {
+    return [{ source: '/:path*', headers: STATIC_SECURITY_HEADERS }];
+  },
   transpilePackages: [
     '@voxa/core',
     '@voxa/i18n',

@@ -26,6 +26,9 @@ All notable changes to Voxa are documented here.
 
 ### Added
 
+- Web: `robots.txt`, `sitemap.xml` and `llms.txt` are public and host-aware. Only hosts in `VOXA_INDEXABLE_HOSTS` (production: the landing host) are crawlable, with the named AI crawlers allowed on the public pages and `/app`, `/auth`, `/api` disallowed; every other host answers `Disallow: /`. The API answers `Disallow: /`.
+- Web: per-request nonce Content-Security-Policy (no third-party origins), HSTS, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy` (camera and microphone for this origin only), `X-Frame-Options: DENY`, no `X-Powered-By`. Pages render per request so the nonce reaches Next.js scripts.
+- API: secure headers (nosniff, frame deny, referrer, HSTS, deny-all CSP, same-site CORP) and an exact CORS allow-list from `CORS_ALLOWED_ORIGINS` (no subdomain wildcard).
 - `AGENTS.md` and `llms.txt`; CI runs the PostgreSQL-backed API test against a `postgres:16` service container.
 - Full GA remediation plan: `docs/launch/REMEDIATION_PLAN.md` (W1–W4 waves)
 - Customer migration guide: `docs/launch/MIGRATION.md` (OBF import path)

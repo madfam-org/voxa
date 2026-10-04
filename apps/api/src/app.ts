@@ -2,6 +2,7 @@ import { createNodeWebSocket } from '@hono/node-ws';
 import { Hono } from 'hono';
 import { corsMiddleware } from './middleware/cors.js';
 import { rateLimit } from './middleware/rate-limit.js';
+import { API_ROBOTS_TXT, securityHeaders } from './middleware/security-headers.js';
 import { teamAuth } from './middleware/team-auth.js';
 import { aiRoutes } from './routes/ai.js';
 import { billingRoutes } from './routes/billing.js';
@@ -34,9 +35,12 @@ app.onError((err, c) => {
   return c.text('Internal Server Error', 500);
 });
 
+app.use('*', securityHeaders());
 app.use('*', corsMiddleware());
 app.use('/v1/*', rateLimit());
 app.use('/v1/*', teamAuth());
+
+app.get('/robots.txt', (c) => c.text(API_ROBOTS_TXT));
 
 app.get('/health', (c) =>
   c.json({ status: 'ok', service: 'voxa-api', version: API_VERSION, store: getStoreDriver() }),
