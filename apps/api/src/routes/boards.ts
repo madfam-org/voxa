@@ -4,6 +4,7 @@ import {
   createBoardId,
   createStarterBoard,
   isStarterContentLocale,
+  isStarterTemplateId,
   listStarterTemplates,
   type Board,
   type StarterTemplateId,
@@ -70,6 +71,9 @@ boardRoutes.post('/', async (c) => {
   const body = (await c.req.json()) as Board & { templateId?: StarterTemplateId; contentLocale?: unknown };
   const team = c.get('team');
   const { userId, orgId } = team;
+  if (body.templateId !== undefined && !isStarterTemplateId(body.templateId)) {
+    return c.json({ error: 'Unknown templateId' }, 400);
+  }
   if (body.templateId && body.contentLocale !== undefined && !isStarterContentLocale(body.contentLocale)) {
     return c.json({ error: 'contentLocale must be one of es-MX, en-US, fr-FR' }, 400);
   }

@@ -249,7 +249,20 @@ export type {
   SymbolRef,
 } from './symbol-ref.js';
 export {
+  CORE_GRID_SIZES,
+  CORE_ORDER_BY_LOCALE,
+  CORE_VOCABULARY_REVIEW,
+  coreGridSize,
+  coreGrowthOrder,
+  DEFAULT_CORE_GRID_TEMPLATE,
+  isCoreGridTemplateId,
+  type CoreGridSize,
+  type CoreGridTemplateId,
+  type CoreVocabularyReview,
+} from './core-grid-sizes.js';
+export {
   createStarterBoard,
+  isStarterTemplateId,
   listStarterTemplates,
   type StarterBoardOptions,
   type StarterTemplateId,
