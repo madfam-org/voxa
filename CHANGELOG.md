@@ -11,10 +11,6 @@ All notable changes to Voxa are documented here.
 - Spanish agreement (es-MX): on Spanish boards the message bar conjugates the verb after a subject pronoun in the present tense ("yo querer beber" → "yo quiero beber", "tú ir" → "tú vas", "nosotros jugar" → "nosotros jugamos"), handles reflexive verbs and *gustar* ("yo gustar jugar" → "me gusta jugar"), and makes descriptors after *ser/estar* agree in gender and number. It is a suggestion: a **Base form** toggle on the message bar keeps the words as tapped, and a setting turns it off. Rule and scope in `docs/linguistic-framework.md`; tables pending review by a credentialed SLP (ruling R89).
 - Web: an accessible in-app dialog replaces `window.prompt`, `alert` and `confirm` (board name, editor PIN, delete and lock-override confirmations, errors). The PIN field is masked.
 
-### Fixed
-
-- Web (WCAG 3.1.2): the communicator, editor and panels no longer show English on Spanish and French pages. Board, editor, word-forms, recorded-speech, grid, usage and audit panels, sync messages, scan-group announcements and the board grid's accessible name come from the es/en/fr catalogues. A guard test fails on new hardcoded text in JSX or native dialogs, and a parity test keeps the three catalogues' keys aligned.
-
 ### Changed
 
 - Consent is a server-side record per user and purpose (`GET/PUT /v1/consents`, tables `consents` and `consent_events`), replacing the client-supplied `X-Voxa-AI-Consent` header, which no longer grants anything. Prediction routes need `ai_processing`; activations need `usage_analytics` and store counts only. Spoken text is kept only under a separate `utterance_text` consent for organizations on the `VOXA_UTTERANCE_TEXT_DPA_ORG_IDS` allow-list (empty by default), and opted-in text is cleared after 90 days. The web banner and Settings show two separate choices (word suggestions, usage counts) and save them to the server; `localStorage` is an offline cache.
@@ -35,6 +31,7 @@ All notable changes to Voxa are documented here.
 
 ### Fixed
 
+- Web (WCAG 3.1.2): the communicator, editor and panels no longer show English on Spanish and French pages. Board, editor, word-forms, recorded-speech, grid, usage and audit panels, sync messages, scan-group announcements and the board grid's accessible name come from the es/en/fr catalogues. A guard test fails on new hardcoded text in JSX or native dialogs, and a parity test keeps the three catalogues' keys aligned.
 - Local predictor: a continuation is appended to the whole message ("I want" → "I want more") instead of replacing its last word ("i more").
 - CI: each deploy workflow has its own concurrency group. The shared web+API group let one workflow's pending run displace the other's, so a merge could leave production web without the change while its API deploy succeeded.
 - CI: the daily smoke (`e2e-smoke.yml`, now "Daily smoke") runs only checks that mean something today: production GA gate, production demo, Redis readiness (warning), and Playwright smoke plus axe on production public pages.
