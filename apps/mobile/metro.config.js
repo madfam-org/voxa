@@ -1,16 +1,6 @@
+// Expo's default Metro config detects the pnpm workspace (watch folders and
+// node_modules paths) on its own since SDK 52. Hierarchical lookup must stay
+// on: pnpm's isolated layout resolves a package's dependencies next to it.
 const { getDefaultConfig } = require('expo/metro-config');
-const path = require('path');
 
-const projectRoot = __dirname;
-const workspaceRoot = path.resolve(projectRoot, '../..');
-
-const config = getDefaultConfig(projectRoot);
-
-config.watchFolders = [workspaceRoot];
-config.resolver.nodeModulesPaths = [
-  path.resolve(projectRoot, 'node_modules'),
-  path.resolve(workspaceRoot, 'node_modules'),
-];
-config.resolver.disableHierarchicalLookup = true;
-
-module.exports = config;
+module.exports = getDefaultConfig(__dirname);

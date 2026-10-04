@@ -1,13 +1,13 @@
-import { Audio } from 'expo-av';
+import { createAudioPlayer, setAudioModeAsync } from 'expo-audio';
 import { encodeScanBeepWav, SCAN_STEP_BEEP, type ScanBeepSpec } from '@voxa/access';
 
 let configured = false;
 
 async function ensureAudioMode(): Promise<void> {
   if (configured) return;
-  await Audio.setAudioModeAsync({
-    playsInSilentModeIOS: true,
-    shouldDuckAndroid: true,
+  await setAudioModeAsync({
+    playsInSilentMode: true,
+    interruptionMode: 'duckOthers',
   });
   configured = true;
 }
@@ -25,9 +25,12 @@ function wavToDataUri(wav: Uint8Array): string {
 export async function playMobileScanBeep(spec: ScanBeepSpec = SCAN_STEP_BEEP): Promise<void> {
   await ensureAudioMode();
   const uri = wavToDataUri(encodeScanBeepWav(spec));
-  const { sound } = await Audio.Sound.createAsync({ uri }, { shouldPlay: true, volume: 1 });
-  sound.setOnPlaybackStatusUpdate((status) => {
-    if (!status.isLoaded || !status.didJustFinish) return;
-    void sound.unloadAsync();
+  const player = createAudioPlayer({ uri });
+  player.volume = 1;
+  const subscription = player.addListener('playbackStatusUpdate', (status) => {
+    if (!status.didJustFinish) return;
+    subscription.remove();
+    player.remove();
   });
+  player.play();
 }

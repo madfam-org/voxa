@@ -1,37 +1,53 @@
 import type { BoardButton } from '@voxa/core';
 import { buttonMediaVideo, buttonRecordedSpeech } from '@voxa/core';
-import { Audio } from 'expo-av';
+import { createAudioPlayer, type AudioPlayer } from 'expo-audio';
 import * as Speech from 'expo-speech';
 import { buttonSpeech } from '@/lib/board-utils';
 
-let activeSound: Audio.Sound | null = null;
+interface ActivePlayback {
+  player: AudioPlayer;
+  finish: () => void;
+}
 
-async function stopActiveSound(): Promise<void> {
-  if (!activeSound) return;
+let active: ActivePlayback | null = null;
+
+function stopActiveSound(): void {
+  if (!active) return;
+  const { player, finish } = active;
+  active = null;
   try {
-    await activeSound.stopAsync();
-    await activeSound.unloadAsync();
+    player.pause();
+    player.remove();
   } catch {
     /* ignore */
   }
-  activeSound = null;
+  finish();
 }
 
 async function playRemoteAudio(
   url: string,
   headers?: Record<string, string>,
 ): Promise<void> {
-  await stopActiveSound();
-  const { sound } = await Audio.Sound.createAsync({ uri: url, headers });
-  activeSound = sound;
-  await sound.playAsync();
+  stopActiveSound();
+  const player = createAudioPlayer({ uri: url, headers });
   await new Promise<void>((resolve) => {
-    sound.setOnPlaybackStatusUpdate((status) => {
-      if (!status.isLoaded) return;
-      if (status.didJustFinish) resolve();
+    const subscription = player.addListener('playbackStatusUpdate', (status) => {
+      if (status.didJustFinish) current.finish();
     });
+    let done = false;
+    const current: ActivePlayback = {
+      player,
+      finish: () => {
+        if (done) return;
+        done = true;
+        subscription.remove();
+        resolve();
+      },
+    };
+    active = current;
+    player.play();
   });
-  await stopActiveSound();
+  if (active?.player === player) stopActiveSound();
 }
 
 /** Play recorded media when present; otherwise fall back to TTS. */

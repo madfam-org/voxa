@@ -1,11 +1,11 @@
 import Constants from 'expo-constants';
 import * as AuthSession from 'expo-auth-session';
 import * as SecureStore from 'expo-secure-store';
-import { isSessionExpired, isSessionExpiring } from './session-expiry.js';
-import type { MobileSession } from './session.js';
+import { isSessionExpired, isSessionExpiring } from './session-expiry';
+import type { MobileSession } from './session';
 
-export type { MobileSession } from './session.js';
-export { isSessionExpired, isSessionExpiring } from './session-expiry.js';
+export type { MobileSession } from './session';
+export { isSessionExpired, isSessionExpiring } from './session-expiry';
 
 export function getOidcConfig(): { issuer: string; clientId: string } {
   const extra = Constants.expoConfig?.extra as
