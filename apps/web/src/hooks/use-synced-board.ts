@@ -14,6 +14,7 @@ import {
   type TeamRole,
 } from '@voxa/core';
 import { createVoxaClient, isVersionConflictError } from '@voxa/sync';
+import { initialBoardId } from '@/lib/editor-access';
 import { exportBoardObfJson } from '@/lib/local-obf-export';
 import { BOARD_CACHE_KEY, SELECTED_BOARD_KEY } from '@/lib/communicator-settings';
 import { registerBackgroundSync } from '@/lib/offline-idb';
@@ -52,8 +53,8 @@ function loadCachedBoard(boardId: string): Board | null {
 }
 
 function loadSelectedBoardId(): string {
-  if (typeof window === 'undefined') return DEMO_BOARD_ID;
-  return localStorage.getItem(SELECTED_BOARD_KEY) || DEMO_BOARD_ID;
+  if (typeof window === 'undefined') return initialBoardId(null);
+  return initialBoardId(localStorage.getItem(SELECTED_BOARD_KEY));
 }
 
 export type SaveBoardResult = BoardUpdateResult | { conflict: true };
@@ -183,6 +184,13 @@ export function useSyncedBoard(role: TeamRole) {
   }, []);
 
   const flushPendingSave = useCallback(async () => {
+    if (boardId === DEMO_BOARD_ID) {
+      // The demo board is read-only on the server; drop any edit queued for it
+      // before that rule existed instead of retrying it forever.
+      await clearPendingBoardSave(boardId);
+      setPendingSave(false);
+      return;
+    }
     const pending = await loadPendingBoardSave(boardId);
     if (!pending) {
       setPendingSave(false);

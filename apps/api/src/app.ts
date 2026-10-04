@@ -9,9 +9,9 @@ import { boardRoutes } from './routes/boards.js';
 import { eventRoutes } from './routes/events.js';
 import { mediaRoutes } from './routes/media.js';
 import { symbolRoutes } from './routes/symbols.js';
-import { syncRoutes } from './routes/sync.js';
 import { canAccessBoard } from './lib/board-access.js';
 import { unwrapDbError } from './lib/db-errors.js';
+import { devAuthEnabled } from './lib/dev-auth.js';
 import { resolveWsTeam } from './lib/ws-auth.js';
 import { checkStoreReady, getStore, getStoreDriver } from './store/index.js';
 import { getSyncHubMode, presenceCount, registerClient, unregisterClient } from './ws/sync-hub.js';
@@ -52,9 +52,7 @@ app.get('/health/ready', async (c) => {
     service: 'voxa-api',
     store: getStoreDriver(),
     syncHub: getSyncHubMode(),
-    authEnforced:
-      process.env.VOXA_JANUA_AUTH_REQUIRED === 'true' ||
-      process.env.JANUA_AUTH_REQUIRED === 'true',
+    authEnforced: !devAuthEnabled(),
   });
 });
 
@@ -63,7 +61,6 @@ app.route('/v1/billing', billingRoutes);
 app.route('/v1/events', eventRoutes);
 app.route('/v1/media', mediaRoutes);
 app.route('/v1/symbols', symbolRoutes);
-app.route('/v1/sync', syncRoutes);
 app.route('/v1/ai', aiRoutes);
 
 app.get(

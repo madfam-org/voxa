@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { createBoardId, createDemoBoard, DEMO_BOARD_ID } from '@voxa/core';
 import { buildSampleGridsetArchive, buildSampleSnapArchive, buildSampleTouchChatArchive } from '@voxa/import-adapters';
-import { applyCreateBoard, applyImportGridsetBoard, applyImportSnapBoard, applyImportTouchChatBoard, applyUpdateBoard } from './board-operations.js';
+import { applyCreateBoard, applyImportGridsetBoard, applyImportSnapBoard, applyImportTouchChatBoard, applyUpdateBoard, trimSyncEvents } from './board-operations.js';
+import type { BoardId, SyncEvent } from '@voxa/core';
 
 describe('board operations', () => {
   it('creates a board and increments version on update', () => {
@@ -99,5 +100,32 @@ describe('board operations', () => {
     assert.equal(result.board.name, 'Core');
     assert.equal(result.board.grid.buttons.length, 3);
     assert.equal(result.event.payload?.action, 'import.touchchat');
+  });
+
+  it('keeps the stored owner and organization on update', () => {
+    const boards: Record<string, ReturnType<typeof createDemoBoard>> = {};
+    applyCreateBoard(boards, { ...createDemoBoard(), id: createBoardId('b1'), ownerUserId: 'owner', orgId: 'org' }, 'owner');
+    const current = boards.b1!;
+    const { board } = applyUpdateBoard(boards, 'b1', { ...current, ownerUserId: 'x', orgId: 'y' }, 'owner');
+    assert.equal(board.ownerUserId, 'owner');
+    assert.equal(board.orgId, 'org');
+  });
+
+  it('trims sync events per board, never another board', () => {
+    const event = (boardId: string, version: number): SyncEvent => ({
+      id: `${boardId}-${version}`,
+      type: 'board.updated',
+      boardId: boardId as BoardId,
+      version,
+      actorUserId: 'u',
+      timestamp: new Date(0).toISOString(),
+    });
+    const events = [event('a', 1), event('b', 1), event('a', 2), event('a', 3), event('b', 2)];
+    const trimmed = trimSyncEvents(events, 'a', 2);
+    assert.deepEqual(
+      trimmed.map((e) => e.id),
+      ['b-1', 'a-2', 'a-3', 'b-2'],
+    );
+    assert.equal(trimSyncEvents(events, 'b', 2), events);
   });
 });

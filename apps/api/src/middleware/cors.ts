@@ -1,5 +1,6 @@
 import type { MiddlewareHandler } from 'hono';
 import { cors as honoCors } from 'hono/cors';
+import { DEV_AUTH_HEADERS } from '../lib/dev-auth.js';
 
 const DEFAULT_ORIGINS = [
   'https://voxa.madfam.io',
@@ -21,17 +22,39 @@ function isAllowedOrigin(origin: string): boolean {
   return /^https:\/\/[a-z0-9-]+\.madfam\.io$/.test(origin);
 }
 
-export function corsMiddleware(): MiddlewareHandler {
+const BASE_HEADERS = ['Authorization', 'Content-Type', 'X-Voxa-AI-Consent'];
+
+/**
+ * The development identity headers are allowed cross-origin only outside
+ * production; production browsers never get to send them.
+ */
+export function allowedHeaders(): string[] {
+  return process.env.NODE_ENV === 'production'
+    ? [...BASE_HEADERS]
+    : [...BASE_HEADERS, ...DEV_AUTH_HEADERS];
+}
+
+function buildCors(headers: string[]): MiddlewareHandler {
   return honoCors({
     origin: (origin) => (origin && isAllowedOrigin(origin) ? origin : ''),
     allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowHeaders: [
-      'Authorization',
-      'Content-Type',
-      'X-Voxa-User-Id',
-      'X-Voxa-Role',
-      'X-Voxa-AI-Consent',
-    ],
+    allowHeaders: headers,
     maxAge: 86400,
   });
+}
+
+export function corsMiddleware(): MiddlewareHandler {
+  // One handler per header set, picked per request so the allow-list always
+  // follows the current NODE_ENV.
+  const handlers = new Map<string, MiddlewareHandler>();
+  return (c, next) => {
+    const headers = allowedHeaders();
+    const key = headers.join(',');
+    let handler = handlers.get(key);
+    if (!handler) {
+      handler = buildCors(headers);
+      handlers.set(key, handler);
+    }
+    return handler(c, next);
+  };
 }

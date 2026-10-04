@@ -9,7 +9,6 @@ import {
 } from '@voxa/core';
 import { canAccessBoard, canEditBoard } from '../lib/board-access.js';
 import { maxBoardCount, resolveEntitlement } from '../lib/dhanam.js';
-import { requireEditor } from '../middleware/team-auth.js';
 import { getStore } from '../store/index.js';
 import { broadcastBoardEvent } from '../ws/sync-hub.js';
 import { errorMessage, unwrapDbError } from '../lib/db-errors.js';
@@ -30,15 +29,12 @@ boardRoutes.get('/templates/list', async (c) => {
 });
 
 boardRoutes.get('/:boardId/audit', async (c) => {
-  if (!requireEditor(c)) {
-    return c.json({ error: 'Editor role required' }, 403);
-  }
-
   const boardId = c.req.param('boardId');
   const { userId, role, orgId } = c.get('team');
   const board = await getStore().getBoard(boardId);
   if (!board) return c.json({ error: 'Board not found' }, 404);
-  if (!canAccessBoard(boardId, board.ownerUserId, userId, role, board.orgId, orgId)) {
+  // The audit trail names who edited a board: only people who may edit it see it.
+  if (!canEditBoard(boardId, board.ownerUserId, userId, role, board.orgId, orgId)) {
     return c.json({ error: 'Forbidden' }, 403);
   }
 
@@ -65,10 +61,8 @@ boardRoutes.get('/:boardId', async (c) => {
 });
 
 boardRoutes.post('/', async (c) => {
-  if (!requireEditor(c)) {
-    return c.json({ error: 'Editor role required' }, 403);
-  }
-
+  // Any signed-in user may create a board they own, within their plan's board
+  // limit. Owner and organization come from the token only, never from the body.
   const body = (await c.req.json()) as Board & { templateId?: StarterTemplateId; contentLocale?: unknown };
   const { userId, orgId } = c.get('team');
   if (body.templateId && body.contentLocale !== undefined && !isStarterContentLocale(body.contentLocale)) {
@@ -94,12 +88,12 @@ boardRoutes.post('/', async (c) => {
           locale: contentLocale,
         }),
         ownerUserId: userId,
-        orgId: orgId ?? body.orgId,
+        orgId,
       }
     : {
         ...body,
         ownerUserId: userId,
-        orgId: orgId ?? body.orgId,
+        orgId,
       };
 
   try {
@@ -112,10 +106,6 @@ boardRoutes.post('/', async (c) => {
 });
 
 boardRoutes.put('/:boardId', async (c) => {
-  if (!requireEditor(c)) {
-    return c.json({ error: 'Editor role required' }, 403);
-  }
-
   const boardId = c.req.param('boardId');
   const body = (await c.req.json()) as Board & { expectedVersion?: number; forceMotorPlanning?: boolean };
   const { userId, role, orgId } = c.get('team');
@@ -146,10 +136,6 @@ boardRoutes.put('/:boardId', async (c) => {
 });
 
 boardRoutes.delete('/:boardId', async (c) => {
-  if (!requireEditor(c)) {
-    return c.json({ error: 'Editor role required' }, 403);
-  }
-
   const boardId = c.req.param('boardId');
   const { userId, role, orgId } = c.get('team');
 
@@ -170,10 +156,6 @@ boardRoutes.delete('/:boardId', async (c) => {
 });
 
 boardRoutes.post('/:boardId/import/obf', async (c) => {
-  if (!requireEditor(c)) {
-    return c.json({ error: 'Editor role required' }, 403);
-  }
-
   const boardId = c.req.param('boardId');
   const raw = await c.req.text();
   const { userId, role, orgId } = c.get('team');
@@ -198,10 +180,6 @@ boardRoutes.post('/:boardId/import/obf', async (c) => {
 });
 
 boardRoutes.post('/:boardId/import/obz', async (c) => {
-  if (!requireEditor(c)) {
-    return c.json({ error: 'Editor role required' }, 403);
-  }
-
   const boardId = c.req.param('boardId');
   const archive = new Uint8Array(await c.req.arrayBuffer());
   const { userId, role, orgId } = c.get('team');
@@ -226,10 +204,6 @@ boardRoutes.post('/:boardId/import/obz', async (c) => {
 });
 
 boardRoutes.post('/:boardId/import/gridset', async (c) => {
-  if (!requireEditor(c)) {
-    return c.json({ error: 'Editor role required' }, 403);
-  }
-
   const boardId = c.req.param('boardId');
   const archive = new Uint8Array(await c.req.arrayBuffer());
   const { userId, role, orgId } = c.get('team');
@@ -254,10 +228,6 @@ boardRoutes.post('/:boardId/import/gridset', async (c) => {
 });
 
 boardRoutes.post('/:boardId/import/snap', async (c) => {
-  if (!requireEditor(c)) {
-    return c.json({ error: 'Editor role required' }, 403);
-  }
-
   const boardId = c.req.param('boardId');
   const archive = new Uint8Array(await c.req.arrayBuffer());
   const { userId, role, orgId } = c.get('team');
@@ -282,10 +252,6 @@ boardRoutes.post('/:boardId/import/snap', async (c) => {
 });
 
 boardRoutes.post('/:boardId/import/touchchat', async (c) => {
-  if (!requireEditor(c)) {
-    return c.json({ error: 'Editor role required' }, 403);
-  }
-
   const boardId = c.req.param('boardId');
   const archive = new Uint8Array(await c.req.arrayBuffer());
   const { userId, role, orgId } = c.get('team');

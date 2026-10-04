@@ -70,8 +70,11 @@ export function SymbolSearchPanel({
     setError(null);
     setPendingHit(null);
     try {
-      const headers: Record<string, string> = { 'X-Voxa-Role': 'editor' };
-      if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
+      // Signed in: the bearer token alone. Development identity headers are
+      // only for local API runs (VOXA_DEV_AUTH) and are not CORS-allowed in production.
+      const headers: Record<string, string> = accessToken
+        ? { Authorization: `Bearer ${accessToken}` }
+        : { 'X-Voxa-Role': 'editor' };
       const res = await fetch(
         `${API_URL.replace(/\/$/, '')}/v1/symbols/search?q=${encodeURIComponent(query.trim())}&locale=${encodeURIComponent(contentLocale.split('-')[0] ?? 'es')}`,
         { headers },

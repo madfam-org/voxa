@@ -48,10 +48,7 @@ export function UsageReportPanel({
       const res = await fetch(
         `${API_URL.replace(/\/$/, '')}/v1/events/activations/summary?boardId=${encodeURIComponent(boardId)}&days=${days}`,
         {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'X-Voxa-Role': 'editor',
-          },
+          headers: { Authorization: `Bearer ${accessToken}` },
         },
       );
       if (!res.ok) {

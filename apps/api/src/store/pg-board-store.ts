@@ -1,4 +1,4 @@
-import { and, eq, gt } from 'drizzle-orm';
+import { and, desc, eq, gt, inArray } from 'drizzle-orm';
 import {
   createDemoBoard,
   DEMO_BOARD_ID,
@@ -21,7 +21,7 @@ import {
   applyUpdateBoard,
   exportBoardObf,
   exportBoardObz,
-  trimSyncEvents,
+  MAX_SYNC_EVENTS_PER_BOARD,
 } from './board-operations.js';
 import type { BoardStore, ImportObfResult } from './types.js';
 
@@ -89,17 +89,25 @@ export function createPgBoardStore(databaseUrl: string): BoardStore {
     });
   }
 
-  async function trimEvents(): Promise<void> {
-    const countRows = await db.select({ id: syncEvents.id }).from(syncEvents);
-    if (countRows.length <= 5000) return;
+  /**
+   * Keep the newest MAX_SYNC_EVENTS_PER_BOARD events of one board. Per board,
+   * so one board's activity never trims another board's audit history.
+   */
+  async function trimBoardEvents(boardId: string): Promise<void> {
+    const stale = db
+      .select({ id: syncEvents.id })
+      .from(syncEvents)
+      .where(eq(syncEvents.boardId, boardId))
+      .orderBy(desc(syncEvents.version), desc(syncEvents.timestamp))
+      .offset(MAX_SYNC_EVENTS_PER_BOARD);
+    await db
+      .delete(syncEvents)
+      .where(and(eq(syncEvents.boardId, boardId), inArray(syncEvents.id, stale)));
+  }
 
-    const keepFrom = countRows.length - 5000;
-    const stale = countRows.slice(0, keepFrom).map((row) => row.id);
-    if (stale.length === 0) return;
-
-    for (const id of stale) {
-      await db.delete(syncEvents).where(eq(syncEvents.id, id));
-    }
+  async function recordEvent(event: SyncEvent): Promise<void> {
+    await persistEvent(event);
+    await trimBoardEvents(event.boardId as string);
   }
 
   return {
@@ -117,7 +125,7 @@ export function createPgBoardStore(databaseUrl: string): BoardStore {
       const map = await loadBoardMap();
       const result = applyCreateBoard(map, board, actorUserId);
       await persistBoard(result.board);
-      await persistEvent(result.event);
+      await recordEvent(result.event);
       return result;
     },
 
@@ -125,7 +133,7 @@ export function createPgBoardStore(databaseUrl: string): BoardStore {
       const map = await loadBoardMap();
       const result = applyUpdateBoard(map, boardId, next, actorUserId, options);
       await persistBoard(result.board);
-      await persistEvent(result.event);
+      await recordEvent(result.event);
       return result;
     },
 
@@ -133,7 +141,7 @@ export function createPgBoardStore(databaseUrl: string): BoardStore {
       const map = await loadBoardMap();
       const result = applyImportObfBoard(map, boardId, rawObf, actorUserId);
       await persistBoard(result.board);
-      await persistEvent(result.event);
+      await recordEvent(result.event);
       return result;
     },
 
@@ -141,7 +149,7 @@ export function createPgBoardStore(databaseUrl: string): BoardStore {
       const map = await loadBoardMap();
       const result = applyImportObzBoard(map, boardId, archive, actorUserId);
       await persistBoard(result.board);
-      await persistEvent(result.event);
+      await recordEvent(result.event);
       return result;
     },
 
@@ -149,7 +157,7 @@ export function createPgBoardStore(databaseUrl: string): BoardStore {
       const map = await loadBoardMap();
       const result = applyImportGridsetBoard(map, boardId, archive, actorUserId);
       await persistBoard(result.board);
-      await persistEvent(result.event);
+      await recordEvent(result.event);
       return result;
     },
 
@@ -157,7 +165,7 @@ export function createPgBoardStore(databaseUrl: string): BoardStore {
       const map = await loadBoardMap();
       const result = await applyImportSnapBoard(map, boardId, archive, actorUserId);
       await persistBoard(result.board);
-      await persistEvent(result.event);
+      await recordEvent(result.event);
       return result;
     },
 
@@ -165,7 +173,7 @@ export function createPgBoardStore(databaseUrl: string): BoardStore {
       const map = await loadBoardMap();
       const result = await applyImportTouchChatBoard(map, boardId, archive, actorUserId);
       await persistBoard(result.board);
-      await persistEvent(result.event);
+      await recordEvent(result.event);
       return result;
     },
 
@@ -195,9 +203,8 @@ export function createPgBoardStore(databaseUrl: string): BoardStore {
 
     async appendSyncEvents(events: SyncEvent[]) {
       for (const event of events) {
-        await persistEvent(event);
+        await recordEvent(event);
       }
-      await trimEvents();
     },
 
     async getRecentEvents(boardId: BoardId, sinceVersion = 0) {

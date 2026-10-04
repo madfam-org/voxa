@@ -1,7 +1,6 @@
 import { Hono } from 'hono';
-import { canAccessBoard } from '../lib/board-access.js';
+import { canAccessBoard, canEditBoard } from '../lib/board-access.js';
 import { getActivationSummary, recordActivation } from '../lib/activations.js';
-import { requireEditor } from '../middleware/team-auth.js';
 import { getStore } from '../store/index.js';
 
 export const eventRoutes = new Hono();
@@ -43,11 +42,9 @@ eventRoutes.post('/activations', async (c) => {
   return c.json({ ok: true }, 201);
 });
 
+// Usage reports aggregate everyone's activity on a board: only people who may
+// edit the board (its owner, or editors of its organization) see them.
 eventRoutes.get('/activations/summary', async (c) => {
-  if (!requireEditor(c)) {
-    return c.json({ error: 'Editor role required' }, 403);
-  }
-
   const boardId = c.req.query('boardId');
   const days = Math.min(90, Math.max(1, Number(c.req.query('days') ?? '7') || 7));
 
@@ -58,7 +55,7 @@ eventRoutes.get('/activations/summary', async (c) => {
   const { userId, role, orgId } = c.get('team');
   const board = await getStore().getBoard(boardId);
   if (!board) return c.json({ error: 'Board not found' }, 404);
-  if (!canAccessBoard(boardId, board.ownerUserId, userId, role, board.orgId, orgId)) {
+  if (!canEditBoard(boardId, board.ownerUserId, userId, role, board.orgId, orgId)) {
     return c.json({ error: 'Forbidden' }, 403);
   }
 

@@ -1,7 +1,6 @@
 import { Hono } from 'hono';
 import { canAccessBoard, canEditBoard } from '../lib/board-access.js';
 import { getMediaAsset, isAllowedMediaMime, saveMediaAsset } from '../lib/media-store.js';
-import { requireEditor } from '../middleware/team-auth.js';
 import { getStore } from '../store/index.js';
 import { errorMessage } from '../lib/db-errors.js';
 
@@ -12,11 +11,9 @@ function mediaPublicUrl(c: { req: { url: string } }, id: string): string {
   return `${url.origin}/v1/media/${id}`;
 }
 
+// Upload rights follow board edit rights (owner, or an editor of the board's
+// organization). The shared demo board accepts no uploads.
 mediaRoutes.post('/', async (c) => {
-  if (!requireEditor(c)) {
-    return c.json({ error: 'Editor role required' }, 403);
-  }
-
   const body = await c.req.parseBody();
   const boardId = String(body.boardId ?? '');
   const file = body.file;

@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import {
   createBoardId,
+  DEMO_BOARD_ID,
   type Board,
   type BoardUpdateResult,
   type SyncEvent,
@@ -76,12 +77,17 @@ export function applyUpdateBoard(
     throw err;
   }
 
+  // Owner and organization are never taken from the request body: an update
+  // cannot transfer a board, and a client that omits them cannot wipe them.
+  const { ownerUserId: _ignoredOwner, orgId: _ignoredOrg, ...content } = next;
   const stored: Board = {
-    ...next,
+    ...content,
     id: createBoardId(boardId),
     version: current.version + 1,
     updatedAt: new Date().toISOString(),
   };
+  if (current.ownerUserId !== undefined) stored.ownerUserId = current.ownerUserId;
+  if (current.orgId !== undefined) stored.orgId = current.orgId;
   boards[boardId] = stored;
   const event = createSyncEvent('board.updated', stored, actorUserId);
   return { board: stored, event };
@@ -265,16 +271,35 @@ export function exportBoardObf(boards: Record<string, Board>, boardId: string): 
   return JSON.stringify(voxaBoardToObf(board), null, 2);
 }
 
-export function trimSyncEvents(events: SyncEvent[], max = 5000): SyncEvent[] {
-  if (events.length <= max) return events;
-  return events.slice(-max);
+/** Sync/audit events kept per board; older ones are trimmed on write. */
+export const MAX_SYNC_EVENTS_PER_BOARD = 5000;
+
+/**
+ * Keep the newest `max` events of `boardId` and every event of other boards.
+ * Trimming is per board, so activity on one board never erases another
+ * board's audit history.
+ */
+export function trimSyncEvents(
+  events: SyncEvent[],
+  boardId: string,
+  max = MAX_SYNC_EVENTS_PER_BOARD,
+): SyncEvent[] {
+  let excess = events.filter((event) => event.boardId === boardId).length - max;
+  if (excess <= 0) return events;
+  return events.filter((event) => {
+    if (excess > 0 && event.boardId === boardId) {
+      excess -= 1;
+      return false;
+    }
+    return true;
+  });
 }
 
 export function applyDeleteBoard(
   boards: Record<string, Board>,
   boardId: string,
 ): void {
-  if (boardId === 'demo-core') {
+  if (boardId === DEMO_BOARD_ID) {
     throw new Error('The demo board cannot be deleted');
   }
   if (!boards[boardId]) {

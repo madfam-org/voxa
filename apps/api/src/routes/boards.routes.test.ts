@@ -4,6 +4,7 @@ import { createBoardId, createDemoBoard, DEMO_BOARD_ID } from '@voxa/core';
 import app from '../app.js';
 import { createFileBoardStore } from '../store/file-board-store.js';
 import { useTestStore } from '../store/index.js';
+import { createOwnedBoard, devHeaders } from '../test-support/boards.js';
 
 describe('board routes', () => {
   beforeEach(async () => {
@@ -62,27 +63,22 @@ describe('board routes', () => {
     assert.equal(res.status, 403);
   });
 
-  it('requires editor role to update a board', async () => {
-    const getRes = await app.request(`/v1/boards/${DEMO_BOARD_ID}`);
-    const board = (await getRes.json()) as { name: string; version: number };
+  it('lets the owner update a board and refuses other communicators', async () => {
+    await createOwnedBoard(app, 'owner-a', 'owned-board');
+    const board = (await (
+      await app.request('/v1/boards/owned-board', { headers: devHeaders('owner-a') })
+    ).json()) as { name: string; version: number };
 
-    const denied = await app.request(`/v1/boards/${DEMO_BOARD_ID}`, {
+    const denied = await app.request('/v1/boards/owned-board', {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Voxa-Role': 'communicator',
-      },
+      headers: { 'Content-Type': 'application/json', ...devHeaders('someone-else') },
       body: JSON.stringify({ ...board, name: 'Blocked rename' }),
     });
     assert.equal(denied.status, 403);
 
-    const allowed = await app.request(`/v1/boards/${DEMO_BOARD_ID}`, {
+    const allowed = await app.request('/v1/boards/owned-board', {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Voxa-Role': 'editor',
-        'X-Voxa-User-Id': 'slp-1',
-      },
+      headers: { 'Content-Type': 'application/json', ...devHeaders('owner-a') },
       body: JSON.stringify({ ...board, name: 'Updated core', expectedVersion: board.version }),
     });
     assert.equal(allowed.status, 200);
@@ -120,33 +116,33 @@ describe('board routes', () => {
       method: 'DELETE',
       headers: { 'X-Voxa-User-Id': 'owner-a', 'X-Voxa-Role': 'editor' },
     });
-    assert.equal(demoDelete.status, 400);
+    assert.equal(demoDelete.status, 403);
   });
 
-  it('returns edit audit log for editors', async () => {
-    const getRes = await app.request(`/v1/boards/${DEMO_BOARD_ID}`);
-    const board = (await getRes.json()) as { name: string; version: number };
+  it('returns the edit audit log to people who may edit the board', async () => {
+    await createOwnedBoard(app, 'slp-remote', 'audited-board', 'editor');
+    const board = (await (
+      await app.request('/v1/boards/audited-board', { headers: devHeaders('slp-remote', 'editor') })
+    ).json()) as { name: string; version: number };
 
-    await app.request(`/v1/boards/${DEMO_BOARD_ID}`, {
+    await app.request('/v1/boards/audited-board', {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Voxa-Role': 'editor',
-        'X-Voxa-User-Id': 'slp-remote',
-      },
+      headers: { 'Content-Type': 'application/json', ...devHeaders('slp-remote', 'editor') },
       body: JSON.stringify({ ...board, name: 'Audit test board', expectedVersion: board.version }),
     });
 
-    const audit = await app.request(`/v1/boards/${DEMO_BOARD_ID}/audit`, {
-      headers: {
-        'X-Voxa-Role': 'editor',
-        'X-Voxa-User-Id': 'slp-remote',
-      },
+    const audit = await app.request('/v1/boards/audited-board/audit', {
+      headers: devHeaders('slp-remote', 'editor'),
     });
     assert.equal(audit.status, 200);
     const body = (await audit.json()) as { events: Array<{ actorUserId: string }> };
     assert.ok(body.events.length >= 1);
     assert.equal(body.events[0]?.actorUserId, 'slp-remote');
+
+    const demoAudit = await app.request(`/v1/boards/${DEMO_BOARD_ID}/audit`, {
+      headers: devHeaders('slp-remote', 'editor'),
+    });
+    assert.equal(demoAudit.status, 403);
   });
   it('creates starter templates in the requested content locale (es-MX by default)', async () => {
     // One owner per board: a free plan allows a single owned board.

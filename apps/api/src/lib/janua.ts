@@ -2,17 +2,26 @@ import type { TeamRole } from '@voxa/core';
 import { mapTeamRoleFromClaims } from '@voxa/core';
 import { createRemoteJWKSet, jwtVerify, type JWTPayload } from 'jose';
 
-const ISSUER = process.env.JANUA_ISSUER_URL || 'https://auth.madfam.io';
-const JWKS_URL = process.env.JANUA_JWKS_URL || `${ISSUER}/.well-known/jwks.json`;
-const AUDIENCE = process.env.JANUA_AUDIENCE || 'voxa';
+/** Read per call (not at import) so configuration is never frozen before env is set. */
+function januaConfig() {
+  const issuer = process.env.JANUA_ISSUER_URL || 'https://auth.madfam.io';
+  return {
+    issuer,
+    jwksUrl: process.env.JANUA_JWKS_URL || `${issuer}/.well-known/jwks.json`,
+    audience: process.env.JANUA_AUDIENCE || 'voxa',
+  };
+}
 
-let jwks: ReturnType<typeof createRemoteJWKSet> | null = null;
+let jwks: { url: string; set: ReturnType<typeof createRemoteJWKSet> } | null = null;
 
-function getJwks() {
-  if (!jwks) {
-    jwks = createRemoteJWKSet(new URL(JWKS_URL), { cacheMaxAge: 10 * 60 * 1000 });
+function getJwks(jwksUrl: string) {
+  if (!jwks || jwks.url !== jwksUrl) {
+    jwks = {
+      url: jwksUrl,
+      set: createRemoteJWKSet(new URL(jwksUrl), { cacheMaxAge: 10 * 60 * 1000 }),
+    };
   }
-  return jwks;
+  return jwks.set;
 }
 
 export interface JanuaClaims extends JWTPayload {
@@ -20,8 +29,7 @@ export interface JanuaClaims extends JWTPayload {
   email?: string;
   name?: string;
   preferred_username?: string;
-  role?: string;
-  voxa_role?: string;
+  /** Janua application roles; only `voxa:*` entries are read (see mapTeamRoleFromClaims). */
   roles?: string[];
   org_id?: string;
   organization_id?: string;
@@ -32,14 +40,12 @@ export function mapJanuaRole(claims: JanuaClaims | Record<string, unknown>): Tea
 }
 
 export async function verifyAccessToken(token: string): Promise<JanuaClaims> {
-  const { payload } = await jwtVerify(token, getJwks(), {
-    issuer: ISSUER,
-    audience: AUDIENCE,
+  const { issuer, jwksUrl, audience } = januaConfig();
+  const { payload } = await jwtVerify(token, getJwks(jwksUrl), {
+    issuer,
+    audience,
     algorithms: ['RS256'],
+    clockTolerance: 30,
   });
   return payload as JanuaClaims;
-}
-
-export function isJanuaConfigured(): boolean {
-  return Boolean(process.env.JANUA_ISSUER_URL || process.env.JANUA_AUTH_REQUIRED === 'true');
 }

@@ -47,9 +47,15 @@ Unique index on `(board_id, user_id)`. Route ACLs currently enforce ownership; m
 
 ## Access control
 
-- `demo-core` is readable by all authenticated/dev users; edits require `editor` or `admin`.
-- Other boards require matching `owner_user_id` or `admin` team role.
-- Board creation respects Dhanam entitlements (`boards:N` feature limits).
+- `demo-core` is readable by all callers and editable by nobody.
+- Other boards: the `owner_user_id` reads and edits; `editor`/`admin` (Janua
+  `voxa:*` app roles) read and edit boards whose `org_id` equals their token's
+  `org_id`. There is no cross-tenant role. See [auth/JANUA.md](./auth/JANUA.md#board-access).
+- `owner_user_id` and `org_id` come from the token at creation and never change
+  through updates or imports.
+- Any signed-in user may create boards; creation respects Dhanam entitlements
+  (`boards:N` feature limits).
+- `sync_events` keeps the newest 5,000 events per board.
 
 ## Migrations
 

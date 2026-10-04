@@ -1,14 +1,11 @@
 import { Hono } from 'hono';
 import { searchArasaac } from '@voxa/symbols';
-import { requireEditor } from '../middleware/team-auth.js';
 
 export const symbolRoutes = new Hono();
 
+// Any signed-in caller may search: board owners edit their own boards whatever
+// their role, and teamAuth() has already rejected unauthenticated requests.
 symbolRoutes.get('/search', async (c) => {
-  if (!requireEditor(c)) {
-    return c.json({ error: 'Editor role required' }, 403);
-  }
-
   const query = c.req.query('q') ?? '';
   const locale = c.req.query('locale') ?? 'en';
   const limit = Number(c.req.query('limit') ?? '12');

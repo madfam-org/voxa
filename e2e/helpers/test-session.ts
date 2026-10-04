@@ -26,7 +26,9 @@ import type { BrowserContext, Page } from '@playwright/test';
  * by calling the unauthenticated app directly. The cookie's `access_token` is
  * a structurally-valid but unsigned JWT: /api/auth/session derives teamRole
  * with `decodeJwt` (decode, not verify), which is what lets this fixture
- * select the `editor` role and reach the SLP-only surfaces.
+ * select the `editor` role and reach the SLP-only surfaces. Voxa reads only
+ * namespaced Janua application roles (`voxa:editor`, `voxa:admin`), so that
+ * is what the fixture projects.
  *
  * The cookie is scoped to the local test origin and is never sent anywhere
  * else. Against a REAL deployment this fixture would simply fail — a genuine
@@ -93,8 +95,8 @@ export async function seedTestSession(
       sub: userId,
       email,
       name,
-      roles: [role],
-      role,
+      // Communicator is the absence of a Voxa app role.
+      roles: role === 'communicator' ? [] : [`voxa:${role}`],
     }),
     user_id: userId,
     email,
@@ -125,21 +127,59 @@ export async function seedLocalState(page: Page): Promise<void> {
   });
 }
 
+/** Must match BOARD_CACHE_KEY / SELECTED_BOARD_KEY in apps/web/src/lib/communicator-settings.ts. */
+const BOARD_CACHE_KEY = 'voxa-board-cache';
+const SELECTED_BOARD_KEY = 'voxa-selected-board-id';
+const DEMO_BOARD_ID = 'demo-core';
+export const TEST_OWNED_BOARD_ID = 'a11y-owned-board';
+
 /**
- * Open the remote-SLP editor at /app/edit with an editor-role session.
+ * Open the remote-SLP editor at /app/edit with an editor-role session on a
+ * board the mocked user owns.
  *
  * /app/edit is used rather than /app because it derives its role from the
- * session (`remoteEditor` short-circuits the editor-PIN prompt), so no
+ * session (an account editor skips the device editor PIN), so no
  * window.prompt can block a headless scan.
+ *
+ * The shared demo board is read-only (no editor mode on it), and the a11y job
+ * runs no API. So the first load lets the app fall back to its built-in demo
+ * board, which it caches in localStorage; that cached content is copied into a
+ * board owned by the mocked user, selected, and the page reloaded. The editor
+ * then renders the same buttons as before, on an owned board, through the same
+ * offline-cache path the app uses when the API is unreachable.
  */
 export async function openAuthenticatedEditor(
   page: Page,
   context: BrowserContext,
   baseURL: string,
 ): Promise<void> {
-  await seedTestSession(context, baseURL, { role: 'editor' });
+  const userId = 'a11y-test-user';
+  await seedTestSession(context, baseURL, { role: 'editor', userId });
   await seedLocalState(page);
   await page.goto('/app/edit');
+  await page.waitForLoadState('networkidle');
+
+  const demoCacheKey = `${BOARD_CACHE_KEY}:${DEMO_BOARD_ID}`;
+  await page.waitForFunction((key) => localStorage.getItem(key) !== null, demoCacheKey, {
+    timeout: 20_000,
+  });
+  await page.evaluate(
+    ({ demoCacheKey, cachePrefix, selectedKey, boardId, ownerUserId }) => {
+      const demo = JSON.parse(localStorage.getItem(demoCacheKey) as string) as Record<string, unknown>;
+      const owned = { ...demo, id: boardId, name: 'A11y owned board', ownerUserId };
+      localStorage.setItem(`${cachePrefix}:${boardId}`, JSON.stringify(owned));
+      localStorage.setItem(selectedKey, boardId);
+    },
+    {
+      demoCacheKey,
+      cachePrefix: BOARD_CACHE_KEY,
+      selectedKey: SELECTED_BOARD_KEY,
+      boardId: TEST_OWNED_BOARD_ID,
+      ownerUserId: userId,
+    },
+  );
+
+  await page.reload();
   await page.waitForLoadState('networkidle');
   // The editor-only chrome renders after /api/auth/session resolves.
   await page.getByRole('button', { name: 'Audit' }).waitFor({ timeout: 20_000 });

@@ -5,6 +5,7 @@ import app from '../app.js';
 import { resetFileMediaForTests } from '../lib/media-store.js';
 import { createFileBoardStore } from '../store/file-board-store.js';
 import { useTestStore } from '../store/index.js';
+import { createOwnedBoard, devHeaders } from '../test-support/boards.js';
 
 describe('media routes', () => {
   beforeEach(async () => {
@@ -14,9 +15,10 @@ describe('media routes', () => {
     useTestStore(store);
   });
 
-  it('rejects upload without editor role', async () => {
+  it('rejects upload to a board the caller may not edit', async () => {
+    await createOwnedBoard(app, 'owner-1', 'owned-board');
     const form = new FormData();
-    form.set('boardId', DEMO_BOARD_ID);
+    form.set('boardId', 'owned-board');
     form.set('file', new File([new Uint8Array([1, 2, 3])], 'test.webm', { type: 'audio/webm' }));
 
     const res = await app.request('/v1/media', {
@@ -31,9 +33,10 @@ describe('media routes', () => {
   });
 
   it('uploads audio and serves it back', async () => {
+    await createOwnedBoard(app, 'editor-1', 'owned-board', 'editor');
     const payload = new Uint8Array([0x1a, 0x45, 0xdf, 0xa3]);
     const form = new FormData();
-    form.set('boardId', DEMO_BOARD_ID);
+    form.set('boardId', 'owned-board');
     form.set('file', new File([payload], 'clip.webm', { type: 'audio/webm' }));
 
     const post = await app.request('/v1/media', {
@@ -49,12 +52,10 @@ describe('media routes', () => {
     assert.equal(body.mimeType, 'audio/webm');
     assert.ok(body.url.includes(body.id));
 
-    const get = await app.request(`/v1/media/${body.id}`, {
-      headers: {
-        'X-Voxa-User-Id': 'user-1',
-        'X-Voxa-Role': 'communicator',
-      },
-    });
+    const foreign = await app.request(`/v1/media/${body.id}`, { headers: devHeaders('user-1') });
+    assert.equal(foreign.status, 403);
+
+    const get = await app.request(`/v1/media/${body.id}`, { headers: devHeaders('editor-1', 'editor') });
     assert.equal(get.status, 200);
     assert.equal(get.headers.get('Content-Type'), 'audio/webm');
     const bytes = new Uint8Array(await get.arrayBuffer());
@@ -62,17 +63,15 @@ describe('media routes', () => {
   });
 
   it('uploads image symbols and serves them back', async () => {
+    await createOwnedBoard(app, 'user-1', 'owned-board');
     const payload = new Uint8Array([0x89, 0x50, 0x4e, 0x47]);
     const form = new FormData();
-    form.set('boardId', DEMO_BOARD_ID);
+    form.set('boardId', 'owned-board');
     form.set('file', new File([payload], 'photo.png', { type: 'image/png' }));
 
     const post = await app.request('/v1/media', {
       method: 'POST',
-      headers: {
-        'X-Voxa-User-Id': 'editor-1',
-        'X-Voxa-Role': 'editor',
-      },
+      headers: devHeaders('user-1'),
       body: form,
     });
     assert.equal(post.status, 201);
@@ -87,5 +86,17 @@ describe('media routes', () => {
     });
     assert.equal(get.status, 200);
     assert.equal(get.headers.get('Content-Type'), 'image/png');
+  });
+
+  it('refuses every upload to the shared demo board', async () => {
+    const form = new FormData();
+    form.set('boardId', DEMO_BOARD_ID);
+    form.set('file', new File([new Uint8Array([1, 2, 3])], 'clip.webm', { type: 'audio/webm' }));
+    const res = await app.request('/v1/media', {
+      method: 'POST',
+      headers: devHeaders('editor-1', 'editor'),
+      body: form,
+    });
+    assert.equal(res.status, 403);
   });
 });

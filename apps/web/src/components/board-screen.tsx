@@ -45,6 +45,13 @@ import {
   lockEditorSession,
   unlockEditor,
 } from '@/lib/editor-pin';
+import {
+  accountMayEditBoard,
+  editorModeAllowed,
+  isTrustedEditorSession,
+  ownsBoard,
+  remoteEditorRole,
+} from '@/lib/editor-access';
 import { logButtonActivation } from '@/lib/log-activation';
 import { speakButton, speakText, subscribeSpeechActivity } from '@/lib/play-button-speech';
 import { presentBoardForDisplay } from '@/lib/board-presentation';
@@ -142,8 +149,17 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
     sessionTeamRole,
   } = useSyncedBoard(role);
 
-  const trustedEditorSession =
-    isAuthenticated && (sessionTeamRole === 'editor' || sessionTeamRole === 'admin');
+  const editorAccess = {
+    boardId,
+    boardOwnerUserId: board.ownerUserId,
+    isAuthenticated,
+    sessionUserId,
+    sessionTeamRole,
+  };
+  const trustedEditorSession = isTrustedEditorSession(editorAccess);
+  const ownBoard = ownsBoard(editorAccess);
+  const canEnterEditor = editorModeAllowed(editorAccess);
+  const accountCanEdit = accountMayEditBoard(editorAccess);
 
   const displaySettings = effectiveDisplaySettings(settings, board.display);
 
@@ -151,8 +167,20 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
 
   useEffect(() => {
     if (!remoteEditor || !isAuthenticated) return;
-    setRole(sessionTeamRole === 'admin' ? 'admin' : sessionTeamRole === 'editor' ? 'editor' : 'communicator');
-  }, [remoteEditor, isAuthenticated, sessionTeamRole]);
+    setRole(
+      remoteEditorRole(
+        { boardId, boardOwnerUserId: board.ownerUserId, isAuthenticated, sessionUserId, sessionTeamRole },
+        !editorPinIsConfigured() || isEditorUnlocked(),
+      ),
+    );
+  }, [remoteEditor, isAuthenticated, sessionTeamRole, sessionUserId, boardId, board.ownerUserId]);
+
+  // The demo board is read-only: leave editor mode whenever it is shown.
+  useEffect(() => {
+    if (canEnterEditor) return;
+    setRole('communicator');
+    setEditingId(null);
+  }, [canEnterEditor]);
 
   useEffect(() => {
     setBabbleActive(false);
@@ -515,7 +543,9 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
       }
       setBabbleActive(false);
 
-      const skipPin = remoteEditor || trustedEditorSession;
+      if (!canEnterEditor) return;
+      // Account editors skip the device PIN; board owners and local users do not.
+      const skipPin = trustedEditorSession;
       if (skipPin || !editorPinIsConfigured() || isEditorUnlocked()) {
         setRole(nextRole);
         return;
@@ -531,7 +561,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
         window.alert('Incorrect PIN. Editor mode stays locked.');
       }
     },
-    [remoteEditor, trustedEditorSession],
+    [canEnterEditor, trustedEditorSession],
   );
 
   const handleSave = useCallback(async () => {
@@ -774,7 +804,16 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
             lineHeight: 1.5,
           }}
         >
-          {trustedEditorSession ? (
+          {!canEnterEditor ? (
+            <>The demo board is read-only. Create a board of your own to edit it here.</>
+          ) : ownBoard && !trustedEditorSession && !isEditor ? (
+            <>
+              This is your board.{' '}
+              <button type="button" onClick={() => handleRoleChange('editor')} style={secondaryBtn}>
+                Edit my board
+              </button>
+            </>
+          ) : accountCanEdit ? (
             <>
               <strong>Remote SLP editor</strong> — edit vocabulary without the communicator device. Changes
               sync to the cloud; the communicator app picks them up automatically.
@@ -827,7 +866,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
           <span style={{ opacity: 0.7, fontSize: '0.875rem' }}>{board.name}</span>
         )}
 
-        {isEditor && isAuthenticated && (
+        {isAuthenticated && (isEditor || !canEnterEditor) && (
           <>
             <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: '0.8125rem' }}>
               Template
@@ -846,13 +885,17 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
             <button type="button" onClick={handleCreateBoard} disabled={busy} style={secondaryBtn}>
               New board
             </button>
-            <button type="button" onClick={() => void handleRenameBoard()} disabled={busy} style={secondaryBtn}>
-              Rename
-            </button>
-            <button type="button" onClick={() => void handleDuplicateBoard()} disabled={busy} style={secondaryBtn}>
-              Duplicate
-            </button>
-            {boardId !== DEMO_BOARD_ID ? (
+            {isEditor ? (
+              <>
+                <button type="button" onClick={() => void handleRenameBoard()} disabled={busy} style={secondaryBtn}>
+                  Rename
+                </button>
+                <button type="button" onClick={() => void handleDuplicateBoard()} disabled={busy} style={secondaryBtn}>
+                  Duplicate
+                </button>
+              </>
+            ) : null}
+            {isEditor && boardId !== DEMO_BOARD_ID ? (
               <button type="button" onClick={() => void handleDeleteBoard()} disabled={busy} style={secondaryBtn}>
                 Delete
               </button>
@@ -874,7 +917,8 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
           onChange={(e) => handleRoleChange(e.target.value as TeamRole)}
           style={selectStyle}
           aria-label="Team role"
-          disabled={remoteEditor}
+          disabled={remoteEditor || !canEnterEditor}
+          title={canEnterEditor ? undefined : 'The demo board is read-only'}
         >
           <option value="communicator">Communicator</option>
           <option value="editor">Editor (SLP)</option>
