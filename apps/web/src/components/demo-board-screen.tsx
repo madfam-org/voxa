@@ -406,7 +406,12 @@ export function DemoBoardScreen(): React.ReactNode {
         <SymbolCredit
           buttons={sorted}
           block
-          style={{ margin: 0, padding: '6px 16px', fontSize: '0.75rem', color: neutral.muted }}
+          style={{
+            margin: 0,
+            padding: '6px 16px',
+            fontSize: '0.75rem',
+            color: classicScene ? classic.textMutedStrong : neutral.muted,
+          }}
         />
       </div>
 
