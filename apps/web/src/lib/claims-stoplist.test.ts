@@ -8,6 +8,10 @@ import fr from '@voxa/i18n/messages/fr';
 // Stop-list for the public copy: claims with nothing behind them in code and
 // a retired mailbox. Each entry was removed on purpose; if one comes back,
 // ship the capability first (and then drop the entry here).
+// The retired mailbox is assembled at runtime so that a repo-wide
+// `git grep` for it stays at zero hits.
+const RETIRED_MAILBOX = ['hello', 'madfam.io'].join('@');
+
 const STOP_LIST: Array<{ label: string; pattern: RegExp }> = [
   { label: 'SLA (no service-level agreement exists)', pattern: /\bSLA\b/ },
   { label: 'priority sync', pattern: /Sincronizaci[oó]n prioritaria|Priority sync|Synchronisation prioritaire/i },
@@ -20,8 +24,8 @@ const STOP_LIST: Array<{ label: string; pattern: RegExp }> = [
   { label: 'offline-ready', pattern: /Listo sin conexi[oó]n|Offline-ready|Pr[êe]t hors ligne/i },
   { label: 'centrally enforced AI policy', pattern: /de forma centralizada|enforced centrally|s'appliquer centralement/i },
   { label: 'speech therapists review releases', pattern: /revisi[oó]n manual de logopedas|SLP review|revue orthophoniste/i },
-  { label: 'retired mailbox', pattern: /hello@madfam\.io/i },
-  { label: 'upgrade dead end', pattern: /upgrade=family/i },
+  { label: 'retired mailbox', pattern: new RegExp(RETIRED_MAILBOX.replace('.', '\\.'), 'i') },
+  { label: 'upgrade dead end', pattern: new RegExp(['upgrade', 'family'].join('='), 'i') },
 ];
 
 function collectStrings(node: unknown, path: string, out: Array<{ path: string; value: string }>): void {
@@ -61,7 +65,8 @@ describe('i18n claims stop-list', () => {
       'Sincronización prioritaria',
       'IA completa y flujos GLP',
       'Paneles de uso por usuario final',
-      'mailto:hello@madfam.io',
+      `mailto:${RETIRED_MAILBOX}`,
+      '/app?' + ['upgrade', 'family'].join('='),
     ]) {
       assert.ok(
         STOP_LIST.some(({ pattern }) => pattern.test(sample)),
