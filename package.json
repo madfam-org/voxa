@@ -28,7 +28,8 @@
     "test:e2e": "pnpm --filter @voxa/e2e test",
     "test:e2e:smoke": "pnpm --filter @voxa/e2e test:smoke",
     "test:e2e:a11y": "pnpm --filter @voxa/e2e test:a11y",
-    "test:e2e:staging": "pnpm --filter @voxa/e2e test:staging"
+    "test:e2e:staging": "pnpm --filter @voxa/e2e test:staging",
+    "test:e2e:staging:signed-in": "pnpm --filter @voxa/e2e test:staging:signed-in"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

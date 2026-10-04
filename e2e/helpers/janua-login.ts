@@ -1,4 +1,5 @@
 import { type Page, expect } from '@playwright/test';
+import { ui } from './i18n';
 
 const STAGING_EMAIL = process.env.JANUA_TEST_EMAIL ?? process.env.VOXA_STAGING_TEST_EMAIL;
 const STAGING_PASSWORD =
@@ -15,7 +16,7 @@ export async function signInViaJanua(page: Page): Promise<void> {
   }
 
   await page.goto('/auth/signin');
-  await page.getByRole('button', { name: 'Continue with Janua' }).click();
+  await page.getByRole('button', { name: ui('auth.continueJanua') }).click();
   await page.waitForURL(/auth\.madfam\.io/);
   await page.getByRole('textbox', { name: 'Email' }).fill(STAGING_EMAIL);
   await page.getByRole('textbox', { name: 'Password' }).fill(STAGING_PASSWORD);
@@ -43,5 +44,5 @@ export async function signInViaJanua(page: Page): Promise<void> {
   });
 
   await page.goto('/app');
-  await expect(page.getByRole('button', { name: 'Settings' })).toBeVisible({ timeout: 20000 });
+  await expect(page.getByRole('button', { name: ui('common.settings') })).toBeVisible({ timeout: 20000 });
 }

@@ -7,6 +7,7 @@ import {
   openAccessibilitySettings,
   prepareAuthenticatedApp,
 } from '../helpers/app-session';
+import { ui } from '../helpers/i18n';
 
 const API_BASE = process.env.VOXA_STAGING_API_URL ?? 'https://voxa-api-staging.madfam.io';
 
@@ -27,16 +28,16 @@ test.describe('Offline sync soak', () => {
     await enterEditorMode(page);
 
     await openAccessibilitySettings(page);
-    const boardHideSymbols = page.getByLabel('Hide symbols on this board');
+    const boardHideSymbols = page.getByLabel(ui('settings.boardHideSymbols', { exact: false }));
     await expect(boardHideSymbols).toBeVisible();
     await boardHideSymbols.check();
-    await page.getByRole('button', { name: 'Close' }).click();
+    await page.getByRole('button', { name: ui('common.close') }).click();
 
     page.once('dialog', async (dialog) => {
       expect(dialog.message()).toMatch(/queued|offline/i);
       await dialog.accept();
     });
-    await page.getByRole('button', { name: 'Save' }).click();
+    await page.getByRole('button', { name: ui('common.save') }).click();
 
     const banner = page.getByRole('status');
     await expect(banner).toContainText(/queued|sync when back online/i, { timeout: 10000 });
@@ -47,7 +48,7 @@ test.describe('Offline sync soak', () => {
     expect(pendingKey).toBeTruthy();
 
     blockSave = false;
-    await page.getByRole('button', { name: 'Retry sync' }).click();
+    await page.getByRole('button', { name: ui('sync.retry') }).click();
     await expect(banner).toBeHidden({ timeout: 15000 });
   });
 
@@ -113,7 +114,7 @@ test.describe('Offline sync soak', () => {
     page.once('dialog', async (dialog) => {
       await dialog.accept();
     });
-    await page.getByRole('button', { name: 'Save' }).click();
+    await page.getByRole('button', { name: ui('common.save') }).click();
     await expect(page.getByRole('status')).toContainText(/queued|sync when back online/i, {
       timeout: 10000,
     });
@@ -125,7 +126,7 @@ test.describe('Offline sync soak', () => {
 
     await enterEditorMode(page);
     const offlineDownload = page.waitForEvent('download');
-    await page.getByRole('button', { name: 'Export OBF' }).click();
+    await page.getByRole('button', { name: ui('communicator.exportObf') }).click();
     const offlineFile = await offlineDownload;
     const offlinePath = await offlineFile.path();
     expect(offlinePath).toBeTruthy();
@@ -133,12 +134,12 @@ test.describe('Offline sync soak', () => {
     expect(offlineObf).toContain(marker);
 
     blockWrite = false;
-    await page.getByRole('button', { name: 'Retry sync' }).click();
+    await page.getByRole('button', { name: ui('sync.retry') }).click();
     await expect(page.getByRole('status')).toBeHidden({ timeout: 15000 });
 
     blockExport = false;
     const onlineDownload = page.waitForEvent('download');
-    await page.getByRole('button', { name: 'Export OBF' }).click();
+    await page.getByRole('button', { name: ui('communicator.exportObf') }).click();
     const onlineFile = await onlineDownload;
     const onlinePath = await onlineFile.path();
     expect(onlinePath).toBeTruthy();
