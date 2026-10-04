@@ -90,7 +90,7 @@ jobs:
       # OCI referrers in the new bundle format, which the cluster's Kyverno
       # (v1.11, verify-image-signatures) does not read. See .github/dependabot.yml.
       - name: Install cosign
-        uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3.9.1
+        uses: sigstore/cosign-installer@7e8b541eb2e61bf99390e1afd4be13a184e9ebc5 # v3.10.1
 
       # Retry the sign call: on 2026-08-26 crea-frontend run 33010085743 the
       # GitHub OIDC endpoint transiently returned non-JSON ("invalid character
