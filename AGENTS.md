@@ -136,7 +136,13 @@ invariant 6).
 - **Janua (identity).** The API verifies Janua access tokens with `jose`
   (`src/lib/janua.ts`): JWKS from `JANUA_JWKS_URL` (default
   `${JANUA_ISSUER_URL}/.well-known/jwks.json`), `iss` = `JANUA_ISSUER_URL`,
-  `aud` = `JANUA_AUDIENCE` (default `voxa`), RS256 only. Contract:
+  `aud` = `JANUA_AUDIENCE` (default `voxa`), RS256 only, 30 s clock tolerance.
+  Roles come only from namespaced app roles in `roles` (`voxa:admin`,
+  `voxa:editor`, `voxa:slp`); bare organization roles are ignored, editors and
+  admins act only inside their own `org_id`, owners edit their own boards and
+  `demo-core` is read-only (`src/lib/board-access.ts`). Development headers
+  (`X-Voxa-User-Id`/`X-Voxa-Role`) need `VOXA_DEV_AUTH=true` and never work in
+  production. Contract:
   [Janua ecosystem integration guide](https://github.com/madfam-org/janua/blob/main/docs/guides/ECOSYSTEM_INTEGRATION.md).
   Voxa setup: [docs/auth/JANUA.md](./docs/auth/JANUA.md).
 - **Dhanam (billing).** `src/lib/dhanam.ts` reads entitlements from

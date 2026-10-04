@@ -31,8 +31,15 @@ Register redirect URI: `https://voxa.madfam.io/auth/callback` (and staging equiv
 
 The API accepts:
 
-1. **`Authorization: Bearer <janua-access-token>`** — verified against Janua JWKS (production)
-2. **`X-Voxa-User-Id` / `X-Voxa-Role`** — local dev only when `JANUA_AUTH_REQUIRED` is not `true`
+1. **`Authorization: Bearer <janua-access-token>`** — verified against Janua JWKS
+   (RS256 only, `iss`, `aud`, `exp`, 30 s clock tolerance).
+2. **`X-Voxa-User-Id` / `X-Voxa-Role`** (and `?userId=&role=` on the WebSocket) —
+   a local-development shortcut, honoured **only** when `NODE_ENV` is not
+   `production` **and** `VOXA_DEV_AUTH=true` (and neither `VOXA_JANUA_AUTH_REQUIRED`
+   nor `JANUA_AUTH_REQUIRED` is `true`). Otherwise a request without a bearer
+   token gets **401**. The headers are not in the production CORS allow-list. The
+   API test preload sets `VOXA_DEV_AUTH=true`; set it yourself for `pnpm dev:api`
+   without Janua.
 
 ### Environment variables (API)
 
@@ -40,20 +47,41 @@ The API accepts:
 JANUA_ISSUER_URL=https://auth.madfam.io
 JANUA_JWKS_URL=https://auth.madfam.io/.well-known/jwks.json
 JANUA_AUDIENCE=voxa
-JANUA_AUTH_REQUIRED=false   # set true after web OIDC is live
+VOXA_JANUA_AUTH_REQUIRED=true   # production and staging
+VOXA_DEV_AUTH=true              # local development only; ignored in production
 ```
 
 Template: `deploy/secrets-template.yaml`
 
 ### Role mapping
 
-| Janua claim | Voxa `TeamRole` |
-|-------------|-----------------|
-| `admin` | `admin` |
-| `editor`, `slp` | `editor` |
-| (default) | `communicator` |
+Voxa reads **only namespaced Janua application roles** from the `roles` claim,
+following Janua's organization-claims contract: organization roles
+(`owner`/`admin`/`member`/`employee`) are authority over the Janua account, ride
+under `madfam_org_roles`, and never authorize inside a product. Janua's OIDC path
+still lists legacy organization roles as bare strings in `roles`, so every
+non-namespaced entry is ignored.
 
-Claims checked: `roles[]`, `role`, `voxa_role`.
+| `roles` entry | Voxa `TeamRole` |
+|---------------|-----------------|
+| `voxa:admin` | `admin` |
+| `voxa:editor`, `voxa:slp` | `editor` |
+| anything else (incl. bare `admin`, `editor`, `slp`; `role`; `voxa_role`) | `communicator` |
+
+Grant app roles per organization membership with Janua's internal app-roles
+grant endpoint (`app` = `voxa`, `role` = `admin` / `editor` / `slp`).
+
+### Board access
+
+- `demo-core` is readable by everyone and **editable by nobody** (no update,
+  import, media upload, audit log or usage report).
+- The **owner** of a board may read and edit it whatever their role.
+- `editor` and `admin` may read and edit boards of **their own organization**
+  (`board.org_id` equals the token's `org_id`; both must be present). There is no
+  cross-tenant role.
+- Any signed-in user may create boards they own, within the plan's board limit.
+  The owner is the token `sub` and the organization is the token `org_id`; body
+  values for either are ignored, on create and on update.
 
 ## Operator checklist
 
@@ -61,7 +89,7 @@ Claims checked: `roles[]`, `role`, `voxa_role`.
 2. Add client id/secret to web build args and Enclii secrets.
 3. Deploy web with OIDC env vars set.
 4. Set API `JANUA_*` secrets via Enclii onboard.
-5. Flip `JANUA_AUTH_REQUIRED=true` when ready to disable header auth.
+5. Keep `VOXA_JANUA_AUTH_REQUIRED=true` on the API deployments; header auth is never available in production.
 
 ## Mobile (Expo)
 

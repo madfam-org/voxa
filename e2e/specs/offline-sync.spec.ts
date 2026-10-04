@@ -55,7 +55,6 @@ test.describe('Offline sync soak', () => {
     test.skip(!hasJanuaTestCredentials(), 'Requires JANUA_TEST_EMAIL/PASSWORD');
 
     await prepareAuthenticatedApp(page);
-    await page.getByLabel('Team role').selectOption('editor');
     await enterEditorMode(page);
 
     const dialogPromise = new Promise<string>((resolve) => {

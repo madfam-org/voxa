@@ -118,19 +118,22 @@ if [[ "${WITH_AUTH}" == true ]]; then
       -d '{"profileId":"soak","recentUtterances":[],"partialText":"I want","locale":"en-US"}')"
     check "POST /v1/ai/predict/text with consent → 200/402" test "${ai_with_consent}" = "200" -o "${ai_with_consent}" = "402"
 
-    activation_code="$(curl -sS -o /dev/null -w '%{http_code}' -X POST "${API_BASE}/v1/events/activations" \
+    echo "== Demo board is read-only =="
+    demo_put_code="$(curl -sS -o /dev/null -w '%{http_code}' -X PUT "${API_BASE}/v1/boards/demo-core" \
       -H "Authorization: Bearer ${token}" \
       -H 'Content-Type: application/json' \
-      -H 'X-Voxa-AI-Consent: true' \
-      -d '{"boardId":"demo-core","buttonId":"want","speechText":"want"}')"
-    check "POST /v1/events/activations with consent → 201" test "${activation_code}" = "201"
+      -d '{}')"
+    check "PUT /v1/boards/demo-core → 403" test "${demo_put_code}" = "403"
 
-    summary_code="$(curl -sS -o /dev/null -w '%{http_code}' \
-      "${API_BASE}/v1/events/activations/summary?boardId=demo-core&days=7" \
+    obf_file="${ROOT}/fixtures/soak/minimal.obf"
+    demo_import_code="$(curl -sS -o /dev/null -w '%{http_code}' \
+      -X POST "${API_BASE}/v1/boards/demo-core/import/obf" \
       -H "Authorization: Bearer ${token}" \
-      -H 'X-Voxa-Role: editor')"
-    check "GET /v1/events/activations/summary → 200" test "${summary_code}" = "200"
+      -H 'Content-Type: application/json' \
+      --data-binary @"${obf_file}")"
+    check "POST demo-core OBF import → 403" test "${demo_import_code}" = "403"
 
+    echo "== Owned board =="
     soak_board_id="soak-create-$(date +%s)"
     create_payload="$(cat <<EOF
 {
@@ -149,38 +152,55 @@ EOF
       -d "${create_payload}")"
     check "POST /v1/boards create → 201/402" test "${create_code}" = "201" -o "${create_code}" = "402"
 
-    echo "== Authenticated OBF round-trip =="
-    obf_file="${ROOT}/fixtures/soak/minimal.obf"
-    import_code="$(curl -sS -o /tmp/voxa-obf-import.json -w '%{http_code}' \
-      -X POST "${API_BASE}/v1/boards/demo-core/import/obf" \
-      -H "Authorization: Bearer ${token}" \
-      -H 'Content-Type: application/json' \
-      --data-binary @"${obf_file}")"
-    check "POST OBF import → 200" test "${import_code}" = "200"
+    if [[ "${create_code}" != "201" ]]; then
+      echo "SKIP owned-board checks (board limit reached for the soak account: ${create_code})"
+    else
+      activation_code="$(curl -sS -o /dev/null -w '%{http_code}' -X POST "${API_BASE}/v1/events/activations" \
+        -H "Authorization: Bearer ${token}" \
+        -H 'Content-Type: application/json' \
+        -H 'X-Voxa-AI-Consent: true' \
+        -d "{\"boardId\":\"${soak_board_id}\",\"buttonId\":\"want\",\"speechText\":\"want\"}")"
+      check "POST /v1/events/activations with consent → 201" test "${activation_code}" = "201"
 
-    export_body="$(curl -sS "${API_BASE}/v1/boards/demo-core/export/obf" \
-      -H "Authorization: Bearer ${token}")"
-    check "GET OBF export non-empty" test -n "${export_body}"
-    check "OBF export contains demo-core board id" grep -q 'demo-core' <<<"${export_body}"
+      summary_code="$(curl -sS -o /dev/null -w '%{http_code}' \
+        "${API_BASE}/v1/events/activations/summary?boardId=${soak_board_id}&days=7" \
+        -H "Authorization: Bearer ${token}")"
+      check "GET /v1/events/activations/summary (owner) → 200" test "${summary_code}" = "200"
 
-    echo "== Co-edit version guard =="
-    board_body="$(curl -sS "${API_BASE}/v1/boards/demo-core" \
-      -H "Authorization: Bearer ${token}" \
-      -H 'X-Voxa-Role: editor')"
-    current_version="$(python3 -c "import json,sys; print(json.load(sys.stdin).get('version', 1))" <<<"${board_body}")"
-    stale_version=$((current_version > 1 ? current_version - 1 : 0))
-    conflict_payload="$(python3 -c "
+      echo "== Authenticated OBF round-trip =="
+      import_code="$(curl -sS -o /dev/null -w '%{http_code}' \
+        -X POST "${API_BASE}/v1/boards/${soak_board_id}/import/obf" \
+        -H "Authorization: Bearer ${token}" \
+        -H 'Content-Type: application/json' \
+        --data-binary @"${obf_file}")"
+      check "POST OBF import (owner) → 200" test "${import_code}" = "200"
+
+      export_body="$(curl -sS "${API_BASE}/v1/boards/${soak_board_id}/export/obf" \
+        -H "Authorization: Bearer ${token}")"
+      check "GET OBF export non-empty" test -n "${export_body}"
+      check "OBF export contains the board id" grep -q "${soak_board_id}" <<<"${export_body}"
+
+      echo "== Co-edit version guard =="
+      board_body="$(curl -sS "${API_BASE}/v1/boards/${soak_board_id}" \
+        -H "Authorization: Bearer ${token}")"
+      current_version="$(python3 -c "import json,sys; print(json.load(sys.stdin).get('version', 1))" <<<"${board_body}")"
+      stale_version=$((current_version > 1 ? current_version - 1 : 0))
+      conflict_payload="$(python3 -c "
 import json, sys
 board = json.load(sys.stdin)
 board['expectedVersion'] = ${stale_version}
 print(json.dumps(board))
 " <<<"${board_body}")"
-    conflict_code="$(curl -sS -o /dev/null -w '%{http_code}' -X PUT "${API_BASE}/v1/boards/demo-core" \
-      -H "Authorization: Bearer ${token}" \
-      -H 'Content-Type: application/json' \
-      -H 'X-Voxa-Role: editor' \
-      -d "${conflict_payload}")"
-    check "PUT /v1/boards/demo-core stale version → 409" test "${conflict_code}" = "409"
+      conflict_code="$(curl -sS -o /dev/null -w '%{http_code}' -X PUT "${API_BASE}/v1/boards/${soak_board_id}" \
+        -H "Authorization: Bearer ${token}" \
+        -H 'Content-Type: application/json' \
+        -d "${conflict_payload}")"
+      check "PUT owned board stale version → 409" test "${conflict_code}" = "409"
+
+      delete_code="$(curl -sS -o /dev/null -w '%{http_code}' -X DELETE "${API_BASE}/v1/boards/${soak_board_id}" \
+        -H "Authorization: Bearer ${token}")"
+      check "DELETE owned soak board → 204" test "${delete_code}" = "204"
+    fi
   fi
 fi
 

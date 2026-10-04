@@ -17,8 +17,17 @@ export async function openAccessibilitySettings(page: Page): Promise<void> {
   await page.getByRole('dialog', { name: 'Accessibility settings' }).waitFor();
 }
 
+/**
+ * Switch to editor mode. The shared demo board is read-only (the role selector
+ * is disabled on it), so a signed-in user first gets a board of their own.
+ */
 export async function enterEditorMode(page: Page): Promise<void> {
-  await page.getByLabel('Team role').selectOption('editor');
+  const roleSelect = page.getByLabel('Team role');
+  if (await roleSelect.isDisabled()) {
+    await createBoardNamed(page, `E2E board ${Date.now()}`);
+    await expect(roleSelect).toBeEnabled();
+  }
+  await roleSelect.selectOption('editor');
   await page.getByRole('button', { name: 'New board' }).waitFor();
 }
 
