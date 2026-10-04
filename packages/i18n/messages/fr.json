@@ -648,6 +648,7 @@
   },
   "auditLog": {
     "title": "Journal des modifications",
+    "ariaLabel": "Journal des modifications du tableau",
     "signIn": "Connectez-vous pour voir le journal des modifications.",
     "loadFailed": "Le journal n'a pas pu être chargé ({detail}).",
     "description": "Les modifications à distance des orthophonistes sont enregistrées lors de la sauvegarde, la création ou l’import du vocabulaire.",

@@ -266,7 +266,7 @@
     "templateBlank": "En blanco 4×4",
     "templateCore47": "Vocabulario núcleo 47",
     "templateCore100": "Vocabulario núcleo 100",
-    "templateLiteracyKeyboard": "Teclado de lectoescritura",
+    "templateLiteracyKeyboard": "Teclado de alfabetización",
     "templateVisualSchedule": "Agenda visual",
     "teamRole": "Rol en el equipo",
     "demoReadOnlyShort": "El tablero de demostración es de solo lectura",
@@ -649,6 +649,7 @@
   },
   "auditLog": {
     "title": "Auditoría de ediciones",
+    "ariaLabel": "Registro de auditoría de ediciones",
     "signIn": "Inicia sesión para ver la auditoría de ediciones.",
     "loadFailed": "No se pudo cargar la auditoría ({detail}).",
     "description": "Las ediciones remotas de terapeutas se registran al guardar, crear o importar vocabulario.",

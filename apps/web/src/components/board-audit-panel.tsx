@@ -72,7 +72,7 @@ export function BoardAuditPanel({
   return (
     <aside
       role="dialog"
-      aria-label={t('title')}
+      aria-label={t('ariaLabel')}
       style={{
         width: 320,
         background: surface.section,

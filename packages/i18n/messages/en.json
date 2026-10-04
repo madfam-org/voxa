@@ -648,6 +648,7 @@
   },
   "auditLog": {
     "title": "Edit audit",
+    "ariaLabel": "Edit audit log",
     "signIn": "Sign in to view the edit audit log.",
     "loadFailed": "The audit log could not be loaded ({detail}).",
     "description": "Remote SLP edits are recorded when vocabulary is saved, created, or imported.",
