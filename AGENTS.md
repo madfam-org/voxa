@@ -18,7 +18,7 @@ fixtures free of real names and health information.
 
 | Path                            | What it is                                                                                                                          |
 | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `apps/api`                      | `@voxa/api` — Hono on Node 20: boards, sync (REST + WebSocket), media, activation events, AI, billing. Drizzle ORM on postgres-js.  |
+| `apps/api`                      | `@voxa/api` — Hono on Node 22: boards, sync (REST + WebSocket), media, activation events, AI, billing. Drizzle ORM on postgres-js.  |
 | `apps/web`                      | `@voxa/web` — Next.js 15 board UI, editor and settings (standalone output).                                                         |
 | `apps/mobile`                   | `@voxa/mobile` — Expo SDK 57 communicator app (EAS builds).                                                                         |
 | `packages/*`                    | `core` (domain model), `obf` (Open Board Format), `import-adapters`, `vocabulary`, `symbols`, `sync`, `access`, `ai`, `i18n`, `ui`. |
@@ -155,9 +155,9 @@ pnpm build
 
 | Workflow                                                     | Trigger                                                        | Effect                                                                           |
 | ------------------------------------------------------------ | -------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| `deploy-voxa-api.yml`                                        | push to `main` touching `apps/api/**`, `packages/**`; dispatch | build, cosign-sign, pin digest in `k8s/production`, smoke `/health`              |
-| `deploy-voxa-web.yml`                                        | push to `main` touching `apps/web/**`, `packages/**`; dispatch | same for web; smoke `/demo` and `/_next/image` → 404                             |
-| `deploy-voxa-api-staging.yml`, `deploy-voxa-web-staging.yml` | push to `main` with the same paths (plus the workflow file); dispatch | build, cosign-sign, pin digest in `k8s/staging`, smoke the staging host; never gates production |
+| `deploy-voxa-api.yml`                                        | push to `main` touching `apps/api/**`, `packages/**`; dispatch | build, cosign-sign, pin digest in `k8s/production`, wait for `/health` to serve this commit's `build` |
+| `deploy-voxa-web.yml`                                        | push to `main` touching `apps/web/**`, `packages/**`; dispatch | same for web (`/api/health` `build`); then smoke `/demo` and `/_next/image` → 404 |
+| `deploy-voxa-api-staging.yml`, `deploy-voxa-web-staging.yml` | push to `main` with the same paths (plus the workflow file); dispatch | build, cosign-sign, pin digest in `k8s/staging`, wait for the staging host to serve this commit's `build`; never gates production |
 | `mobile-eas.yml`, `mobile-eas-submit.yml`, `ghcr-public.yml` | dispatch only                                                  | EAS build/submit, package visibility                                             |
 | `e2e-smoke.yml` ("Daily smoke")                              | daily schedule; dispatch                                       | job `smoke`: read-only production checks (`verify-prod-ga`, `verify-prod-demo`, `verify-prod-redis`, which warns until Redis is bound; Playwright smoke and axe on public pages). Job `staging-signed-in`: the signed-in specs against staging; skips with a notice without the `VOXA_STAGING_*` secrets |
 
@@ -167,6 +167,22 @@ workflow holds an identity-provider or platform credential. Each deploy
 workflow has its own concurrency group. GitHub-hosted jobs are pinned to
 `ubuntu-24.04`. Full runbook: [docs/deploy/ENCLII.md](./docs/deploy/ENCLII.md);
 on-call: [docs/ops/RUNBOOK.md](./docs/ops/RUNBOOK.md).
+
+Both images build from `node:22-alpine` pinned by digest (through
+`mirror.gcr.io`), and their runtime stage deletes npm, npx, corepack and yarn;
+nothing at runtime needs them (the API migrates in-process). `image-smoke.yml`
+builds both images without pushing on changes to a Dockerfile, the lockfile or
+a `package.json`, and checks Node 22, no package manager, and `/health` (API) /
+`/api/health` (web) answering 200 under the Deployment's securityContext.
+
+Build identity: the deploy workflows pass `GIT_SHA=<commit>` as a build arg,
+the runner stage sets it as `GIT_SHA` (default `unknown`), and the API
+`/health`, `/health/ready` and the web `/api/health` serve it as `build`
+(`src/lib/build-info.ts` in each app: a 7–40 character hex id or `unknown`,
+nothing else). Every deploy smoke runs `scripts/launch/wait-for-build.sh`,
+which polls for up to 12 minutes (Argo CD polls git about every 3 minutes,
+then the surge rollout) until `build` equals the commit, so a green deploy run
+proves the new image is serving, not just that an old pod answers 200.
 
 ## Pending work and known gaps (as of 2026-10-03)
 

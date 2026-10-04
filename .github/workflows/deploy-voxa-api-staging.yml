@@ -36,6 +36,8 @@ jobs:
   build-and-push:
     name: Build & Push API Image (Staging)
     runs-on: ubuntu-24.04
+    # Build (~10 min) + sign + pin + up to 12 min waiting for the new build.
+    timeout-minutes: 45
     permissions:
       contents: write
       packages: write
@@ -62,6 +64,8 @@ jobs:
           context: .
           file: apps/api/Dockerfile
           push: true
+          build-args: |
+            GIT_SHA=${{ github.sha }}
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:staging-${{ github.sha }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:staging
@@ -176,19 +180,11 @@ jobs:
               }
             }" || true
 
+      # HTTP 200 alone is not proof: the previous pods answer it too. Wait for
+      # /health to serve this commit's build (scripts/launch/wait-for-build.sh).
       - name: Smoke test staging API
         if: success()
-        run: |
-          for i in 1 2 3 4 5 6; do
-            code="$(curl -sS -o /tmp/voxa-health.json -w '%{http_code}' https://voxa-api-staging.madfam.io/health || true)"
-            if [ "$code" = "200" ]; then
-              cat /tmp/voxa-health.json
-              exit 0
-            fi
-            sleep 20
-          done
-          echo "Smoke test failed: https://voxa-api-staging.madfam.io/health" >&2
-          exit 1
+        run: ./scripts/launch/wait-for-build.sh https://voxa-api-staging.madfam.io/health "${GITHUB_SHA}"
 
       # Loud-stale guard (2026-08-26 crea-frontend OIDC incident): the failure
       # mode that hurts is a pushed image whose digest pin never ran — main goes

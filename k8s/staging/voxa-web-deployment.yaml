@@ -131,7 +131,7 @@ spec:
             periodSeconds: 5
           # Let the endpoint removal reach the Service and tunnel before the
           # process gets SIGTERM, so in-flight and new requests do not hit a
-          # closing socket (node:20-alpine ships /bin/sleep).
+          # closing socket (node:22-alpine ships /bin/sleep).
           lifecycle:
             preStop:
               exec:

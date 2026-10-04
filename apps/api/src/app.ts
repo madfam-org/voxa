@@ -12,6 +12,7 @@ import { eventRoutes } from './routes/events.js';
 import { mediaRoutes } from './routes/media.js';
 import { symbolRoutes } from './routes/symbols.js';
 import { canAccessBoard } from './lib/board-access.js';
+import { buildSha } from './lib/build-info.js';
 import { unwrapDbError } from './lib/db-errors.js';
 import { devAuthEnabled } from './lib/dev-auth.js';
 import { resolveWsTeam } from './lib/ws-auth.js';
@@ -44,17 +45,27 @@ app.use('/v1/*', teamAuth());
 app.get('/robots.txt', (c) => c.text(API_ROBOTS_TXT));
 
 app.get('/health', (c) =>
-  c.json({ status: 'ok', service: 'voxa-api', version: API_VERSION, store: getStoreDriver() }),
+  c.json({
+    status: 'ok',
+    service: 'voxa-api',
+    version: API_VERSION,
+    build: buildSha(),
+    store: getStoreDriver(),
+  }),
 );
 
 app.get('/health/ready', async (c) => {
   const ready = await checkStoreReady();
   if (!ready) {
-    return c.json({ status: 'unavailable', service: 'voxa-api', store: getStoreDriver() }, 503);
+    return c.json(
+      { status: 'unavailable', service: 'voxa-api', build: buildSha(), store: getStoreDriver() },
+      503,
+    );
   }
   return c.json({
     status: 'ready',
     service: 'voxa-api',
+    build: buildSha(),
     store: getStoreDriver(),
     syncHub: getSyncHubMode(),
     authEnforced: !devAuthEnabled(),

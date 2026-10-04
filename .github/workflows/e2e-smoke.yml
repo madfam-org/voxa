@@ -38,7 +38,7 @@ jobs:
           version: 9.15.0
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install chromium --with-deps
@@ -104,7 +104,7 @@ jobs:
       - uses: actions/setup-node@v4
         if: steps.creds.outputs.run == 'true'
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
         if: steps.creds.outputs.run == 'true'

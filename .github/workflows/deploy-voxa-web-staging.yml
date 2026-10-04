@@ -36,6 +36,8 @@ jobs:
   build-and-push:
     name: Build & Push Web Image (Staging)
     runs-on: ubuntu-24.04
+    # Build (~10 min) + sign + pin + up to 12 min waiting for the new build.
+    timeout-minutes: 45
     permissions:
       contents: write
       packages: write
@@ -67,6 +69,7 @@ jobs:
             NEXT_PUBLIC_BASE_URL=https://voxa-staging.madfam.io
             NEXT_PUBLIC_OIDC_ISSUER=https://auth.madfam.io
             NEXT_PUBLIC_OIDC_CLIENT_ID=${{ vars.NEXT_PUBLIC_OIDC_CLIENT_ID }}
+            GIT_SHA=${{ github.sha }}
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:staging-${{ github.sha }}
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:staging
@@ -196,16 +199,18 @@ jobs:
       # pod template's restartedAt, and Argo CD auto-syncs the staging app
       # (automated sync with self-heal). The smoke below retries while the
       # rollout lands.
+      # HTTP 200 alone is not proof: the previous pods answer it too. Wait for
+      # /api/health to serve this commit's build, then check a public page.
       - name: Smoke test staging web
         if: success()
         run: |
-          for i in 1 2 3 4 5 6; do
-            h="$(curl -sS -o /dev/null -w '%{http_code}' https://voxa-staging.madfam.io/api/health || true)"
+          ./scripts/launch/wait-for-build.sh https://voxa-staging.madfam.io/api/health "${GITHUB_SHA}"
+          for i in 1 2 3; do
             p="$(curl -sS -o /dev/null -w '%{http_code}' https://voxa-staging.madfam.io/legal/privacy || true)"
-            if [ "$h" = "200" ] && [ "$p" = "200" ]; then exit 0; fi
+            if [ "$p" = "200" ]; then exit 0; fi
             sleep 20
           done
-          echo "Smoke test failed: https://voxa-staging.madfam.io (/api/health=${h}, /legal/privacy=${p})" >&2
+          echo "Smoke test failed: https://voxa-staging.madfam.io/legal/privacy=${p}" >&2
           exit 1
 
       # Loud-stale guard (2026-08-26 crea-frontend OIDC incident): the failure
