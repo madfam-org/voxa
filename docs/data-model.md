@@ -118,7 +118,7 @@ Button recordings and GLP video clips (base64 in Postgres for MVP).
 | `data` | `text` | Base64-encoded bytes |
 | `created_at` | `timestamptz` | Upload time |
 
-Upload: `POST /v1/media` (multipart `boardId` + `file`, editor role). Serve: `GET /v1/media/:id` (board access). Button JSON stores the returned URL in `RecordedSpeech.url` or `GlpButton.video.url`.
+Upload: `POST /v1/media` (multipart `boardId` + `file`, editor role). Serve: `GET /v1/media/:id` (board access). Button JSON stores the returned URL in `RecordedSpeech.url` or `GlpButton.video.url`. Media elements cannot send a bearer token, so the web app loads these URLs through its same-origin proxy `GET /api/media/:id` (`apps/web/src/app/api/media/[id]/route.ts`), which forwards the signed-in session's token from the server and passes the API's 401/403/404 through; the read rule stays in the API. Board JSON keeps the API URL.
 
 ## Future tables
 

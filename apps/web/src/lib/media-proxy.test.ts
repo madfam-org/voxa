@@ -20,7 +20,8 @@ function fakeApi(calls: Array<{ url: string; headers: Headers }>): typeof fetch 
     const auth = headers.get('Authorization');
     if (!auth) return new Response('{"error":"Authentication required"}', { status: 401 });
     if (id !== OWNED) return new Response('{"error":"Not found"}', { status: 404 });
-    if (auth !== 'Bearer owner-token') return new Response('{"error":"Forbidden"}', { status: 403 });
+    if (auth !== 'Bearer owner-token')
+      return new Response('{"error":"Forbidden"}', { status: 403 });
     return new Response(PNG, {
       status: 200,
       headers: { 'Content-Type': 'image/png', 'Content-Length': String(PNG.byteLength) },
@@ -31,7 +32,12 @@ function fakeApi(calls: Array<{ url: string; headers: Headers }>): typeof fetch 
 describe('media proxy (GET /api/media/:id)', () => {
   it('serves the owner with the session token, private cache and no-sniff', async () => {
     const calls: Array<{ url: string; headers: Headers }> = [];
-    const res = await proxyMediaRequest({ id: OWNED, accessToken: 'owner-token', apiUrl: `${API}/`, fetchImpl: fakeApi(calls) });
+    const res = await proxyMediaRequest({
+      id: OWNED,
+      accessToken: 'owner-token',
+      apiUrl: `${API}/`,
+      fetchImpl: fakeApi(calls),
+    });
     assert.equal(res.status, 200);
     assert.equal(res.headers.get('Content-Type'), 'image/png');
     assert.equal(res.headers.get('Cache-Control'), MEDIA_CACHE_CONTROL);
@@ -46,7 +52,12 @@ describe('media proxy (GET /api/media/:id)', () => {
   });
 
   it("passes the API's 403 through for another user's token", async () => {
-    const res = await proxyMediaRequest({ id: OWNED, accessToken: 'other-user-token', apiUrl: API, fetchImpl: fakeApi([]) });
+    const res = await proxyMediaRequest({
+      id: OWNED,
+      accessToken: 'other-user-token',
+      apiUrl: API,
+      fetchImpl: fakeApi([]),
+    });
     assert.equal(res.status, 403);
     assert.equal(res.headers.get('Cache-Control'), 'no-store');
   });
@@ -63,7 +74,12 @@ describe('media proxy (GET /api/media/:id)', () => {
 
   it('answers 401 without a session and never calls the API', async () => {
     const calls: Array<{ url: string; headers: Headers }> = [];
-    const res = await proxyMediaRequest({ id: OWNED, accessToken: undefined, apiUrl: API, fetchImpl: fakeApi(calls) });
+    const res = await proxyMediaRequest({
+      id: OWNED,
+      accessToken: undefined,
+      apiUrl: API,
+      fetchImpl: fakeApi(calls),
+    });
     assert.equal(res.status, 401);
     assert.equal(calls.length, 0);
   });
@@ -71,7 +87,12 @@ describe('media proxy (GET /api/media/:id)', () => {
   it('rejects ids that are not a single path segment before calling the API', async () => {
     const calls: Array<{ url: string; headers: Headers }> = [];
     for (const id of ['../boards', 'a/b', '', 'x'.repeat(200)]) {
-      const res = await proxyMediaRequest({ id, accessToken: 'owner-token', apiUrl: API, fetchImpl: fakeApi(calls) });
+      const res = await proxyMediaRequest({
+        id,
+        accessToken: 'owner-token',
+        apiUrl: API,
+        fetchImpl: fakeApi(calls),
+      });
       assert.equal(res.status, 404, id);
     }
     assert.equal(calls.length, 0);
@@ -79,12 +100,28 @@ describe('media proxy (GET /api/media/:id)', () => {
 
   it('turns API failures and non-media answers into 502', async () => {
     const failing = (async () => new Response('boom', { status: 503 })) as typeof fetch;
-    assert.equal((await proxyMediaRequest({ id: OWNED, accessToken: 't', apiUrl: API, fetchImpl: failing })).status, 502);
-    const html = (async () => new Response('<html>', { status: 200, headers: { 'Content-Type': 'text/html' } })) as typeof fetch;
-    assert.equal((await proxyMediaRequest({ id: OWNED, accessToken: 't', apiUrl: API, fetchImpl: html })).status, 502);
+    assert.equal(
+      (await proxyMediaRequest({ id: OWNED, accessToken: 't', apiUrl: API, fetchImpl: failing }))
+        .status,
+      502,
+    );
+    const html = (async () =>
+      new Response('<html>', {
+        status: 200,
+        headers: { 'Content-Type': 'text/html' },
+      })) as typeof fetch;
+    assert.equal(
+      (await proxyMediaRequest({ id: OWNED, accessToken: 't', apiUrl: API, fetchImpl: html }))
+        .status,
+      502,
+    );
     const down = (async () => {
       throw new TypeError('fetch failed');
     }) as typeof fetch;
-    assert.equal((await proxyMediaRequest({ id: OWNED, accessToken: 't', apiUrl: API, fetchImpl: down })).status, 502);
+    assert.equal(
+      (await proxyMediaRequest({ id: OWNED, accessToken: 't', apiUrl: API, fetchImpl: down }))
+        .status,
+      502,
+    );
   });
 });

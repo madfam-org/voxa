@@ -107,9 +107,18 @@ describe('service worker (public/sw.js)', () => {
 
   it('never answers session, media proxy, API-origin or non-GET requests', async () => {
     assert.equal(await dispatchFetch(`${ORIGIN}/api/auth/session`, 'cors'), undefined);
-    assert.equal(await dispatchFetch(`${ORIGIN}/api/media/3f1c2a9e-7b4d-4c1e-9a8f-0d2b6e5c4a31`), undefined);
-    assert.equal(await dispatchFetch('https://voxa-api.example.test/v1/boards/demo-core', 'cors'), undefined);
-    assert.equal(await dispatchFetch(`${ORIGIN}/_next/static/chunks/a.js`, 'no-cors', 'POST'), undefined);
+    assert.equal(
+      await dispatchFetch(`${ORIGIN}/api/media/3f1c2a9e-7b4d-4c1e-9a8f-0d2b6e5c4a31`),
+      undefined,
+    );
+    assert.equal(
+      await dispatchFetch('https://voxa-api.example.test/v1/boards/demo-core', 'cors'),
+      undefined,
+    );
+    assert.equal(
+      await dispatchFetch(`${ORIGIN}/_next/static/chunks/a.js`, 'no-cors', 'POST'),
+      undefined,
+    );
     assert.equal(stores.size, 0);
   });
 
@@ -126,7 +135,7 @@ describe('service worker (public/sw.js)', () => {
 
   it('does not cache a redirect (signed-out visit) as the shell', async () => {
     network = async () => response('', 0, 'opaqueredirect');
-    await (await dispatchFetch(`${ORIGIN}/en/app`, 'navigate'));
+    await await dispatchFetch(`${ORIGIN}/en/app`, 'navigate');
     const shell = [...stores.entries()].find(([name]) => name.startsWith('voxa-shell-'));
     assert.equal(shell?.[1].entries.size ?? 0, 0);
   });
@@ -134,13 +143,13 @@ describe('service worker (public/sw.js)', () => {
   it('serves build assets and pictograms cache first', async () => {
     const chunk = `${ORIGIN}/_next/static/chunks/main-abc.js`;
     const symbol = `${ORIGIN}/symbols/mulberry/EN/want.svg`;
-    await (await dispatchFetch(chunk));
-    await (await dispatchFetch(symbol));
+    await await dispatchFetch(chunk);
+    await await dispatchFetch(symbol);
     network = async () => {
       throw new TypeError('Failed to fetch');
     };
-    assert.equal((await (await dispatchFetch(chunk)))!.body, `net:${chunk}`);
-    assert.equal((await (await dispatchFetch(symbol)))!.body, `net:${symbol}`);
+    assert.equal((await await dispatchFetch(chunk))!.body, `net:${chunk}`);
+    assert.equal((await await dispatchFetch(symbol))!.body, `net:${symbol}`);
   });
 
   it('deletes caches of older versions on activate, and only Voxa caches', async () => {
@@ -154,7 +163,7 @@ describe('service worker (public/sw.js)', () => {
   });
 
   it('forgets the cached shell when the user signs out', async () => {
-    await (await dispatchFetch(`${ORIGIN}/app`, 'navigate'));
+    await await dispatchFetch(`${ORIGIN}/app`, 'navigate');
     assert.ok([...stores.keys()].some((name) => name.startsWith('voxa-shell-')));
     assert.equal(await dispatchFetch(`${ORIGIN}/auth/signout`, 'navigate'), undefined);
     assert.ok(![...stores.keys()].some((name) => name.startsWith('voxa-shell-')));

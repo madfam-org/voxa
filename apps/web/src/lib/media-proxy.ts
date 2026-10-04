@@ -12,6 +12,12 @@ import { isValidMediaId } from './media-url';
  */
 export const MEDIA_CACHE_CONTROL = 'private, max-age=86400';
 const NO_STORE = 'no-store';
+/** The API's access decisions, passed through unchanged. */
+const PASSTHROUGH_ERRORS: Record<number, string> = {
+  401: 'Unauthorized',
+  403: 'Forbidden',
+  404: 'Not found',
+};
 const MEDIA_TYPE = /^(image|audio|video)\/[A-Za-z0-9.+-]+$/;
 
 export interface MediaProxyInput {
@@ -49,9 +55,10 @@ export async function proxyMediaRequest(input: MediaProxyInput): Promise<Respons
     return jsonError(502, 'Media unavailable');
   }
 
-  if (upstream.status === 401 || upstream.status === 403 || upstream.status === 404) {
+  const denied = PASSTHROUGH_ERRORS[upstream.status];
+  if (denied) {
     await upstream.body?.cancel().catch(() => undefined);
-    return jsonError(upstream.status, upstream.status === 404 ? 'Not found' : upstream.status === 403 ? 'Forbidden' : 'Unauthorized');
+    return jsonError(upstream.status, denied);
   }
   if (!upstream.ok) {
     await upstream.body?.cancel().catch(() => undefined);

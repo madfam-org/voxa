@@ -133,7 +133,7 @@
       },
       "offline": {
         "title": "Rides out network drops",
-        "body": "With a board already open you can keep using it if the Wi‑Fi drops; changes sync when the connection returns. Opening the app offline is not available yet."
+        "body": "If the Wi‑Fi drops, the open board keeps working. Once you have opened the app with a connection, it also reopens offline on that device, with the boards you already loaded. Changes sync when the connection returns."
       },
       "janua": {
         "title": "Janua identity",

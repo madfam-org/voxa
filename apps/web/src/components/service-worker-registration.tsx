@@ -28,9 +28,7 @@ export function ServiceWorkerRegistration() {
       .then(() => navigator.serviceWorker.ready)
       .then((registration) => {
         if (cancelled || !registration.active) return;
-        const loaded = performance
-          .getEntriesByType('resource')
-          .map((entry) => entry.name);
+        const loaded = performance.getEntriesByType('resource').map((entry) => entry.name);
         registration.active.postMessage({
           type: 'voxa:cache-urls',
           urls: offlineCacheUrls(window.location.href, loaded),

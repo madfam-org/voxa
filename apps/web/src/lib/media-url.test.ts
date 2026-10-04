@@ -12,7 +12,10 @@ describe('media URLs for media elements', () => {
   });
 
   it('leaves pictograms, data URLs and other origins unchanged', () => {
-    assert.equal(displayMediaUrl('/symbols/mulberry/EN/want.svg', API), '/symbols/mulberry/EN/want.svg');
+    assert.equal(
+      displayMediaUrl('/symbols/mulberry/EN/want.svg', API),
+      '/symbols/mulberry/EN/want.svg',
+    );
     assert.equal(displayMediaUrl('data:image/png;base64,AAAA', API), 'data:image/png;base64,AAAA');
     const foreign = `https://elsewhere.example.test/v1/media/${ID}`;
     assert.equal(displayMediaUrl(foreign, API), foreign);

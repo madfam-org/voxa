@@ -48,7 +48,10 @@ async function createBoard(id: string, claims: Record<string, unknown>): Promise
 async function upload(boardId: string, claims: Record<string, unknown>): Promise<Response> {
   const form = new FormData();
   form.set('boardId', boardId);
-  form.set('file', new File([new Uint8Array([0x89, 0x50, 0x4e, 0x47])], 'photo.png', { type: 'image/png' }));
+  form.set(
+    'file',
+    new File([new Uint8Array([0x89, 0x50, 0x4e, 0x47])], 'photo.png', { type: 'image/png' }),
+  );
   return app.request('/v1/media', { method: 'POST', headers: await auth(claims), body: form });
 }
 

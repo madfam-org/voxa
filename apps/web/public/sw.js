@@ -56,7 +56,12 @@ function isSignOutPath(pathname) {
 
 /** Only complete, same-origin, non-redirected 200 answers are worth keeping. */
 function cacheable(response) {
-  return Boolean(response) && response.status === 200 && response.type === 'basic' && !response.redirected;
+  return (
+    Boolean(response) &&
+    response.status === 200 &&
+    response.type === 'basic' &&
+    !response.redirected
+  );
 }
 
 async function trimCache(cacheName, maxEntries) {

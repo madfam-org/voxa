@@ -133,7 +133,7 @@
       },
       "offline": {
         "title": "Résiste aux coupures réseau",
-        "body": "Avec un tableau déjà ouvert, vous pouvez continuer à l'utiliser si le Wi‑Fi tombe ; les modifications se synchronisent au retour de la connexion. L'ouverture de l'app hors ligne n'est pas encore disponible."
+        "body": "Si le Wi‑Fi tombe, le tableau ouvert continue de fonctionner. Après une première ouverture avec connexion, l'app se rouvre aussi hors ligne sur cet appareil, avec les tableaux déjà chargés. Les modifications se synchronisent au retour de la connexion."
       },
       "janua": {
         "title": "Identité Janua",

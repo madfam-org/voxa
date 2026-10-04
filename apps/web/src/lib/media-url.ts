@@ -18,7 +18,10 @@ export function isValidMediaId(id: string): boolean {
 }
 
 /** The media id of an `<api>/v1/media/:id` URL on the configured API origin, else null. */
-export function mediaIdFromApiUrl(url: string | undefined, apiUrl: string = DEFAULT_API_URL): string | null {
+export function mediaIdFromApiUrl(
+  url: string | undefined,
+  apiUrl: string = DEFAULT_API_URL,
+): string | null {
   if (!url) return null;
   let parsed: URL;
   let api: URL;

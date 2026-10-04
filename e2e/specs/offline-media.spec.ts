@@ -97,7 +97,11 @@ async function recordWebm(page: Page): Promise<Buffer> {
 }
 
 async function openOwnedBoard(page: Page, context: BrowserContext): Promise<void> {
-  await seedTestSession(context, BASE_URL, { userId: OWNER_ID, role: 'communicator', accessToken: ownerToken });
+  await seedTestSession(context, BASE_URL, {
+    userId: OWNER_ID,
+    role: 'communicator',
+    accessToken: ownerToken,
+  });
   await seedLocalState(page);
   await page.addInitScript(
     ({ key, boardId }) => {
@@ -120,7 +124,9 @@ async function openOwnedBoard(page: Page, context: BrowserContext): Promise<void
     { key: SELECTED_BOARD_KEY, boardId: BOARD_ID },
   );
   await page.goto('/app');
-  await expect(page.locator(`[data-voxa-button-id="${PHOTO_ID}"]`)).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator(`[data-voxa-button-id="${PHOTO_ID}"]`)).toBeVisible({
+    timeout: 30_000,
+  });
 }
 
 test.beforeAll(async ({ browser }) => {
@@ -155,7 +161,9 @@ async function seed(browser: Browser): Promise<void> {
     grid: { rows: 2, columns: 2, buttons: [] },
   });
   expect(created.status).toBe(201);
-  const { board } = (await created.json()) as { board: Record<string, unknown> & { version: number } };
+  const { board } = (await created.json()) as {
+    board: Record<string, unknown> & { version: number };
+  };
 
   const page = await browser.newPage();
   const webm = await recordWebm(page);
@@ -208,15 +216,25 @@ async function seed(browser: Browser): Promise<void> {
 }
 
 test.describe('offline start', () => {
-  test('reloading /app offline renders the board from the service worker cache', async ({ page, context }) => {
-    await seedTestSession(context, BASE_URL, { userId: OWNER_ID, role: 'communicator', accessToken: ownerToken });
+  test('reloading /app offline renders the board from the service worker cache', async ({
+    page,
+    context,
+  }) => {
+    await seedTestSession(context, BASE_URL, {
+      userId: OWNER_ID,
+      role: 'communicator',
+      accessToken: ownerToken,
+    });
     await seedLocalState(page);
     await page.goto('/app');
     const buttons = page.locator('[data-voxa-button-id]');
     await expect.poll(() => buttons.count(), { timeout: 30_000 }).toBeGreaterThanOrEqual(47);
 
     // The worker confirms it stored the shell and what the page loaded...
-    await page.waitForSelector('html[data-voxa-offline="ready"]', { state: 'attached', timeout: 30_000 });
+    await page.waitForSelector('html[data-voxa-offline="ready"]', {
+      state: 'attached',
+      timeout: 30_000,
+    });
     // ...and it controls the page and holds the shell and every loaded chunk.
     const cached = await page.evaluate(async () => {
       if (!navigator.serviceWorker.controller) return 'no controller';
@@ -282,14 +300,22 @@ test.describe('uploaded media', () => {
     await expect(page.locator('[data-voxa-glp-video]')).toHaveCount(0);
   });
 
-  test('recorded speech falls back to text-to-speech when media answers 503', async ({ page, context }) => {
-    await page.route('**/api/media/**', (route) => route.fulfill({ status: 503, body: 'unavailable' }));
+  test('recorded speech falls back to text-to-speech when media answers 503', async ({
+    page,
+    context,
+  }) => {
+    await page.route('**/api/media/**', (route) =>
+      route.fulfill({ status: 503, body: 'unavailable' }),
+    );
     await openOwnedBoard(page, context);
     await page.locator(`[data-voxa-button-id="${RECORDED_ID}"]`).click();
     await expect
-      .poll(() => page.evaluate(() => (window as unknown as { __voxaSpoken: string[] }).__voxaSpoken), {
-        timeout: 10_000,
-      })
+      .poll(
+        () => page.evaluate(() => (window as unknown as { __voxaSpoken: string[] }).__voxaSpoken),
+        {
+          timeout: 10_000,
+        },
+      )
       .toContain(RECORDED_SPEECH);
   });
 });
