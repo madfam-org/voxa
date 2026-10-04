@@ -2,20 +2,25 @@
   "name": "@voxa/symbols",
   "version": "0.1.0",
   "private": true,
-  "description": "ARASAAC and open symbol search helpers",
+  "description": "Mulberry Symbols (CC BY-SA 4.0): resolver, licence metadata and offline keyword search",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./search": {
+      "types": "./dist/search.d.ts",
+      "default": "./dist/search.js"
     }
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "node --import tsx --test src/index.test.ts src/arasaac-traits.test.ts src/mulberry.test.ts",
-    "clean": "rm -rf dist"
+    "test": "node --import tsx --test src/mulberry.test.ts src/mulberry-search.test.ts src/legacy.test.ts src/no-removed-symbol-hosts.test.ts",
+    "clean": "rm -rf dist",
+    "build:index": "node scripts/build-mulberry-index.mjs"
   },
   "devDependencies": {
     "tsx": "^4.19.2",

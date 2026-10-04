@@ -1,0 +1,488 @@
+# Spanish keywords for Mulberry Symbols — hand-curated list.
+#
+# STATUS: pending review by a credentialed SLP (speech-language pathologist /
+# terapeuta de lenguaje). Do not present these keywords as clinically
+# validated until that review is recorded here.
+#
+# Source: curated entry by entry for the AAC core and the most common fringe
+# words, Mexican Spanish first. No upstream or third-party Spanish label set
+# for Mulberry was available under a licence compatible with this repository
+# (Global Symbols API, checked 2026-10-03: zero Spanish labels for the
+# Mulberry set). This is not a bulk machine translation of the Mulberry set;
+# words without an entry here are searchable in English (and French) only.
+#
+# Format: <upstream Mulberry file stem><TAB><keyword>|<keyword>|...
+# The first keyword is the primary label. Lines starting with # are comments.
+# Rebuild the index after editing: node packages/symbols/scripts/build-mulberry-index.mjs <mulberry-checkout>
+#
+# --- Core: people
+# Mulberry has no pictured pronouns: its "I" is the letter glyph, so "yo",
+# "tú", "él", "ella" etc. are intentionally absent (label-only buttons).
+mum_parent	mamá|mami|madre
+dad_parent	papá|papi|padre
+parents	papás|padres
+brother	hermano
+sister	hermana
+grandmother	abuela|abuelita
+grandfather	abuelo|abuelito
+grandparents	abuelos
+family	familia
+baby	bebé
+son	hijo
+daughter	hija
+uncle_maternal	tío
+aunt_maternal	tía
+teacher_1a	maestra|maestro|profesora|profesor
+doctor_1a	doctora|doctor|médico
+nurse_1a	enfermera|enfermero
+good_person	buena persona
+# --- Core: verbs
+want_,_to	querer|quiero
+go_,_to	ir|voy
+help_,_to	ayudar|ayuda
+eat_,_to	comer|como
+drink_,_to	beber|tomar|tomo
+wait_,_to	esperar|espera
+look_,_to	mirar|mira
+watch_,_to	ver|veo
+hear_,_to	oír|escuchar
+come_,_to	venir|ven
+turn_,_to	girar|voltear|dar vuelta
+put_,_to	poner|pon
+get_,_to	conseguir|obtener|agarrar
+make_,_to	hacer|hago
+give_,_to	dar|dame
+take_,_to	tomar|llevar
+open_,_to	abrir|abre
+close_,_to	cerrar|cierra
+play_,_to	jugar|juego
+walk_,_to	caminar|andar
+run_,_to	correr
+jump_,_to	saltar|brincar
+sit_,_to	sentarse|sentar
+stand_,_to	pararse|ponerse de pie
+sleep_female_,_to	dormir|duermo
+sleep_male_,_to	dormir
+read_,_to	leer
+write_,_to	escribir
+draw_,_to	dibujar
+paint_,_to	pintar
+sing_,_to	cantar
+dance_,_to	bailar
+talk_1_,_to	hablar|platicar
+ask_,_to	preguntar
+think_,_to	pensar
+find_,_to	encontrar|buscar
+push_,_to	empujar
+pull_,_to	jalar|tirar
+throw_away_,_to	tirar a la basura|tirar
+catch_,_to	atrapar|cachar
+hold_,_to	sostener|agarrar
+carry_,_to	cargar|llevar
+bring_,_to	traer
+share_,_to	compartir
+hug_,_to	abrazar|abrazo
+smile_,_to	sonreír
+touch_,_to	tocar
+cut_,_to	cortar
+cook_,_to	cocinar
+wash_hands_,_to	lavarse las manos|lavar manos
+wash_face_,_to	lavarse la cara
+brush_teeth_,_to	lavarse los dientes|cepillarse los dientes
+brush_hair_,_to	peinarse|cepillarse el pelo
+bathe_,_to	bañarse|bañar
+shower_1_,_to	ducharse|bañarse en regadera
+get_dressed_,_to	vestirse
+undress_,_to	desvestirse
+toilet_,_go_to_the	ir al baño
+need_toilet	necesito ir al baño|baño
+swim_,_to	nadar
+climb_up_,_to	subir|trepar
+ride_horse_,_to	montar a caballo
+drive_,_to	manejar|conducir
+build_,_to	construir
+finish	terminar|terminé|acabar
+begin_start	empezar|comenzar|inicio
+turn_on_,_to	prender|encender
+turn_off_,_to	apagar
+work_,_to	trabajar
+study_,_to	estudiar
+visit_,_to	visitar
+rest_,_to	descansar
+relax_,_to	relajarse
+shout_,_to	gritar
+whisper_,_to	susurrar|secreto
+vomit_,_to	vomitar|guacarear
+blow_,_to	soplar
+bite_,_to	morder
+chew_,_to	masticar
+count_,_to	contar
+tickle_,_to	hacer cosquillas|cosquillas
+yawn_,_to	bostezar
+taste_,_to	probar|saborear
+pour_,_to	servir|verter
+tidy_2_,_to	recoger|ordenar
+# --- Core: describing words
+more	más
+lots_more	mucho más
+good	bueno|bien
+bad	malo|mal
+up	arriba
+down	abajo
+in	dentro|adentro|en
+out	fuera|afuera
+on	sobre|encima
+off	quitar|fuera de
+outside	afuera|exterior
+inside_room	adentro|interior
+under_1	debajo|abajo de
+over	por encima
+behind	detrás|atrás
+in_front	enfrente|delante
+beside_next_to	al lado|junto
+near	cerca
+away	lejos
+large	grande
+little	pequeño|chico|chiquito
+hot	caliente|calor
+wet	mojado
+dry	seco
+dirty	sucio
+clean_room	limpio
+loud	fuerte|ruidoso
+quiet	silencio|callado
+open	abierto
+closed	cerrado
+empty	vacío
+full	lleno
+same	igual|mismo
+fast_2	rápido
+heavy	pesado
+light	ligero
+long	largo
+short_2	corto
+some	algunos|un poco
+both	ambos|los dos
+broken	roto|descompuesto
+old_object	viejo
+correct	correcto|bien hecho
+mistake_no_wrong	incorrecto|error|no
+favourite	favorito
+yummy	rico|delicioso
+yucky	guácala|asco|feo
+first	primero
+last	último
+next	siguiente
+# --- Core: questions and time
+what	qué
+where	dónde
+who	quién
+when	cuándo
+why	por qué
+how	cómo
+how_many	cuántos
+which	cuál
+now	ahora|ya
+today	hoy
+tomorrow	mañana
+yesterday	ayer
+morning	mañana (parte del día)|en la mañana
+afternoon	tarde
+night	noche
+day	día
+week	semana
+weekend	fin de semana
+bed_time	hora de dormir
+lunch_time	hora de comer
+break_time_1	recreo
+circle_time	círculo|asamblea
+time_out	tiempo fuera
+# --- Social
+hello	hola
+# --- Feelings
+happy_lady	feliz|contenta
+happy_man	feliz|contento
+sad_lady	triste
+sad_man	triste
+angry_lady	enojada|enojo
+angry_man	enojado|enojo
+afraid_lady	miedo|asustada
+afraid_man	miedo|asustado
+surprised_lady	sorprendida
+surprised_man	sorprendido
+worried_lady	preocupada
+worried_man	preocupado
+excited_lady	emocionada
+excited_man	emocionado
+confused_lady	confundida
+confused_man	confundido
+disgusted_lady	asco|asqueada
+jealous_man	celoso
+laughing_lady	reír|risa
+hungry	hambre|tengo hambre
+thirsty	sed|tengo sed
+# --- Body and health
+head	cabeza
+eye	ojo
+eyes	ojos
+ear	oreja|oído
+mouth	boca
+teeth	dientes
+tooth	diente
+tongue	lengua
+neck	cuello
+arm	brazo
+right_hand	mano
+finger	dedo
+feet	pies
+foot	pie
+leg	pierna
+knee	rodilla
+back	espalda
+stomach	estómago|panza|panzita
+heart	corazón
+hair_bunches	pelo|cabello
+headache	dolor de cabeza
+stomach_ache	dolor de estómago|dolor de panza
+toothache	dolor de muelas|dolor de diente
+back_ache	dolor de espalda
+cut	cortada|herida
+burn	quemadura
+rash	sarpullido|ronchas
+itch	comezón
+sneeze_cold	gripa|resfriado|estornudo
+seizure	convulsión|crisis
+broken_bone	hueso roto|fractura
+operation	operación|cirugía
+body_outline	cuerpo
+penis	pene
+vagina	vagina|vulva
+# --- Food
+water	agua
+milk	leche
+apple_juice	jugo de manzana|jugo
+orange_juice	jugo de naranja|jugo
+hot_chocolate	chocolate caliente
+tea	té
+coffee	café
+lemonade	limonada
+milkshake	licuado|malteada
+apple	manzana
+banana	plátano|banana
+orange	naranja
+grapes	uvas
+strawberry	fresa
+watermelon	sandía
+melon	melón
+mango	mango
+pineapple	piña
+pear	pera
+peach	durazno
+lemon	limón
+fruit	fruta
+bread	pan
+sandwich	sándwich|torta
+cheese	queso
+egg	huevo
+chicken	pollo
+meat	carne
+ham	jamón
+sausages	salchichas
+rice	arroz
+pasta	pasta
+soup	sopa
+pizza	pizza
+hamburger	hamburguesa
+hot_dog	hot dog|salchicha
+chips	papas fritas
+crisps	papitas
+potato	papa
+carrot	zanahoria
+tomato	jitomate|tomate
+lettuce	lechuga
+avocado	aguacate
+sweetcorn	elote|maíz
+peas	chícharos
+broccoli	brócoli
+vegetables	verduras
+cereal	cereal
+pancakes	hot cakes|panqueques
+biscuits	galletas
+cake	pastel
+birthday_cake	pastel de cumpleaños
+ice_cream	helado|nieve
+chocolate	chocolate
+sweet	dulce
+lollipop	paleta
+yogurt	yogur
+butter	mantequilla
+jelly	gelatina
+breakfast_1	desayuno
+lunch_1	comida|almuerzo
+dinner	cena
+food	comida
+salty	salado
+spicy	picante|enchiloso
+sour	ácido|agrio
+# --- Eating and drinking items
+plate	plato
+cup_non_spill	vaso entrenador|taza
+glass_,_drinking	vaso
+spoon	cuchara
+tea_spoon	cucharita
+fork	tenedor
+knife	cuchillo
+straw	popote
+milk_bottle	botella de leche
+bib	babero
+# --- Clothes
+clothes_generic	ropa
+shirt	camisa
+t-shirt	playera|camiseta
+trousers	pantalón
+jeans	pantalón de mezclilla
+shorts	shorts|pantalón corto
+dress	vestido
+skirt	falda
+jumper	suéter
+coat	abrigo|chamarra
+jacket	chamarra
+socks	calcetines
+trainers	tenis
+boots	botas
+sandals	sandalias|huaraches
+pyjamas	pijama
+cap	gorra
+hat_-_mans	sombrero
+gloves	guantes
+scarf	bufanda
+nappy	pañal
+# --- Places
+house	casa|hogar
+school	escuela
+class_room	salón|aula
+park_,_to	estacionar
+play_area	parque|juegos
+shop	tienda
+cafe	café|cafetería
+church	iglesia
+surgery_health_centre	clínica|centro de salud
+toilets	baño|sanitarios
+room	cuarto
+back_garden	jardín|patio
+beach	playa
+# --- Things at home
+single_bed	cama
+chair	silla
+table	mesa
+door	puerta
+window	ventana
+bath	tina
+shower	regadera
+toilet	excusado|inodoro|baño
+mirror_1	espejo
+blanket	cobija
+key_1	llave
+mobile_phone	celular|teléfono
+computer_1	computadora
+flatscreen_tv	tele|televisión
+remote_control	control remoto
+headphones	audífonos
+camera	cámara
+music	música
+turn_on_light_switch_,_to	prender la luz
+turn_off_light_switch_,_to	apagar la luz
+# --- Toys and play
+ball	pelota
+toys	juguetes
+doll	muñeca
+teddy_bear	osito de peluche|peluche
+bricks	bloques
+lego	lego|bloques
+jigsaw_puzzle	rompecabezas
+bubbles	burbujas
+car_toy	carrito
+kite	papalote
+slide	resbaladilla
+swing	columpio
+see_saw	sube y baja
+book_shelf	libros
+colouring_book	libro para colorear
+crayon	crayola|crayolas
+paint	pintura
+scissors	tijeras
+pencil	lápiz
+pen	pluma
+paper	papel
+glue_stick	pegamento|resistol
+iPod	música (reproductor)
+# --- Animals
+dog	perro|perrito
+cat	gato|gatito
+horse	caballo
+cow	vaca
+piglet	cerdito|puerquito|cochinito
+sheep	borrego|oveja
+chicken_live	gallina
+duck	pato
+bird	pájaro|ave
+fish	pez|pescado
+rabbit	conejo
+mouse	ratón
+elephant	elefante
+lion	león
+tiger	tigre
+chimpanzee	chimpancé|mono|chango
+giraffe	jirafa
+bear	oso
+snake	serpiente|víbora
+frog	rana
+butterfly	mariposa
+spider	araña
+dinosaur	dinosaurio
+# --- Transport
+car	coche|carro
+bus_single_decker	camión|autobús
+bicycle	bicicleta|bici
+motorcycle	moto|motocicleta
+taxi	taxi
+train	tren
+aeroplane	avión
+boat	barco|lancha
+ambulance	ambulancia
+fire_engine	camión de bomberos
+police_car	patrulla
+wheelchair	silla de ruedas
+# --- Weather and nature
+sun	sol
+rain	lluvia|llueve
+cloudy	nublado
+snow	nieve
+rainbow	arcoíris
+tree	árbol
+flower	flor
+# --- Colours
+red	rojo
+blue	azul
+green	verde
+yellow	amarillo
+black	negro
+white	blanco
+pink	rosa
+purple	morado
+brown	café
+orange_2	naranja (color)
+# --- Numbers
+one	uno
+two	dos
+three	tres
+four	cuatro
+five	cinco
+six	seis
+seven	siete
+eight	ocho
+nine	nueve
+ten	diez
+# --- Communication
+communication_book	libro de comunicación|tablero
+communication_device	comunicador|dispositivo
