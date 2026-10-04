@@ -191,7 +191,13 @@ test.describe('recorded speech', () => {
   // The test answers the clip request itself; a service worker would take it first.
   test.use({ serviceWorkers: 'block' });
 
-  test('switch scanning resumes when a recorded clip never plays, and the text is spoken instead', async ({ page }) => {
+  test('switch scanning resumes when a recorded clip never plays, and the text is spoken instead', async ({
+    page,
+    context,
+    baseURL,
+  }) => {
+    // /app is gated on a valid session (the CI server has sign-in configured).
+    await seedTestSession(context, baseURL!, { role: 'communicator' });
     await stubStuckSpeech(page, RECORDED_BOARD);
     await page.addInitScript(() => {
       // A stuck decoder: play() resolves, the position never moves, no event ever fires.
