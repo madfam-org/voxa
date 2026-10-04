@@ -92,8 +92,8 @@ export function UsageReportPanel({
       </div>
 
       <p style={{ margin: '0 0 12px', fontSize: '0.8125rem', color: neutral.muted, lineHeight: 1.5 }}>
-        Button activations logged when the communicator opted in to AI/analytics consent. No raw utterance
-        text is shown here — counts only.
+        Button presses recorded while the communicator has usage counts turned on: which button and
+        when. This report shows counts only.
       </p>
 
       <label style={labelStyle}>

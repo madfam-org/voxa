@@ -1213,6 +1213,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
             showEditorPinSettings={role === 'admin'}
             boardDisplay={board.display}
             onBoardDisplayChange={isEditor ? handleBoardDisplayChange : undefined}
+            accessToken={accessToken}
           />
         )}
 

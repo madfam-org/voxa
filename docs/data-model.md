@@ -69,7 +69,7 @@ pnpm --filter @voxa/api db:generate
 DATABASE_URL='postgresql://…' pnpm --filter @voxa/api db:migrate
 ```
 
-The API container runs migrations automatically on startup when `DATABASE_URL` is set, on a dedicated single connection that is closed before the server listens. A transient connection refusal at startup is retried for `DATABASE_STARTUP_RETRY_MS` (default 30 s); SQL and migration errors are never retried. Pool sizing and the connection budget: [deploy/ENCLII.md](./deploy/ENCLII.md#connection-budget-contract).
+The API container runs migrations automatically on startup when `DATABASE_URL` is set, on a dedicated single connection that is closed before the server listens. The run holds a PostgreSQL session advisory lock, so processes that start at the same time apply migrations one after the other. A transient connection refusal at startup is retried for `DATABASE_STARTUP_RETRY_MS` (default 30 s); SQL and migration errors are never retried. Pool sizing and the connection budget: [deploy/ENCLII.md](./deploy/ENCLII.md#connection-budget-contract).
 
 The migrator only applies files listed in `drizzle/migrations/meta/_journal.json`, and `db:generate` diffs against the newest `meta/NNNN_snapshot.json`. Migration `0003_media_assets` is idempotent (`IF NOT EXISTS`, guarded FK), so databases that already had the table apply it cleanly. Always add migrations with `db:generate` (or, for a hand-written file, add its journal entry with a `when` greater than the previous entry, plus a matching snapshot). `src/db/migrations-journal.test.ts` and the CI drift step (`drizzle-kit generate` must produce no changes) enforce this.
 
@@ -81,10 +81,25 @@ The migrator only applies files listed in `drizzle/migrations/meta/_journal.json
 | `board_id` | `text` FK | Board where button was activated |
 | `button_id` | `text` | Button identifier |
 | `user_id` | `text` | Janua user id |
-| `speech_text` | `text` | Spoken text (optional) |
+| `speech_text` | `text` | Spoken text. `NULL` by default; see below |
+| `speech_text_consented` | `boolean` | `true` only when `speech_text` was written under an `utterance_text` consent from an allow-listed organization |
 | `recorded_at` | `timestamptz` | Activation time |
 
-Requires `X-Voxa-AI-Consent: true` (same opt-in as AI predictions). Summary endpoint: `GET /v1/events/activations/summary?boardId=&days=7` (editor role).
+Activations are **counts only** by default. `POST /v1/events/activations` needs the caller's `usage_analytics` consent record (403 otherwise; nothing is stored) and answers 403 for the shared `demo-core` board. `speech_text` is written only when the caller granted `utterance_text` **and** their organization is listed in `VOXA_UTTERANCE_TEXT_DPA_ORG_IDS` (organizations with a data-processing agreement; empty by default, so no text is stored). A timer in each API process clears opted-in text older than 90 days (`speech_text_consented = true` rows only; one replica at a time via a PostgreSQL advisory lock; interval `VOXA_UTTERANCE_PURGE_INTERVAL_MS`, default 6 h). Rows written before server-side consent existed keep `speech_text_consented = false` and are not touched by that purge.
+
+Summary endpoint: `GET /v1/events/activations/summary?boardId=&days=7` (people who may edit the board). The board owner can erase a board's whole history with `DELETE /v1/events/activations?boardId=`.
+
+### `consents` and `consent_events`
+
+One row per user and purpose in `consents` (`user_id`, `purpose`, `granted`, `policy_version`, `granted_at`, `revoked_at`, `updated_at`; primary key `user_id, purpose`); every change is also appended to `consent_events` with the server time. Purposes:
+
+| Purpose | Allows |
+|---------|--------|
+| `ai_processing` | `POST /v1/ai/predict/*` (403 without it) |
+| `usage_analytics` | `POST /v1/events/activations` (counts, no text) |
+| `utterance_text` | keeping `speech_text`, honoured only for organizations in `VOXA_UTTERANCE_TEXT_DPA_ORG_IDS` |
+
+`GET /v1/consents` and `PUT /v1/consents` (`{ "consents": { "ai_processing": true, "usage_analytics": false } }`) act on the signed-in user only. No record means not granted. No request header grants consent. Without `DATABASE_URL` the API keeps these records in `consents.json` under `VOXA_DATA_DIR`, replaced atomically like `boards.json`. The web app keeps a copy in `localStorage` (`voxa-consent`) as an offline cache only; a signed-out visitor's choice stays on the device.
 
 **OBZ bundles:** `POST /v1/boards/:id/import/obz` (zip), `GET /v1/boards/:id/export/obz` — embeds `board.json` plus `images/*` per `@voxa/obf`.
 

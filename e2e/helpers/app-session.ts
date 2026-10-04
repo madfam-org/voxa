@@ -2,14 +2,27 @@ import { type Page, expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { signInViaJanua } from './janua-login';
 
-/** Seed local consent/editor state before navigation. */
+/** Seed editor state, sign in, and grant both consent purposes if the app asks. */
 export async function prepareAuthenticatedApp(page: Page): Promise<void> {
   await page.addInitScript(() => {
-    localStorage.setItem('voxa-ai-consent', 'granted');
     localStorage.removeItem('voxa-editor-pin');
     sessionStorage.removeItem('voxa-editor-unlocked');
   });
   await signInViaJanua(page);
+  await grantConsentIfAsked(page);
+}
+
+/**
+ * Consent is the signed-in user's server record: the banner asks while the
+ * API holds no decision. Grants word suggestions and usage counts.
+ */
+export async function grantConsentIfAsked(page: Page): Promise<void> {
+  const dialog = page.getByRole('dialog', { name: 'Privacy choices' });
+  if (!(await dialog.isVisible({ timeout: 5000 }).catch(() => false))) return;
+  await dialog.getByLabel('Word suggestions').check();
+  await dialog.getByLabel('Usage counts').check();
+  await dialog.getByRole('button', { name: 'Save choices' }).click();
+  await expect(dialog).toBeHidden({ timeout: 15000 });
 }
 
 export async function openAccessibilitySettings(page: Page): Promise<void> {

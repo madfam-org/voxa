@@ -83,7 +83,8 @@ pnpm build
    retries `ECONNREFUSED`, `ECONNRESET`, `ETIMEDOUT`, `ENOTFOUND` and
    `EAI_AGAIN` on the startup migration for `DATABASE_STARTUP_RETRY_MS`
    (default 30 s), logs the code only, then fails as before. SQL and
-   migration errors are never retried.
+   migration errors are never retried. Migrations run under a session
+   advisory lock (`MIGRATION_LOCK_KEY`), so concurrent starts do not race.
 4. **No query parameters in responses or logs.** Since drizzle-orm 0.44 a
    `DrizzleQueryError` carries the SQL and its bound parameters (board
    content, user ids, media bytes). `src/lib/db-errors.ts` (`unwrapDbError`,
@@ -102,6 +103,17 @@ pnpm build
    `scripts/launch/verify-prod-image-optimizer.sh` after each production web
    deploy. Re-enabling the optimizer or adding a remote origin means changing
    the config, the test and this entry together, with exact origins only.
+
+7. **Consent is a server-side record.** `src/lib/consents.ts` holds one
+   record per user and purpose (`ai_processing`, `usage_analytics`,
+   `utterance_text`); `GET/PUT /v1/consents` act on the signed-in user only.
+   Predictions need `ai_processing`, activations need `usage_analytics` and
+   store counts only; `speech_text` is written only with `utterance_text`
+   from an organization in `VOXA_UTTERANCE_TEXT_DPA_ORG_IDS` (empty by
+   default) and cleared after 90 days by `src/lib/utterance-retention.ts`.
+   Never gate on a request header again, and never store activation text
+   outside that path. Tested in `src/routes/consents.routes.test.ts`,
+   `src/routes/events.routes.test.ts` and `src/routes/consent.pg.test.ts`.
 
 ## Deploy
 

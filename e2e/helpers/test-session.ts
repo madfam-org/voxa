@@ -118,10 +118,22 @@ export async function seedTestSession(
   );
 }
 
-/** Seed the local state the app expects so no consent gate covers the scan. */
+/**
+ * Seed the local state the app expects so no consent banner covers the scan.
+ * The API is not running in the a11y job, so the banner falls back to this
+ * offline cache (key and shape: CONSENT_CACHE_KEY in apps/web/src/lib/consent.ts).
+ */
 export async function seedLocalState(page: Page): Promise<void> {
   await page.addInitScript(() => {
-    localStorage.setItem('voxa-ai-consent', 'granted');
+    localStorage.setItem(
+      'voxa-consent',
+      JSON.stringify({
+        choices: { aiProcessing: true, usageAnalytics: true },
+        utteranceText: false,
+        source: 'local',
+        decidedAt: '2026-10-03T00:00:00.000Z',
+      }),
+    );
     localStorage.removeItem('voxa-editor-pin');
     sessionStorage.removeItem('voxa-editor-unlocked');
   });

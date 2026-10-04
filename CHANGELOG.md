@@ -4,6 +4,12 @@ All notable changes to Voxa are documented here.
 
 ## [Unreleased]
 
+### Changed
+
+- Consent is a server-side record per user and purpose (`GET/PUT /v1/consents`, tables `consents` and `consent_events`), replacing the client-supplied `X-Voxa-AI-Consent` header, which no longer grants anything. Prediction routes need `ai_processing`; activations need `usage_analytics` and store counts only. Spoken text is kept only under a separate `utterance_text` consent for organizations on the `VOXA_UTTERANCE_TEXT_DPA_ORG_IDS` allow-list (empty by default), and opted-in text is cleared after 90 days. The web banner and Settings show two separate choices (word suggestions, usage counts) and save them to the server; `localStorage` is an offline cache.
+- Activations on the shared `demo-core` board answer 403. A board owner can delete the board's activation history (`DELETE /v1/events/activations?boardId=`).
+- Startup migrations hold a PostgreSQL advisory lock, so processes that start together do not race.
+
 ### Removed
 
 - CI: the production web deploy no longer logs in to the identity provider with an admin account to sync Argo CD and restart pods; Argo CD auto-syncs the digest pin, which already bumps the pod template's `restartedAt`. The three scripts that step used (`scripts/deploy/*`) and the June GA soak-window tools (`soak-window-progress.sh`, `soak-status.sh`, `verify-soak-window.sh`, `setup-staging-soak-secrets.sh`) moved to MADFAM's private operations repository.

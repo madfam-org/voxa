@@ -9,7 +9,7 @@ test.describe('Staging UX soak', () => {
   });
 
   test('AI consent banner can be dismissed on sign-in', async ({ page }) => {
-    await page.addInitScript(() => localStorage.removeItem('voxa-ai-consent'));
+    await page.addInitScript(() => localStorage.removeItem('voxa-consent'));
     await page.goto('/auth/signin');
     const dialog = page.getByRole('dialog', { name: 'Privacy choices' });
     await expect(dialog).toBeVisible();
@@ -39,7 +39,6 @@ test.describe('Staging UX soak', () => {
     test.skip(!hasJanuaTestCredentials(), 'Requires JANUA_TEST_EMAIL/PASSWORD for staging OAuth');
 
     await page.addInitScript(() => {
-      localStorage.setItem('voxa-ai-consent', 'granted');
       localStorage.removeItem('voxa-editor-pin');
       localStorage.setItem(
         'voxa-communicator-settings',
