@@ -1,6 +1,6 @@
 # Voxa
 
-> Open augmentative and alternative communication (AAC) app: a Next.js board app, an Expo mobile app and a Hono API in one pnpm + Turborepo monorepo (Node 22). Spanish first (es-MX), also English and French. Apache-2.0; the vendored Mulberry Symbols are CC BY-SA 4.0. Public repository: operational detail and commercial research live in MADFAM's private operations repository, not here. This file indexes the repository; the landing host serves its own product-facing `/llms.txt` and `/llms-full.txt` (built in `apps/web/src/lib/crawling.ts`).
+> Augmentative & alternative communication. A Spanish-first communication board that turns direct touch, switch scanning or pointer dwell into speech with the device voice you choose (es-MX first); core boards in 24, 36 and 60 cells on one stable motor plan, offline use after the first visit, and Open Board Format (OBF/OBZ) exchange — at home, in therapy, and in class. This repository holds its open-source code: a Next.js board app, an Expo mobile app and a Hono API in one pnpm + Turborepo monorepo (Node 22). Spanish first (es-MX), also English and French. Apache-2.0; the vendored Mulberry Symbols are CC BY-SA 4.0. Public repository: operational detail and commercial research live in MADFAM's private operations repository, not here. This file indexes the repository; the landing host serves its own product-facing `/llms.txt` and `/llms-full.txt` (built in `apps/web/src/lib/crawling.ts`).
 
 ## Read first
 

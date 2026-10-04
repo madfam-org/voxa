@@ -498,7 +498,7 @@ export function SettingsPanel({
                 return;
               }
               try {
-                setEditorPin(pin);
+                await setEditorPin(pin);
                 await dialogs.alert(t('pinSaved'));
               } catch {
                 await dialogs.alert(t('pinStorageUnavailable'));

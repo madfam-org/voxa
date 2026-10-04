@@ -604,7 +604,7 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
       }
 
       const pin = await dialogs.prompt(tcx('pinPrompt'), { secret: true });
-      if (pin && unlockEditor(pin)) {
+      if (pin && (await unlockEditor(pin))) {
         setRole(nextRole);
         return;
       }

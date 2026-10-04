@@ -6,10 +6,9 @@
 ![Node.js](https://img.shields.io/badge/Node.js-22.x-green)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue)
 
-Voxa is an open **augmentative and alternative communication (AAC)** app: a
-communication board that turns taps, switch presses and pointer dwell into
-spoken language, at home, in therapy and in class. It is **Spanish first**
-(es-MX), also in English and French. Built by [MADFAM](https://madfam.io) under
+**Augmentative & alternative communication.** A Spanish-first communication board that turns direct touch, switch scanning or pointer dwell into speech with the device voice you choose (es-MX first); core boards in 24, 36 and 60 cells on one stable motor plan, offline use after the first visit, and Open Board Format (OBF/OBZ) exchange — at home, in therapy, and in class.
+
+Voxa is open source (Apache-2.0); its interface is also in English and French. Built by [MADFAM](https://madfam.io) under
 the [madfam-org](https://github.com/madfam-org) organization; try it at
 [voxa.madfam.io/demo](https://voxa.madfam.io/demo) without an account.
 

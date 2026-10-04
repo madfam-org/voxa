@@ -2,7 +2,7 @@
   "name": "voxa",
   "version": "1.0.0",
   "private": true,
-  "description": "Next-generation Augmentative and Alternative Communication (AAC) platform — cross-platform, GLP-native, AI-powered, and open by design.",
+  "description": "Augmentative & alternative communication. A Spanish-first communication board that turns direct touch, switch scanning or pointer dwell into speech with the device voice you choose (es-MX first); core boards in 24, 36 and 60 cells on one stable motor plan, offline use after the first visit, and Open Board Format (OBF/OBZ) exchange — at home, in therapy, and in class.",
   "author": "Innovaciones MADFAM <hola@madfam.io>",
   "license": "Apache-2.0",
   "repository": {
