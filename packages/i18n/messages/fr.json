@@ -123,6 +123,10 @@
         "title": "CVI et modes d'accès",
         "body": "Thèmes à fort contraste, balayage par interrupteur et sélection par maintien du pointeur adaptent le même tableau au CVI et aux accès physiques variés."
       },
+      "voices": {
+        "title": "Les voix de l'appareil, à votre mesure",
+        "body": "Choisissez parmi les voix installées sur le téléphone, la tablette ou l'ordinateur et réglez le débit, la hauteur et le volume. Les voix d'enfant naturelles sont en attente."
+      },
       "ai": {
         "title": "Suggestions avec consentement",
         "body": "Des suggestions de mots optionnelles accélèrent les messages ; les familles décident de les activer."
@@ -381,6 +385,48 @@
     "postSelectionPause": "Pause après une sélection ({ms} ms)",
     "gazeBridge": "Pont d’événements de regard (voxa:gaze, pour intégrateurs)",
     "gazeHintBridge": "Pour les intégrateurs : envoyez des coordonnées d'écran avec window.__voxaInjectGaze(x, y) ou un CustomEvent voxa:gaze ; Voxa applique le même maintien. Aucun pilote d'oculomètre n'est fourni avec Voxa."
+  },
+  "voice": {
+    "title": "Voix",
+    "intro": "Voxa parle avec les voix installées sur cet appareil. Choisissez-en une pour {language} et réglez le débit, la hauteur et le volume. Les voix d'enfant naturelles ne sont pas encore disponibles.",
+    "unsupported": "Ce navigateur ne peut pas lire à voix haute. Essayez un autre navigateur ou appareil.",
+    "loading": "Recherche des voix de l'appareil…",
+    "voiceLabel": "Voix pour {language}",
+    "automatic": "Automatique (voix par défaut du navigateur)",
+    "automaticWith": "Automatique : {name}",
+    "groupExact": "Voix en {language}",
+    "groupSameLanguage": "Autres variantes de la langue",
+    "groupOther": "Autres langues",
+    "voiceOption": "{name} ({lang})",
+    "voiceOptionTagged": "{name} ({lang}) · {tags}",
+    "hint": {
+      "premium": "Premium",
+      "enhanced": "Améliorée",
+      "natural": "Naturelle",
+      "neural": "Neuronale",
+      "google": "Google",
+      "online": "En ligne"
+    },
+    "needsNetwork": "connexion requise",
+    "qualityHint": "Les étiquettes viennent du nom de chaque voix. Une voix qui demande une connexion ne parle pas hors ligne.",
+    "showAll": "Afficher les voix d'autres langues ({count})",
+    "preview": "Écouter un exemple",
+    "previewPhrase": "Bonjour, voici ma voix. Tu veux jouer avec moi ?",
+    "installTitle": "Cet appareil n'a pas de voix en {language}",
+    "installAndroid": "Android : dans Paramètres, cherchez « Synthèse vocale », ouvrez les paramètres du moteur et installez les données vocales en {language}.",
+    "installApple": "iPhone et iPad : Réglages › Accessibilité › Contenu énoncé › Voix ; choisissez {language} et téléchargez une voix.",
+    "installWindows": "Windows : Paramètres › Heure et langue › Voix › Ajouter des voix, puis choisissez {language}.",
+    "installMeanwhile": "Rouvrez ensuite Voxa. En attendant, Voxa parle avec la meilleure voix disponible.",
+    "rate": "Débit : {value}",
+    "pitch": "Hauteur : {value}",
+    "volume": "Volume : {percent} %",
+    "volumeValue": "{percent} %",
+    "higherPreset": "Voix plus aiguë (approximation)",
+    "higherPresetHint": "Monte la hauteur et accélère un peu la voix choisie. C'est une approximation, pas une voix d'enfant.",
+    "resetTuning": "Réinitialiser débit, hauteur et volume",
+    "missingNotice": "La voix choisie n'est plus sur cet appareil. Voxa parle maintenant avec {fallback}. Vous pouvez en choisir une autre dans les réglages.",
+    "missingNoticeDefault": "La voix choisie n'est plus sur cet appareil. Voxa parle maintenant avec la voix par défaut du navigateur. Vous pouvez en choisir une autre dans les réglages.",
+    "dismiss": "Compris"
   },
   "legal": {
     "shared": {

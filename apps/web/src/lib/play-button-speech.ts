@@ -1,6 +1,13 @@
 import type { BoardButton } from '@voxa/core';
 import { buttonMediaVideo, buttonRecordedSpeech, resolveButtonSpeech } from '@voxa/core';
 import { displayMediaUrl } from './media-url';
+import {
+  chosenVoiceForLocale,
+  DEFAULT_SPEECH_TUNING,
+  resolveVoice,
+  type SpeechTuning,
+  type VoiceResolution,
+} from './speech-voices';
 
 type SpeechActivityListener = (active: boolean) => void;
 
@@ -208,13 +215,86 @@ async function playVisibleVideo(blob: Blob, caption: string, closeLabel: string)
   await done;
 }
 
-function speakWithTts(text: string, locale: string): void {
-  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+/**
+ * Voice and tuning for every utterance Voxa speaks. Set from the device's
+ * communicator settings (`configureSpeech`); the public demo keeps the
+ * defaults, which still pick the best installed voice for the locale.
+ */
+export interface SpeechPreferences extends SpeechTuning {
+  /** Chosen `voiceURI` per speech locale (`es-MX` → a voice on this device). */
+  voiceURIByLocale: Record<string, string>;
+}
+
+export const DEFAULT_SPEECH_PREFERENCES: SpeechPreferences = {
+  ...DEFAULT_SPEECH_TUNING,
+  voiceURIByLocale: {},
+};
+
+let speechPreferences: SpeechPreferences = DEFAULT_SPEECH_PREFERENCES;
+
+export function configureSpeech(preferences: Partial<SpeechPreferences>): void {
+  speechPreferences = { ...speechPreferences, ...preferences };
+}
+
+/** @internal test helper */
+export function resetSpeechPreferencesForTests(): void {
+  speechPreferences = DEFAULT_SPEECH_PREFERENCES;
+}
+
+function speechSynthesisOrNull(): SpeechSynthesis | null {
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return null;
+  return window.speechSynthesis ?? null;
+}
+
+/** The device's voices right now (empty while the browser is still loading them). */
+export function deviceVoices(): SpeechSynthesisVoice[] {
+  try {
+    return speechSynthesisOrNull()?.getVoices?.() ?? [];
+  } catch {
+    return [];
+  }
+}
+
+/** Which voice Voxa would use for `locale` now, and whether a stored choice is gone. */
+export function resolveSpeechVoice(
+  locale: string,
+  preferences: Pick<SpeechPreferences, 'voiceURIByLocale'> = speechPreferences,
+): VoiceResolution<SpeechSynthesisVoice> {
+  return resolveVoice(deviceVoices(), locale, chosenVoiceForLocale(preferences.voiceURIByLocale, locale));
+}
+
+export interface UtteranceOverrides extends Partial<SpeechTuning> {
+  /** Speak with this voice instead of the stored choice (settings preview). */
+  voiceURI?: string;
+}
+
+/**
+ * The one place an utterance is built: `lang` is the speech locale, the voice
+ * is the stored choice for it (else the best installed match), and rate, pitch
+ * and volume come from the communicator's tuning.
+ */
+function buildUtterance(text: string, locale: string, overrides: UtteranceOverrides = {}): SpeechSynthesisUtterance {
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = locale;
+  const voiceChoices = overrides.voiceURI
+    ? { voiceURIByLocale: { [locale]: overrides.voiceURI } }
+    : speechPreferences;
+  const { voice } = resolveSpeechVoice(locale, voiceChoices);
+  if (voice) utterance.voice = voice;
+  utterance.rate = overrides.rate ?? speechPreferences.rate;
+  utterance.pitch = overrides.pitch ?? speechPreferences.pitch;
+  utterance.volume = overrides.volume ?? speechPreferences.volume;
+  return utterance;
+}
+
+function speakWithTts(text: string, locale: string, overrides?: UtteranceOverrides): void {
+  const synth = speechSynthesisOrNull();
+  if (!synth) return;
   beginSpeechActivity();
-  const utterance = Object.assign(new SpeechSynthesisUtterance(text), { lang: locale });
+  const utterance = buildUtterance(text, locale, overrides);
   utterance.onend = () => endSpeechActivity();
   utterance.onerror = () => endSpeechActivity();
-  window.speechSynthesis.speak(utterance);
+  synth.speak(utterance);
 }
 
 /**
@@ -261,10 +341,27 @@ export function speakText(text: string, locale: string): void {
   speakWithTts(text, locale);
 }
 
-/** Speak a scanned button label without affecting scan-pause activity tracking. */
-export function announceScanLabel(label: string, locale = 'en-US'): void {
-  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-  window.speechSynthesis.cancel();
-  const utterance = Object.assign(new SpeechSynthesisUtterance(label), { lang: locale, volume: 0.85 });
-  window.speechSynthesis.speak(utterance);
+/**
+ * Preview a voice from settings: cancels what is playing, then speaks `text`
+ * with `voiceURI` and the given tuning (not yet saved).
+ */
+export function previewVoice(text: string, locale: string, overrides: UtteranceOverrides): void {
+  speechSynthesisOrNull()?.cancel();
+  speakWithTts(text, locale, overrides);
+}
+
+/** Scan cues sit slightly below the communicator's own speech volume. */
+export const SCAN_CUE_VOLUME_FACTOR = 0.85;
+
+/**
+ * Speak a scanned button label without affecting scan-pause activity
+ * tracking. Same voice and tuning as everything else, a little quieter.
+ */
+export function announceScanLabel(label: string, locale: string): void {
+  const synth = speechSynthesisOrNull();
+  if (!synth) return;
+  synth.cancel();
+  synth.speak(
+    buildUtterance(label, locale, { volume: speechPreferences.volume * SCAN_CUE_VOLUME_FACTOR }),
+  );
 }

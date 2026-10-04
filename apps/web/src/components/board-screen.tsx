@@ -35,6 +35,8 @@ import {
 import { effectiveDisplaySettings } from '@/lib/communicator-settings';
 import type { CommunicatorSettings } from '@/lib/communicator-settings';
 import { useCommunicatorSettings } from '@/hooks/use-communicator-settings';
+import { useSpeechSettings } from '@/hooks/use-device-voices';
+import { VoiceMissingNotice } from '@/components/voice-missing-notice';
 import { useEyeDwellByButton } from '@/hooks/use-eye-dwell';
 import { useGazeBridgeDwell } from '@/hooks/use-gaze-bridge-dwell';
 import { usePredictions } from '@/hooks/use-predictions';
@@ -201,6 +203,11 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
     [board, boardId, isEditor, uiLocale],
   );
   const speechLocale = speechLocaleForBoard(viewBoard, uiLocale);
+  const { deviceVoices, missingVoiceNotice, dismissMissingVoiceNotice } = useSpeechSettings(
+    settings,
+    setSettings,
+    speechLocale,
+  );
 
   const sorted = [...viewBoard.grid.buttons].sort(
     (a, b) => a.position.row - b.position.row || a.position.column - b.position.column,
@@ -1150,6 +1157,13 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
         />
       ) : null}
 
+      {missingVoiceNotice ? (
+        <VoiceMissingNotice
+          fallbackName={missingVoiceNotice.fallbackName}
+          onDismiss={dismissMissingVoiceNotice}
+        />
+      ) : null}
+
       <SyncStatusBanner
         syncStatus={syncStatus}
         pendingSave={pendingSave}
@@ -1298,6 +1312,8 @@ export function BoardScreen({ mode = 'communicator' }: BoardScreenProps): React.
             boardDisplay={board.display}
             onBoardDisplayChange={isEditor ? handleBoardDisplayChange : undefined}
             accessToken={accessToken}
+            speechLocale={speechLocale}
+            deviceVoices={deviceVoices}
           />
         )}
 

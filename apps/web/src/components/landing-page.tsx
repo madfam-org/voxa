@@ -20,7 +20,7 @@ const card: React.CSSProperties = {
   padding: 24,
 };
 
-const FEATURE_KEYS = ['motor', 'cvi', 'ai', 'obf', 'offline', 'janua'] as const;
+const FEATURE_KEYS = ['motor', 'cvi', 'voices', 'ai', 'obf', 'offline', 'janua'] as const;
 
 export function LandingPage(): React.ReactNode {
   const t = useTranslations('landing');
