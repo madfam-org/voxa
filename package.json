@@ -36,6 +36,7 @@
     "test:e2e:first-run": "pnpm --filter @voxa/e2e test:first-run",
     "test:e2e:session": "pnpm --filter @voxa/e2e test:session",
     "test:e2e:live": "pnpm --filter @voxa/e2e test:live",
+    "test:e2e:settings-sync": "pnpm --filter @voxa/e2e test:settings-sync",
     "test:e2e:staging": "pnpm --filter @voxa/e2e test:staging",
     "test:e2e:staging:signed-in": "pnpm --filter @voxa/e2e test:staging:signed-in"
   },

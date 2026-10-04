@@ -29,7 +29,7 @@ fixtures free of real names and health information.
 | `e2e`                           | Playwright smoke, accessibility (axe), browser workflow and staging specs.                                                          |
 | `scripts/`                      | `run-unit-tests.mjs` (test discovery), `guards/` (repository guards), `launch/` (deploy smokes), `mobile/` (EAS checks).             |
 | `fixtures/`                     | Synthetic OBF/OBZ files and soak fixtures (no real names or health data).                                                           |
-| `apps/api/drizzle/migrations`   | SQL migrations, `meta/_journal.json` and their snapshots (`0000`–`0007`).                                                           |
+| `apps/api/drizzle/migrations`   | SQL migrations, `meta/_journal.json` and their snapshots (`0000`–`0008`).                                                           |
 | `k8s/production`, `k8s/staging` | Kustomize manifests (digest-pinned images).                                                                                         |
 | `enclii.yaml`                   | Enclii network and status declarations.                                                                                             |
 | `docs/`                         | Architecture, data model, auth, deploy, ops, launch and legal docs.                                                                 |
@@ -107,7 +107,11 @@ pnpm build
   user picks switch scanning, 36 cells and a voice and lands on a 36-cell
   es-MX board with scanning on; a returning user and `/demo` never see the
   setup; a 402 offers the existing board; axe on every step in a light and a
-  dark theme). The axe job scans `/app`
+  dark theme) and `pnpm test:e2e:settings-sync`
+  (`e2e/specs/settings-sync.spec.ts`, same local API: two browser contexts as
+  one user with the `settings_sync` consent on, a scan speed changed in one
+  appears in the other after a reload; with the consent off no request
+  reaches `/v1/me/settings`; axe on the section). The axe job scans `/app`
   in all four board themes and, in Spanish (the default, unprefixed locale),
   the landing, `/demo`, `/app` and its settings panel; both fail on serious
   or critical violations. The standalone server binds `HOSTNAME=0.0.0.0` as
@@ -115,7 +119,7 @@ pnpm build
   request URL and every unprefixed Spanish path redirects to itself.
 - Playwright: `pnpm test:e2e:smoke`, `pnpm test:e2e:a11y`,
   `pnpm test:e2e:offline`, `pnpm test:e2e:access`, `pnpm test:e2e:voices`,
-  `pnpm test:e2e:first-run`, `pnpm test:e2e:staging`,
+  `pnpm test:e2e:first-run`, `pnpm test:e2e:settings-sync`, `pnpm test:e2e:staging`,
   `pnpm test:e2e:staging:signed-in` (the five
   signed-in specs, one worker). Authenticated specs skip themselves without
   `JANUA_TEST_EMAIL`/`JANUA_TEST_PASSWORD` (or `VOXA_TEST_ACCESS_TOKEN`).
@@ -170,14 +174,18 @@ pnpm build
    the config, the test and this entry together, with exact origins only.
 7. **Consent is a server-side record.** `src/lib/consents.ts` holds one
    record per user and purpose (`ai_processing`, `usage_analytics`,
-   `utterance_text`); `GET/PUT /v1/consents` act on the signed-in user only.
+   `utterance_text`, `settings_sync`); `GET/PUT /v1/consents` act on the
+   signed-in user only.
    Predictions need `ai_processing`, activations need `usage_analytics` and
    store counts only; `speech_text` is written only with `utterance_text`
    from an organization in `VOXA_UTTERANCE_TEXT_DPA_ORG_IDS` (empty by
    default) and cleared after 90 days by `src/lib/utterance-retention.ts`.
+   `GET/PUT /v1/me/settings` need `settings_sync`, and revoking it deletes
+   the stored settings (`src/lib/user-settings.ts`).
    Never gate on a request header again, and never store activation text
    outside that path. Tested in `src/routes/consents.routes.test.ts`,
-   `src/routes/events.routes.test.ts` and `src/routes/consent.pg.test.ts`.
+   `src/routes/events.routes.test.ts`, `src/routes/consent.pg.test.ts` and
+   `src/routes/me-settings.routes.test.ts`.
 8. **Entitlements come only from the verified Janua claim.** Plan limits
    (`maxBoardCount`, `hasFeature`) resolve from `voxa_tier` through
    `src/lib/entitlement.ts` and fail safe to `free`. Do not add a pull from the
@@ -324,6 +332,21 @@ pnpm build
     `sign-out.test.ts`, `account-switch.test.ts`, `account-data.test.ts`,
     `pending-board-save.test.ts`, `apps/api/src/lib/ws-auth.test.ts` and
     `apps/api/src/routes/ws-ticket.routes.test.ts` / `ws-ticket.pg.test.ts`.
+18. **Settings sync is opt-in, allow-listed and per user.** The
+    communicator settings follow the user between devices only with the
+    `settings_sync` consent (access settings can reveal a disability).
+    `GET/PUT /v1/me/settings` act on the signed-in user only (no route names
+    another user), accept only the fields and values of
+    `SYNCED_SETTING_RULES` (`packages/core/src/synced-settings.ts`; never
+    arbitrary JSON, never the device's chosen voice), cap the body at 16 KB,
+    and write compare-and-set on `version` (stale → 409 with the current
+    document). Revoking the consent deletes the stored copy. The web app is
+    local first (`apps/web/src/lib/settings-sync.ts`): it merges per field
+    (newer change wins), pushes after a pause, queues offline, never blocks
+    the communicator, and sends nothing to `/v1/me/settings` while the
+    consent is off. Tested in `src/routes/me-settings.routes.test.ts`,
+    `src/routes/me-settings.pg.test.ts`, `apps/web/src/lib/settings-sync.test.ts`
+    and `e2e/specs/settings-sync.spec.ts`.
 
 ## Guards
 
@@ -366,7 +389,7 @@ until a credentialed reviewer has done one (ruling R89).
    Redis 7 service containers, the Drizzle drift step, the EAS config check,
    the mobile bundle export and `pnpm build`. `a11y`: the built standalone web
    server and API, the image-optimizer check, axe, and the browser specs
-   (`offline`, `access`, `voices`, `import`, `first-run`). A change to a
+   (`offline`, `access`, `voices`, `import`, `first-run`, `settings-sync`). A change to a
    Dockerfile, the lockfile, a `package.json` or the build-identity helpers
    also runs `image-smoke.yml`.
 2. **Merge to `main`.** The deploy workflows whose path filters match

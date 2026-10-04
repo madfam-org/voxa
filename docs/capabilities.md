@@ -122,6 +122,8 @@ of clinical review until one has happened.
 | Live updates between devices while a board is open: each browser opens its live connection with a single-use ticket, and an edit saved on one device reaches the others | Shipped | [#39](https://github.com/madfam-org/voxa/pull/39); `e2e/specs/live-sync.spec.ts`, `apps/api/src/routes/ws-ticket.routes.test.ts` |
 | Live updates across server replicas (Redis) | Partial: built and tested, not enabled in production | [#37](https://github.com/madfam-org/voxa/pull/37); `apps/api/src/ws/sync-hub.redis.test.ts` |
 | Inviting a care team from inside Voxa | Not yet | Roles are granted in the MADFAM account |
+| Communicator and access settings that follow the person between devices (access method, scanning, dwell, keyguard, theme, display, voice rate, pitch and volume; the chosen voice stays on each device): off until the person turns it on in Settings, works offline and catches up later | Shipped (web; opt-in) | `apps/api/src/routes/me-settings.routes.test.ts`, `apps/web/src/lib/settings-sync.test.ts`, `e2e/specs/settings-sync.spec.ts` |
+| A therapist changing a communicator's settings from their own account | Not yet | Settings sync covers the signed-in person's own settings only |
 
 ## Privacy and consent
 
@@ -132,6 +134,7 @@ of clinical review until one has happened.
 | Spoken text is kept only for an organization with a data-processing agreement and a separate opt-in, and cleared after 90 days. No organization is enabled today | Shipped (off) | [#24](https://github.com/madfam-org/voxa/pull/24); `apps/api/src/routes/consent.pg.test.ts` |
 | Text stored before these rules was cleared | Shipped | [#25](https://github.com/madfam-org/voxa/pull/25) |
 | A board owner can delete the board's usage history | Shipped | [#24](https://github.com/madfam-org/voxa/pull/24) |
+| Settings sync is a separate opt-in (access settings can reveal a disability); turning it off stops syncing and deletes the server copy | Shipped | `apps/api/src/routes/me-settings.routes.test.ts`, `apps/api/src/routes/me-settings.pg.test.ts` |
 
 ## Word suggestions and AI
 

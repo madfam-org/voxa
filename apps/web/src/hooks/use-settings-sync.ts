@@ -224,11 +224,15 @@ export function useSettingsSync({ settings, loaded, applyRemote, signedIn, userI
 
   const setEnabled = useCallback(
     async (next: boolean) => {
+      const previous = enabledRef.current;
+      // The switch follows the tap at once and returns if the API refuses.
+      setEnabledState(next);
       setBusy(true);
       setConsentError(false);
       try {
         const saved = await saveSettingsSyncConsent(next);
         if (!saved) {
+          setEnabledState(previous);
           setConsentError(true);
           return;
         }
