@@ -1,23 +1,32 @@
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
-import { afterEach, beforeEach, describe, it } from 'node:test';
+import { afterEach, beforeEach, describe, it, mock } from 'node:test';
 import type { BoardButton } from '@voxa/core';
 import {
   announceScanLabel,
   configureSpeech,
+  estimateUtteranceMs,
   previewVoice,
   resetSpeechActivityForTests,
   resetSpeechPreferencesForTests,
   resolveSpeechVoice,
   SCAN_CUE_VOLUME_FACTOR,
+  SPEECH_IDLE_GRACE_MS,
+  SPEECH_IDLE_POLL_MS,
+  SPEECH_PAUSE_MAX_MS,
+  SPEECH_PAUSE_MIN_MS,
   speakButton,
   speakText,
+  subscribeSpeechActivity,
 } from './play-button-speech';
 import type { VoiceLike } from './speech-voices';
 
 interface FakeUtterance {
   text: string;
+  onstart?: (() => void) | null;
+  onend?: (() => void) | null;
+  onerror?: (() => void) | null;
   lang?: string;
   voice?: VoiceLike | null;
   rate?: number;
@@ -74,6 +83,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  resetSpeechActivityForTests();
   delete g.window;
   delete g.SpeechSynthesisUtterance;
   globalThis.fetch = originalFetch;
@@ -207,5 +217,120 @@ describe('one speech path', () => {
       .filter((file) => file !== join('lib', 'play-button-speech.ts'))
       .filter((file) => /speechSynthesis\.speak\(|new SpeechSynthesisUtterance\(/.test(readFileSync(join(root, file), 'utf8')));
     assert.deepEqual(offenders, []);
+  });
+});
+
+describe('scan pause while speaking is bounded (C-029)', () => {
+  let active = false;
+  let unsubscribe: () => void = () => undefined;
+  let synth: { speaking?: boolean; pending?: boolean };
+
+  beforeEach(() => {
+    mock.timers.enable({ apis: ['setTimeout', 'setInterval', 'Date'] });
+    synth = (g.window as { speechSynthesis: { speaking?: boolean; pending?: boolean } }).speechSynthesis;
+    unsubscribe = subscribeSpeechActivity((value) => {
+      active = value;
+    });
+  });
+
+  afterEach(() => {
+    unsubscribe();
+    resetSpeechActivityForTests();
+    mock.timers.reset();
+  });
+
+  it('estimates from length and rate, never under 2 s nor over 15 s', () => {
+    assert.equal(estimateUtteranceMs('sí'), SPEECH_PAUSE_MIN_MS);
+    assert.equal(estimateUtteranceMs(''), SPEECH_PAUSE_MIN_MS);
+    assert.equal(estimateUtteranceMs('a'.repeat(1000)), SPEECH_PAUSE_MAX_MS);
+    const sentence = 'yo quiero tomar agua fría por favor';
+    const atRate1 = estimateUtteranceMs(sentence, 1);
+    assert.ok(atRate1 > SPEECH_PAUSE_MIN_MS && atRate1 < SPEECH_PAUSE_MAX_MS, `got ${atRate1}`);
+    assert.ok(estimateUtteranceMs(sentence, 0.5) > atRate1, 'a slower rate holds longer');
+    assert.equal(estimateUtteranceMs(sentence, 0), atRate1, 'an invalid rate counts as 1');
+    assert.equal(estimateUtteranceMs(sentence, Number.NaN), atRate1);
+  });
+
+  it('an engine that never fires end or error releases the pause at the bound', () => {
+    speakText('agua', 'es-MX');
+    assert.equal(active, true);
+    const bound = estimateUtteranceMs('agua');
+    mock.timers.tick(bound - 1);
+    assert.equal(active, true, 'still held just before the bound');
+    mock.timers.tick(1);
+    assert.equal(active, false, 'released at the bound');
+  });
+
+  it('an engine stuck reporting speaking still releases at the bound', () => {
+    synth.speaking = true;
+    synth.pending = false;
+    const text = 'quiero ir al parque con mi mamá';
+    speakText(text, 'es-MX');
+    mock.timers.tick(estimateUtteranceMs(text) - 1);
+    assert.equal(active, true);
+    mock.timers.tick(1);
+    assert.equal(active, false);
+  });
+
+  it('releases as soon as the engine goes idle without an end event', () => {
+    synth.speaking = true;
+    synth.pending = false;
+    speakText('quiero ir al parque con mi mamá', 'es-MX');
+    mock.timers.tick(SPEECH_IDLE_GRACE_MS + SPEECH_IDLE_POLL_MS);
+    assert.equal(active, true, 'held while the engine speaks');
+    synth.speaking = false;
+    mock.timers.tick(SPEECH_IDLE_POLL_MS);
+    assert.equal(active, false, 'released on the next idle check');
+  });
+
+  it('does not treat the moment right after speak() as idle', () => {
+    synth.speaking = false;
+    synth.pending = false;
+    speakText('agua', 'es-MX');
+    mock.timers.tick(SPEECH_IDLE_GRACE_MS - SPEECH_IDLE_POLL_MS);
+    assert.equal(active, true);
+  });
+
+  it('end and error release at once and leave no timer behind', () => {
+    speakText('agua', 'es-MX');
+    spoken[0]!.onend?.();
+    assert.equal(active, false);
+    speakText('leche', 'es-MX');
+    assert.equal(active, true);
+    spoken[1]!.onerror?.();
+    assert.equal(active, false);
+    // A late end for the same utterance does not end someone else's speech.
+    speakText('pan', 'es-MX');
+    spoken[0]!.onend?.();
+    assert.equal(active, true);
+    mock.timers.tick(SPEECH_PAUSE_MAX_MS);
+    assert.equal(active, false);
+  });
+
+  it('a queued utterance keeps the pause after the first one ends', () => {
+    synth.speaking = true;
+    synth.pending = true;
+    speakText('yo', 'es-MX');
+    speakText('quiero agua', 'es-MX');
+    spoken[0]!.onend?.();
+    assert.equal(active, true);
+    spoken[1]!.onstart?.();
+    spoken[1]!.onend?.();
+    assert.equal(active, false);
+  });
+
+  it('a start after the bound released holds the pause again until end or a new bound', () => {
+    speakText('agua', 'es-MX');
+    mock.timers.tick(estimateUtteranceMs('agua'));
+    assert.equal(active, false);
+    spoken[0]!.onstart?.();
+    assert.equal(active, true, 'the utterance really started: pause again');
+    mock.timers.tick(estimateUtteranceMs('agua'));
+    assert.equal(active, false, 'bounded again');
+    spoken[0]!.onstart?.();
+    spoken[0]!.onend?.();
+    assert.equal(active, false);
+    spoken[0]!.onstart?.();
+    assert.equal(active, false, 'nothing holds the pause after end');
   });
 });

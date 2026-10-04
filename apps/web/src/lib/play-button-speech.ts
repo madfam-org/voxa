@@ -35,8 +35,13 @@ export function subscribeSpeechActivity(listener: SpeechActivityListener): () =>
   return () => listeners.delete(listener);
 }
 
+/** Utterances whose activity is still held, so a test reset can stop their timers. */
+const heldUtterances = new Set<() => void>();
+
 /** @internal test helper */
 export function resetSpeechActivityForTests(): void {
+  for (const stop of [...heldUtterances]) stop();
+  heldUtterances.clear();
   activeSpeechCount = 0;
   notifySpeechActivity();
 }
@@ -287,13 +292,92 @@ function buildUtterance(text: string, locale: string, overrides: UtteranceOverri
   return utterance;
 }
 
+/**
+ * How long one utterance may hold the scan pause when the engine never says it
+ * finished. Some Android and iOS voices, and backgrounded pages, drop `end`
+ * and `error`; without a bound, switch scanning would stay paused for good.
+ */
+export const SPEECH_PAUSE_MIN_MS = 2000;
+export const SPEECH_PAUSE_MAX_MS = 15000;
+/** Characters per second at rate 1: a slow, child-paced speaking rate, so the bound errs long. */
+const SPEECH_CHARS_PER_SECOND = 12;
+const SPEECH_PAUSE_MARGIN_MS = 1000;
+/** While an utterance is tracked, the engine is checked this often for having gone idle. */
+export const SPEECH_IDLE_POLL_MS = 250;
+/** The engine is not asked whether it is idle before this: `speaking` is still false right after `speak()`. */
+export const SPEECH_IDLE_GRACE_MS = 750;
+
+/**
+ * Upper bound, in ms, for speaking `text` at `rate`: its length at a slow
+ * speaking pace plus a margin, never under 2 s nor over 15 s.
+ */
+export function estimateUtteranceMs(text: string, rate = 1): number {
+  const safeRate = Number.isFinite(rate) && rate > 0 ? rate : 1;
+  const chars = text.trim().length;
+  const ms = (chars / (SPEECH_CHARS_PER_SECOND * safeRate)) * 1000 + SPEECH_PAUSE_MARGIN_MS;
+  return Math.round(Math.min(SPEECH_PAUSE_MAX_MS, Math.max(SPEECH_PAUSE_MIN_MS, ms)));
+}
+
+/**
+ * Holds speech activity (and so the scan pause) for one utterance until the
+ * first of: `end`, `error`, the engine reporting it is idle (`speaking` and
+ * `pending` both false), or the bound from `estimateUtteranceMs`. The bound
+ * restarts when the utterance actually starts (it may wait behind another);
+ * a `start` that arrives after the bound already released it holds the pause
+ * again for this utterance's own length.
+ */
+function trackUtteranceActivity(synth: SpeechSynthesis, utterance: SpeechSynthesisUtterance, boundMs: number): void {
+  let active = false;
+  let finished = false;
+  let bound: ReturnType<typeof setTimeout> | undefined;
+  let idlePoll: ReturnType<typeof setInterval> | undefined;
+
+  const release = () => {
+    if (bound !== undefined) clearTimeout(bound);
+    if (idlePoll !== undefined) clearInterval(idlePoll);
+    bound = undefined;
+    idlePoll = undefined;
+    heldUtterances.delete(release);
+    if (active) {
+      active = false;
+      endSpeechActivity();
+    }
+  };
+
+  const hold = () => {
+    if (finished) return;
+    if (!active) {
+      active = true;
+      heldUtterances.add(release);
+      beginSpeechActivity();
+    }
+    if (bound !== undefined) clearTimeout(bound);
+    bound = setTimeout(release, boundMs);
+    if (idlePoll === undefined && typeof synth.speaking === 'boolean') {
+      const heldAt = Date.now();
+      idlePoll = setInterval(() => {
+        if (Date.now() - heldAt < SPEECH_IDLE_GRACE_MS) return;
+        if (!synth.speaking && !synth.pending) release();
+      }, SPEECH_IDLE_POLL_MS);
+    }
+  };
+
+  const finish = () => {
+    finished = true;
+    release();
+  };
+
+  utterance.onstart = () => hold();
+  utterance.onend = finish;
+  utterance.onerror = finish;
+  hold();
+}
+
 function speakWithTts(text: string, locale: string, overrides?: UtteranceOverrides): void {
   const synth = speechSynthesisOrNull();
   if (!synth) return;
-  beginSpeechActivity();
   const utterance = buildUtterance(text, locale, overrides);
-  utterance.onend = () => endSpeechActivity();
-  utterance.onerror = () => endSpeechActivity();
+  trackUtteranceActivity(synth, utterance, estimateUtteranceMs(text, utterance.rate));
   synth.speak(utterance);
 }
 
