@@ -75,6 +75,8 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @voxa/web... build
+      # The offline/media spec starts the built API itself (file store, test JWKS).
+      - run: pnpm --filter @voxa/api... build
       - name: Prepare standalone server
         run: |
           cp -r apps/web/.next/static apps/web/.next/standalone/apps/web/.next/static
@@ -95,3 +97,11 @@ jobs:
       - run: pnpm test:e2e:a11y
         env:
           PLAYWRIGHT_BASE_URL: http://127.0.0.1:3000
+      - name: Offline start, uploaded media, GLP video, spoken fallback
+        # e2e/specs/offline-media.spec.ts: reload /app offline (service worker),
+        # uploaded photo through the media proxy, visible GLP video, TTS when
+        # media answers 503. The web build calls the API at its default URL.
+        run: pnpm test:e2e:offline
+        env:
+          PLAYWRIGHT_BASE_URL: http://127.0.0.1:3000
+          VOXA_E2E_API_URL: http://localhost:4000

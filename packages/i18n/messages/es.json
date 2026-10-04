@@ -134,7 +134,7 @@
       },
       "offline": {
         "title": "Tolera cortes de red",
-        "body": "Con el tablero ya abierto puedes seguir usándolo si se cae el Wi‑Fi; los cambios se sincronizan al volver la conexión. Abrir la app sin conexión aún no está disponible."
+        "body": "Si se cae el Wi‑Fi, el tablero abierto sigue funcionando. Después de abrir la app una vez con conexión, en ese dispositivo también vuelve a abrirse sin red, con los tableros que ya cargaste. Los cambios se sincronizan al volver la conexión."
       },
       "janua": {
         "title": "Identidad Janua",

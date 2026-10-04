@@ -5,6 +5,7 @@ import type { BoardButton, PartOfSpeechTag, SymbolDisplayDefaults } from '@voxa/
 import { resolveButtonSpeech } from '@voxa/core';
 import { isSymbolUnavailable, resolveButtonSymbolUrl } from '@voxa/symbols';
 import { fitzgeraldColor, resolvePartOfSpeech, type PartOfSpeech } from '@voxa/vocabulary';
+import { displayMediaUrl } from './media-url';
 
 export function buttonLabel(btn: BoardButton): string {
   return btn.kind === 'analytic' ? btn.label : btn.phrase;
@@ -19,10 +20,14 @@ export function buttonSymbolUrl(
   defaults?: SymbolDisplayDefaults,
 ): string | undefined {
   const symbolRef = btn.kind === 'analytic' || btn.kind === 'glp' ? btn.symbolRef : undefined;
-  return resolveButtonSymbolUrl(
-    btn.kind === 'analytic' || btn.kind === 'glp' ? btn.symbolUrl : undefined,
-    symbolRef,
-    defaults,
+  // Uploaded photos live on the API; media elements load them through the
+  // same-origin proxy (see src/lib/media-url.ts).
+  return displayMediaUrl(
+    resolveButtonSymbolUrl(
+      btn.kind === 'analytic' || btn.kind === 'glp' ? btn.symbolUrl : undefined,
+      symbolRef,
+      defaults,
+    ),
   );
 }
 

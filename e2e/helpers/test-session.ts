@@ -41,6 +41,11 @@ export interface TestSessionOptions {
   userId?: string;
   email?: string;
   name?: string;
+  /**
+   * A real signed access token to carry instead of the unsigned fixture
+   * (specs that run against a local API with a test JWKS; see local-api.ts).
+   */
+  accessToken?: string;
 }
 
 function base64Url(input: string): string {
@@ -88,16 +93,19 @@ export async function seedTestSession(
     userId = 'a11y-test-user',
     email = 'a11y@voxa.test',
     name = 'A11y Test User',
+    accessToken,
   } = options;
 
   const session = {
-    access_token: unsignedJwt({
-      sub: userId,
-      email,
-      name,
-      // Communicator is the absence of a Voxa app role.
-      roles: role === 'communicator' ? [] : [`voxa:${role}`],
-    }),
+    access_token:
+      accessToken ??
+      unsignedJwt({
+        sub: userId,
+        email,
+        name,
+        // Communicator is the absence of a Voxa app role.
+        roles: role === 'communicator' ? [] : [`voxa:${role}`],
+      }),
     user_id: userId,
     email,
     name,

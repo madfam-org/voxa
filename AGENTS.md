@@ -1,6 +1,6 @@
 # Voxa agent guide
 
-> Last Updated: 2026-10-03
+> Last Updated: 2026-10-04
 
 > **Repository boundary:** operational detail (platform identifiers, operator procedures, break-glass steps) and commercial research (pricing, competitor benchmarks, outreach) live in MADFAM's private operations repository; this public repo holds only public-safe context, per MADFAM's repo-boundary contract.
 
@@ -57,9 +57,13 @@ pnpm build
 - CI (`.github/workflows/ci.yml`, on pushes and PRs to `main`): typecheck,
   `pnpm test`, the Drizzle drift step (`drizzle-kit generate` must produce no
   changes), the EAS config check, `pnpm build`, then an axe job against the
-  built web app.
+  built web app, which also runs `pnpm test:e2e:offline`
+  (`e2e/specs/offline-media.spec.ts`: offline reload of `/app`, uploaded
+  photo, visible GLP video, spoken fallback; it starts the built API itself
+  with a file store and a test JWKS).
 - Playwright: `pnpm test:e2e:smoke`, `pnpm test:e2e:a11y`,
-  `pnpm test:e2e:staging`, `pnpm test:e2e:staging:signed-in` (the five
+  `pnpm test:e2e:offline`, `pnpm test:e2e:staging`,
+  `pnpm test:e2e:staging:signed-in` (the five
   signed-in specs, one worker). Authenticated specs skip themselves without
   `JANUA_TEST_EMAIL`/`JANUA_TEST_PASSWORD` (or `VOXA_TEST_ACCESS_TOKEN`).
   `/app` renders in Spanish by default: match catalog-backed labels with
@@ -138,6 +142,14 @@ pnpm build
    credentialed speech-language pathologist. Tested in
    `src/lib/selva.test.ts`, `src/routes/ai.routes.test.ts` and
    `packages/ai/src/predict.test.ts`.
+10. **Service worker and media.** `apps/web/public/sw.js` is plain JavaScript
+    (`node --check` must pass; browsers do not run TypeScript there). It caches
+    the `/app` shell, `/_next/static`, icons and `/symbols`, and never caches
+    `/api/*` or any other origin: its caches are shared by every user of the
+    browser. Uploaded media is loaded through the same-origin proxy
+    `/api/media/:id`, which adds no access rule of its own (the API's
+    `canAccessBoard` decides). Tested in `apps/web/src/service-worker.test.ts`,
+    `apps/web/src/lib/media-proxy.test.ts` and `apps/api/src/routes/media-access.routes.test.ts`.
 
 ## Deploy
 
