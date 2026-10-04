@@ -6,7 +6,8 @@ export const FITZGERALD_KEY = {
   verb: { label: 'Verb', hex: '#16a34a' },
   pronoun: { label: 'Pronoun', hex: '#eab308' },
   noun: { label: 'Noun', hex: '#ea580c' },
-  preposition: { label: 'Preposition / Social', hex: '#db2777' },
+  preposition: { label: 'Preposition', hex: '#db2777' },
+  social: { label: 'Social', hex: '#db2777' },
   conjunction: { label: 'Conjunction', hex: '#ffffff' },
 } as const;
 
