@@ -17,8 +17,9 @@ test.describe('Staging authenticated API soak', () => {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
     expect(entitlement.status()).toBe(200);
-    const body = (await entitlement.json()) as { entitlement?: { tier?: string } };
-    expect(body.entitlement?.tier).toBeTruthy();
+    const body = (await entitlement.json()) as { tier?: string; source?: string };
+    expect(body.tier).toBeTruthy();
+    expect(body.source).toBe('janua');
   });
 
   test('AI routes follow the server-side ai_processing record, not a header', async ({ request }) => {

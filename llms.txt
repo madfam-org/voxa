@@ -16,7 +16,7 @@
 - `apps/api/src/db/startup-retry.ts`: bounded retry of connection-level errors on the startup migration (`DATABASE_STARTUP_RETRY_MS`, default 30 s).
 - `apps/api/src/lib/db-errors.ts`: `unwrapDbError` keeps `DrizzleQueryError` SQL parameters out of responses and logs.
 - `apps/api/src/store/`: board store drivers (PostgreSQL, or an atomic JSON file under `VOXA_DATA_DIR` when `DATABASE_URL` is unset).
-- `apps/api/src/lib/janua.ts`, `apps/api/src/lib/dhanam.ts`: identity (JWKS verification) and entitlement clients.
+- `apps/api/src/lib/janua.ts`: identity (JWKS verification). `apps/api/src/lib/entitlement.ts`: plan tier from the token's `voxa_tier` claim and the tier → features table.
 - `apps/api/drizzle/migrations/`: SQL migrations, `meta/_journal.json`, snapshots 0000–0003; guarded by `src/db/migrations-journal.test.ts` and the CI drift step.
 - `apps/web`, `apps/mobile`, `packages/*`, `e2e`: web app, Expo app, shared packages, Playwright specs.
 
@@ -36,4 +36,4 @@
 
 - Janua (identity): https://github.com/madfam-org/janua/blob/main/docs/guides/ECOSYSTEM_INTEGRATION.md
 - Enclii (deploy): https://github.com/madfam-org/enclii/blob/main/docs/guides/ZERO_TOUCH_CONTRACT.md
-- Dhanam (billing): entitlements over HTTP, described in AGENTS.md.
+- Entitlements: the Janua `voxa_tier` claim (billing writes it through Janua), described in AGENTS.md.

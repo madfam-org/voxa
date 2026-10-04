@@ -43,7 +43,11 @@ describe('entitlement from the voxa_tier claim', () => {
   it('logs nothing for a valid claim', () => {
     const { lines, log } = capture();
     const entitlement = resolveEntitlement({ tierClaim: 'family' }, log);
-    assert.deepEqual(entitlement, { tier: 'family', features: [...TIER_FEATURES.family], source: 'janua' });
+    assert.deepEqual(entitlement, {
+      tier: 'family',
+      features: [...TIER_FEATURES.family],
+      source: 'janua',
+    });
     assert.deepEqual(lines, []);
   });
 

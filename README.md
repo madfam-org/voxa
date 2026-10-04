@@ -116,7 +116,7 @@ See [docs/deploy/ENCLII.md](./docs/deploy/ENCLII.md) for CI, onboarding and the 
 
 - [Janua](https://github.com/madfam-org/janua) — identity. The API verifies Janua access tokens against its JWKS; contract: [ecosystem integration guide](https://github.com/madfam-org/janua/blob/main/docs/guides/ECOSYSTEM_INTEGRATION.md).
 - [Enclii](https://github.com/madfam-org/enclii) — deployment platform; contract: [zero-touch contract](https://github.com/madfam-org/enclii/blob/main/docs/guides/ZERO_TOUCH_CONTRACT.md).
-- Dhanam — billing entitlements over HTTP (`apps/api/src/lib/dhanam.ts`; see [AGENTS.md](./AGENTS.md#related-repositories-and-contracts)).
+- Plan entitlements — the API reads the `voxa_tier` claim of the Janua access token (`apps/api/src/lib/entitlement.ts`); billing writes it through Janua. See [AGENTS.md](./AGENTS.md#related-repositories-and-contracts).
 
 ## License
 

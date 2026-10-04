@@ -97,7 +97,7 @@ Symptom: GitHub hook deliveries show `Invalid HTTP Response: 401`; Enclii respon
 
 - **Platform / Enclii:** MADFAM platform on-call
 - **Auth (Janua):** auth.madfam.io operators
-- **Billing (Dhanam):** billing on-call when entitlements API errors persist
+- **Billing (Dhanam):** billing on-call when a paying user's token carries the wrong `voxa_tier` (the API logs `voxa entitlement: … resolved to free`)
 
 ## Post-incident
 

@@ -9,6 +9,7 @@ All notable changes to Voxa are documented here.
 - Consent is a server-side record per user and purpose (`GET/PUT /v1/consents`, tables `consents` and `consent_events`), replacing the client-supplied `X-Voxa-AI-Consent` header, which no longer grants anything. Prediction routes need `ai_processing`; activations need `usage_analytics` and store counts only. Spoken text is kept only under a separate `utterance_text` consent for organizations on the `VOXA_UTTERANCE_TEXT_DPA_ORG_IDS` allow-list (empty by default), and opted-in text is cleared after 90 days. The web banner and Settings show two separate choices (word suggestions, usage counts) and save them to the server; `localStorage` is an offline cache.
 - Activations on the shared `demo-core` board answer 403. A board owner can delete the board's activation history (`DELETE /v1/events/activations?boardId=`).
 - Startup migrations hold a PostgreSQL advisory lock, so processes that start together do not race.
+- API: plan entitlements come from the `voxa_tier` claim of the verified Janua access token (`free`, `family`, `clinic`) instead of a per-request call to the billing API, which answered for no user, so everyone silently got the free tier. A missing, malformed or unknown claim still resolves to `free` and is logged. `GET /v1/billing/entitlement` now answers `{ tier, features, source: "janua" }` (previously `{ entitlement: { … } }`). `DHANAM_API_URL` and `DHANAM_API_TOKEN` are no longer read.
 
 ### Removed
 

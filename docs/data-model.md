@@ -53,8 +53,9 @@ Unique index on `(board_id, user_id)`. Route ACLs currently enforce ownership; m
   `org_id`. There is no cross-tenant role. See [auth/JANUA.md](./auth/JANUA.md#board-access).
 - `owner_user_id` and `org_id` come from the token at creation and never change
   through updates or imports.
-- Any signed-in user may create boards; creation respects Dhanam entitlements
-  (`boards:N` feature limits).
+- Any signed-in user may create boards; creation respects the plan's
+  `boards:N` limit, resolved from the `voxa_tier` claim of the Janua access
+  token (`apps/api/src/lib/entitlement.ts`).
 - `sync_events` keeps the newest 5,000 events per board.
 
 ## Migrations

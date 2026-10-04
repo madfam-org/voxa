@@ -89,7 +89,11 @@ describe('entitlement from the Janua voxa_tier claim', () => {
 
   it('a token without the claim resolves to free', async () => {
     const body = await entitlement({ sub: 'plain-user' });
-    assert.deepEqual(body, { tier: 'free', features: ['boards:1', 'sync', 'obf', 'ai:basic'], source: 'janua' });
+    assert.deepEqual(body, {
+      tier: 'free',
+      features: ['boards:1', 'sync', 'obf', 'ai:basic'],
+      source: 'janua',
+    });
   });
 
   it("an unknown value ('enterprise') resolves to free", async () => {

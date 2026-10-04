@@ -103,7 +103,6 @@ pnpm build
    `scripts/launch/verify-prod-image-optimizer.sh` after each production web
    deploy. Re-enabling the optimizer or adding a remote origin means changing
    the config, the test and this entry together, with exact origins only.
-
 7. **Consent is a server-side record.** `src/lib/consents.ts` holds one
    record per user and purpose (`ai_processing`, `usage_analytics`,
    `utterance_text`); `GET/PUT /v1/consents` act on the signed-in user only.
@@ -114,6 +113,12 @@ pnpm build
    Never gate on a request header again, and never store activation text
    outside that path. Tested in `src/routes/consents.routes.test.ts`,
    `src/routes/events.routes.test.ts` and `src/routes/consent.pg.test.ts`.
+8. **Entitlements come only from the verified Janua claim.** Plan limits
+   (`maxBoardCount`, `hasFeature`) resolve from `voxa_tier` through
+   `src/lib/entitlement.ts` and fail safe to `free`. Do not add a pull from the
+   billing system, a request header or a body field that sets the tier.
+   Tested in `src/lib/entitlement.test.ts` and
+   `src/routes/entitlement.routes.test.ts` (real RS256 tokens).
 
 ## Deploy
 
@@ -132,7 +137,7 @@ workflow has its own concurrency group. GitHub-hosted jobs are pinned to
 `ubuntu-24.04`. Full runbook: [docs/deploy/ENCLII.md](./docs/deploy/ENCLII.md);
 on-call: [docs/ops/RUNBOOK.md](./docs/ops/RUNBOOK.md).
 
-## Pending work and known gaps (as of 2026-10-02)
+## Pending work and known gaps (as of 2026-10-03)
 
 This is the single pending-work list for the repository; `llms.txt` points
 here. Product and launch phases live in
@@ -143,6 +148,7 @@ blocks production use, **P1** next, **P2** planned, **P3** cleanup.
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------- | -------- |
 | **Expo SDK upgrade** for `apps/mobile` (Expo SDK 52 today).                                                                                                                                                                  | The Expo SDK 52 CLI (`@expo/cli`) bundles a `tar` release with a critical advisory. It is mobile build tooling only, never in the API or web images, and only an SDK upgrade clears it. | P1       | Engineering work                                                                | —        |
 | **Daily smoke covers production public pages only.** Staging has not been rebuilt from `main`, so the authenticated staging specs (`pnpm test:e2e:staging`) and the staging soak (`scripts/launch/soak-scenarios.sh`) are out of the schedule. | Signed-in flows are only covered by the CI a11y job's mock-session scans until staging returns. | P1 | Engineering work (rebuild staging from `main`, then put the staging specs back on the schedule) | — |
+| **Paid tiers are not grantable yet.** The API reads the plan tier from the Janua `voxa_tier` claim, but the push that writes the claim for user subscriptions (billing → Janua) is not built. | Nobody can hold `family` or `clinic`, so every user gets the free limits (one board). Fails safe: no one gets a paid tier they did not buy. | P1 | Ecosystem work outside this repo; no Voxa change is needed once tokens carry the claim | Y1 |
 | **Staging images are unsigned.** Only the production deploy workflows run cosign.                                                                                                                                            | Staging cannot be verified the same way as production.                                                                                                                                  | P2       | Engineering work                                                                | —        |
 | **Prettier is not enforced.** `pnpm format` exists but CI does not check it, and several files predate it.                                                                                                                   | Formatting drifts and creates noise in unrelated PRs.                                                                                                                                   | P3       | Engineering work (one reformat, then a CI check)                                | —        |
 | **Two internal literals left in deploy-functional or app files.** The Kubernetes web deployments still carry the OAuth client id as a literal, and a code comment in `apps/web/src/lib/pricing.ts` points at a pricing document that is now private. | The operational and commercial docs moved out on 2026-10-03; these two need a deploy-touching change, so they were left for a separate PR. | P2       | Engineering work (read the client id from configuration; reword the comment)    | —        |
@@ -164,8 +170,16 @@ invariant 6).
   production. Contract:
   [Janua ecosystem integration guide](https://github.com/madfam-org/janua/blob/main/docs/guides/ECOSYSTEM_INTEGRATION.md).
   Voxa setup: [docs/auth/JANUA.md](./docs/auth/JANUA.md).
-- **Dhanam (billing).** `src/lib/dhanam.ts` reads entitlements from
-  `GET ${DHANAM_API_URL}/api/v1/entitlements/:userId` with a service bearer
-  token (`DHANAM_API_TOKEN`) and a 5 s timeout, and falls back to the free
-  tier when it is unset or fails.
+- **Entitlements (Janua claim, ADR-006).** The plan tier is a claim on the
+  Janua access token: `voxa_tier`, one of `free`, `family`, `clinic`.
+  `src/lib/entitlement.ts` reads it from the token `teamAuth()` has already
+  verified (`TeamContext.tierClaim`) and holds the one tier → features table
+  (`boards:N`, `ai:*`, `team:N`, `reports`). Dhanam (billing) is the only
+  writer of the claim and writes it through Janua; Voxa never calls Dhanam.
+  Exact values only (never a plan or SKU id); a missing, malformed or unknown
+  claim resolves to `free` and logs one line without the claim value.
+  `GET /v1/billing/entitlement` answers `{ tier, features, source: 'janua' }`.
+  A tier change reaches Voxa when the user's next token is minted. The push
+  that writes the claim for user subscriptions is not built yet (gate Y1), so
+  paid tiers are not grantable and every user resolves to `free`.
 - **Enclii (deploy).** [Zero-touch contract](https://github.com/madfam-org/enclii/blob/main/docs/guides/ZERO_TOUCH_CONTRACT.md).
