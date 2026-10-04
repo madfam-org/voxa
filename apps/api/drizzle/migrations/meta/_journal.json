@@ -43,6 +43,13 @@
       "when": 1791093006383,
       "tag": "0005_purge_legacy_utterance_text",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791098941880,
+      "tag": "0006_scoped_board_and_media_indexes",
+      "breakpoints": true
     }
   ]
 }

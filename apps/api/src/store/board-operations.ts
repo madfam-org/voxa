@@ -27,6 +27,17 @@ export function createSyncEvent(
   };
 }
 
+/** A 409 that carries the board's current version, for the client to rebase on. */
+export function boardVersionConflict(currentVersion: number | undefined): Error {
+  const err = new Error('Board version conflict') as Error & {
+    status: number;
+    currentVersion?: number;
+  };
+  err.status = 409;
+  if (currentVersion !== undefined) err.currentVersion = currentVersion;
+  return err;
+}
+
 export function applyCreateBoard(
   boards: Record<string, Board>,
   board: Board,
@@ -60,9 +71,7 @@ export function applyUpdateBoard(
   }
 
   if (options?.expectedVersion !== undefined && current.version !== options.expectedVersion) {
-    const err = new Error('Board version conflict');
-    (err as Error & { status: number }).status = 409;
-    throw err;
+    throw boardVersionConflict(current.version);
   }
 
   const violations = findMotorPlanningViolations(current.grid.buttons, next.grid.buttons);
@@ -106,6 +115,19 @@ export function exportBoardObf(boards: Record<string, Board>, boardId: string): 
     throw new Error(`Board not found: ${boardId}`);
   }
   return serializeObf(voxaBoardToObf(board, { assetBaseUrl: webBaseUrl() }));
+}
+
+/** Most sync events one `appendSyncEvents` call accepts. */
+export const MAX_SYNC_EVENTS_PER_BATCH = 500;
+
+/** Refuses an oversized batch with a 413-style error before anything is written. */
+export function assertSyncEventBatch(events: readonly SyncEvent[]): void {
+  if (events.length > MAX_SYNC_EVENTS_PER_BATCH) {
+    const err = new Error(`At most ${MAX_SYNC_EVENTS_PER_BATCH} sync events per batch`);
+    (err as Error & { status: number; code: string }).status = 413;
+    (err as Error & { status: number; code: string }).code = 'PAYLOAD_TOO_LARGE';
+    throw err;
+  }
 }
 
 /** Sync/audit events kept per board; older ones are trimmed on write. */

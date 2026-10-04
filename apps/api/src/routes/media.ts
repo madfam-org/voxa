@@ -1,6 +1,13 @@
 import { Hono } from 'hono';
 import { canAccessBoard, canEditBoard } from '../lib/board-access.js';
-import { getMediaAsset, isAllowedMediaMime, saveMediaAsset } from '../lib/media-store.js';
+import {
+  getMediaAsset,
+  isAllowedMediaMime,
+  MediaQuotaExceededError,
+  MediaTooLargeError,
+  saveMediaAsset,
+} from '../lib/media-store.js';
+import { mediaBytesMatchType } from '../lib/media-sniff.js';
 import { getStore } from '../store/index.js';
 import { errorMessage } from '../lib/db-errors.js';
 
@@ -39,6 +46,14 @@ mediaRoutes.post('/', async (c) => {
   }
 
   const bytes = Buffer.from(await file.arrayBuffer());
+  // The declared type is client-asserted: the first bytes must agree (A-025).
+  if (!mediaBytesMatchType(bytes, mimeType)) {
+    return c.json(
+      { error: `File content does not match ${mimeType}`, code: 'MEDIA_TYPE_MISMATCH' },
+      415,
+    );
+  }
+
   try {
     const saved = await saveMediaAsset(process.env.DATABASE_URL, {
       boardId,
@@ -57,6 +72,15 @@ mediaRoutes.post('/', async (c) => {
       201,
     );
   } catch (err) {
+    if (err instanceof MediaQuotaExceededError) {
+      return c.json(
+        { error: err.message, code: err.code, usedBytes: err.usedBytes, quotaBytes: err.quotaBytes },
+        413,
+      );
+    }
+    if (err instanceof MediaTooLargeError) {
+      return c.json({ error: err.message, code: err.code, maxBytes: err.maxBytes }, 413);
+    }
     return c.json({ error: errorMessage(err) }, 400);
   }
 });
@@ -78,6 +102,10 @@ mediaRoutes.get('/:id', async (c) => {
       'Content-Type': asset.mimeType,
       'Content-Length': String(asset.sizeBytes),
       'Cache-Control': 'private, max-age=86400',
+      // Never let a browser second-guess the stored type, and never offer the
+      // bytes as a download under a guessed name.
+      'X-Content-Type-Options': 'nosniff',
+      'Content-Disposition': 'inline',
     },
   });
 });
