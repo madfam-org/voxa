@@ -53,6 +53,10 @@ The API holds one pool per process, capped by `DATABASE_POOL_MAX` (default 5), a
 2. Verify Cloudflare tunnel junction routes `voxa-api.*` to the API service (not web).
 3. Check CORS: browser origin must be `https://voxa.madfam.io` or staging equivalent.
 
+### Sign-in fails or lands on the wrong address
+
+Symptoms: after Janua the browser lands on `https://0.0.0.0:3000/…` or on the other Voxa host, the sign-in page shows `error=Configuration`, Janua shows a consent screen for Voxa, or Janua refuses the redirect URI. Check each web host anonymously with `VERIFY_SAME_HOST=1 ./scripts/launch/verify-auth-public-origin.sh voxa.madfam.io voxa-app.madfam.io`, then follow the [troubleshooting table](../auth/JANUA.md#troubleshooting-sign-in). Never fix it by setting `AUTH_URL` on the deployment: one origin cannot serve both hosts.
+
 ### Janua auth errors (401)
 
 1. Confirm the Janua OAuth client is registered with the Auth.js callback (`/api/auth/callback/janua`) and the sign-in page as post-logout redirect, for each host.

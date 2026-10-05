@@ -15,10 +15,12 @@
 #   3. neither body nor Location mentions 0.0.0.0
 #
 # <allowed> is any host given on the command line (or in
-# VOXA_AUTH_ALLOWED_HOSTS, comma-separated), so the check passes while
-# AUTH_URL still pins every host to the landing host. With VERIFY_SAME_HOST=1,
-# <allowed> must be the host that was asked: sign-in stays on each host, which
-# holds once AUTH_URL is removed and AUTH_PUBLIC_HOSTS alone decides.
+# VOXA_AUTH_ALLOWED_HOSTS, comma-separated); that loose mode passed while
+# voxa#50 pinned AUTH_URL to the landing host. With VERIFY_SAME_HOST=1,
+# <allowed> must be the host that was asked: sign-in stays on each host. The
+# manifests set no AUTH_URL since voxa#52, so the web deploy workflows and the
+# CI axe job run it strict; scripts/launch/deploy-contract.test.mjs keeps their
+# host lists equal to each manifest's AUTH_PUBLIC_HOSTS.
 #
 # No cookie, no session, no sign-in: the callback probe carries no state
 # cookie, so Auth.js answers with its error redirect, which is what is checked.

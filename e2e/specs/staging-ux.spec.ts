@@ -1,19 +1,20 @@
 import { test, expect } from '@playwright/test';
+import { ui } from '../helpers/i18n';
 import { hasJanuaTestCredentials } from '../helpers/janua-login';
 import { openAccessibilitySettings, prepareAuthenticatedApp } from '../helpers/app-session';
 
 test.describe('Staging UX soak', () => {
   test('sign-in page loads Continue with Janua', async ({ page }) => {
     await page.goto('/auth/signin');
-    await expect(page.getByRole('button', { name: 'Continue with Janua' })).toBeVisible();
+    await expect(page.getByRole('button', { name: ui('auth.continueJanua') })).toBeVisible();
   });
 
   test('AI consent banner can be dismissed on sign-in', async ({ page }) => {
     await page.addInitScript(() => localStorage.removeItem('voxa-consent'));
     await page.goto('/auth/signin');
-    const dialog = page.getByRole('dialog', { name: 'Privacy choices' });
+    const dialog = page.getByRole('dialog', { name: ui('consent.ariaLabel') });
     await expect(dialog).toBeVisible();
-    await page.getByRole('button', { name: 'Essential only' }).click();
+    await page.getByRole('button', { name: ui('consent.essential') }).click();
     await expect(dialog).toBeHidden();
   });
 

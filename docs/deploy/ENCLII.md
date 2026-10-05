@@ -74,7 +74,24 @@ Four workflows build, sign and pin images. Each runs on `workflow_dispatch` and 
 | `deploy-voxa-api-staging.yml` | `main` | `apps/api/**`, `packages/**` | yes | `k8s/staging/` |
 | `deploy-voxa-web-staging.yml` | `main` | `apps/web/**`, `packages/**` | yes | `k8s/staging/` |
 
-Each workflow has its own concurrency group (`voxa-web-production`, `voxa-api-production`, `voxa-web-staging`, `voxa-api-staging`): GitHub keeps only the newest pending run per group, so a shared web+API group let one workflow's pending run displace the other's. The pin step retries (3 times in production, 5 with jitter in staging: fetch, reset to `origin/main`, re-apply the digest), so the workflows cannot clobber each other's pin. Staging images are tagged `staging-<sha>` and `staging`, and the staging builds read the production build cache without writing to it. They then run `scripts/launch/wait-for-build.sh`, which polls the public health URL until it serves this commit's `build` (up to 12 minutes), and fail loudly if an image was pushed but never pinned. A docs-only change (root `*.md`, `docs/**`) deploys nothing. All GitHub-hosted jobs are pinned to `ubuntu-24.04`.
+Each workflow has its own concurrency group (`voxa-web-production`, `voxa-api-production`, `voxa-web-staging`, `voxa-api-staging`): GitHub keeps only the newest pending run per group, so a shared web+API group let one workflow's pending run displace the other's. The pin step retries (3 times in production, 5 with jitter in staging: fetch, reset to `origin/main`, re-apply the digest), so the workflows cannot clobber each other's pin. Staging images are tagged `staging-<sha>` and `staging`, and the staging builds read the production build cache without writing to it. They then run the deploy smokes below, and fail loudly if an image was pushed but never pinned. A docs-only change (root `*.md`, `docs/**`) deploys nothing. All GitHub-hosted jobs are pinned to `ubuntu-24.04`.
+
+### Deploy smokes
+
+Every check is an anonymous GET against the public hosts.
+
+| Workflow | Smoke |
+|----------|-------|
+| all four | `scripts/launch/wait-for-build.sh`: polls `/health` (API) or `/api/health` (web) until it serves this commit's `build` (up to 12 minutes), so a green run proves the new image is serving, not just that an old pod answers 200 |
+| `deploy-voxa-web.yml` | then `verify-prod-ga.sh` (informational, never fails the run), `verify-prod-demo.sh` (`/demo` serves the board), `verify-prod-image-optimizer.sh` (`/_next/image` → 404) and `VERIFY_SAME_HOST=1 scripts/launch/verify-auth-public-origin.sh` on the landing and the app host |
+| `deploy-voxa-web-staging.yml` | then the same strict auth smoke on both staging web hosts and a public page |
+| `deploy-voxa-api.yml`, `deploy-voxa-api-staging.yml` | the build check above (it reads `/health`, and readiness gates the rollout) |
+
+The strict auth smoke checks that `/api/auth/providers` reports a callback on the host that was asked and that an anonymous callback probe redirects back to that same host, never to the server's `0.0.0.0` bind address (see [docs/auth/JANUA.md](../auth/JANUA.md#sign-in-stays-on-the-host-the-browser-used)). The CI axe job runs it too, against the standalone server bound to `0.0.0.0`, and `scripts/launch/deploy-contract.test.mjs` keeps each workflow's host list equal to its manifest's `AUTH_PUBLIC_HOSTS`.
+
+### Environment changes and image rollouts
+
+Argo CD applies a change under `k8s/` as soon as it lands on `main`, while an image built from the same merge rolls out minutes later, after the build, the signature and the digest pin. A manifest change that the new image needs, or that the old image cannot run with, therefore goes in its own manifest-only PR, before or after the image as the dependency requires, and only once `/api/health` (or `/health`) serves the image it depends on. The sign-in fix of October 2026 is the worked example: voxa#50 pinned `AUTH_URL` as a hotfix, voxa#51 shipped an image that builds its URLs per public host while the pin stayed, and voxa#52 removed the pin and made the smoke strict only after voxa#51's `build` was serving in production.
 
 | Environment | Branch | Manifests | Domains |
 |-------------|--------|-----------|---------|
@@ -88,7 +105,7 @@ ArgoCD auto-syncs after digest commits (automated sync with self-heal); the web 
 | Service | Probe | Path | Test |
 |---------|-------|------|------|
 | Web | liveness, startup | `GET /api/health` | `apps/web/src/app/api/health/route.test.ts` |
-| Web | readiness | `GET /api/health/ready` (503 without OIDC issuer and client id) | `apps/web/src/app/api/health/ready/route.test.ts` |
+| Web | readiness | `GET /api/health/ready` (503 naming any missing `AUTH_SECRET` / `AUTH_JANUA_*` setting, or `invalid: ["AUTH_PUBLIC_HOSTS"]` for a malformed host list; names only, never values) | `apps/web/src/app/api/health/ready/route.test.ts` |
 | API | liveness | `GET /health` | `apps/api/src/health.test.ts` |
 | API | readiness, startup, status page | `GET /health/ready` (503 when the store is unreachable) | `apps/api/src/health.test.ts` |
 
@@ -136,6 +153,12 @@ Workload `Deployment` YAML must contain `@sha256:` references, not short names l
 Until `ghcr.io/madfam-org/voxa/voxa-web` and `voxa-api` are **public** GitHub Packages, Kyverno keyless verification cannot pull manifests. A temporary `PolicyException` in `k8s/*/signature-policyexception.yaml` (sync-wave `-1`) unblocks rollout.
 
 **Cleanup:** GitHub → madfam-org → Packages → each Voxa image → **Change visibility to public**, then remove the PolicyException manifests and sync.
+
+**Status (2026-10-05):** both exceptions are still in git. Removing them is [voxa#34](https://github.com/madfam-org/voxa/pull/34), which waits on read-only cluster checks (Argo CD diff mode and prune policy) so that the removal cannot stop the Argo apps from syncing.
+
+### cosign is held at v2 (cosign-installer v3)
+
+The deploy workflows sign with cosign v2, installed by `sigstore/cosign-installer` v3. cosign v3 (installer v4) writes its signature as a protobuf Sigstore bundle attached as an OCI 1.1 referrer instead of the `sha256-<digest>.sig` tag, and the cluster's Kyverno version verifies only the tag format. Taking the installer major before Kyverno verifies the new format would fail admission once the exceptions above are gone. Dependabot ignores the installer's majors (`.github/dependabot.yml`), and `scripts/launch/deploy-contract.test.mjs` fails if a deploy workflow pins anything but v3 ([voxa#46](https://github.com/madfam-org/voxa/pull/46)). To move on: upgrade Kyverno in Enclii to a version that verifies the bundle format and prove a cosign-v3-signed image is admitted without an exception, or take the installer major while pinning `cosign-release` to v2.
 
 ### API pod CrashLoop
 

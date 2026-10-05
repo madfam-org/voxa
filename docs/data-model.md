@@ -120,6 +120,19 @@ Communicator settings that follow the user between devices (migration 0009), one
 
 **Board files (OBF 0.1):** `POST /v1/boards/import/:format` (`obf`, `obz`, beta `gridset`/`snap`/`touchchat`) always creates NEW boards owned by the caller (embedded media becomes `media_assets` rows of the new boards; remote picture URLs are never fetched); `GET /v1/boards/:id/export/obf` and `/export/obz` write spec OBF 0.1 (`.obz`: `manifest.json`, `boards/*.obf`, `images/*`, `sounds/*`) per `@voxa/obf`. See [MIGRATION.md](./launch/MIGRATION.md).
 
+### `ws_tickets`
+
+Single-use tickets for the live-sync WebSocket (migration 0008). `POST /v1/ws-ticket` (signed in) mints a random 32-byte ticket valid for 30 seconds; only its SHA-256 is stored. `GET /v1/ws?ticket=…` consumes it in one `DELETE … RETURNING` before the upgrade, so of two replicas only one can use it, and a reused, unknown or expired ticket answers 401. Expired rows are deleted when the next ticket is minted. Without `DATABASE_URL` the tickets live in memory.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `ticket_hash` | `text` PK | SHA-256 of the ticket (the ticket itself is never stored) |
+| `user_id` | `text` | Janua user id of the bearer that minted it |
+| `role` | `text` | Voxa role at minting |
+| `org_id` | `text` | Organization from the token, if any |
+| `expires_at` | `timestamptz` | Ticket expiry (30 s after minting) |
+| `token_expires_at` | `timestamptz` | `exp` of the access token that minted it; the socket closes with 4401 at that time |
+
 ### `media_assets`
 
 Uploaded photos, button recordings and GLP video clips (base64 in PostgreSQL; moving the bytes to object storage is an open decision, see AGENTS.md). Uploads must match their declared type by magic bytes and count against a per-user quota (`MEDIA_QUOTA_BYTES_PER_USER`, default 500 MB). Index on `owner_user_id` (migration 0006).
@@ -141,6 +154,6 @@ Upload: `POST /v1/media` (multipart `boardId` + `file`; the board's owner, or an
 | Table | Purpose |
 |-------|---------|
 | `organizations` | Tenant boundary for teams (today the organization comes from the Janua token's `org_id`) |
-| `user_profiles` | Communicator settings (CVI theme, dwell, locales, voice); today they live on each device |
+| `user_profiles` | Profile data beyond settings. Communicator settings live on each device, and follow the person between devices only with the `settings_sync` consent (`user_settings` above) |
 
 See [architecture.md](./architecture.md) and [capabilities.md](./capabilities.md).

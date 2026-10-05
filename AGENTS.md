@@ -1,6 +1,6 @@
 # Voxa agent guide
 
-> Last Updated: 2026-10-04
+> Last Updated: 2026-10-05
 
 > **Repository boundary:** operational detail (platform identifiers, operator procedures, break-glass steps) and commercial research (pricing, competitor benchmarks, outreach) live in MADFAM's private operations repository; this public repo holds only public-safe context, per MADFAM's repo-boundary contract.
 
@@ -70,9 +70,9 @@ pnpm build
   every test process its own temporary `VOXA_DATA_DIR`, so test files never
   share the file store. `src/store/file-board-store.test.ts` guards that
   wiring. Never point tests at `apps/api/data/`.
-- The API's `*.pg.test.ts` files (`routes/media.pg.test.ts`,
-  `routes/consent.pg.test.ts`, `db/legacy-utterance-purge.pg.test.ts`,
-  `store/pg-board-store.pg.test.ts`) run against a real PostgreSQL when
+- The API's `*.pg.test.ts` files (discovered by name like every other test;
+  boards, media, consents, the legacy purge, WebSocket tickets and settings
+  sync have one today) run against a real PostgreSQL when
   `VOXA_TEST_DATABASE_URL` is set (they migrate and write there, so use a
   throwaway database; ids are unique per run because the files share it) and
   skip themselves otherwise. `src/ws/sync-hub.redis.test.ts` also needs
@@ -107,11 +107,19 @@ pnpm build
   user picks switch scanning, 36 cells and a voice and lands on a 36-cell
   es-MX board with scanning on; a returning user and `/demo` never see the
   setup; a 402 offers the existing board; axe on every step in a light and a
-  dark theme) and `pnpm test:e2e:settings-sync`
+  dark theme) and `pnpm test:e2e:session`
+  (`e2e/specs/session-account.spec.ts`: real encrypted Auth.js sessions, no
+  token in `/api/auth/session` or the cookie, sign-out, both account
+  switches, purged local data, the sign-in page under axe) and
+  `pnpm test:e2e:live` (`e2e/specs/live-sync.spec.ts`: two signed-in
+  browsers go Live over ticketed sockets; a reused ticket and
+  `?accessToken=` are refused) and `pnpm test:e2e:settings-sync`
   (`e2e/specs/settings-sync.spec.ts`, same local API: two browser contexts as
   one user with the `settings_sync` consent on, a scan speed changed in one
   appears in the other after a reload; with the consent off no request
-  reaches `/v1/me/settings`; axe on the section). The axe job scans `/app`
+  reaches `/v1/me/settings`; axe on the section). `pnpm test:e2e:a11y` also
+  runs `e2e/specs/demo-cta.spec.ts` (20 taps on `/demo`, 20 utterances, no
+  dialog, the call to action below the board). The axe job scans `/app`
   in all four board themes and, in Spanish (the default, unprefixed locale),
   the landing, `/demo`, `/app` and its settings panel; both fail on serious
   or critical violations. The standalone server binds `HOSTNAME=0.0.0.0` as
@@ -123,9 +131,10 @@ pnpm build
   stay on each of those hosts.
 - Playwright: `pnpm test:e2e:smoke`, `pnpm test:e2e:a11y`,
   `pnpm test:e2e:offline`, `pnpm test:e2e:access`, `pnpm test:e2e:voices`,
-  `pnpm test:e2e:first-run`, `pnpm test:e2e:settings-sync`, `pnpm test:e2e:staging`,
-  `pnpm test:e2e:staging:signed-in` (the five
-  signed-in specs, one worker). Authenticated specs skip themselves without
+  `pnpm test:e2e:first-run`, `pnpm test:e2e:session`, `pnpm test:e2e:live`,
+  `pnpm test:e2e:settings-sync`, `pnpm --filter @voxa/e2e test:import`,
+  `pnpm test:e2e:staging`, `pnpm test:e2e:staging:signed-in` (the five
+  signed-in specs, one worker; the daily smoke runs it). Authenticated specs skip themselves without
   `JANUA_TEST_EMAIL`/`JANUA_TEST_PASSWORD` (or `VOXA_TEST_ACCESS_TOKEN`).
   `/app` renders in Spanish by default: match catalog-backed labels with
   `ui('<namespace.key>')` from `e2e/helpers/i18n.ts`, never an English string.
@@ -351,6 +360,23 @@ pnpm build
     consent is off. Tested in `src/routes/me-settings.routes.test.ts`,
     `src/routes/me-settings.pg.test.ts`, `apps/web/src/lib/settings-sync.test.ts`
     and `e2e/specs/settings-sync.spec.ts`.
+19. **Sign-in stays on the public host the browser used.** One web
+    deployment serves the landing and the app host, and the PKCE, state,
+    nonce and session cookies are host-scoped. The exported Auth.js handlers
+    (`apps/web/src/auth.ts`) rebuild each request's URL from the forwarded
+    host, and only for a host in `AUTH_PUBLIC_HOSTS`
+    (`apps/web/src/lib/public-origin.ts`); sign-out, the proxy's same-origin
+    check and the sign-in server actions follow the same list. Never set
+    `AUTH_URL` in the manifests (one origin cannot serve both hosts) and never
+    build an Auth.js or redirect URL from `request.url` (behind the tunnel it
+    is `0.0.0.0:3000`). A new web host goes into `AUTH_PUBLIC_HOSTS`, the
+    deploy smoke's host list and the Janua client's redirect URIs together
+    ([docs/auth/JANUA.md](./docs/auth/JANUA.md#sign-in-stays-on-the-host-the-browser-used)).
+    Tested in `apps/web/src/lib/public-origin.test.ts`,
+    `e2e/specs/auth-public-origin.spec.ts`,
+    `scripts/launch/verify-auth-public-origin.sh` (strict, after every web
+    deploy and in the axe job) and `scripts/launch/deploy-contract.test.mjs`
+    (no `AUTH_URL` in a web manifest; smoke hosts equal manifest hosts).
 
 ## Guards
 
@@ -372,10 +398,12 @@ rather than passing (each one asserts how much it read).
 | Sessions and live sync | a token or `eyJ` in `/api/auth/session` or the session cookie; a proxied write without a same-origin `Origin`; a WebSocket opened without a ticket, with a reused one or with `?accessToken=`; sign-out over GET; a queued save sent under another account | `apps/web/src/lib/auth-session.test.ts`, `api-proxy.test.ts`, `sign-out.test.ts`, `pending-board-save.test.ts`; `apps/api/src/lib/ws-auth.test.ts`, `src/routes/ws-ticket.*.test.ts`; `e2e/specs/session-account.spec.ts`, `e2e/specs/live-sync.spec.ts` | unit job; axe job | voxa#39 |
 | Hardcoded UI text | user-facing literals outside the es/en/fr catalogs | `apps/web/src/hardcoded-ui-text.test.ts` | unit job | voxa#29 |
 | Service worker | `sw.js` must parse as plain JavaScript and never cache `/api/*` or other origins | `apps/web/src/service-worker.test.ts` | unit job | voxa#32 |
-| Auth.js on the public origin | an Auth.js URL (callback, error redirect, sign-out return) built on the server's bind address (`0.0.0.0:3000`) or on a host outside `AUTH_PUBLIC_HOSTS`; a non-allow-listed host must answer 400 | `apps/web/src/lib/public-origin.test.ts`; `e2e/specs/auth-public-origin.spec.ts`; `scripts/launch/verify-auth-public-origin.sh` (both hosts of each environment) | unit job; axe job; after each production and staging web deploy | voxa#51 |
+| Auth.js on the public origin | an Auth.js URL (callback, error redirect, sign-out return) built on the server's bind address (`0.0.0.0:3000`), on a host outside `AUTH_PUBLIC_HOSTS` or on another host than the one asked (`VERIFY_SAME_HOST=1`); a non-allow-listed host must answer 400; an `AUTH_URL` in a web manifest; deploy-smoke hosts that differ from the manifest's `AUTH_PUBLIC_HOSTS` | `apps/web/src/lib/public-origin.test.ts`; `e2e/specs/auth-public-origin.spec.ts`; `scripts/launch/verify-auth-public-origin.sh` (both hosts of each environment, strict); `scripts/launch/deploy-contract.test.mjs` | unit job; axe job; after each production and staging web deploy; `pnpm test:guards` | voxa#51, voxa#52 |
+| Cosign hold | a deploy workflow whose `sigstore/cosign-installer` pin is not v3, or a Dependabot config that no longer ignores its major updates (cosign v3 signatures are not verified by the cluster's Kyverno) | `scripts/launch/deploy-contract.test.mjs` | `pnpm test:guards` | voxa#46 |
 | Image optimizer off | `/_next/image` must answer 404 | `apps/web/src/next-config.test.ts`; `scripts/launch/verify-prod-image-optimizer.sh` | unit job; axe job; after each production web deploy | voxa#13 |
 | Image smoke and build identity | images on Node 22 without package managers, health 200 under the Deployment's securityContext; deploys wait until `/health` serves the commit's `build` | `.github/workflows/image-smoke.yml`, `apps/*/src/lib/build-info.test.ts`, `scripts/launch/wait-for-build.sh` | image-smoke workflow (Dockerfile, lockfile or `package.json` changes); deploy workflows | voxa#33 |
-| Accessibility (axe) | serious or critical WCAG 2.2 AA violations on public pages, the editor panels, `/app` in four themes and the Spanish landing, `/demo`, `/app` and settings; the demo never opens a dialog over the board (20 taps, 20 utterances, the call to action below the board, axe with it visible) | `e2e/specs/a11y.spec.ts`, `e2e/specs/demo-cta.spec.ts` (also the axe steps in `voice-choice`, `offline-media` and `first-run`) | axe job | voxa#4, voxa#36, voxa#40 (Spanish) |
+| Accessibility (axe) | serious or critical WCAG 2.2 AA violations on public pages, the editor panels, `/app` in four themes and the Spanish landing, `/demo`, `/app` and settings; the demo never opens a dialog over the board (20 taps, 20 utterances, the call to action below the board, axe with it visible) | `e2e/specs/a11y.spec.ts`, `e2e/specs/demo-cta.spec.ts` (also the axe steps in `voice-choice`, `offline-media`, `first-run`, `session-account` and `settings-sync`) | axe job | voxa#4, voxa#36, voxa#40 (Spanish), voxa#44 |
+| Scan pause always ends | switch scanning left paused by a voice that never fires `end` or a recorded clip that stalls | `apps/web/src/lib/play-button-speech.test.ts`, `apps/web/src/lib/play-button-media.test.ts`, `e2e/specs/scan-pause.spec.ts` | unit job; axe job (`test:e2e:voices`) | voxa#44, voxa#49 |
 
 Guard output is `file:line rule`, never the matched text, because CI logs of
 a public repository are public. To allowlist a file, add its path (not a
@@ -394,7 +422,8 @@ until a credentialed reviewer has done one (ruling R89).
    Redis 7 service containers, the Drizzle drift step, the EAS config check,
    the mobile bundle export and `pnpm build`. `a11y`: the built standalone web
    server and API, the image-optimizer check, axe, and the browser specs
-   (`offline`, `access`, `voices`, `import`, `first-run`, `settings-sync`). A change to a
+   (`offline`, `access`, `voices`, `import`, `first-run`, `session`, `live`,
+   `settings-sync`) and the strict auth public-origin smoke. A change to a
    Dockerfile, the lockfile, a `package.json` or the build-identity helpers
    also runs `image-smoke.yml`.
 2. **Merge to `main`.** The deploy workflows whose path filters match
@@ -403,26 +432,42 @@ until a credentialed reviewer has done one (ruling R89).
    docs, `docs/**` or other non-app paths deploys nothing; a change under
    `k8s/` is applied by Argo CD directly.
 3. **Build, sign, pin.** Each workflow builds the image with `GIT_SHA`,
-   cosign-signs it and commits its digest to `k8s/production` or
-   `k8s/staging`. Argo CD auto-syncs the pin; nothing restarts pods by hand.
-4. **Wait for the build.** The smoke step runs
+   cosign-signs it (cosign-installer held at v3, see [Deploy](#deploy)) and
+   commits its digest to `k8s/production` or `k8s/staging`. Argo CD
+   auto-syncs the pin; nothing restarts pods by hand.
+4. **Wait for the build, then smoke it.** The smoke step runs
    `scripts/launch/wait-for-build.sh` until `/health` (API) or `/api/health`
-   (web) serves this commit's `build` (up to 12 minutes). The production web
-   workflow then checks `/demo` and that `/_next/image` answers 404.
+   (web) serves this commit's `build` (build identity, up to 12 minutes), so
+   a green run proves the new image is serving. The production web workflow
+   then checks `/demo` and that `/_next/image` answers 404, and both web
+   workflows run the strict auth smoke
+   (`VERIFY_SAME_HOST=1 scripts/launch/verify-auth-public-origin.sh` on the
+   landing and app host: each host's Auth.js callback stays on that host).
 5. **Staging alongside.** Staging rebuilds from the same merge and never
    gates production; its signed-in specs run in the daily smoke. Until the
    staging Argo CD app tracks `main` (see Pending work), staging pins land
    but do not roll out.
 6. **Daily smoke** (`e2e-smoke.yml`): read-only production checks, and the
    signed-in specs against staging.
+7. **Environment changes ship in two steps when an image depends on them.**
+   Argo CD applies a `k8s/` change as soon as the merge lands, minutes before
+   an image built from the same merge rolls out (step 4). So a manifest
+   change and the image that needs it never travel in one PR when the old
+   image cannot run with the new manifest: first ship the image that works
+   both ways, wait until `/api/health` (or `/health`) serves its `build`,
+   then change the manifest in a manifest-only PR (and the reverse order to
+   remove a variable an old image needs). The sign-in fix followed this
+   order: voxa#50 pinned `AUTH_URL` (manifest), voxa#51 shipped the image
+   that no longer needs it while the pin stayed, and voxa#52 removed the pin
+   and made the deploy smoke strict only after voxa#51 was verified serving.
 
 ## Deploy
 
 | Workflow                                                     | Trigger                                                        | Effect                                                                           |
 | ------------------------------------------------------------ | -------------------------------------------------------------- | -------------------------------------------------------------------------------- |
 | `deploy-voxa-api.yml`                                        | push to `main` touching `apps/api/**`, `packages/**`; dispatch | build, cosign-sign, pin digest in `k8s/production`, wait for `/health` to serve this commit's `build` |
-| `deploy-voxa-web.yml`                                        | push to `main` touching `apps/web/**`, `packages/**`; dispatch | same for web (`/api/health` `build`); then smoke `/demo` and `/_next/image` → 404 |
-| `deploy-voxa-api-staging.yml`, `deploy-voxa-web-staging.yml` | push to `main` with the same paths (plus the workflow file); dispatch | build, cosign-sign, pin digest in `k8s/staging`, wait for the staging host to serve this commit's `build`; never gates production |
+| `deploy-voxa-web.yml`                                        | push to `main` touching `apps/web/**`, `packages/**`; dispatch | same for web (`/api/health` `build`); then smoke `/demo`, `/_next/image` → 404 and the strict auth public-origin smoke on both production web hosts |
+| `deploy-voxa-api-staging.yml`, `deploy-voxa-web-staging.yml` | push to `main` with the same paths (plus the workflow file); dispatch | build, cosign-sign, pin digest in `k8s/staging`, wait for the staging host to serve this commit's `build` (web: then the strict auth smoke on both staging web hosts); never gates production |
 | `mobile-eas.yml`, `mobile-eas-submit.yml`, `ghcr-public.yml` | dispatch only                                                  | EAS build/submit, package visibility                                             |
 | `e2e-smoke.yml` ("Daily smoke")                              | daily schedule; dispatch                                       | job `smoke`: read-only production checks (`verify-prod-ga`, `verify-prod-demo`, `verify-prod-redis`, which warns until Redis is bound; Playwright smoke and axe on public pages). Job `staging-signed-in`: the signed-in specs against staging; skips with a notice without the `VOXA_STAGING_*` secrets |
 
@@ -436,7 +481,12 @@ use (`packages: write` to push, `id-token: write` for keyless cosign,
 `contents: write` for the digest pin) and `ghcr-public.yml`'s job for
 `packages: write`. Every action is pinned to a full commit SHA with its
 version in a trailing comment (`@<sha> # v4.4.0`); `.github/dependabot.yml`
-updates them weekly, and the workflows guard fails on anything else. CI
+updates them weekly (minor and patch grouped; each major alone), and the
+workflows guard fails on anything else. `sigstore/cosign-installer` is held
+at v3 (cosign v2): cosign v3 writes its signature as an OCI 1.1 referrer
+bundle, which the cluster's Kyverno version does not verify yet; Dependabot
+ignores its majors, and `scripts/launch/deploy-contract.test.mjs` fails if a
+deploy workflow moves off v3 (voxa#46). CI
 cancels a pull request's superseded run; runs on `main` are never cancelled. Full runbook: [docs/deploy/ENCLII.md](./docs/deploy/ENCLII.md);
 on-call: [docs/ops/RUNBOOK.md](./docs/ops/RUNBOOK.md).
 
@@ -458,7 +508,7 @@ proves the new image is serving, not just that an old pod answers 200.
 
 ## Pending work and known gaps
 
-As of 2026-10-04. This is the single pending-work list for the repository;
+As of 2026-10-05. This is the single pending-work list for the repository;
 `llms.txt` and [docs/capabilities.md](./docs/capabilities.md) point here. Product and launch phases live in
 [docs/launch/GA_ROADMAP.md](./docs/launch/GA_ROADMAP.md). Priorities: **P0**
 blocks production use, **P1** next, **P2** planned, **P3** cleanup.
@@ -468,13 +518,16 @@ blocks production use, **P1** next, **P2** planned, **P3** cleanup.
 | **Clinical review of record is pending (ruling R89).** No credentialed speech-language pathologist has reviewed the es-MX core vocabulary, the core-size order, the Spanish symbol keywords, the Spanish predictor table or the agreement rules. The June 2026 "SLP sign-off" was an internal product check and is withdrawn (`docs/launch/SLP_SIGNOFF.md`). | Clinical accuracy for real communicators; public copy must keep saying "pending clinical review". | P1 | Owner (engage a reviewer of record) | R89 |
 | **Mobile store builds are not set up.** The app is on Expo SDK 57, shows symbols and bundles in CI, but the EAS project, the App Store Connect and Google Play listings and the repository variables and secrets the mobile workflows read do not exist yet. | No preview or store build has ever been produced; the workflows stop with a message naming each missing variable. | P1 | Owner setup (names and commands in `docs/launch/MOBILE_GA.md`) | — |
 | **Three mobile build-tool advisories have no compatible fix.** `node-forge` (Expo CLI code signing; no patched release), `braces` (Metro file watcher and the shadcn CLI; no patched release) and `decode-uri-component` 0.2 under `expo-router`'s `query-string` 7 (the fix, 0.5, is ESM-only and `query-string` 7 loads it with `require`). | Dev and build tooling, except `decode-uri-component`, which ships in the app and only parses the app's own deep links. | P3 | Upstream (re-check on each Expo SDK release) | — |
-| **Staging's Argo CD app still tracks the deleted `staging` branch.** The staging workflows now pin `k8s/staging` on `main`, but `voxa-staging-services` reads branch `staging`, which no longer exists, so it cannot compare (ComparisonError) and staging keeps a June build. | Until the app tracks `main`, staging does not move and the daily signed-in specs test an old build. | P1 | Platform operator (point the app's source revision at `main`); then confirm the `VOXA_STAGING_*` test account still signs in and holds `voxa:slp` | — |
+| **Staging's Argo CD app still tracks the deleted `staging` branch.** The staging workflows now pin `k8s/staging` on `main`, but `voxa-staging-services` reads branch `staging`, which no longer exists, so it cannot compare (ComparisonError) and staging keeps a June build. | Until the app tracks `main`, staging does not move and the daily signed-in specs test an old build. Staging has therefore not received the Auth.js web either: whether its session secret (`secret/voxa-staging`, `auth_secret`) is delivered shows only once it rolls out (`/api/health/ready` on both staging web hosts). | P1 | Platform operator (point the app's source revision at `main`); then confirm `/api/health/ready` answers 200 on both staging web hosts and the `VOXA_STAGING_*` test account still signs in and holds `voxa:slp` | — |
 | **Paid tiers are not grantable yet.** The API reads the plan tier from the Janua `voxa_tier` claim, but the push that writes the claim for user subscriptions (billing → Janua) is not built. | Nobody can hold `family` or `clinic`, so every user gets the free limits (one board). Fails safe: no one gets a paid tier they did not buy. | P1 | Ecosystem work outside this repo; no Voxa change is needed once tokens carry the claim | Y1 |
 | **Production and staging do not bind `REDIS_URL` yet.** Both API Deployments read it from `voxa-secrets` (optional), but production's `/health/ready` reports `syncHub: local`, so the key is not set there (staging unverified). | With two production replicas, a co-editor on the other pod sees no live change and presence counts one pod. Data is safe (writes are compare-and-set). | P1 | Platform operator: add `REDIS_URL` (shared Redis with AUTH, this app's own DB index) to `voxa-secrets` for each environment, then `REQUIRE_REDIS=1 ./scripts/launch/verify-prod-redis.sh` | — |
 | **Media bytes live in the shared PostgreSQL.** Uploads are size-capped, type-checked and quota-bound per user, but the bytes are stored in `media_assets.data`. | Large media grows the shared database, its backups and WAL. | P2 | Owner ruling (object storage behind signed URLs) | — |
 | **Prettier is not enforced.** `pnpm format` exists but CI does not check it, and several files predate it.                                                                                                                   | Formatting drifts and creates noise in unrelated PRs.                                                                                                                                   | P3       | Engineering work (one reformat, then a CI check)                                | —        |
 | **Selva predictions are off.** `SELVA_ENABLED` defaults to `false`, so every text suggestion comes from the local predictor. Turning it on needs a Janua service client for this edge, its id and secret delivered to the API, and a local model behind Selva for `restricted` requests. | Until then suggestions are rule-based only. Turning it on early is safe (every failure falls back to local) but pointless. | P2 | Ecosystem and operator work; no Voxa code change is needed | — |
-| **Web sign-in needs `AUTH_SECRET` and the new Janua redirect URIs.** The web moved to Auth.js (invariant 17): the platform's secret store needs `auth_secret` under `secret/voxa` and `secret/voxa-staging` (secret intake `--generate auth_secret`, targets `voxa/web-session` and `voxa-staging/web-session`; the `voxa-web-session` ExternalSecret delivers it), the Switchyard Vault writer policy must cover both paths, and the Janua client needs `https://<host>/api/auth/callback/janua` and `https://<host>/auth/signin` for the landing and app hosts of production and staging. | Until all of it exists, `/api/health/ready` answers 503 on new web pods and the `voxa-web-session` ExternalSecret cannot sync, so the rollout stays on the previous version (safe, but the new sign-in is not live). | P0 | Owner setup, in the order given in the pull request that introduced invariant 17 | — |
+| **The privacy policy does not list the `settings_sync` purpose yet.** Settings sync (invariant 18) is opt-in and its in-product consent text says what is shared, but the public privacy policy (`legal.privacy` in the catalogs) predates it. | Access settings can reveal a disability (sensitive data); the policy should name every purpose that stores personal data. | P1 | Owner and counsel (policy wording), then a copy change in the three catalogs | voxa#47 |
+| **Kyverno signature exceptions are still in both overlays.** `k8s/*/signature-policyexception.yaml` exempt the Voxa Deployments from image-signature verification. Removing them is voxa#34, which waits on read-only cluster checks (Argo diff mode and prune policy) so the removal cannot stall the Argo apps. | Signed images are not verified at admission until then. | P2 | Owner (run the checks in voxa#34, then merge it) | voxa#34 |
+| **cosign is held at v2 (cosign-installer v3).** cosign v3 signatures are OCI 1.1 referrer bundles, which the cluster's Kyverno does not verify yet. | Taking cosign v3 before Kyverno verifies it would fail admission once the exceptions above are gone. | P3 | Ecosystem work in Enclii (Kyverno that verifies the bundle format), then the installer major | voxa#46 |
+| **Deploy workflow comments still describe the removed `AUTH_URL` pin.** The comment above the strict auth smoke in `deploy-voxa-web.yml` and `deploy-voxa-web-staging.yml` says the manifest still pins `AUTH_URL`; the code is right (strict smoke, no pin). | Misleading to a reader; no behaviour change. | P3 | Engineering work (fold into the next web change; editing the staging workflow re-runs the staging web deploy) | — |
 | **One internal literal left in deploy-functional files.** The Kubernetes web deployments still carry the OAuth client id as a literal. (The `apps/web/src/lib/pricing.ts` comment that pointed at a now-private pricing document was reworded on 2026-10-04.) | The operational and commercial docs moved out on 2026-10-03; this needs a deploy-touching change. | P2 | Engineering work (read the client id from configuration) | — |
 
 The Next image optimizer gap listed here before 2026-10-02 is closed (#13,
@@ -493,9 +546,19 @@ invariant 6).
   (`X-Voxa-User-Id`/`X-Voxa-Role`) need `VOXA_DEV_AUTH=true` and never work in
   production. The web signs in through Auth.js with the Janua OIDC provider
   (`AUTH_SECRET`, `AUTH_JANUA_ISSUER`, `AUTH_JANUA_CLIENT_ID`,
-  `AUTH_JANUA_CLIENT_SECRET`; invariant 17). Contract:
-  [Janua ecosystem integration guide](https://github.com/madfam-org/janua/blob/main/docs/guides/ECOSYSTEM_INTEGRATION.md).
-  Voxa setup: [docs/auth/JANUA.md](./docs/auth/JANUA.md).
+  `AUTH_JANUA_CLIENT_SECRET`, `AUTH_PUBLIC_HOSTS`, no `AUTH_URL`;
+  invariants 17 and 19). The Voxa web client is first-party (no consent
+  screen) and registers the Auth.js callback and the sign-in page for each
+  of the four web hosts. Voxa setup and troubleshooting:
+  [docs/auth/JANUA.md](./docs/auth/JANUA.md). Janua contracts Voxa relies on:
+  [ecosystem integration guide](https://github.com/madfam-org/janua/blob/main/docs/guides/ECOSYSTEM_INTEGRATION.md),
+  [organization claims and app roles](https://github.com/madfam-org/janua/blob/main/docs/architecture/CLAIMS_DE_ORGANIZACION_Y_SERVICE_PRINCIPALS.md),
+  [first-party pre-consent](https://github.com/madfam-org/janua/blob/main/docs/architecture/SILENT_SSO_SESSION.md#b6--pre-consent),
+  [account switching (`prompt=select_account` / `prompt=login`)](https://github.com/madfam-org/janua/blob/main/docs/architecture/SILENT_SSO_SESSION.md#account-switching-l1l3),
+  [revocation and `POST /oauth/revoke` (RFC 7009)](https://github.com/madfam-org/janua/blob/main/docs/runbooks/oauth-shared-state-redis.md#post-oauthrevoke-rfc-7009)
+  and [readiness semantics](https://github.com/madfam-org/janua/blob/main/docs/runbooks/oauth-shared-state-redis.md#health-and-readiness)
+  (janua#694–#698). Ecosystem view:
+  [Janua integration guide](https://github.com/madfam-org/solarpunk-foundry/blob/main/docs/JANUA_INTEGRATION.md).
 - **Entitlements (Janua claim, ADR-006).** The plan tier is a claim on the
   Janua access token: `voxa_tier`, one of `free`, `family`, `clinic`.
   `src/lib/entitlement.ts` reads it from the token `teamAuth()` has already
