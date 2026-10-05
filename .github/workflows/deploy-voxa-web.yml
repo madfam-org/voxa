@@ -205,9 +205,12 @@ jobs:
           ./scripts/launch/verify-prod-ga.sh || true
           ./scripts/launch/verify-prod-demo.sh
           ./scripts/launch/verify-prod-image-optimizer.sh
-          # Sign-in stays on each host this web serves (anonymous GETs): the
-          # Auth.js callback URL and the callback's error redirect must name
-          # that host, never the 0.0.0.0 bind address (2026-10-04 incident).
+          # Sign-in URLs stay on a public host (anonymous GETs): the Auth.js
+          # callback URL and the callback's error redirect must name one of
+          # these hosts, never the 0.0.0.0 bind address (2026-10-04 incident).
+          # While the manifest still pins AUTH_URL to the landing host, the app
+          # host's callback is on the landing host; the PR that removes the pin
+          # sets VERIFY_SAME_HOST=1 here so each host must keep its own.
           ./scripts/launch/verify-auth-public-origin.sh voxa.madfam.io voxa-app.madfam.io
 
       # Loud-stale guard (2026-08-26 crea-frontend OIDC incident): the failure

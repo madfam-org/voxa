@@ -81,7 +81,7 @@ AUTH_JANUA_ISSUER=https://auth.madfam.io
 AUTH_JANUA_CLIENT_ID=<Janua client id>
 AUTH_JANUA_CLIENT_SECRET=<Janua client secret>
 AUTH_PUBLIC_HOSTS=voxa.madfam.io,voxa-app.madfam.io   # hosts sign-in may run on (see below)
-# AUTH_URL=<origin>   # break-glass pin for every host; unset in the deployments
+# AUTH_URL=<origin>   # pin for every host; still set in the deployments until the rollout below
 NEXT_PUBLIC_API_URL=https://voxa-api.madfam.io
 ```
 
@@ -99,7 +99,7 @@ One web deployment serves two hosts per environment: the landing host
 (`voxa.madfam.io`) and the app host (`voxa-app.madfam.io`; `voxa-staging…` and
 `voxa-app-staging…` on staging). The PKCE, state and nonce cookies and the
 session cookie are host-scoped, so sign-in must stay on the host the browser
-used, and `AUTH_URL` (one origin for every host) is left unset.
+used; `AUTH_URL` (one origin for every host) cannot do that.
 
 Behind the tunnel the Next.js standalone server hands route handlers a
 request URL on its bind address (`HOSTNAME=0.0.0.0`, `PORT=3000`), and
@@ -126,12 +126,20 @@ with `invalid: ["AUTH_PUBLIC_HOSTS"]`. Sign-out returns to the sign-in page of
 the allow-listed host the browser used.
 
 The k8s web manifests set `AUTH_PUBLIC_HOSTS` to the landing and app host of
-their environment. After each web deploy,
-`scripts/launch/verify-auth-public-origin.sh` checks both hosts anonymously:
-`/api/auth/providers` must report `callbackUrl` =
+their environment. They still set `AUTH_URL` to the landing host (voxa#50):
+Argo applies a manifest change when the merge lands, minutes before the new
+image rolls out, and the previous image needs that pin. While the pin is set,
+every host stays on the landing host, as before, and app-host sign-ins stay
+broken. A follow-up manifest-only change removes it once this image is live.
+
+After each web deploy, `scripts/launch/verify-auth-public-origin.sh` checks
+both hosts anonymously: `/api/auth/providers` must report a `callbackUrl` of
 `https://<host>/api/auth/callback/janua`, and an anonymous
 `/api/auth/callback/janua?code=probe&state=probe` must redirect to
-`https://<host>/…`. The CI axe job runs the same script and
+`https://<host>/…`. `<host>` must be one of the public hosts given and never
+`0.0.0.0`. With `VERIFY_SAME_HOST=1` it must be the host that was asked; the
+change that removes the pin turns that on in the deploy workflows. The CI axe
+job runs the same script (strict) and
 `e2e/specs/auth-public-origin.spec.ts` against the standalone server bound to
 `0.0.0.0`. Adding a web host means adding it to `AUTH_PUBLIC_HOSTS`, to the
 deploy smoke and to the Janua client (next paragraph) together.

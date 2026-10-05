@@ -164,6 +164,50 @@ describe('Auth.js handlers on the public origin (server bound to 0.0.0.0)', () =
   });
 });
 
+describe('AUTH_URL and AUTH_PUBLIC_HOSTS both set (the transition: the manifest keeps the pin)', () => {
+  const discovery = (async () => Response.json({ end_session_endpoint: `${janua.issuer}/logout` })) as unknown as typeof fetch;
+
+  it('every allow-listed host stays pinned to AUTH_URL, as before this change', async () => {
+    process.env.AUTH_URL = `https://${LANDING}`;
+    const pinned = { ...env, AUTH_URL: `https://${LANDING}` };
+    for (const host of [LANDING, APP]) {
+      const providers = await handlers.GET(boundRequest('/api/auth/providers', viaTunnel(host)));
+      assert.equal(providers.status, 200);
+      const text = await providers.text();
+      assert.ok(!text.includes('0.0.0.0'), text);
+      const body = JSON.parse(text) as Providers;
+      assert.equal(body.janua?.callbackUrl, `https://${LANDING}/api/auth/callback/janua`);
+      assert.equal(body.janua?.signinUrl, `https://${LANDING}/api/auth/signin/janua`);
+
+      const callback = await handlers.GET(boundRequest('/api/auth/callback/janua?code=probe&state=probe', viaTunnel(host)));
+      assert.equal(callback.status, 302);
+      const location = new URL(callback.headers.get('location') ?? '');
+      assert.equal(location.origin, `https://${LANDING}`);
+      assert.equal(location.pathname, '/auth/signin');
+
+      const signOutReq = boundRequest('/auth/signout', { ...viaTunnel(host), Origin: `https://${host}` }, { method: 'POST' });
+      assert.equal(isSameOriginRequest(signOutReq, pinned), true);
+      const signOut = await signOutResponse(signOutReq, {
+        sameOrigin: true,
+        idToken: async () => 'id',
+        env: pinned,
+        fetchImpl: discovery,
+      });
+      assert.equal(signOut.status, 303);
+      assert.equal(
+        new URL(signOut.headers.get('location') ?? '').searchParams.get('post_logout_redirect_uri'),
+        `https://${LANDING}/auth/signin`,
+      );
+    }
+  });
+
+  it('the readiness probe stays ready with both set', async () => {
+    const { GET } = await import('../app/api/health/ready/route');
+    process.env.AUTH_URL = `https://${LANDING}`;
+    assert.equal((await GET()).status, 200);
+  });
+});
+
 describe('resolvePublicOrigin', () => {
   const headers = (h: Record<string, string>) => new Headers(h);
 

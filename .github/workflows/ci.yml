@@ -155,8 +155,9 @@ jobs:
         run: VOXA_PROD_WEB_URL=http://127.0.0.1:3000 VOXA_IMAGE_VERIFY_ATTEMPTS=1 ./scripts/launch/verify-prod-image-optimizer.sh
       - name: Sign-in stays on every public host (deploy smoke against the 0.0.0.0-bound server)
         # scripts/launch/verify-auth-public-origin.sh, the same check the web
-        # deploy workflows run against production and staging.
-        run: VOXA_AUTH_CONNECT_URL=http://127.0.0.1:3000 VOXA_AUTH_VERIFY_ATTEMPTS=1 ./scripts/launch/verify-auth-public-origin.sh ${VOXA_E2E_PUBLIC_HOSTS//,/ }
+        # deploy workflows run against production and staging. Strict here: this
+        # server runs without AUTH_URL, so each host must keep its own callback.
+        run: VERIFY_SAME_HOST=1 VOXA_AUTH_CONNECT_URL=http://127.0.0.1:3000 VOXA_AUTH_VERIFY_ATTEMPTS=1 ./scripts/launch/verify-auth-public-origin.sh ${VOXA_E2E_PUBLIC_HOSTS//,/ }
       - run: pnpm test:e2e:a11y
         env:
           PLAYWRIGHT_BASE_URL: http://127.0.0.1:3000
