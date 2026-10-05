@@ -10,6 +10,10 @@
 | S2 | Degraded sync or auth | Mitigate within 1 hour |
 | S3 | Non-critical bug | Next business day |
 
+## How an outage reaches on-call
+
+Critical platform alerts reach the on-call phone through Alertmanager and Courier (angelia); warnings do not. For Voxa that covers crash-looping pods, the Argo CD app degraded or missing, and the shared PostgreSQL, Redis, tunnel and nodes. A Deployment running below its desired count without crash looping pages only once [enclii#695](https://github.com/madfam-org/enclii/pull/695) lands, which adds the production `voxa` namespace to the platform's client availability alerting (critical: `ClientDeploymentUnavailable`; staging stays out). [status.madfam.io](https://status.madfam.io) shows the five hosts in `enclii.yaml`'s `status:` block and pages no one; neither does a failed deploy or daily smoke. Details: [ENCLII.md › How an outage is detected](../deploy/ENCLII.md#how-an-outage-is-detected).
+
 ## Health checks
 
 ```bash
@@ -46,6 +50,13 @@ Symptom: a new API pod logs `Voxa API startup migrations: database unreachable (
 ### Postgres reports too many connections
 
 The API holds one pool per process, capped by `DATABASE_POOL_MAX` (default 5), against a shared server with a fixed connection limit. See the [connection budget](../deploy/ENCLII.md#connection-budget-contract). Check the replica count times `DATABASE_POOL_MAX` before raising either.
+
+### Fewer pods than the manifest says, or a node drain waits on a Voxa pod
+
+Argo CD ignores `/spec/replicas` for `voxa-services`, so `replicas:` in `k8s/production/` is the intended floor (web 2, API 2), not the live count, and Argo CD reports Synced either way. With one live pod, the `minAvailable: 1` budget allows no disruption and a drain of that node waits.
+
+1. Escalate to the platform operator, who scales live (`kubectl -n voxa scale deploy/<name> --replicas=N`) and confirms with `kubectl -n voxa get deploy` that ready and available equal the spec. See [ENCLII.md › Replica counts](../deploy/ENCLII.md#replica-counts-git-records-intent-the-operator-scales-live).
+2. Do not close the incident on a health check alone: `/api/health/ready` and `/health/ready` answer 200 from a single pod.
 
 ### Web loads but sync fails
 

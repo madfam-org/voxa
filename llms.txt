@@ -30,8 +30,8 @@
 - [docs/architecture.md](./docs/architecture.md): components, sync model, deploy flow.
 - [docs/data-model.md](./docs/data-model.md): tables, migrations and the journal rule.
 - [docs/auth/JANUA.md](./docs/auth/JANUA.md): SSO for web and API: Auth.js, public hosts, the Janua client, sign-out and account switching, troubleshooting.
-- [docs/deploy/ENCLII.md](./docs/deploy/ENCLII.md): deploy workflows and smokes, environment changes vs image rollouts, storage, Redis, request limits, Postgres connection budget.
-- [docs/ops/RUNBOOK.md](./docs/ops/RUNBOOK.md), [docs/ops/BACKUP_RESTORE.md](./docs/ops/BACKUP_RESTORE.md): on-call and backups.
+- [docs/deploy/ENCLII.md](./docs/deploy/ENCLII.md): deploy workflows and smokes, environment changes vs image rollouts, availability (replica floor in git vs live scaling, disruption budgets), how outages are detected, storage, Redis, request limits, Postgres connection budget.
+- [docs/ops/RUNBOOK.md](./docs/ops/RUNBOOK.md), [docs/ops/BACKUP_RESTORE.md](./docs/ops/BACKUP_RESTORE.md): on-call (how alerts reach it) and backups.
 - [docs/ai-roadmap.md](./docs/ai-roadmap.md): word suggestions today and the plan.
 - [docs/launch/MIGRATION.md](./docs/launch/MIGRATION.md): Open Board Format import/export and beta imports. [docs/launch/MOBILE_GA.md](./docs/launch/MOBILE_GA.md): mobile store path. [docs/launch/SLP_SIGNOFF.md](./docs/launch/SLP_SIGNOFF.md): clinical review, pending. Other files in `docs/launch/` are June 2026 launch records kept for history.
 - [docs/legal/](./docs/legal/): privacy, terms and data-handling summaries.

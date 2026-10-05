@@ -5,7 +5,10 @@ capability: [docs/capabilities.md](./docs/capabilities.md).
 
 ## [Unreleased]
 
-Nothing yet.
+### Operations docs and tests
+
+- Availability and alerting docs say what is true ([#54](https://github.com/madfam-org/voxa/pull/54)). `replicas:` in `k8s/production` records the intended floor (web 2, API 2); the Argo CD app ignores `/spec/replicas`, so a replica change in git does not reach the cluster and the platform operator scales and verifies live (`docs/deploy/ENCLII.md`, `docs/ops/RUNBOOK.md`, `AGENTS.md` invariant 20). The runbook and deploy guide now say how an outage reaches on-call (critical platform alerts through Alertmanager and Courier), what covers Voxa today, the pending platform change that adds the production `voxa` namespace to the client availability alerting, including the critical `ClientDeploymentUnavailable` ([enclii#695](https://github.com/madfam-org/enclii/pull/695)), and that the status page is not an alert path.
+- `scripts/launch/deploy-contract.test.mjs` fails when a PodDisruptionBudget allows no voluntary disruption at its Deployment's manifest replica count (production or staging) or when production web or API drops below 2 replicas in git.
 
 ## 2026-10-05 — Sessions, settings sync and sign-in on every host
 
@@ -118,7 +121,7 @@ Pull requests [#8](https://github.com/madfam-org/voxa/pull/8)–[#41](https://gi
 
 - Images on Node 22 pinned by digest with no package manager at runtime; deploys wait until `/health` serves the commit's `build`; an image smoke on pull requests ([#33](https://github.com/madfam-org/voxa/pull/33)).
 - Staging rebuilds from `main` beside production, signed like production, and hosts the signed-in specs; it never gates production ([#30](https://github.com/madfam-org/voxa/pull/30)).
-- No admin credential in any deploy; one concurrency group per deploy workflow; a read-only daily smoke ([#22](https://github.com/madfam-org/voxa/pull/22)). Surge-first rollouts, two web replicas, PodDisruptionBudgets and a real web readiness probe ([#26](https://github.com/madfam-org/voxa/pull/26)). GitHub-hosted runners pinned to `ubuntu-24.04` ([#9](https://github.com/madfam-org/voxa/pull/9)).
+- No admin credential in any deploy; one concurrency group per deploy workflow; a read-only daily smoke ([#22](https://github.com/madfam-org/voxa/pull/22)). Surge-first rollouts, two web replicas, PodDisruptionBudgets and a real web readiness probe ([#26](https://github.com/madfam-org/voxa/pull/26)). *Correction (2026-10-05): #26 changed `replicas:` in the manifest only; the Argo CD app ignores `/spec/replicas`, so production web ran one pod until the platform operator scaled it to two on 2026-10-05. The live count is the operator's to scale (see Unreleased).* GitHub-hosted runners pinned to `ubuntu-24.04` ([#9](https://github.com/madfam-org/voxa/pull/9)).
 - Unit tests discovered instead of listed; axe on the Spanish pages; licence, LLM-egress and public-repo hygiene guards ([#40](https://github.com/madfam-org/voxa/pull/40)). `AGENTS.md` and its pending-work list ([#12](https://github.com/madfam-org/voxa/pull/12), [#14](https://github.com/madfam-org/voxa/pull/14)).
 
 ### Changes for API clients

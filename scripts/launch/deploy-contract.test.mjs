@@ -14,6 +14,12 @@
 //    referrer bundles that the cluster's Kyverno does not verify yet. Every
 //    deploy workflow must pin a v3 release, and Dependabot must keep ignoring
 //    the installer's majors.
+// 3. Availability floor (AGENTS.md invariant 20). Production's web and API
+//    manifests keep `replicas` >= 2, and no PodDisruptionBudget in either
+//    environment may forbid every voluntary disruption at the manifest's
+//    replica count (minAvailable below replicas), or node drains block. This
+//    reads git only: Argo CD ignores /spec/replicas, so the live count is the
+//    platform operator's to scale and verify (docs/deploy/ENCLII.md).
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
@@ -140,5 +146,166 @@ describe('deploy contract: cosign-installer held at v3 (voxa#46)', () => {
   it('the pin helper reads the version comment', () => {
     const sha = '398d4b0eeef1380460a10c8013a76f728fb906ac';
     assert.deepEqual(cosignInstallerPins(`        uses: sigstore/cosign-installer@${sha} # v4.1.2`), [{ sha, version: 'v4.1.2' }]);
+  });
+});
+
+/**
+ * The objects of a multi-document Kubernetes manifest, read without a YAML
+ * library: kind, metadata.name, spec.replicas, the PodDisruptionBudget fields
+ * and the `app` label each selector matches. Comments are ignored; values the
+ * reader does not know stay undefined, and the tests assert they were found.
+ */
+export function manifestObjects(text) {
+  const objects = [];
+  for (const doc of text.split(/^---\s*$/m)) {
+    const lines = doc.split('\n').map((line) => line.replace(/\s+#.*$/, '').replace(/^\s*#.*$/, ''));
+    const top = (key) => {
+      for (const line of lines) {
+        const match = new RegExp(`^${key}:\\s*(\\S.*)?$`).exec(line);
+        if (match) return match[1]?.trim();
+      }
+      return undefined;
+    };
+    const kind = top('kind');
+    if (!kind) continue;
+    /** Scalar `key` directly under the top-level block `parent` (two-space indent). */
+    const child = (parent, key) => {
+      let inside = false;
+      for (const line of lines) {
+        if (/^\S/.test(line)) inside = line.startsWith(`${parent}:`);
+        else if (inside) {
+          const match = new RegExp(`^  ${key}:\\s*["']?([^"'\\s]+)["']?\\s*$`).exec(line);
+          if (match) return match[1];
+        }
+      }
+      return undefined;
+    };
+    /** The `app:` value inside spec.selector.matchLabels. */
+    const selectorApp = () => {
+      let section = '';
+      for (const line of lines) {
+        if (/^\S/.test(line)) section = line.startsWith('spec:') ? 'spec' : '';
+        else if (section && /^  selector:\s*$/.test(line)) section = 'selector';
+        else if (section === 'selector' && /^  \S/.test(line)) section = 'spec';
+        else if (section === 'selector') {
+          const match = /^ {6}app:\s*["']?([^"'\s]+)["']?\s*$/.exec(line);
+          if (match) return match[1];
+        }
+      }
+      return undefined;
+    };
+    const number = (value) => (value === undefined || value.endsWith('%') ? value : Number(value));
+    objects.push({
+      kind,
+      name: child('metadata', 'name'),
+      replicas: number(child('spec', 'replicas')),
+      minAvailable: number(child('spec', 'minAvailable')),
+      maxUnavailable: number(child('spec', 'maxUnavailable')),
+      app: selectorApp(),
+    });
+  }
+  return objects;
+}
+
+/**
+ * Voluntary disruptions a PodDisruptionBudget allows when `replicas` pods are
+ * healthy (Kubernetes rounds a minAvailable percentage up and a
+ * maxUnavailable percentage down).
+ */
+export function allowedDisruptions(pdb, replicas) {
+  const percent = (value, round) => round((Number(value.slice(0, -1)) * replicas) / 100);
+  if (pdb.minAvailable !== undefined) {
+    const min = typeof pdb.minAvailable === 'string' ? percent(pdb.minAvailable, Math.ceil) : pdb.minAvailable;
+    return Math.max(0, replicas - min);
+  }
+  if (pdb.maxUnavailable !== undefined) {
+    return typeof pdb.maxUnavailable === 'string' ? percent(pdb.maxUnavailable, Math.floor) : pdb.maxUnavailable;
+  }
+  throw new Error(`PodDisruptionBudget ${pdb.name}: neither minAvailable nor maxUnavailable`);
+}
+
+/** Every object of the manifests an overlay's kustomization.yaml lists under resources. */
+function overlayObjects(dir) {
+  const kustomization = read(`${dir}/kustomization.yaml`);
+  const block = /^resources:\s*\n((?:\s*-\s*\S+\s*\n)+)/m.exec(kustomization);
+  assert.ok(block, `${dir}/kustomization.yaml: no resources list`);
+  const files = [...block[1].matchAll(/-\s*(\S+)/g)].map((match) => match[1]);
+  return files.flatMap((file) => manifestObjects(read(`${dir}/${file}`)).map((object) => ({ ...object, file: `${dir}/${file}` })));
+}
+
+describe('deploy contract: availability floor (AGENTS.md invariant 20)', () => {
+  for (const dir of ['k8s/production', 'k8s/staging']) {
+    const objects = overlayObjects(dir);
+    const deployments = objects.filter((object) => object.kind === 'Deployment');
+    const budgets = objects.filter((object) => object.kind === 'PodDisruptionBudget');
+
+    it(`${dir}: every PodDisruptionBudget leaves a node drain room at the manifest's replica count`, () => {
+      assert.ok(budgets.length >= 2, `${dir}: expected a budget for web and API, read ${budgets.length}`);
+      for (const pdb of budgets) {
+        const targets = deployments.filter((deployment) => deployment.app && deployment.app === pdb.app);
+        assert.equal(targets.length, 1, `${pdb.file}: budget ${pdb.name} selects app=${pdb.app}, matching ${targets.length} Deployments`);
+        const [deployment] = targets;
+        assert.equal(typeof deployment.replicas, 'number', `${deployment.file}: ${deployment.name} has no numeric spec.replicas`);
+        assert.ok(
+          allowedDisruptions(pdb, deployment.replicas) >= 1,
+          `${pdb.file}: budget ${pdb.name} allows no disruption at ${deployment.replicas} replica(s) of ${deployment.name} (minAvailable must stay below replicas)`,
+        );
+      }
+    });
+  }
+
+  it('k8s/production: web and API keep at least 2 replicas, each with a budget', () => {
+    const objects = overlayObjects('k8s/production');
+    for (const name of ['voxa-web', 'voxa-api']) {
+      const deployment = objects.find((object) => object.kind === 'Deployment' && object.name === name);
+      assert.ok(deployment, `k8s/production: no Deployment ${name}`);
+      assert.ok(deployment.replicas >= 2, `${deployment.file}: ${name} replicas ${deployment.replicas} (production floor is 2)`);
+      assert.ok(
+        objects.some((object) => object.kind === 'PodDisruptionBudget' && object.app === deployment.app),
+        `k8s/production: no PodDisruptionBudget selects ${name}`,
+      );
+    }
+  });
+
+  it('the manifest reader and the disruption arithmetic', () => {
+    const text = [
+      '# leading comment',
+      '---',
+      'apiVersion: apps/v1',
+      'kind: Deployment',
+      'metadata:',
+      '  name: web',
+      '  labels:',
+      '    app: web',
+      'spec:',
+      '  replicas: 1 # was 2',
+      '  # replicas: 3',
+      '  selector:',
+      '    matchLabels:',
+      '      app: web',
+      '  template:',
+      '    metadata:',
+      '      labels:',
+      '        app: other',
+      '---',
+      'kind: PodDisruptionBudget',
+      'metadata:',
+      '  name: web',
+      'spec:',
+      '  minAvailable: "50%"',
+      '  selector:',
+      '    matchLabels:',
+      '      app: web',
+      '',
+    ].join('\n');
+    const [deployment, pdb] = manifestObjects(text);
+    assert.deepEqual(deployment, { kind: 'Deployment', name: 'web', replicas: 1, minAvailable: undefined, maxUnavailable: undefined, app: 'web' });
+    assert.deepEqual(pdb, { kind: 'PodDisruptionBudget', name: 'web', replicas: undefined, minAvailable: '50%', maxUnavailable: undefined, app: 'web' });
+    assert.equal(allowedDisruptions({ minAvailable: 1 }, 1), 0);
+    assert.equal(allowedDisruptions({ minAvailable: 1 }, 2), 1);
+    assert.equal(allowedDisruptions({ minAvailable: '50%' }, 1), 0);
+    assert.equal(allowedDisruptions({ minAvailable: '50%' }, 2), 1);
+    assert.equal(allowedDisruptions({ maxUnavailable: 1 }, 1), 1);
+    assert.equal(allowedDisruptions({ maxUnavailable: '50%' }, 1), 0);
   });
 });
