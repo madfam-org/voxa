@@ -212,6 +212,13 @@ jobs:
         if: success()
         run: |
           ./scripts/launch/wait-for-build.sh https://voxa-staging.madfam.io/api/health "${GITHUB_SHA}"
+          # Sign-in URLs stay on a public host (anonymous GETs): the Auth.js
+          # callback URL and the callback's error redirect must name one of
+          # these hosts, never the 0.0.0.0 bind address (2026-10-04 incident).
+          # While the manifest still pins AUTH_URL to the landing host, the app
+          # host's callback is on the landing host; the PR that removes the pin
+          # sets VERIFY_SAME_HOST=1 here so each host must keep its own.
+          ./scripts/launch/verify-auth-public-origin.sh voxa-staging.madfam.io voxa-app-staging.madfam.io
           for i in 1 2 3; do
             p="$(curl -sS -o /dev/null -w '%{http_code}' https://voxa-staging.madfam.io/legal/privacy || true)"
             if [ "$p" = "200" ]; then exit 0; fi

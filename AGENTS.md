@@ -116,7 +116,11 @@ pnpm build
   the landing, `/demo`, `/app` and its settings panel; both fail on serious
   or critical violations. The standalone server binds `HOSTNAME=0.0.0.0` as
   in production: bound to `127.0.0.1`, Next hands middleware a `localhost`
-  request URL and every unprefixed Spanish path redirects to itself.
+  request URL and every unprefixed Spanish path redirects to itself. It runs
+  with `AUTH_PUBLIC_HOSTS` = loopback plus every host the k8s web manifests
+  allow-list, and `e2e/specs/auth-public-origin.spec.ts` (in `test:e2e:a11y`)
+  and `scripts/launch/verify-auth-public-origin.sh` prove the Auth.js URLs
+  stay on each of those hosts.
 - Playwright: `pnpm test:e2e:smoke`, `pnpm test:e2e:a11y`,
   `pnpm test:e2e:offline`, `pnpm test:e2e:access`, `pnpm test:e2e:voices`,
   `pnpm test:e2e:first-run`, `pnpm test:e2e:settings-sync`, `pnpm test:e2e:staging`,
@@ -368,6 +372,7 @@ rather than passing (each one asserts how much it read).
 | Sessions and live sync | a token or `eyJ` in `/api/auth/session` or the session cookie; a proxied write without a same-origin `Origin`; a WebSocket opened without a ticket, with a reused one or with `?accessToken=`; sign-out over GET; a queued save sent under another account | `apps/web/src/lib/auth-session.test.ts`, `api-proxy.test.ts`, `sign-out.test.ts`, `pending-board-save.test.ts`; `apps/api/src/lib/ws-auth.test.ts`, `src/routes/ws-ticket.*.test.ts`; `e2e/specs/session-account.spec.ts`, `e2e/specs/live-sync.spec.ts` | unit job; axe job | voxa#39 |
 | Hardcoded UI text | user-facing literals outside the es/en/fr catalogs | `apps/web/src/hardcoded-ui-text.test.ts` | unit job | voxa#29 |
 | Service worker | `sw.js` must parse as plain JavaScript and never cache `/api/*` or other origins | `apps/web/src/service-worker.test.ts` | unit job | voxa#32 |
+| Auth.js on the public origin | an Auth.js URL (callback, error redirect, sign-out return) built on the server's bind address (`0.0.0.0:3000`) or on a host outside `AUTH_PUBLIC_HOSTS`; a non-allow-listed host must answer 400 | `apps/web/src/lib/public-origin.test.ts`; `e2e/specs/auth-public-origin.spec.ts`; `scripts/launch/verify-auth-public-origin.sh` (both hosts of each environment) | unit job; axe job; after each production and staging web deploy | voxa#51 |
 | Image optimizer off | `/_next/image` must answer 404 | `apps/web/src/next-config.test.ts`; `scripts/launch/verify-prod-image-optimizer.sh` | unit job; axe job; after each production web deploy | voxa#13 |
 | Image smoke and build identity | images on Node 22 without package managers, health 200 under the Deployment's securityContext; deploys wait until `/health` serves the commit's `build` | `.github/workflows/image-smoke.yml`, `apps/*/src/lib/build-info.test.ts`, `scripts/launch/wait-for-build.sh` | image-smoke workflow (Dockerfile, lockfile or `package.json` changes); deploy workflows | voxa#33 |
 | Accessibility (axe) | serious or critical WCAG 2.2 AA violations on public pages, the editor panels, `/app` in four themes and the Spanish landing, `/demo`, `/app` and settings; the demo never opens a dialog over the board (20 taps, 20 utterances, the call to action below the board, axe with it visible) | `e2e/specs/a11y.spec.ts`, `e2e/specs/demo-cta.spec.ts` (also the axe steps in `voice-choice`, `offline-media` and `first-run`) | axe job | voxa#4, voxa#36, voxa#40 (Spanish) |

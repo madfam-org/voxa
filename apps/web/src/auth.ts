@@ -8,6 +8,7 @@ import {
   type JanuaClientConfig,
 } from '@/lib/auth-env';
 import { refreshJanuaTokens, verifyJanuaAccessToken } from '@/lib/janua-oidc';
+import { withPublicOrigin } from '@/lib/public-origin';
 import { decodeSessionJwt, encodeSessionJwt } from '@/lib/session-jwt';
 import {
   publicSession,
@@ -73,9 +74,10 @@ export function buildAuthConfig(env: Record<string, string | undefined> = proces
 
   return {
     secret: authSecret(env),
-    // Callbacks are built from the host the browser used (the tunnel forwards
-    // it): one web serves the landing and app hosts. AUTH_URL may pin one
-    // origin instead.
+    // One web serves the landing and app hosts: the exported handlers run on
+    // the public origin the browser used, rebuilt from the forwarded host and
+    // allow-listed (`withPublicOrigin`, AUTH_PUBLIC_HOSTS). trustHost only
+    // skips Auth.js's own host check; it never fixes the origin.
     trustHost: true,
     useSecureCookies: useSecureAuthCookies(env),
     providers: client ? [januaProvider(client)] : [],
@@ -119,4 +121,18 @@ export function buildAuthConfig(env: Record<string, string | undefined> = proces
   };
 }
 
-export const { handlers, auth, signIn, signOut } = NextAuth(() => buildAuthConfig());
+const nextAuth = NextAuth(() => buildAuthConfig());
+
+export const { auth, signIn, signOut } = nextAuth;
+
+/**
+ * Auth.js route handlers on the public origin. Behind the tunnel the standalone
+ * server hands route handlers a request URL on its bind address
+ * (`0.0.0.0:3000`); Auth.js would build the callback, error and sign-out URLs
+ * from it. Every caller (the `[...nextauth]` route, the middleware session
+ * read, the API proxy) uses these.
+ */
+export const handlers = {
+  GET: withPublicOrigin(nextAuth.handlers.GET),
+  POST: withPublicOrigin(nextAuth.handlers.POST),
+};

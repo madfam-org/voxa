@@ -80,12 +80,22 @@ spec:
               value: "https://voxa-staging.madfam.io"
             # Sign-in (Auth.js + Janua; docs/auth/JANUA.md). The Janua client is the
             # one the web always used; its secret keeps its Secret key name.
-            # AUTH_URL pins Auth.js to the landing host. Behind the proxy the Next
-            # standalone server hands route handlers a request URL built from its bind
-            # address (0.0.0.0:3000), so without it every OAuth callback redirected to
-            # https://0.0.0.0:3000/auth/signin?error=Configuration. Sign-ins that start on
-            # the app host stay broken until the handlers rebuild the URL from an
-            # allow-listed forwarded host; then this pin can go.
+            # This web serves the landing host and the app host, and the PKCE,
+            # state, nonce and session cookies are host-scoped, so sign-in must
+            # stay on the host the browser used. Behind the tunnel the standalone
+            # server hands route handlers a request URL on its bind address
+            # (0.0.0.0:3000); the Auth.js handlers rebuild it from the forwarded
+            # host, and only for a host in AUTH_PUBLIC_HOSTS (any other answers
+            # 400; src/lib/public-origin.ts, docs/auth/JANUA.md).
+            # AUTH_URL (voxa#50) still pins every host to the landing host: Argo
+            # applies this manifest as soon as the merge lands, before the image
+            # with the rebuilt URL rolls out, and the old image needs the pin to
+            # avoid redirecting to 0.0.0.0. While it is set, app-host sign-ins
+            # stay broken. It is removed in a follow-up manifest-only PR once
+            # this image is live; that PR also turns on VERIFY_SAME_HOST=1 in
+            # the deploy smoke.
+            - name: AUTH_PUBLIC_HOSTS
+              value: "voxa-staging.madfam.io,voxa-app-staging.madfam.io"
             - name: AUTH_URL
               value: "https://voxa-staging.madfam.io"
             - name: AUTH_JANUA_ISSUER

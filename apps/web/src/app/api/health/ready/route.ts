@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { missingAuthEnv } from '../../../../lib/auth-env';
+import { AUTH_PUBLIC_HOSTS_KEY, invalidPublicHostEntries } from '../../../../lib/public-origin';
 
 /**
  * Readiness probe (Kubernetes `readinessProbe`).
@@ -12,15 +13,20 @@ import { missingAuthEnv } from '../../../../lib/auth-env';
  * rollouts (`maxUnavailable: 0`) a rollout missing a secret stalls on the
  * previous pods instead of replacing them.
  *
- * The response names missing settings only; it never echoes values.
+ * A malformed `AUTH_PUBLIC_HOSTS` entry (anything but a host name with an
+ * optional port) is reported as `invalid`: such a pod would answer sign-in
+ * with 400 on the host the entry meant to allow.
+ *
+ * The response names missing or invalid settings only; it never echoes values.
  */
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   const missing = missingAuthEnv();
-  if (missing.length > 0) {
+  const invalid = invalidPublicHostEntries().length > 0 ? [AUTH_PUBLIC_HOSTS_KEY] : [];
+  if (missing.length > 0 || invalid.length > 0) {
     return NextResponse.json(
-      { status: 'unavailable', service: 'voxa-web', missing },
+      { status: 'unavailable', service: 'voxa-web', missing, ...(invalid.length > 0 ? { invalid } : {}) },
       { status: 503, headers: { 'Cache-Control': 'no-store' } },
     );
   }
