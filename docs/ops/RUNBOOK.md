@@ -12,7 +12,7 @@
 
 ## How an outage reaches on-call
 
-Critical platform alerts reach the on-call phone through Alertmanager and Courier (angelia); warnings do not. For Voxa that covers crash-looping pods, the Argo CD app degraded or missing, and the shared PostgreSQL, Redis, tunnel and nodes. A Deployment running below its desired count without crash looping pages only once [enclii#695](https://github.com/madfam-org/enclii/pull/695) lands, which adds the production `voxa` namespace to the platform's client availability alerting (critical: `ClientDeploymentUnavailable`; staging stays out). [status.madfam.io](https://status.madfam.io) shows the five hosts in `enclii.yaml`'s `status:` block and pages no one; neither does a failed deploy or daily smoke. Details: [ENCLII.md › How an outage is detected](../deploy/ENCLII.md#how-an-outage-is-detected).
+Critical platform alerts reach the on-call phone through Alertmanager and Courier (angelia); warnings do not. For Voxa that covers crash-looping pods, the Argo CD app degraded or missing, and the shared PostgreSQL, Redis, tunnel and nodes. A production Deployment below its desired pods for 5 minutes pages too (`ClientDeploymentUnavailable`, critical), since [enclii#695](https://github.com/madfam-org/enclii/pull/695) (2026-10-05); staging is not covered. [status.madfam.io](https://status.madfam.io) shows the five hosts in `enclii.yaml`'s `status:` block and pages no one; neither does a failed deploy or daily smoke. Details: [ENCLII.md › How an outage is detected](../deploy/ENCLII.md#how-an-outage-is-detected).
 
 ## Health checks
 
