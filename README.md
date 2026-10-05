@@ -38,7 +38,10 @@ table, with status and evidence per row, is
 - **Access.** Touch (press or release), keyguard, switch scanning with one or
   two switches that never traps the user, pointer dwell for any device that
   moves the pointer, and button moves in the editor without dragging
-  ([#36](https://github.com/madfam-org/voxa/pull/36)).
+  ([#36](https://github.com/madfam-org/voxa/pull/36)). The scan pause while
+  speech or a recording plays always ends, even when a voice never reports
+  the end or a clip stalls ([#44](https://github.com/madfam-org/voxa/pull/44),
+  [#49](https://github.com/madfam-org/voxa/pull/49)).
 - **Offline.** The open board keeps working when the network drops, edits queue
   on the device, and `/app` reopens offline after one online visit
   ([#32](https://github.com/madfam-org/voxa/pull/32)).
@@ -47,12 +50,23 @@ table, with status and evidence per row, is
   como otra persona** for shared tablets, and sign-out ends the MADFAM session
   too; each clears the previous account's boards and pending changes from the
   device. Boards update live between open devices
-  ([#39](https://github.com/madfam-org/voxa/pull/39)).
+  ([#39](https://github.com/madfam-org/voxa/pull/39)). Sign-in works on both
+  web addresses and returns to the one where it started
+  ([#51](https://github.com/madfam-org/voxa/pull/51),
+  [#52](https://github.com/madfam-org/voxa/pull/52)).
+- **Settings that follow you (opt-in).** With a separate consent, access and
+  communicator settings sync between a person's devices, newer change wins;
+  the chosen voice stays on each device, and turning it off deletes the
+  server copy ([#47](https://github.com/madfam-org/voxa/pull/47)).
 - **Open Board Format 0.1** import and export (`.obf`, `.obz`); imports always
   create new boards ([#35](https://github.com/madfam-org/voxa/pull/35)).
 - **Privacy.** Consent stored per person and purpose on the server; usage
   logging keeps counts only ([#24](https://github.com/madfam-org/voxa/pull/24),
-  [#25](https://github.com/madfam-org/voxa/pull/25)).
+  [#25](https://github.com/madfam-org/voxa/pull/25)); the editor PIN is kept
+  as a salted hash ([#44](https://github.com/madfam-org/voxa/pull/44)).
+- **Public demo** at `/demo` that never interrupts: no dialog over the board,
+  and an invitation to the plans below it only after real use
+  ([#44](https://github.com/madfam-org/voxa/pull/44)).
 - **Suggestions.** Basic word suggestions from a local predictor, with consent;
   no third-party AI calls ([#20](https://github.com/madfam-org/voxa/pull/20),
   [#28](https://github.com/madfam-org/voxa/pull/28)).
@@ -74,6 +88,8 @@ table, with status and evidence per row, is
   speech-language pathologist**. Voxa claims no clinical review until one has
   happened.
 - **Model-based suggestions** (built, switched off).
+- **Settings sync on mobile** and a therapist adjusting a communicator's
+  settings from their own account.
 
 Engineering gaps and their priority: [AGENTS.md](./AGENTS.md#pending-work-and-known-gaps).
 
@@ -97,8 +113,8 @@ refuses to start in production without it. See [.env.example](./.env.example).
 ### Checks (what CI runs)
 
 ```bash
-pnpm guards            # repository guards: test discovery, symbol licence, no direct LLM egress, public-repo hygiene
-pnpm test:guards       # the guards' own tests
+pnpm guards            # repository guards: test discovery, symbol licence, no direct LLM egress, public-repo hygiene, workflow permissions and SHA pins
+pnpm test:guards       # the guards' own tests and the deploy contract (scripts/**/*.test.mjs)
 pnpm turbo typecheck   # every package, the mobile app and the e2e specs
 pnpm test              # unit and route tests of every package (not e2e)
 pnpm build
@@ -115,10 +131,12 @@ pnpm build
   missing or unreachable service fails the run.
 - **Browser specs** (Playwright, `e2e/`): `pnpm test:e2e:a11y`,
   `test:e2e:offline`, `test:e2e:access`, `test:e2e:voices`,
-  `test:e2e:first-run`, `pnpm --filter @voxa/e2e test:import` run in the CI
-  `a11y` job against the built web app (bound to `HOSTNAME=0.0.0.0`, as in
-  production). `pnpm test:e2e:smoke` and `test:e2e:staging:signed-in` run in
-  the daily smoke.
+  `test:e2e:first-run`, `test:e2e:session`, `test:e2e:live`,
+  `test:e2e:settings-sync` and `pnpm --filter @voxa/e2e test:import` run in
+  the CI `a11y` job against the built web app (bound to `HOSTNAME=0.0.0.0`,
+  as in production), with the strict sign-in host check
+  (`scripts/launch/verify-auth-public-origin.sh`). `pnpm test:e2e:smoke` and
+  `test:e2e:staging:signed-in` run in the daily smoke.
 
 ## Architecture
 
@@ -141,7 +159,8 @@ pnpm build
             ▼                                          ▼
  apps/api  Hono on Node 22 ── Janua JWKS: verifies tokens, voxa:* roles, voxa_tier claim
  │                         └─ Selva /v1 (optional, off): X-Sensitivity: restricted
- ├─ PostgreSQL: boards, sync events, activation counts, consents, media bytes
+ ├─ PostgreSQL: boards, sync events, activation counts, consents, media bytes,
+ │              one-use WebSocket tickets, opt-in synced settings
  └─ Redis (optional): co-editing fan-out and presence across replicas
 
  packages/  core · obf · import-adapters · vocabulary · symbols · sync · access · ai · i18n · ui
@@ -194,11 +213,17 @@ Service status: [status.madfam.io](https://status.madfam.io).
 
 - **Identity — [Janua](https://github.com/madfam-org/janua).** The web signs in
   through Auth.js with Janua as OIDC provider (the public-npm alternative to
-  the private `@madfam/janua-next`; [docs/auth/JANUA.md](./docs/auth/JANUA.md)).
+  the private `@madfam/janua-next`), as a first-party client on each web host
+  ([docs/auth/JANUA.md](./docs/auth/JANUA.md), including troubleshooting).
   The API verifies Janua access tokens against its JWKS. Roles come only from namespaced
   application roles, per Janua's
-  [claims contract](https://github.com/madfam-org/janua/blob/main/docs/architecture/CLAIMS_DE_ORGANIZACION_Y_SERVICE_PRINCIPALS.md);
-  integration: [Janua ecosystem integration guide](https://github.com/madfam-org/janua/blob/main/docs/guides/ECOSYSTEM_INTEGRATION.md)
+  [claims contract](https://github.com/madfam-org/janua/blob/main/docs/architecture/CLAIMS_DE_ORGANIZACION_Y_SERVICE_PRINCIPALS.md).
+  Janua behaviour Voxa relies on:
+  [first-party pre-consent](https://github.com/madfam-org/janua/blob/main/docs/architecture/SILENT_SSO_SESSION.md#b6--pre-consent),
+  [account switching](https://github.com/madfam-org/janua/blob/main/docs/architecture/SILENT_SSO_SESSION.md#account-switching-l1l3),
+  [token revocation (RFC 7009)](https://github.com/madfam-org/janua/blob/main/docs/runbooks/oauth-shared-state-redis.md#post-oauthrevoke-rfc-7009)
+  and [readiness](https://github.com/madfam-org/janua/blob/main/docs/runbooks/oauth-shared-state-redis.md#health-and-readiness).
+  Integration: [Janua ecosystem integration guide](https://github.com/madfam-org/janua/blob/main/docs/guides/ECOSYSTEM_INTEGRATION.md)
   and the ecosystem's [Janua integration guide](https://github.com/madfam-org/solarpunk-foundry/blob/main/docs/JANUA_INTEGRATION.md).
 - **Plans.** The API reads the plan tier from the `voxa_tier` claim of the
   Janua token (`apps/api/src/lib/entitlement.ts`); billing writes it through

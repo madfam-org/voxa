@@ -5,26 +5,54 @@ capability: [docs/capabilities.md](./docs/capabilities.md).
 
 ## [Unreleased]
 
-### Documentation
+Nothing yet.
 
-- Public docs match what ships: a capabilities page with status and evidence per row ([docs/capabilities.md](./docs/capabilities.md)), a rewritten README and architecture, the accessibility statement updated for switch scanning, voices and the first-run setup, `AGENTS.md` with its invariants numbered once and a "How a change ships" section, a `CLAUDE.md` pointer, and the served `llms.txt` plus a new `llms-full.txt` on the landing host. The June 2026 "SLP sign-off" is withdrawn: it was an internal product check, not a clinical review (ruling R89); launch records are marked historical.
+## 2026-10-05 — Sessions, settings sync and sign-in on every host
 
-### Changed
+Pull requests [#39](https://github.com/madfam-org/voxa/pull/39), [#42](https://github.com/madfam-org/voxa/pull/42)–[#44](https://github.com/madfam-org/voxa/pull/44), [#46](https://github.com/madfam-org/voxa/pull/46), [#47](https://github.com/madfam-org/voxa/pull/47), [#48](https://github.com/madfam-org/voxa/pull/48) and [#49](https://github.com/madfam-org/voxa/pull/49)–[#52](https://github.com/madfam-org/voxa/pull/52), merged after the stabilization wave on 2026-10-04 and 2026-10-05 (UTC), plus this documentation and test close-out. On 2026-10-05 production served all of it (web build `f3972fb`, API build `bd4a150`, no `AUTH_URL` pin); staging pins land but do not roll out until the staging Argo CD app tracks `main`.
 
-- Copy (es/en/fr): the classic light theme is described by what it is, without a competitor's product name; the Spanish catalog says "terapeutas de lenguaje" (Mexican Spanish) instead of Spain's "logopedas". The claims stop-list now rejects both. A code comment with commercial pricing research is reworded.
-- `LICENSE`: the copyright holder is Innovaciones MADFAM S.A.S. de C.V., as in `NOTICE`.
-- Copy (es/en/fr): the landing hero says what ships — direct touch, switch scanning or pointer dwell, and dwell works with an eye tracker only when its own software moves the pointer — instead of listing gaze as an input; the dwell access mode in Settings says the same. The claims stop-list now rejects gaze listed as an input of its own.
-- The landing host's `llms.txt` and `llms-full.txt` open with the product one-liner, word for word as in the README, `AGENTS.md`, the repository `llms.txt` and the package descriptions; a test fails when they drift apart. Host rules are unchanged (landing host only).
+### Accounts and sessions
 
-### Fixed
+- Web sign-in moves to Auth.js with the Janua OIDC provider (code flow with PKCE, `state` and `nonce`). The session is an encrypted httpOnly cookie; page JavaScript never holds a token and calls the API only through the same-origin proxy `/api/v1/*`, which refuses cross-origin writes and forwards no cookie ([#39](https://github.com/madfam-org/voxa/pull/39)).
+- Live sync connects in browsers: the WebSocket opens with a single-use, 30-second ticket (`POST /v1/ws-ticket`, stored hashed; migration `0008_ws_tickets`) and closes when the access token expires. Before this, every browser upgrade got 401 in production ([#39](https://github.com/madfam-org/voxa/pull/39)).
+- Sign-out is POST-only and ends the Janua session too (RP-initiated logout). «Cambiar de cuenta» (Janua's account chooser, `prompt=select_account`) and «Entrar como otra persona» (`prompt=login`) on the sign-in page and in the app, in es/en/fr. Sign-out and both switches purge the previous account's boards, queued saves and consent copy from a shared tablet; a queued save is never sent under another account ([#39](https://github.com/madfam-org/voxa/pull/39)).
+- Sign-in works on the landing and the app host and returns to the host where it started. After [#39](https://github.com/madfam-org/voxa/pull/39) every Janua callback was redirected to the server's bind address (`https://0.0.0.0:3000/…`); [#50](https://github.com/madfam-org/voxa/pull/50) pinned `AUTH_URL` as a hotfix, [#51](https://github.com/madfam-org/voxa/pull/51) rebuilds each request's URL from the allow-listed public host (`AUTH_PUBLIC_HOSTS`; any other host answers 400), and [#52](https://github.com/madfam-org/voxa/pull/52) removed the pin and made the deploy smoke strict on both hosts.
+- Outside this repository: the Voxa Janua client is first-party (no consent screen) and registers the Auth.js callback and the sign-in page for each of the four web hosts; the old `/auth/callback` URIs are gone. The Janua fixes that sign-in and switching rely on are [janua#694](https://github.com/madfam-org/janua/pull/694)–[#698](https://github.com/madfam-org/janua/pull/698).
 
-- Switch scanning no longer stays paused when a recorded clip or GLP video stalls: the scan pause ends on `ended`, `error` or `abort`, after 4 s without progress, or at the clip's length plus 2 s (60 s when the length is unknown). A clip that fails or stalls is stopped and the button's text is spoken instead.
+### Settings sync (opt-in)
 
-### Operations
+- Communicator and access settings can follow a person between devices, only with the new `settings_sync` consent (off by default; access settings can reveal a disability). `GET/PUT /v1/me/settings` act on the signed-in user only, accept an allow-list of 28 fields, cap the body at 16 KB and write compare-and-set (409 with the current document). Turning it off deletes the server copy. The web app is local first: per-field merge (newer change wins), push after a pause, offline queue; the chosen voice stays on each device (migration `0009_user_settings`; [#47](https://github.com/madfam-org/voxa/pull/47)).
 
-- API rollouts drain instead of cutting connections: on `SIGTERM` readiness turns 503, WebSockets get a 1001 close frame, requests in flight finish, then Redis and the database pool close; a second signal or the 20 s deadline (`SHUTDOWN_DEADLINE_MS`) exits 1.
-- CI fails when the PostgreSQL or Redis suites cannot run (unset or unreachable service) instead of passing with them skipped; locally they still skip, and the test runner says which and why.
-- Workflows: read-only token by default with per-job grants only where used, CI cancels a pull request's superseded runs, every action is pinned to a commit SHA (kept current by Dependabot), and a repository guard enforces both.
+### Access and trust
+
+- The switch-scan pause while speaking always ends: on `end` or `error`, when the engine reports idle, or after a bound from the message length (2–15 s) ([#44](https://github.com/madfam-org/voxa/pull/44)). Recorded clips and GLP video are bounded the same way (4 s without progress, or length plus 2 s; 60 s when unknown), and a clip that stalls is spoken instead ([#49](https://github.com/madfam-org/voxa/pull/49)).
+- The public demo never blocks communication: the sales dialog is gone; a call to action below the board shows after five spoken messages or on request and never takes focus on its own ([#44](https://github.com/madfam-org/voxa/pull/44)).
+- The editor PIN is stored as a salted PBKDF2-SHA-256 hash; a plain PIN from an earlier version is migrated on its next unlock ([#44](https://github.com/madfam-org/voxa/pull/44)).
+- Copy (es/en/fr): the landing hero and the dwell setting say what ships (direct touch, switch scanning or pointer dwell; an eye tracker works only when its own software moves the pointer); the claims stop-list rejects gaze listed as an input of its own ([#49](https://github.com/madfam-org/voxa/pull/49)).
+- One product sentence everywhere: README, `AGENTS.md`, `llms.txt`, both `package.json` descriptions and the served `llms.txt` / `llms-full.txt` open with the same one-liner, and a test fails when they drift ([#44](https://github.com/madfam-org/voxa/pull/44), [#49](https://github.com/madfam-org/voxa/pull/49)).
+- Copy (es/en/fr): the classic light theme is described without a competitor's product name; Spanish says "terapeutas de lenguaje". `LICENSE` names Innovaciones MADFAM S.A.S. de C.V., as `NOTICE` does ([#42](https://github.com/madfam-org/voxa/pull/42)).
+
+### Operations and CI
+
+- API rollouts drain on `SIGTERM`: readiness turns 503, WebSockets get a 1001 close frame, requests in flight finish, then Redis and the database pool close; a second signal or the 20 s deadline (`SHUTDOWN_DEADLINE_MS`) exits 1 ([#43](https://github.com/madfam-org/voxa/pull/43)).
+- CI fails when the PostgreSQL or Redis suites cannot run, instead of passing with them skipped ([#43](https://github.com/madfam-org/voxa/pull/43)).
+- Workflows: read-only token by default with per-job grants, superseded pull-request runs cancelled, every action pinned to a commit SHA with its version, Dependabot keeping them current, and a repository guard ([#43](https://github.com/madfam-org/voxa/pull/43)). The reviewed action majors are taken; `sigstore/cosign-installer` is held at v3 because the cluster's Kyverno does not verify cosign v3 signatures yet, and Dependabot ignores its majors ([#46](https://github.com/madfam-org/voxa/pull/46)); its grouped minor update moved the installer to v3.10.1, which still installs cosign v2 ([#48](https://github.com/madfam-org/voxa/pull/48)).
+- Web deploys run the strict sign-in host smoke (`scripts/launch/verify-auth-public-origin.sh`, `VERIFY_SAME_HOST=1`) on both hosts of each environment, after the build-identity wait ([#51](https://github.com/madfam-org/voxa/pull/51), [#52](https://github.com/madfam-org/voxa/pull/52)).
+
+### Documentation and tests (this close-out)
+
+- Public docs match what ships: a capabilities page with status and evidence per row, the accessibility statement, `AGENTS.md` (invariants 1–19, the guards table, how a change ships, including the two-step rule for environment changes against image rollouts), `docs/auth/JANUA.md` (the final sign-in model, the Janua client and a troubleshooting table), `docs/deploy/ENCLII.md` (deploy smokes, Kyverno exceptions, the cosign hold) and the data model (`ws_tickets`). The June 2026 "SLP sign-off" stays withdrawn (ruling R89) ([#42](https://github.com/madfam-org/voxa/pull/42) and this close-out).
+- `scripts/launch/deploy-contract.test.mjs` fails when a web manifest sets `AUTH_URL`, when a deploy workflow's auth smoke is not strict or names other hosts than the manifest's `AUTH_PUBLIC_HOSTS`, and when a deploy workflow moves cosign-installer off v3.
+- The daily production smoke matches catalog labels in any locale instead of English strings (on 2026-10-03 it failed when `/demo` rendered in Spanish).
+
+### Changes for API clients
+
+- New: `POST /v1/ws-ticket`; `GET /v1/ws` takes only `ticket=` (no `accessToken=`, no `Authorization`, no development headers) ([#39](https://github.com/madfam-org/voxa/pull/39)).
+- New: `GET/PUT /v1/me/settings` (403 `CONSENT_REQUIRED`, 409 `VERSION_CONFLICT`, 428 without a version, 413 `PAYLOAD_TOO_LARGE`) and the consent purpose `settings_sync` ([#47](https://github.com/madfam-org/voxa/pull/47)).
+
+### Known gaps after this release
+
+Staging's Argo CD app still tracks a deleted branch (staging keeps a June build), Redis is not bound in production, paid tiers cannot be granted yet, the privacy policy does not list the `settings_sync` purpose, the Kyverno signature exceptions wait on [#34](https://github.com/madfam-org/voxa/pull/34), the mobile app has no store build, and the clinical review is pending. The prioritized list is in [AGENTS.md](./AGENTS.md#pending-work-and-known-gaps).
 
 ## 2026-10-04 — Stabilization and compliance wave
 

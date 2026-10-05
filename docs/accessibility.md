@@ -2,7 +2,7 @@
 
 Voxa targets **WCAG 2.2 Level AA** as a minimum bar. For AAC users with severe motor and visual impairments, several requirements exceed baseline web guidance.
 
-**Where this stands (2026-10-04).** Automated axe checks with the WCAG 2.2 AA rules run in CI on every pull request (see [Testing](#testing)); serious or critical findings fail the build. No external audit or conformance report exists yet, and the vocabulary and Spanish language features are pending review by a credentialed speech-language pathologist (see [launch/SLP_SIGNOFF.md](./launch/SLP_SIGNOFF.md)). The public statement shown in the app is `/legal/accessibility`; the capability list with status is [capabilities.md](./capabilities.md).
+**Where this stands (2026-10-05).** Automated axe checks with the WCAG 2.2 AA rules run in CI on every pull request (see [Testing](#testing)); serious or critical findings fail the build. No external audit or conformance report exists yet, and the vocabulary and Spanish language features are pending review by a credentialed speech-language pathologist (see [launch/SLP_SIGNOFF.md](./launch/SLP_SIGNOFF.md)). The public statement shown in the app is `/legal/accessibility`; the capability list with status is [capabilities.md](./capabilities.md).
 
 ## Touch Targets (Success Criterion 2.5.8)
 
@@ -50,6 +50,14 @@ The interface is Spanish by default (unprefixed URLs), with complete English (`/
 ## First-run setup
 
 A signed-in person with no board of their own sees a short setup once per device on `/app` (never on `/demo` or in the editor): board language, access method (touch, switch scanning, pointer dwell, keyguard), grid size (24, 36 or 60 cells, with a live preview and a "pending clinical review" note) and voice, then the first board opens. It is a native modal `<dialog>`: focus moves to each step's heading, every control is a native button or form field (Tab, Space and Enter, so key-emulating switches work), every step can be skipped and Escape skips the setup. It can be reopened from Settings. Tested in `apps/web/src/lib/first-run.test.ts` and `e2e/specs/first-run.spec.ts` (axe on every step in a light and a dark theme).
+
+## Public demo
+
+`/demo` is a full board without an account. It never opens a dialog over the board: an invitation to the plans appears as a region in the page flow, below the board, and never covers, moves or resizes the board or the message bar. It shows on its own only after five spoken messages (once per visit) or when the visitor asks; it never takes focus on its own (when the visitor asks, focus moves to its heading), every control is a link or a button, and Escape or "Keep exploring" dismisses it. Tested in `e2e/specs/demo-cta.spec.ts`: 20 taps give 20 utterances with no dialog at any point, the board's and message bar's boxes are unchanged, and axe finds no violation with the invitation visible.
+
+## Settings on several devices (opt-in)
+
+A person who uses Voxa on more than one device (a school tablet and a family phone) can turn on settings sync in Settings. Access settings can reveal a disability, so it is a separate consent, off by default; turning it off deletes the server copy. The access method, scanning, dwell, keyguard, theme, display and voice rate, pitch and volume follow the person; the chosen voice stays on each device, because each device has different voices. The communicator never waits for the network: changes are saved locally first and synced after a pause. Tested in `e2e/specs/settings-sync.spec.ts` (two browsers as one person; axe on the section, off and on).
 
 ## Recorded media and GLP video
 
@@ -105,6 +113,10 @@ Voxa does **not** integrate eye-tracker hardware or vendor SDKs. Dwell works in 
   - `e2e/specs/voice-choice.spec.ts`: the Voice settings and the install guidance, light and dark themes.
   - `e2e/specs/first-run.spec.ts`: every first-run step, light and dark themes.
   - `e2e/specs/offline-media.spec.ts`: the GLP video dialog.
+  - `e2e/specs/demo-cta.spec.ts`: `/demo` with the plans invitation visible; no dialog over the board.
+  - `e2e/specs/session-account.spec.ts`: the sign-in page with «Cambiar de cuenta» and «Entrar como otra persona».
+  - `e2e/specs/settings-sync.spec.ts`: the settings-sync section, off and on.
+- **Scan pause:** `apps/web/src/lib/play-button-speech.test.ts`, `apps/web/src/lib/play-button-media.test.ts` and `e2e/specs/scan-pause.spec.ts` (a voice that never fires `end` and a clip that never plays still release the scan).
 - **Contrast:** `apps/web/src/lib/theme-contrast.test.ts` (4.5:1 text, 3:1 scan ring, all four themes).
 - **Access methods:** `e2e/specs/access-methods.spec.ts` (touch-only button moves, keyboard moves, admin motor-plan override, rejected saves leave the queue) against a real local API; `packages/access/src/scan-machine.test.ts` for the scan.
 - **Daily smoke** (`e2e-smoke.yml`): Playwright smoke and axe against the production public pages, and the signed-in specs against staging.

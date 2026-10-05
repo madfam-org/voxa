@@ -84,9 +84,14 @@ ships, with status: [capabilities.md](./capabilities.md).
 - **Sessions** (`apps/web/src/auth.ts`, [docs/auth/JANUA.md](./auth/JANUA.md)):
   Auth.js with Janua as OIDC provider; the encrypted session cookie keeps
   Janua's tokens on the server, refreshed before expiry. Page code calls the
-  API through the same-origin proxy `/api/v1/*`. Sign-out ends the Janua
-  session too, and switching account purges the previous account's local
-  data.
+  API through the same-origin proxy `/api/v1/*`. One web deployment serves
+  the landing and the app host; Auth.js builds its URLs on the allow-listed
+  host the browser used (`AUTH_PUBLIC_HOSTS`, no `AUTH_URL`). Sign-out ends
+  the Janua session too, and switching account purges the previous account's
+  local data.
+- **Settings sync** (opt-in, `settings_sync` consent): the web app keeps
+  communicator settings locally and, when the person turns sync on, merges
+  them per field with `GET/PUT /v1/me/settings` (newer change wins).
 - **Live updates** use a WebSocket hub that relays board events and counts
   presence. The browser opens it with a single-use ticket
   (`POST /v1/ws-ticket`, stored hashed in PostgreSQL for 30 seconds) and the
@@ -109,7 +114,8 @@ routes are managed by Enclii.
 ```
 merge to main → deploy-voxa-{web,api}.yml          → build (GIT_SHA), cosign sign, pin digest → k8s/production
              └→ deploy-voxa-{web,api}-staging.yml  → build (GIT_SHA), cosign sign, pin digest → k8s/staging
-Argo CD auto-syncs each pin; the smoke waits until /health serves the commit's build.
+Argo CD auto-syncs each pin; the smoke waits until /health serves the commit's build,
+then (web) checks that sign-in URLs stay on each public host.
 ```
 
 | Surface | Liveness | Readiness |

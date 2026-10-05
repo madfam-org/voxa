@@ -1,6 +1,6 @@
 # What Voxa does today
 
-> Last checked against `main`: 2026-10-04. Rows name the pull request that
+> Last checked against `main`: 2026-10-05. Rows name the pull request that
 > delivered the capability (for the October 2026 wave) and the tests that hold
 > it. If a row and the code disagree, the code wins: please open an issue.
 
@@ -32,6 +32,7 @@ of clinical review until one has happened.
 | Capability | Status | Evidence |
 | --- | --- | --- |
 | Board app at `/app` (sign-in) and a public demo at `/demo` (no account): symbol and text buttons, message bar, **Speak** | Shipped | `e2e/specs/smoke.spec.ts`, `e2e/specs/a11y.spec.ts` |
+| The public demo never interrupts communication: no dialog over the board; an invitation to the plans appears below the board, in the page flow, only after five spoken messages or when the visitor asks, never takes focus on its own, and closes with Escape | Shipped | [#44](https://github.com/madfam-org/voxa/pull/44); `e2e/specs/demo-cta.spec.ts` (20 taps, 20 utterances, no dialog, axe) |
 | Templates: Core 47 (6×8, locked core slots), Core 100 (10×10), literacy keyboard (with á é í ó ú ü ñ ¿ ¡ on Spanish boards), visual schedule | Shipped; vocabulary pending clinical review | [#17](https://github.com/madfam-org/voxa/pull/17); `packages/core/src/starter-boards.test.ts`, `packages/core/src/visual-schedule.test.ts` |
 | Core boards in three sizes, **24** (4×6), **36** (6×6) and **60** (6×10), built from one ordered word list: each size is the top-left block of the next, so growing a board never moves a learned word | Shipped; order pending clinical review | [#41](https://github.com/madfam-org/voxa/pull/41); `packages/core/src/core-grid-sizes.test.ts` |
 | First-run setup (once per user and device): board language, access method, grid size with a live preview, voice; then the first board opens. Every step can be skipped | Shipped | [#41](https://github.com/madfam-org/voxa/pull/41); `apps/web/src/lib/first-run.test.ts`, `e2e/specs/first-run.spec.ts` |
@@ -39,6 +40,7 @@ of clinical review until one has happened.
 | Several boards per account (board picker, **New board**), hide or show single buttons, babble mode (hidden words visible for a session), hide labels or symbols, build a message without speaking (whisper mode) | Shipped | `e2e/specs/editor-workflow.spec.ts` (signed-in, runs against staging); board limits follow the plan |
 | Modified Fitzgerald Key colours on button borders, never colour alone | Shipped | [linguistic-framework.md](./linguistic-framework.md#modified-fitzgerald-key) |
 | Gestalt language (GLP) phrase buttons, recorded speech per button, GLP video in a visible, closable dialog | Shipped | [#32](https://github.com/madfam-org/voxa/pull/32); `e2e/specs/offline-media.spec.ts` |
+| A recording or GLP video that stalls or never starts is stopped (after 4 s without progress, or at its length plus 2 s; 60 s when the length is unknown) and the button's text is spoken instead | Shipped | [#49](https://github.com/madfam-org/voxa/pull/49); `apps/web/src/lib/play-button-media.test.ts`, `e2e/specs/scan-pause.spec.ts` |
 | Usage report per board (counts only, with consent) and a board audit log | Shipped | `apps/api/src/routes/events.routes.test.ts`, `apps/api/src/routes/boards.routes.test.ts` |
 
 ## Offline
@@ -86,6 +88,7 @@ of clinical review until one has happened.
 | --- | --- | --- |
 | Touch, selecting on press or on release; large targets (scalable); a keyguard (touch guard) that blocks touches between or around buttons | Shipped | `packages/access/src/touch-activation.test.ts`, `packages/access/src/touch-guard.test.ts` |
 | Switch scanning with one switch (auto scan) or two (step scan); linear, row, column and quadrant scans; a **Back** position and automatic return so a group never traps the user; first-item hold, acceptance time, pause after selection, spoken and beep cues | Shipped | [#36](https://github.com/madfam-org/voxa/pull/36); `packages/access/src/scan-machine.test.ts` |
+| The scan pause while speech plays always ends: on the voice's end or error, when the engine reports idle, or after a bound from the message length (2 s to 15 s), so a voice that never reports the end cannot leave scanning stuck; recorded clips are bounded the same way | Shipped | [#44](https://github.com/madfam-org/voxa/pull/44), [#49](https://github.com/madfam-org/voxa/pull/49); `apps/web/src/lib/play-button-speech.test.ts`, `e2e/specs/scan-pause.spec.ts` |
 | Switches that act as a keyboard (USB or Bluetooth) and gamepad buttons | Shipped (web); keyboard-mode switches on mobile | `packages/access/src/hardware-switch-adapter.test.ts`; [accessibility.md](./accessibility.md#switch-scanning) |
 | Pointer dwell (500 ms to 3 s): works with any device that moves the pointer, such as a head pointer or an eye tracker whose own software drives the pointer | Shipped; not tested by us on eye-tracking hardware | [#36](https://github.com/madfam-org/voxa/pull/36) |
 | Gaze event bridge (`voxa:gaze`) for integrators who already have gaze coordinates | Partial (experimental) | [accessibility.md](./accessibility.md#dwell-selection-head-pointers-and-pointer-driving-eye-trackers) |
@@ -107,6 +110,7 @@ of clinical review until one has happened.
 | Capability | Status | Evidence |
 | --- | --- | --- |
 | Sign-in with the person's MADFAM account (Janua) through Auth.js; the session is an encrypted cookie and no access token ever reaches page code (the app calls the API through its own server) | Shipped | [#39](https://github.com/madfam-org/voxa/pull/39); `apps/web/src/lib/auth-session.test.ts`, `apps/web/src/lib/api-proxy.test.ts`, `e2e/specs/session-account.spec.ts` |
+| Sign-in works on both web addresses (the landing and the app host) and comes back to the address where it started. Janua shows no consent screen for Voxa, a MADFAM first-party app (a Janua client setting, not tested from this repository) | Shipped | [#51](https://github.com/madfam-org/voxa/pull/51), [#52](https://github.com/madfam-org/voxa/pull/52); `apps/web/src/lib/public-origin.test.ts`, `e2e/specs/auth-public-origin.spec.ts`, `scripts/launch/verify-auth-public-origin.sh` (after every web deploy) |
 | The session renews itself before the access token expires; when it cannot, the person is signed out cleanly | Shipped | [#39](https://github.com/madfam-org/voxa/pull/39); `apps/web/src/lib/auth-session.test.ts` |
 | **Cambiar de cuenta** (choose another MADFAM account) and **Entrar como otra persona** (sign in again) on the sign-in page and in the app, in Spanish, English and French | Shipped | [#39](https://github.com/madfam-org/voxa/pull/39); `apps/web/src/lib/account-switch.test.ts`, `e2e/specs/session-account.spec.ts` |
 | Signing out also ends the MADFAM session, so the next person on a shared tablet is not signed back in as the previous one | Shipped | [#39](https://github.com/madfam-org/voxa/pull/39); `apps/web/src/lib/sign-out.test.ts` |
@@ -122,7 +126,8 @@ of clinical review until one has happened.
 | Live updates between devices while a board is open: each browser opens its live connection with a single-use ticket, and an edit saved on one device reaches the others | Shipped | [#39](https://github.com/madfam-org/voxa/pull/39); `e2e/specs/live-sync.spec.ts`, `apps/api/src/routes/ws-ticket.routes.test.ts` |
 | Live updates across server replicas (Redis) | Partial: built and tested, not enabled in production | [#37](https://github.com/madfam-org/voxa/pull/37); `apps/api/src/ws/sync-hub.redis.test.ts` |
 | Inviting a care team from inside Voxa | Not yet | Roles are granted in the MADFAM account |
-| Communicator and access settings that follow the person between devices (access method, scanning, dwell, keyguard, theme, display, voice rate, pitch and volume; the chosen voice stays on each device): off until the person turns it on in Settings, works offline and catches up later | Shipped (web; opt-in) | `apps/api/src/routes/me-settings.routes.test.ts`, `apps/web/src/lib/settings-sync.test.ts`, `e2e/specs/settings-sync.spec.ts` |
+| Communicator and access settings that follow the person between devices (access method, scanning, dwell, keyguard, theme, display, voice rate, pitch and volume; the chosen voice stays on each device): off until the person turns it on in Settings, works offline and catches up later; when two devices changed the same setting, the newer change wins | Shipped (web; opt-in) | [#47](https://github.com/madfam-org/voxa/pull/47); `apps/api/src/routes/me-settings.routes.test.ts`, `apps/api/src/routes/me-settings.pg.test.ts`, `apps/web/src/lib/settings-sync.test.ts`, `e2e/specs/settings-sync.spec.ts` |
+| Settings sync in the mobile app | Not yet | The mobile app keeps its own settings |
 | A therapist changing a communicator's settings from their own account | Not yet | Settings sync covers the signed-in person's own settings only |
 
 ## Privacy and consent
@@ -134,7 +139,8 @@ of clinical review until one has happened.
 | Spoken text is kept only for an organization with a data-processing agreement and a separate opt-in, and cleared after 90 days. No organization is enabled today | Shipped (off) | [#24](https://github.com/madfam-org/voxa/pull/24); `apps/api/src/routes/consent.pg.test.ts` |
 | Text stored before these rules was cleared | Shipped | [#25](https://github.com/madfam-org/voxa/pull/25) |
 | A board owner can delete the board's usage history | Shipped | [#24](https://github.com/madfam-org/voxa/pull/24) |
-| Settings sync is a separate opt-in (access settings can reveal a disability); turning it off stops syncing and deletes the server copy | Shipped | `apps/api/src/routes/me-settings.routes.test.ts`, `apps/api/src/routes/me-settings.pg.test.ts` |
+| Settings sync is a separate opt-in (access settings can reveal a disability); turning it off stops syncing and deletes the server copy. The public privacy policy does not list this purpose yet (the in-app consent text explains it) | Shipped; policy text pending | [#47](https://github.com/madfam-org/voxa/pull/47); `apps/api/src/routes/me-settings.routes.test.ts`, `apps/api/src/routes/me-settings.pg.test.ts` |
+| The editor lock (PIN) is kept on the device as a salted PBKDF2 hash, never as the PIN itself. It is a device lock: a 4-digit PIN can still be guessed offline by someone who can read the browser's storage | Shipped | [#44](https://github.com/madfam-org/voxa/pull/44); `apps/web/src/lib/editor-pin.test.ts` |
 
 ## Word suggestions and AI
 
@@ -149,7 +155,7 @@ of clinical review until one has happened.
 
 | Capability | Status | Evidence |
 | --- | --- | --- |
-| Automated accessibility checks (axe, WCAG 2.2 AA rules) in CI on the public pages, the editor panels, `/app` in all four themes, the Spanish landing, demo, app and settings, the voice settings, every first-run step and the GLP video dialog; serious or critical findings fail the build | Shipped | [#36](https://github.com/madfam-org/voxa/pull/36), [#38](https://github.com/madfam-org/voxa/pull/38), [#40](https://github.com/madfam-org/voxa/pull/40), [#41](https://github.com/madfam-org/voxa/pull/41); `e2e/specs/a11y.spec.ts` |
+| Automated accessibility checks (axe, WCAG 2.2 AA rules) in CI on the public pages, the editor panels, `/app` in all four themes, the Spanish landing, demo, app and settings, the voice settings, every first-run step, the GLP video dialog, the demo with its call to action visible, the sign-in page with both account controls and the settings-sync section; serious or critical findings fail the build | Shipped | [#36](https://github.com/madfam-org/voxa/pull/36), [#38](https://github.com/madfam-org/voxa/pull/38), [#39](https://github.com/madfam-org/voxa/pull/39), [#40](https://github.com/madfam-org/voxa/pull/40), [#41](https://github.com/madfam-org/voxa/pull/41), [#44](https://github.com/madfam-org/voxa/pull/44), [#47](https://github.com/madfam-org/voxa/pull/47); `e2e/specs/a11y.spec.ts`, `e2e/specs/demo-cta.spec.ts`, `e2e/specs/session-account.spec.ts`, `e2e/specs/settings-sync.spec.ts` |
 | Text and scan-highlight contrast held by tests on every theme | Shipped | [#36](https://github.com/madfam-org/voxa/pull/36); `apps/web/src/lib/theme-contrast.test.ts` |
 | WCAG 2.2 AA is the target. No external audit or conformance report exists | Partial | [accessibility.md](./accessibility.md) |
 

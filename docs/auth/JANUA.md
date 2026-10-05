@@ -81,19 +81,28 @@ AUTH_JANUA_ISSUER=https://auth.madfam.io
 AUTH_JANUA_CLIENT_ID=<Janua client id>
 AUTH_JANUA_CLIENT_SECRET=<Janua client secret>
 AUTH_PUBLIC_HOSTS=voxa.madfam.io,voxa-app.madfam.io   # hosts sign-in may run on (see below)
-# AUTH_URL=<origin>   # pin for every host; still set in the deployments until the rollout below
 NEXT_PUBLIC_API_URL=https://voxa-api.madfam.io
 ```
 
+`AUTH_URL` is **not set** in any deployment (see "Sign-in stays on the host
+the browser used" below). Leave it unset locally too unless you want every
+host pinned to one origin.
+
 `/api/health/ready` answers 503 and names (never shows) whichever of
-`AUTH_SECRET` and `AUTH_JANUA_*` is missing, so a rollout without them stalls on
-the previous pods. In the Kubernetes manifests the client secret comes from the
-existing `OIDC_CLIENT_SECRET` key of `voxa-secrets`, and the session secret
-from the dedicated Secret `voxa-web-session`, which the ExternalSecret of the
-same name fills from the platform's secret store (`secret/voxa`, property
-`auth_secret`; `secret/voxa-staging` on staging). The value is generated
-inside the store by the secret intake (`--generate auth_secret`); nobody
-types or sees it.
+`AUTH_SECRET` and `AUTH_JANUA_*` is missing, and answers 503 with
+`invalid: ["AUTH_PUBLIC_HOSTS"]` when an entry of that list is not a plain
+host, so a rollout without them stalls on the previous pods. `/api/health`
+reports `auth: { <name>: true|false }` (presence only) next to the image's
+`build`. In the Kubernetes manifests the client secret comes from the
+existing `OIDC_CLIENT_SECRET` key of `voxa-secrets` (a Secret key name kept
+from the earlier client; the web reads it as `AUTH_JANUA_CLIENT_SECRET`), and
+the session secret from the dedicated Secret `voxa-web-session`, which the
+ExternalSecret of the same name fills from the platform's secret store
+(`secret/voxa`, property `auth_secret`; `secret/voxa-staging` on staging).
+The value is generated inside the store by the secret intake
+(`--generate auth_secret`); nobody types or sees it.
+
+### Sign-in stays on the host the browser used
 
 One web deployment serves two hosts per environment: the landing host
 (`voxa.madfam.io`) and the app host (`voxa-app.madfam.io`; `voxa-staging…` and
@@ -105,48 +114,85 @@ Behind the tunnel the Next.js standalone server hands route handlers a
 request URL on its bind address (`HOSTNAME=0.0.0.0`, `PORT=3000`), and
 Auth.js builds its callback, error and sign-out URLs from that URL's origin
 (`trustHost` only skips Auth.js's own host check). Left alone, every Janua
-callback redirects to `https://0.0.0.0:3000/auth/signin?error=Configuration`.
-So the exported Auth.js handlers (`src/auth.ts`, used by the
-`[...nextauth]` route, the middleware session read and the API proxy) first
-rebuild the request URL (`src/lib/public-origin.ts`):
+callback redirects to `https://0.0.0.0:3000/auth/signin?error=Configuration`
+(the October 2026 incident, voxa#50). So the exported Auth.js handlers
+(`src/auth.ts`, used by the `[...nextauth]` route, the middleware session read
+and the API proxy) first rebuild the request URL (`src/lib/public-origin.ts`,
+voxa#51):
 
 - host: the first `X-Forwarded-Host` value, else `Host`;
 - scheme: `X-Forwarded-Proto` (`http` or `https`), else `https` (`http` for
   a loopback host);
 - only when the host is in `AUTH_PUBLIC_HOSTS` (comma-separated; an entry
   without a port matches any port). Without the variable the list is the
-  host of `NEXT_PUBLIC_BASE_URL` and of `AUTH_URL` plus `localhost`,
-  `127.0.0.1` and `[::1]` (development and tests).
+  host of `NEXT_PUBLIC_BASE_URL` (and of `AUTH_URL`, if set) plus
+  `localhost`, `127.0.0.1` and `[::1]` (development and tests).
 
-A host outside the list is never used: Auth.js answers 400 (or uses
-`AUTH_URL` when it is set), sign-out answers 400, the same-origin check
-refuses, and the sign-in server actions go to the sign-in page with
-`error=Configuration`. A malformed entry makes `/api/health/ready` answer 503
-with `invalid: ["AUTH_PUBLIC_HOSTS"]`. Sign-out returns to the sign-in page of
-the allow-listed host the browser used.
+A host outside the list is never used: Auth.js answers 400 (or falls back to
+`AUTH_URL` when one is set), sign-out answers 400, the same-origin check of
+the API proxy refuses, and the sign-in server actions go to the sign-in page
+with `error=Configuration`. Sign-out returns to the sign-in page of the
+allow-listed host the browser used.
 
 The k8s web manifests set `AUTH_PUBLIC_HOSTS` to the landing and app host of
-their environment. They still set `AUTH_URL` to the landing host (voxa#50):
-Argo applies a manifest change when the merge lands, minutes before the new
-image rolls out, and the previous image needs that pin. While the pin is set,
-every host stays on the landing host, as before, and app-host sign-ins stay
-broken. A follow-up manifest-only change removes it once this image is live.
+their environment and do not set `AUTH_URL` (voxa#52 removed the temporary
+pin of voxa#50 once voxa#51's image was serving). Adding a web host means
+adding it to `AUTH_PUBLIC_HOSTS`, to the deploy smoke's host list and to the
+Janua client (next section) together;
+`scripts/launch/deploy-contract.test.mjs` fails when a manifest sets
+`AUTH_URL` or when the smoke's hosts and the manifest's hosts differ.
 
-After each web deploy, `scripts/launch/verify-auth-public-origin.sh` checks
-both hosts anonymously: `/api/auth/providers` must report a `callbackUrl` of
-`https://<host>/api/auth/callback/janua`, and an anonymous
-`/api/auth/callback/janua?code=probe&state=probe` must redirect to
-`https://<host>/…`. `<host>` must be one of the public hosts given and never
-`0.0.0.0`. With `VERIFY_SAME_HOST=1` it must be the host that was asked; the
-change that removes the pin turns that on in the deploy workflows. The CI axe
-job runs the same script (strict) and
-`e2e/specs/auth-public-origin.spec.ts` against the standalone server bound to
-`0.0.0.0`. Adding a web host means adding it to `AUTH_PUBLIC_HOSTS`, to the
-deploy smoke and to the Janua client (next paragraph) together.
+Checks:
 
-Janua client registration, for **each of the four hosts**: redirect URI
-`https://<host>/api/auth/callback/janua` (exact match) and post-logout redirect
-`https://<host>/auth/signin`.
+- **Unit:** `src/lib/public-origin.test.ts` runs the real exported handlers
+  with a request URL on `0.0.0.0:3000` and the forwarded headers of each host.
+- **CI axe job:** `e2e/specs/auth-public-origin.spec.ts` and
+  `scripts/launch/verify-auth-public-origin.sh` (strict) against the
+  standalone server bound to `0.0.0.0`, with every manifest host allow-listed.
+- **After each web deploy:** `VERIFY_SAME_HOST=1
+  scripts/launch/verify-auth-public-origin.sh <landing> <app>` checks both
+  hosts anonymously: `/api/auth/providers` must report a `callbackUrl` of
+  `https://<host>/api/auth/callback/janua`, and an anonymous
+  `/api/auth/callback/janua?code=probe&state=probe` must redirect to
+  `https://<host>/…`, on the same host that was asked and never `0.0.0.0`.
+
+### The Janua client
+
+Production and staging use one confidential web client in Janua.
+
+- **Redirect URIs (eight, exact match).** For each of the four web hosts
+  (landing and app, production and staging): the Auth.js callback
+  `https://<host>/api/auth/callback/janua` and the sign-in page
+  `https://<host>/auth/signin`. Janua compares `redirect_uri` exactly
+  (scheme, host and path). The sign-in page is registered because Janua
+  accepts a `post_logout_redirect_uri` only when it is a registered redirect
+  URI of the client (or the origin root of one). The `/auth/callback` URIs of
+  the hand-rolled client that Auth.js replaced (voxa#39) are no longer
+  registered and no longer exist in the app.
+- **First-party (no consent screen).** The client is registered as a MADFAM
+  first-party client (its allowed scopes include `madfam:silent_auth`), which
+  Janua treats as pre-consented: a person signing in to Voxa is not asked to
+  approve Voxa's access to their own MADFAM account. Third-party clients still
+  see Janua's consent screen. Voxa requests
+  `openid email profile offline_access` and does not use silent sign-in
+  (`prompt=none`) today. Janua's rule:
+  [pre-consent of first-party clients](https://github.com/madfam-org/janua/blob/main/docs/architecture/SILENT_SSO_SESSION.md#b6--pre-consent).
+- **Account chooser.** «Cambiar de cuenta» sends `prompt=select_account`:
+  Janua shows the accounts this browser holds and degrades to its login form
+  when it holds none that still lives. «Entrar como otra persona» sends
+  `prompt=login`, so Janua asks for credentials even with a live session.
+  Janua's rules:
+  [account switching](https://github.com/madfam-org/janua/blob/main/docs/architecture/SILENT_SSO_SESSION.md#account-switching-l1l3).
+
+### Troubleshooting sign-in
+
+| Symptom | Likely cause | Check and fix |
+|---------|--------------|---------------|
+| After Janua, the browser lands on `https://0.0.0.0:3000/…` or on the other Voxa host, or the sign-in page shows `error=Configuration` | Auth.js built its URLs on the bind address or on a pinned `AUTH_URL` | `curl -sS https://<host>/api/auth/providers` must show `callbackUrl` = `https://<host>/api/auth/callback/janua` on each host; run `VERIFY_SAME_HOST=1 ./scripts/launch/verify-auth-public-origin.sh <landing> <app>`. The host must be in `AUTH_PUBLIC_HOSTS` and the manifest must not set `AUTH_URL`. A host outside the list answers 400 by design. |
+| Janua shows a consent screen for Voxa | The client is not registered as first-party | A platform operator marks the Voxa client first-party in Janua (allowed scope `madfam:silent_auth`); nothing changes in this repository. |
+| Janua refuses the request with a redirect-URI error before its login form appears, or sign-out does not come back to Voxa | The host's callback or sign-in page is not a registered redirect URI | Register both URIs for that host on the client (exact scheme, host and path). Every host in `AUTH_PUBLIC_HOSTS` needs its pair. |
+| `/api/health/ready` answers 503 with `missing` or `invalid` | A session or client setting is absent, or `AUTH_PUBLIC_HOSTS` has a malformed entry | The body names the settings, never their values; the rollout waits on the previous pods until they are fixed. |
+| Signed in, but `/app` returns to the sign-in page after a while | The refresh token was refused (revoked, reused or expired), so the session ended by design | Sign in again. Janua's revocation semantics: [revocation and `POST /oauth/revoke` (RFC 7009)](https://github.com/madfam-org/janua/blob/main/docs/runbooks/oauth-shared-state-redis.md#post-oauthrevoke-rfc-7009). |
 
 ## API (Hono)
 
@@ -209,9 +255,9 @@ grant endpoint (`app` = `voxa`, `role` = `admin` / `editor` / `slp`).
 
 ## Operator checklist
 
-1. Register, for each web host (landing and app, production and staging), the Auth.js callback `https://<host>/api/auth/callback/janua` and the post-logout redirect `https://<host>/auth/signin` on the Voxa Janua client.
+1. Register, for each web host (landing and app, production and staging), the Auth.js callback `https://<host>/api/auth/callback/janua` and the sign-in page `https://<host>/auth/signin` on the Voxa Janua client, and keep the client first-party (no consent screen).
 2. Generate the session secret in the platform's secret store with the Enclii secret intake (targets `voxa/web-session` and `voxa-staging/web-session`, key `auth_secret`); the `voxa-web-session` ExternalSecret delivers it.
-3. Deploy web; `/api/health/ready` must answer 200.
+3. Deploy web; `/api/health/ready` must answer 200 on every web host and the deploy smoke (`verify-auth-public-origin.sh`, strict) must pass.
 4. Set API `JANUA_*` secrets via Enclii onboard.
 5. Keep `VOXA_JANUA_AUTH_REQUIRED=true` on the API deployments; header auth is never available in production.
 
@@ -241,4 +287,15 @@ Registering the OAuth client, binding PostgreSQL and the full GA operator pass a
 
 ## References
 
-- MADFAM canon: Janua is the only auth provider
+- MADFAM canon: Janua is the only auth provider.
+- Janua: [organization claims and app roles](https://github.com/madfam-org/janua/blob/main/docs/architecture/CLAIMS_DE_ORGANIZACION_Y_SERVICE_PRINCIPALS.md) ·
+  [first-party pre-consent](https://github.com/madfam-org/janua/blob/main/docs/architecture/SILENT_SSO_SESSION.md#b6--pre-consent) ·
+  [account switching and `prompt` values](https://github.com/madfam-org/janua/blob/main/docs/architecture/SILENT_SSO_SESSION.md#account-switching-l1l3) ·
+  [revocation, `POST /oauth/revoke` (RFC 7009) and readiness](https://github.com/madfam-org/janua/blob/main/docs/runbooks/oauth-shared-state-redis.md) ·
+  [ecosystem integration guide](https://github.com/madfam-org/janua/blob/main/docs/guides/ECOSYSTEM_INTEGRATION.md).
+  The Janua changes that sign-in and switching rely on are [janua#694](https://github.com/madfam-org/janua/pull/694) (consent
+  state and the account chooser), [janua#695](https://github.com/madfam-org/janua/pull/695)–[#697](https://github.com/madfam-org/janua/pull/697) (revocation that fails closed
+  and revokes, RFC 7009, readiness independent of Redis) and [janua#698](https://github.com/madfam-org/janua/pull/698) (health
+  endpoints publish status fields only).
+- Ecosystem: [Janua integration guide](https://github.com/madfam-org/solarpunk-foundry/blob/main/docs/JANUA_INTEGRATION.md).
+- Auth.js: [authjs.dev](https://authjs.dev).
