@@ -211,7 +211,7 @@ jobs:
           # While the manifest still pins AUTH_URL to the landing host, the app
           # host's callback is on the landing host; the PR that removes the pin
           # sets VERIFY_SAME_HOST=1 here so each host must keep its own.
-          ./scripts/launch/verify-auth-public-origin.sh voxa.madfam.io voxa-app.madfam.io
+          VERIFY_SAME_HOST=1 ./scripts/launch/verify-auth-public-origin.sh voxa.madfam.io voxa-app.madfam.io
 
       # Loud-stale guard (2026-08-26 crea-frontend OIDC incident): the failure
       # mode that hurts is a pushed image whose digest pin never ran — main goes

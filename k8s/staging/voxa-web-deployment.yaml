@@ -87,17 +87,12 @@ spec:
             # (0.0.0.0:3000); the Auth.js handlers rebuild it from the forwarded
             # host, and only for a host in AUTH_PUBLIC_HOSTS (any other answers
             # 400; src/lib/public-origin.ts, docs/auth/JANUA.md).
-            # AUTH_URL (voxa#50) still pins every host to the landing host: Argo
-            # applies this manifest as soon as the merge lands, before the image
-            # with the rebuilt URL rolls out, and the old image needs the pin to
-            # avoid redirecting to 0.0.0.0. While it is set, app-host sign-ins
-            # stay broken. It is removed in a follow-up manifest-only PR once
-            # this image is live; that PR also turns on VERIFY_SAME_HOST=1 in
-            # the deploy smoke.
+            # No AUTH_URL: the image rebuilds each request's URL from the allow-listed
+            # public host the browser used (voxa#51), so sign-in works on both hosts.
+            # The deploy smoke checks that each host's callback stays on that host
+            # (VERIFY_SAME_HOST=1).
             - name: AUTH_PUBLIC_HOSTS
               value: "voxa-staging.madfam.io,voxa-app-staging.madfam.io"
-            - name: AUTH_URL
-              value: "https://voxa-staging.madfam.io"
             - name: AUTH_JANUA_ISSUER
               value: "https://auth.madfam.io"
             - name: AUTH_JANUA_CLIENT_ID
