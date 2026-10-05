@@ -1,5 +1,8 @@
 # Keep at least one web and one API pod serving through voluntary disruptions
-# (node drains, k3s upgrades). Both Deployments run 2 replicas.
+# (node drains, k3s upgrades). Both Deployments set replicas: 2 in git, the
+# intended floor; Argo CD ignores /spec/replicas, so the live count is scaled
+# by the platform operator (AGENTS.md invariant 20). minAvailable must stay
+# below replicas or drains block (scripts/launch/deploy-contract.test.mjs).
 ---
 apiVersion: policy/v1
 kind: PodDisruptionBudget

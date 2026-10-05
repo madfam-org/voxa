@@ -111,12 +111,32 @@ ArgoCD auto-syncs after digest commits (automated sync with self-heal); the web 
 
 ### Availability during rollouts and node drains
 
-- Production runs 2 web and 2 API replicas, spread across nodes when possible (`topologySpreadConstraints`, `ScheduleAnyway`). Staging runs 1 of each.
-- Rollouts are surge-first (`maxSurge: 1`, `maxUnavailable: 0`, `minReadySeconds: 5`): a new pod must pass readiness before an old one stops. If the surge pod cannot be scheduled, the rollout waits on the old pods, which keep serving.
+- The production manifests set the intended replica floor: 2 web and 2 API replicas, spread across nodes when possible (`topologySpreadConstraints`, `ScheduleAnyway`). Staging sets 1 of each. The live count is not taken from git; see the next section.
+- Rollouts are surge-first (`maxSurge: 1`, `maxUnavailable: 0`, `minReadySeconds: 5`): a new pod must pass readiness before an old one stops. If the surge pod cannot be scheduled, the rollout waits on the old pods, which keep serving. With one live pod a rollout still keeps a ready endpoint, but a crash or eviction of that pod is an outage until a replacement is ready.
 - A `preStop` sleep of 5 s lets the endpoint removal reach the Service before the container gets `SIGTERM`.
 - On `SIGTERM` the API drains (`apps/api/src/lib/graceful-shutdown.ts`): `/health/ready` answers 503, open WebSockets get a 1001 close frame (clients reconnect to the other replica), requests in flight finish, then Redis and the database pool close and the process exits 0. It exits 1 on a second signal or after `SHUTDOWN_DEADLINE_MS` (default 20 s, below the 30 s `terminationGracePeriodSeconds` minus the 5 s `preStop`). The web server is Next's standalone server, which already stops accepting and awaits in-flight requests on `SIGTERM` before it exits.
-- `k8s/*/pod-disruption-budgets.yaml`: production keeps `minAvailable: 1` per Deployment; staging (1 replica) allows one disruption so node drains are never blocked.
-- Capacity: a production rollout briefly runs 3 pods of the Deployment being updated (web requests 50m CPU / 128Mi per pod, API 100m / 256Mi).
+- `k8s/*/pod-disruption-budgets.yaml`: production keeps `minAvailable: 1` per Deployment, which allows one voluntary disruption only while that Deployment has at least 2 healthy pods; at 1 pod the budget allows none and a drain of that pod's node waits on it. Staging (1 replica) uses `maxUnavailable: 1` so its drains are never blocked. `scripts/launch/deploy-contract.test.mjs` fails when a budget allows no disruption at its manifest's replica count, or when production web or API drops below 2 replicas in git.
+- Capacity: a production rollout briefly runs one pod more than the live count of the Deployment being updated (3 at the floor of 2; web requests 50m CPU / 128Mi per pod, API 100m / 256Mi).
+
+### Replica counts: git records intent, the operator scales live
+
+The Argo CD app `voxa-services` ignores `/spec/replicas` on Deployments and StatefulSets (`ignoreDifferences` with the sync option `RespectIgnoreDifferences=true`). A change to `replicas:` under `k8s/production/` therefore merges, Argo CD reports Synced and Healthy, and the cluster keeps the count it had. Everything else under `k8s/` is applied as usual.
+
+To change the live count, the platform operator scales the Deployment and checks the result against the Deployment itself:
+
+```bash
+kubectl -n voxa scale deploy/voxa-web --replicas=2     # or deploy/voxa-api
+kubectl -n voxa get deploy voxa-web voxa-api           # READY n/n and AVAILABLE must equal the spec
+```
+
+Change the manifest in the same direction so git keeps recording the intended floor. Never take a 200 from `/api/health/ready` or `/health/ready` as evidence of the replica count: one ready pod answers it. These commands need cluster access, which no workflow in this repository holds; the operator procedure around them is private.
+
+### How an outage is detected
+
+- **Alerts to on-call.** Critical alerts from the platform's Prometheus rules go through Alertmanager to Courier, the notification service of the angelia platform, which delivers them to the on-call phone. Courier forwards critical alerts only; warnings stay in Alertmanager.
+- **What covers Voxa today.** A Voxa pod that crash loops (`PodCrashLooping`, every namespace); the Argo CD app degraded or missing (`ArgoCDAppDegraded`, `ArgoCDAppMissing`); and the shared dependencies Voxa runs on (PostgreSQL, Redis, the Cloudflare tunnel, node pressure). A Deployment that sits below its desired count without crash looping (for example a pod that never turns ready) is not covered until [enclii#695](https://github.com/madfam-org/enclii/pull/695) lands. It adds the production `voxa` namespace to the platform's client availability rules (the `client-slo` group): the critical `ClientDeploymentUnavailable` (available below desired for 5 minutes), which pages, and the warning rules `ClientServiceErrorRate`, `ClientServiceLatencyP95`, `ClientPodRestartRate` and `TenantResourceQuotaNearLimit`, which do not. `voxa-staging` stays out on purpose: staging serves an old build until its Argo CD app tracks `main` and would page falsely.
+- **Status page.** [status.madfam.io](https://status.madfam.io) checks the five hosts declared in the `status:` block of `enclii.yaml` (production web, app and API, staging web and API; API entries use `/health/ready`). It shows state; it is not part of the alert path above.
+- **Deploy and daily smokes.** A failed deploy smoke or daily smoke (`e2e-smoke.yml`) shows as a failed GitHub Actions run; it pages no one.
 
 Run locally: `pnpm test`
 
@@ -203,7 +223,7 @@ Board writes are compare-and-set: the API reads the board by id, applies the cha
 
 ### Real-time co-editing across replicas (Redis)
 
-Production runs two API replicas. WebSocket clients connect to either, so board changes must fan out through Redis: with `REDIS_URL` set and reachable, each replica publishes its `board.*` events on one channel and relays the others', and presence (`{"type":"connected","presence":N}`) counts clients on every replica (a sorted set per board with 30 s expiring entries, so a crashed replica's clients age out). `/health/ready` then reports `"syncHub":"redis"`.
+The production manifest sets two API replicas. WebSocket clients connect to any of them, so board changes must fan out through Redis: with `REDIS_URL` set and reachable, each replica publishes its `board.*` events on one channel and relays the others', and presence (`{"type":"connected","presence":N}`) counts clients on every replica (a sorted set per board with 30 s expiring entries, so a crashed replica's clients age out). `/health/ready` then reports `"syncHub":"redis"`.
 
 - `REDIS_URL` is a key of the `voxa-secrets` Secret (the shared Redis requires a password and gives each app its own DB index, so the URL is never a literal in a manifest). Both API Deployments bind it explicitly with `optional: true`.
 - Without it, or with Redis unreachable, the API keeps serving in **local** mode (events reach only clients on the same replica), keeps reconnecting in the background, switches to Redis by itself, and `/health/ready` stays 200 with a `syncHubWarning`. An unreachable Redis never makes a pod unready.

@@ -377,6 +377,17 @@ pnpm build
     `scripts/launch/verify-auth-public-origin.sh` (strict, after every web
     deploy and in the axe job) and `scripts/launch/deploy-contract.test.mjs`
     (no `AUTH_URL` in a web manifest; smoke hosts equal manifest hosts).
+20. **Replica counts in git are intent; the operator scales live.**
+    `k8s/production` sets web 2 and API 2 with `minAvailable: 1` budgets, but
+    the Argo CD app `voxa-services` ignores `/spec/replicas`
+    (`RespectIgnoreDifferences=true`), so a `replicas:` change merges, reports
+    Synced and changes nothing live. The platform operator runs
+    `kubectl -n voxa scale deploy/<name> --replicas=N` and verifies
+    `kubectl get deploy` (spec and available), never an HTTP check alone.
+    Keep every budget's `minAvailable` below its Deployment's `replicas`.
+    Tested in `scripts/launch/deploy-contract.test.mjs` (git side only);
+    operator detail in
+    [docs/deploy/ENCLII.md](./docs/deploy/ENCLII.md#replica-counts-git-records-intent-the-operator-scales-live).
 
 ## Guards
 
@@ -400,6 +411,7 @@ rather than passing (each one asserts how much it read).
 | Service worker | `sw.js` must parse as plain JavaScript and never cache `/api/*` or other origins | `apps/web/src/service-worker.test.ts` | unit job | voxa#32 |
 | Auth.js on the public origin | an Auth.js URL (callback, error redirect, sign-out return) built on the server's bind address (`0.0.0.0:3000`), on a host outside `AUTH_PUBLIC_HOSTS` or on another host than the one asked (`VERIFY_SAME_HOST=1`); a non-allow-listed host must answer 400; an `AUTH_URL` in a web manifest; deploy-smoke hosts that differ from the manifest's `AUTH_PUBLIC_HOSTS` | `apps/web/src/lib/public-origin.test.ts`; `e2e/specs/auth-public-origin.spec.ts`; `scripts/launch/verify-auth-public-origin.sh` (both hosts of each environment, strict); `scripts/launch/deploy-contract.test.mjs` | unit job; axe job; after each production and staging web deploy; `pnpm test:guards` | voxa#51, voxa#52 |
 | Cosign hold | a deploy workflow whose `sigstore/cosign-installer` pin is not v3, or a Dependabot config that no longer ignores its major updates (cosign v3 signatures are not verified by the cluster's Kyverno) | `scripts/launch/deploy-contract.test.mjs` | `pnpm test:guards` | voxa#46 |
+| Availability floor | a PodDisruptionBudget that allows no voluntary disruption at its Deployment's manifest `replicas` (production or staging; node drains would block); production web or API below 2 replicas or without a budget. Reads git only: the live count is the operator's (invariant 20) | `scripts/launch/deploy-contract.test.mjs` | `pnpm test:guards` | voxa#@@VOXA_PR@@ |
 | Image optimizer off | `/_next/image` must answer 404 | `apps/web/src/next-config.test.ts`; `scripts/launch/verify-prod-image-optimizer.sh` | unit job; axe job; after each production web deploy | voxa#13 |
 | Image smoke and build identity | images on Node 22 without package managers, health 200 under the Deployment's securityContext; deploys wait until `/health` serves the commit's `build` | `.github/workflows/image-smoke.yml`, `apps/*/src/lib/build-info.test.ts`, `scripts/launch/wait-for-build.sh` | image-smoke workflow (Dockerfile, lockfile or `package.json` changes); deploy workflows | voxa#33 |
 | Accessibility (axe) | serious or critical WCAG 2.2 AA violations on public pages, the editor panels, `/app` in four themes and the Spanish landing, `/demo`, `/app` and settings; the demo never opens a dialog over the board (20 taps, 20 utterances, the call to action below the board, axe with it visible) | `e2e/specs/a11y.spec.ts`, `e2e/specs/demo-cta.spec.ts` (also the axe steps in `voice-choice`, `offline-media`, `first-run`, `session-account` and `settings-sync`) | axe job | voxa#4, voxa#36, voxa#40 (Spanish), voxa#44 |
@@ -430,7 +442,7 @@ until a credentialed reviewer has done one (ruling R89).
    (`apps/web/**` or `apps/api/**`, `packages/**`, the Dockerfile) start for
    production and staging at the same time. A change that touches only root
    docs, `docs/**` or other non-app paths deploys nothing; a change under
-   `k8s/` is applied by Argo CD directly.
+   `k8s/` is applied by Argo CD directly, except `replicas:` (invariant 20).
 3. **Build, sign, pin.** Each workflow builds the image with `GIT_SHA`,
    cosign-signs it (cosign-installer held at v3, see [Deploy](#deploy)) and
    commits its digest to `k8s/production` or `k8s/staging`. Argo CD
@@ -521,6 +533,7 @@ blocks production use, **P1** next, **P2** planned, **P3** cleanup.
 | **Staging's Argo CD app still tracks the deleted `staging` branch.** The staging workflows now pin `k8s/staging` on `main`, but `voxa-staging-services` reads branch `staging`, which no longer exists, so it cannot compare (ComparisonError) and staging keeps a June build. | Until the app tracks `main`, staging does not move and the daily signed-in specs test an old build. Staging has therefore not received the Auth.js web either: whether its session secret (`secret/voxa-staging`, `auth_secret`) is delivered shows only once it rolls out (`/api/health/ready` on both staging web hosts). | P1 | Platform operator (point the app's source revision at `main`); then confirm `/api/health/ready` answers 200 on both staging web hosts and the `VOXA_STAGING_*` test account still signs in and holds `voxa:slp` | — |
 | **Paid tiers are not grantable yet.** The API reads the plan tier from the Janua `voxa_tier` claim, but the push that writes the claim for user subscriptions (billing → Janua) is not built. | Nobody can hold `family` or `clinic`, so every user gets the free limits (one board). Fails safe: no one gets a paid tier they did not buy. | P1 | Ecosystem work outside this repo; no Voxa change is needed once tokens carry the claim | Y1 |
 | **Production and staging do not bind `REDIS_URL` yet.** Both API Deployments read it from `voxa-secrets` (optional), but production's `/health/ready` reports `syncHub: local`, so the key is not set there (staging unverified). | With two production replicas, a co-editor on the other pod sees no live change and presence counts one pod. Data is safe (writes are compare-and-set). | P1 | Platform operator: add `REDIS_URL` (shared Redis with AUTH, this app's own DB index) to `voxa-secrets` for each environment, then `REQUIRE_REDIS=1 ./scripts/launch/verify-prod-redis.sh` | — |
+| **The deployment-unavailable alert does not cover Voxa yet.** The platform's critical `ClientDeploymentUnavailable` rule (available replicas below desired for 5 minutes) lists other namespaces but not `voxa`; Voxa pages only on crash loops, Argo CD app health and shared dependencies ([ENCLII.md](./docs/deploy/ENCLII.md#how-an-outage-is-detected)). | A Voxa Deployment below its desired count without crash looping (a pod that never turns ready) reaches no one. | P1 | Platform (merge [enclii#695](https://github.com/madfam-org/enclii/pull/695), which adds the production `voxa` namespace to the `client-slo` rules including `ClientDeploymentUnavailable`, then confirm Prometheus loaded it; then this row goes) | enclii#695 |
 | **Media bytes live in the shared PostgreSQL.** Uploads are size-capped, type-checked and quota-bound per user, but the bytes are stored in `media_assets.data`. | Large media grows the shared database, its backups and WAL. | P2 | Owner ruling (object storage behind signed URLs) | — |
 | **Prettier is not enforced.** `pnpm format` exists but CI does not check it, and several files predate it.                                                                                                                   | Formatting drifts and creates noise in unrelated PRs.                                                                                                                                   | P3       | Engineering work (one reformat, then a CI check)                                | —        |
 | **Selva predictions are off.** `SELVA_ENABLED` defaults to `false`, so every text suggestion comes from the local predictor. Turning it on needs a Janua service client for this edge, its id and secret delivered to the API, and a local model behind Selva for `restricted` requests. | Until then suggestions are rule-based only. Turning it on early is safe (every failure falls back to local) but pointless. | P2 | Ecosystem and operator work; no Voxa code change is needed | — |
