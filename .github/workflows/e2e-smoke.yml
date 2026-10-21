@@ -10,6 +10,8 @@ name: Daily smoke
 #   staging test account and write test boards, consent choices and media to
 #   staging only. Without the staging credentials the job logs why and skips.
 #   Staging never gates production deploys; a red run here is a staging signal.
+#   Staging was retired on 2026-10-18: this job runs only while the repository
+#   variable STAGING_ENABLED is 'true' (unset = skipped). `smoke` always runs.
 
 on:
   workflow_dispatch:
@@ -68,6 +70,11 @@ jobs:
           PLAYWRIGHT_BASE_URL: ${{ env.VOXA_PROD_WEB_URL }}
 
   staging-signed-in:
+    # Staging was retired on 2026-10-18 (its Argo CD app and namespace are gone),
+    # so this job runs only when the repository variable STAGING_ENABLED is
+    # 'true'. Unset or any other value: skipped. Set it back to 'true' once a
+    # staging environment exists again.
+    if: vars.STAGING_ENABLED == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
