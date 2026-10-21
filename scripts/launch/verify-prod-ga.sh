@@ -38,7 +38,11 @@ check "API GET /v1/boards → 401" test "${boards_code}" = "401"
 echo "== Production web =="
 health_body="$(curl -sf "${WEB_BASE}/api/health" 2>/dev/null || true)"
 check "Web /api/health" test -n "${health_body}"
-check "Web oidcClientSecretSet" grep -q '"oidcClientSecretSet":true' <<<"${health_body}"
+# /api/health reports each sign-in setting as a boolean under "auth"
+# (apps/web/src/lib/auth-env.ts AUTH_ENV_KEYS); every one must be set.
+for key in AUTH_SECRET AUTH_JANUA_ISSUER AUTH_JANUA_CLIENT_ID AUTH_JANUA_CLIENT_SECRET; do
+  check "Web auth.${key} set" grep -q "\"${key}\":true" <<<"${health_body}"
+done
 
 landing_code="$(curl -sS -o /dev/null -w '%{http_code}' "${WEB_BASE}/" 2>/dev/null || echo 000)"
 demo_code="$(curl -sS -o /dev/null -w '%{http_code}' "${WEB_BASE}/demo" 2>/dev/null || echo 000)"

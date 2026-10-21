@@ -61,7 +61,7 @@ Routing uses Cloudflare Tunnel routes (Enclii junctions) to the `voxa-web` and `
      --secrets-file ./deploy/secrets.env.example
    ```
 
-5. **Staging** — `voxa-staging-services` ArgoCD app must track branch `main` and `k8s/staging/` (registered at runtime, not via Enclii `infra/argocd/projects/` entries). The `staging` branch was deleted; an app still pointed at it shows a ComparisonError and never syncs. A platform operator points the app's source revision at `main`. Do not re-run `onboard/ensure` for the staging project to do it: that endpoint keys the onboarding record by repository, so a staging call would rewrite the production record's desired state.
+5. **Staging (retired 2026-10-18)** — the staging Argo CD app and namespace were removed on 2026-10-18; the staging deploy workflows and the daily signed-in specs run only while the repository variable `STAGING_ENABLED` is `true` (unset = skipped). If staging is brought back: the `voxa-staging-services` ArgoCD app must track branch `main` and `k8s/staging/` (registered at runtime, not via Enclii `infra/argocd/projects/` entries). The `staging` branch was deleted; an app still pointed at it shows a ComparisonError and never syncs. A platform operator points the app's source revision at `main`. Do not re-run `onboard/ensure` for the staging project to do it: that endpoint keys the onboarding record by repository, so a staging call would rewrite the production record's desired state.
 
 ## Day-to-day deploys
 

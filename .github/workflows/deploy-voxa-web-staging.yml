@@ -41,6 +41,11 @@ env:
 jobs:
   build-and-push:
     name: Build & Push Web Image (Staging)
+    # Staging was retired on 2026-10-18 (its Argo CD app and namespace are gone),
+    # so this job runs only when the repository variable STAGING_ENABLED is
+    # 'true'. Unset or any other value: skipped. Set it back to 'true' once a
+    # staging environment exists again.
+    if: vars.STAGING_ENABLED == 'true'
     runs-on: ubuntu-24.04
     # Build (~10 min) + sign + pin + up to 12 min waiting for the new build.
     timeout-minutes: 45

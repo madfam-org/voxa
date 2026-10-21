@@ -135,8 +135,8 @@ pnpm build
   `test:e2e:settings-sync` and `pnpm --filter @voxa/e2e test:import` run in
   the CI `a11y` job against the built web app (bound to `HOSTNAME=0.0.0.0`,
   as in production), with the strict sign-in host check
-  (`scripts/launch/verify-auth-public-origin.sh`). `pnpm test:e2e:smoke` and
-  `test:e2e:staging:signed-in` run in the daily smoke.
+  (`scripts/launch/verify-auth-public-origin.sh`). `pnpm test:e2e:smoke` runs in the daily smoke;
+  `test:e2e:staging:signed-in` too while `STAGING_ENABLED` is `true`.
 
 ## Architecture
 
@@ -193,8 +193,9 @@ More: [docs/architecture.md](./docs/architecture.md) ·
 | Production | [voxa.madfam.io](https://voxa.madfam.io) | [voxa-app.madfam.io](https://voxa-app.madfam.io) | [voxa-api.madfam.io](https://voxa-api.madfam.io) |
 | Staging | [voxa-staging.madfam.io](https://voxa-staging.madfam.io) | [voxa-app-staging.madfam.io](https://voxa-app-staging.madfam.io) | [voxa-api-staging.madfam.io](https://voxa-api-staging.madfam.io) |
 
-A merge to `main` deploys production and staging side by side; staging never
-gates production. How a change ships: [AGENTS.md › How a change ships](./AGENTS.md#how-a-change-ships).
+A merge to `main` deploys production. Staging was retired on 2026-10-18: its
+hosts no longer serve, and the staging workflows run only while the repository
+variable `STAGING_ENABLED` is `true`. How a change ships: [AGENTS.md › How a change ships](./AGENTS.md#how-a-change-ships).
 Service status: [status.madfam.io](https://status.madfam.io).
 
 ## Documentation
