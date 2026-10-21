@@ -57,7 +57,11 @@ web_code="$(curl -sS -o /dev/null -w '%{http_code}' "${WEB_BASE}/api/health" 2>/
 check "Web /api/health → 200" test "${web_code}" = "200"
 
 health_body="$(curl -sf "${WEB_BASE}/api/health" 2>/dev/null || true)"
-check "Web oidcClientSecretSet" grep -q '"oidcClientSecretSet":true' <<<"${health_body}"
+# /api/health reports each sign-in setting as a boolean under "auth"
+# (apps/web/src/lib/auth-env.ts AUTH_ENV_KEYS); every one must be set.
+for key in AUTH_SECRET AUTH_JANUA_ISSUER AUTH_JANUA_CLIENT_ID AUTH_JANUA_CLIENT_SECRET; do
+  check "Web auth.${key} set" grep -q "\"${key}\":true" <<<"${health_body}"
+done
 
 landing_code="$(curl -sS -o /dev/null -w '%{http_code}' "${WEB_BASE}/" 2>/dev/null || echo 000)"
 check "GET / landing → 200" test "${landing_code}" = "200"
