@@ -21,7 +21,7 @@
     "@voxa/symbols": "workspace:*",
     "@voxa/vocabulary": "workspace:*",
     "drizzle-orm": "^0.45.3",
-    "hono": "^4.13.12",
+    "hono": "^4.13.16",
     "ioredis": "^5.4.2",
     "jose": "^5.9.6",
     "postgres": "^3.4.5",
