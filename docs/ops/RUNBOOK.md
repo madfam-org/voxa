@@ -111,7 +111,7 @@ Four limiters answer 429 `{"code":"RATE_LIMITED"}` with `Retry-After: 60`, all p
 ## Rollback
 
 1. Revert the digest in `k8s/production/voxa-api-deployment.yaml` or `voxa-web-deployment.yaml` to last known good SHA.
-2. Sync Argo app via Enclii ops or `enclii apps sync voxa-services`.
+2. Sync the Argo app through Enclii: `enclii ops apps sync voxa-services --apply --reason "rollback to the last known good digest"`.
 3. Re-run smoke tests from deploy workflow or manually curl health endpoints.
 
 ## Escalation
