@@ -51,15 +51,18 @@ Routing uses Cloudflare Tunnel routes (Enclii junctions) to the `voxa-web` and `
      --manifest-path k8s/production --preflight
    ```
 
-4. Full production onboard (optional DB when moving off JSON file store):
+4. Full production onboard:
    ```bash
    enclii onboard --repo madfam-org/voxa --project voxa \
      --manifest-path k8s/production \
      --secret-name voxa-secrets \
-     --db-name <database-name> \
-     --db-password "$(openssl rand -base64 32)" \
      --secrets-file ./deploy/secrets.env.example
    ```
+
+   To also create a database when moving off the JSON file store, add
+   `--db-name` with the database name you choose and
+   `--db-password "$(openssl rand -base64 32)"`. The name is a per-deployment
+   choice, so it is not written into the command above.
 
 5. **Staging (retired 2026-10-18)** — the staging Argo CD app and namespace were removed on 2026-10-18; the staging deploy workflows and the daily signed-in specs run only while the repository variable `STAGING_ENABLED` is `true` (unset = skipped). If staging is brought back: the `voxa-staging-services` ArgoCD app must track branch `main` and `k8s/staging/` (registered at runtime, not via Enclii `infra/argocd/projects/` entries). The `staging` branch was deleted; an app still pointed at it shows a ComparisonError and never syncs. A platform operator points the app's source revision at `main`. Do not re-run `onboard/ensure` for the staging project to do it: that endpoint keys the onboarding record by repository, so a staging call would rewrite the production record's desired state.
 
@@ -273,11 +276,19 @@ The Postgres server is shared with other services under a fixed connection limit
 An isolated Enclii-managed Postgres can replace the shared server:
 
 ```bash
-enclii addon create voxa --project voxa --plan standard-0 --engine postgres
-# when status=ready:
-enclii addon bind <addon_id> --service <voxa-api-service-id> --env-var DATABASE_URL
-enclii ops apps sync --application voxa-services
+# the voxa-api service id (enclii releases prints it on its first line)
+VOXA_API_SERVICE_ID=$(enclii releases voxa-api --project voxa -n 1 \
+  | sed -n 's/.*(\([0-9a-f-]\{36\}\)).*/\1/p')
+enclii addon create voxa --project voxa --plan standard-0 --engine postgres \
+  --service "$VOXA_API_SERVICE_ID" --env-var DATABASE_URL
+# when status=ready (enclii addon ls --project voxa):
+enclii ops apps sync voxa-services --apply --reason "bind the managed Postgres addon to voxa-api"
 ```
+
+`enclii addon bind` does not exist: `enclii addon create` binds the addon at
+creation, given the service ID in `--service` and the variable in `--env-var`.
+`enclii ops apps sync` takes the application as its argument (there is no
+`--application` flag) and is a dry-run plan without `--apply`.
 
 Keep the connection budget above in mind for any target.
 
