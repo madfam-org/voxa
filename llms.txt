@@ -37,6 +37,10 @@
 - [docs/legal/](./docs/legal/): privacy, terms and data-handling summaries.
 - [CHANGELOG.md](./CHANGELOG.md): the October 2026 stabilization and compliance wave and the sessions and settings-sync follow-up, grouped by theme.
 
+## Commercial pipeline state (2026-11-26)
+
+- Family and Clinic are in Dhanam's catalogue; there is no self-serve checkout, so paid plans go to a discovery call, and no paid tier has been observed granted end to end. `status.madfam.io` does not list Voxa yet. Detail: [AGENTS.md › Commercial pipeline state](./AGENTS.md#commercial-pipeline-state-2026-11-26); cross-repo source: `internal-devops/audits/2026-11-26-business-pipeline/README.md` (private).
+
 ## Contracts with other repositories
 
 - Janua (identity), claims contract: https://github.com/madfam-org/janua/blob/main/docs/architecture/CLAIMS_DE_ORGANIZACION_Y_SERVICE_PRINCIPALS.md

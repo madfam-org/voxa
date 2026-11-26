@@ -1,6 +1,6 @@
 # Voxa agent guide
 
-> Last Updated: 2026-10-05
+> Last Updated: 2026-11-26
 
 > **Repository boundary:** operational detail (platform identifiers, operator procedures, break-glass steps) and commercial research (pricing, competitor benchmarks, outreach) live in MADFAM's private operations repository; this public repo holds only public-safe context, per MADFAM's repo-boundary contract.
 
@@ -532,7 +532,7 @@ blocks production use, **P1** next, **P2** planned, **P3** cleanup.
 | **Mobile store builds are not set up.** The app is on Expo SDK 57, shows symbols and bundles in CI, but the EAS project, the App Store Connect and Google Play listings and the repository variables and secrets the mobile workflows read do not exist yet. | No preview or store build has ever been produced; the workflows stop with a message naming each missing variable. | P1 | Owner setup (names and commands in `docs/launch/MOBILE_GA.md`) | — |
 | **Three mobile build-tool advisories have no compatible fix.** `node-forge` (Expo CLI code signing; no patched release), `braces` (Metro file watcher and the shadcn CLI; no patched release) and `decode-uri-component` 0.2 under `expo-router`'s `query-string` 7 (the fix, 0.5, is ESM-only and `query-string` 7 loads it with `require`). | Dev and build tooling, except `decode-uri-component`, which ships in the app and only parses the app's own deep links. | P3 | Upstream (re-check on each Expo SDK release) | — |
 | **Staging is retired.** Staging was retired on 2026-10-18 (its Argo CD app and namespace were removed); the staging hostnames answer 502. The staging deploy workflows and the daily signed-in specs are skipped while the repository variable `STAGING_ENABLED` is unset. `k8s/staging/` stays in git for a future staging. | Changes reach production without a staging rehearsal; the CI `a11y` job and the production deploy smokes are the remaining pre- and post-merge checks. | P2 | Owner decision (bring staging back or remove `k8s/staging/` and the staging workflows); to restore: recreate the environment, then set `STAGING_ENABLED=true` | — |
-| **Paid tiers are not grantable yet.** The API reads the plan tier from the Janua `voxa_tier` claim, but the push that writes the claim for user subscriptions (billing → Janua) is not built. | Nobody can hold `family` or `clinic`, so every user gets the free limits (one board). Fails safe: no one gets a paid tier they did not buy. | P1 | Ecosystem work outside this repo; no Voxa change is needed once tokens carry the claim | Y1 |
+| **Paid tiers are not grantable yet.** The API reads the plan tier from the Janua `voxa_tier` claim. As of 2026-11-26 the push that writes the claim for user subscriptions (billing → Janua) exists in code but is not verified live: self-serve checkout is off in production and a failed purchase-time notice is logged, not retried. Treat paid tiers as not grantable until one is observed. | Nobody can hold `family` or `clinic`, so every user gets the free limits (one board). Fails safe: no one gets a paid tier they did not buy. | P1 | Ecosystem work outside this repo; no Voxa change is needed once tokens carry the claim | Y1 |
 | **Production and staging do not bind `REDIS_URL` yet.** Both API Deployments read it from `voxa-secrets` (optional), but production's `/health/ready` reports `syncHub: local`, so the key is not set there (staging unverified). | With two production replicas, a co-editor on the other pod sees no live change and presence counts one pod. Data is safe (writes are compare-and-set). | P1 | Platform operator: add `REDIS_URL` (shared Redis with AUTH, this app's own DB index) to `voxa-secrets` for each environment, then `REQUIRE_REDIS=1 ./scripts/launch/verify-prod-redis.sh` | — |
 | **Media bytes live in the shared PostgreSQL.** Uploads are size-capped, type-checked and quota-bound per user, but the bytes are stored in `media_assets.data`. | Large media grows the shared database, its backups and WAL. | P2 | Owner ruling (object storage behind signed URLs) | — |
 | **Prettier is not enforced.** `pnpm format` exists but CI does not check it, and several files predate it.                                                                                                                   | Formatting drifts and creates noise in unrelated PRs.                                                                                                                                   | P3       | Engineering work (one reformat, then a CI check)                                | —        |
@@ -545,6 +545,34 @@ blocks production use, **P1** next, **P2** planned, **P3** cleanup.
 
 The Next image optimizer gap listed here before 2026-10-02 is closed (#13,
 invariant 6).
+
+## Commercial pipeline state (2026-11-26)
+
+What is true for Voxa at each stage of MADFAM's commercial pipeline, read on
+`main` and against the public hosts on 2026-11-26:
+
+- **Discovery.** `voxa.madfam.io` serves `robots.txt`, `sitemap.xml` and
+  `llms.txt` (built in `apps/web/src/lib/crawling.ts`; guarded by the
+  "Crawling and security headers" row under [Guards](#guards)). No visitor
+  analytics loads on it.
+- **Conversion.** Family and Clinic are purchasable tiers in Dhanam's
+  catalogue. The landing shows their prices from `apps/web/src/lib/pricing.ts`,
+  typed to match the catalogue rather than read from it. There is no
+  self-serve checkout: every paid-plan call to action goes to a discovery call
+  on the MADFAM booking page.
+- **Fulfillment.** The API grants limits from the Janua `voxa_tier` claim; no
+  paid tier has been observed granted end to end (row "Paid tiers are not
+  grantable yet" under [Pending work and known gaps](#pending-work-and-known-gaps)).
+- **Customer success.** Contact is the `hola@madfam.io` role mailbox; public
+  copy claims no SLA (the claims stop-list guard). `status.madfam.io` does not
+  list Voxa yet ([README › Environments](./README.md#environments)).
+- **Virality and expansion.** No bundle or partner plan exists. Clinic is
+  priced per seat on the landing, but Dhanam's checkout sends a quantity of
+  one, so seats cannot be bought online.
+
+Cross-repo source: the
+[2026-11-26 business pipeline audit](https://github.com/madfam-org/internal-devops/blob/main/audits/2026-11-26-business-pipeline/README.md)
+in MADFAM's private operations repository.
 
 ## Related repositories and contracts
 

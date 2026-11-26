@@ -196,7 +196,7 @@ More: [docs/architecture.md](./docs/architecture.md) ·
 A merge to `main` deploys production. Staging was retired on 2026-10-18: its
 hosts no longer serve, and the staging workflows run only while the repository
 variable `STAGING_ENABLED` is `true`. How a change ships: [AGENTS.md › How a change ships](./AGENTS.md#how-a-change-ships).
-Service status: [status.madfam.io](https://status.madfam.io).
+Service status: [status.madfam.io](https://status.madfam.io) does not list Voxa yet (2026-11-26); the status entries declared in `enclii.yaml` are not in that page's configuration.
 
 ## Documentation
 
